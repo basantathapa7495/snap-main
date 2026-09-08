@@ -1,29 +1,82 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
 export default function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('');
+
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   // Add shadow + stronger blur once the user scrolls
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    onScroll();
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+ useEffect(() => {
+  const sectionIds = ['features', 'how', 'video', 'pricing', 'faq'];
+
+  const handleScroll = () => {
+    let current = '';
+
+    for (const id of sectionIds) {
+      const section = document.getElementById(id);
+
+      if (section) {
+        const rect = section.getBoundingClientRect();
+
+        if (rect.top <= 140 && rect.bottom >= 140) {
+          current = id;
+          break;
+        }
+      }
+    }
+
+    setActiveSection(current);
+  };
+
+  handleScroll();
+  window.addEventListener('scroll', handleScroll);
+
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      mobileOpen &&
+      mobileMenuRef.current &&
+      !mobileMenuRef.current.contains(event.target as Node)
+    ) {
+      setMobileOpen(false);
+    }
+  };
+
+  const handleEscape = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      setMobileOpen(false);
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  document.addEventListener('keydown', handleEscape);
+
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+    document.removeEventListener('keydown', handleEscape);
+  };
+}, [mobileOpen]);
 
   const navLinks = [
-    { href: '#features', label: 'Features' },
-    { href: '#how', label: 'How it works' },
-    { href: '#video', label: 'video guide' },
-    { href: '#pricing', label: 'Pricing' },
-    { href: '#faq', label: 'FAQ' },
-  ];
+  { href: '#features', label: 'Features' },
+  { href: '/solutions', label: 'Solutions' },
+  { href: '#how', label: 'How It Works' },
+  { href: '#video', label: 'Demo' },
+  { href: '#pricing', label: 'Pricing' },
+  { href: '/schoolslist', label: 'View Schools' },
+  { href: '#faq', label: 'FAQ' },
+];
 
   return (
     <header
+    ref={mobileMenuRef}
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
           ? 'border-b border-gray-200/70 bg-white/90 shadow-[0_1px_20px_rgba(0,0,0,0.06)] backdrop-blur-xl'
@@ -34,13 +87,20 @@ export default function LandingNavbar() {
         {/* ===== Logo (left) ===== */}
         {/* logo1 stays on the left with hamburger */}
 <Link href="/" className="flex items-center gap-2.5">
-  <img src="/logo1.png" alt="snap logo" className="h-14 w-auto" />
-  <img src="/logo2.png" alt="snap" className="hidden h-14 w-auto md:block" />
+  
+  <img src="/logo2.png" alt="snap" className="hidden h-20 w-auto md:block" />
 </Link>
 
 {/* logo2 centered — mobile only */}
-<Link href="/" className="absolute left-1/2 top-8 -translate-x-1/2 -translate-y-1/2 md:hidden">
-  <img src="/logo2.png" alt="snap" className="h-18 w-auto" />
+<Link
+  href="/"
+  className="pointer-events-auto absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 md:hidden"
+>
+  <img
+    src="/logo2.png"
+    alt="SNAP"
+    className="h-10 w-auto transition-transform duration-200 hover:scale-105"
+  />
 </Link>
 
         {/* ===== Desktop links (center) ===== */}
@@ -48,11 +108,23 @@ export default function LandingNavbar() {
           {navLinks.map((link) => (
             <li key={link.href}>
               <a
-                href={link.href}
-                className="rounded-full px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
-              >
-                {link.label}
-              </a>
+  href={link.href}
+  className={`group relative rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+    activeSection === link.href.replace('#', '')
+      ? 'text-blue-700'
+      : 'text-gray-600 hover:text-gray-900'
+  }`}
+>
+  {link.label}
+
+  <span
+    className={`absolute bottom-0 left-1/2 h-0.5 -translate-x-1/2 rounded-full bg-blue-600 transition-all duration-300 ${
+      activeSection === link.href.replace('#', '')
+        ? 'w-6'
+        : 'w-0 group-hover:w-18'
+    }`}
+  />
+</a>
             </li>
           ))}
         </ul>
@@ -75,56 +147,82 @@ export default function LandingNavbar() {
 
         {/* ===== Mobile hamburger ===== */}
         <button
-          onClick={() => setMobileOpen((v) => !v)}
-          className="inline-flex items-center justify-center rounded-lg p-2 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
-          aria-label="Toggle menu"
-          aria-expanded={mobileOpen}
-        >
-          {mobileOpen ? (
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
-        </button>
+  type="button"
+  onClick={() => setMobileOpen((prev) => !prev)}
+  className="relative z-20 inline-flex h-10 w-10 items-center justify-center rounded-xl text-gray-700 transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 active:scale-90 md:hidden"
+  aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+  aria-expanded={mobileOpen}
+  aria-controls="mobile-menu"
+>
+  {mobileOpen ? (
+    <svg
+      className="h-6 w-6 transition-transform duration-200"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6 18L18 6M6 6l12 12"
+      />
+    </svg>
+  ) : (
+    <svg
+      className="h-6 w-6 transition-transform duration-200"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4 6h16M4 12h16M4 18h16"
+      />
+    </svg>
+  )}
+</button>
       </nav>
 
       {/* ===== Mobile slide-down menu ===== */}
       <div
-        className={`overflow-hidden transition-all duration-300 md:hidden ${
-          mobileOpen ? 'max-h-96 border-t border-gray-100 bg-white' : 'max-h-0'
-        }`}
-      >
+  id="mobile-menu"
+  className={`overflow-hidden bg-white transition-all duration-300 ease-out md:hidden ${
+    mobileOpen
+      ? 'max-h-[500px] translate-y-0 border-t border-gray-100 opacity-100'
+      : 'pointer-events-none max-h-0 -translate-y-2 opacity-0'
+  }`}
+>
         <div className="space-y-1 px-4 pb-4 pt-3">
           {navLinks.map((link) => (
             <a
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
-              className="block rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              className="group flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-blue-50 hover:pl-5 hover:text-blue-700 active:scale-[0.98]"
             >
               {link.label}
             </a>
           ))}
-          <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3">
-            <Link
-              href="/auth/login"
-              onClick={() => setMobileOpen(false)}
-              className="rounded-lg border border-gray-200 px-4 py-2.5 text-center text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/auth/signup"
-              onClick={() => setMobileOpen(false)}
-              className="rounded-lg bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-            >
-              Register your school
-            </Link>
-          </div>
+          <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-4">
+  <Link
+    href="/auth/login"
+    onClick={() => setMobileOpen(false)}
+    className="px-4 py-2.5 text-center text-sm font-medium text-gray-600 transition-colors hover:text-gray-950"
+  >
+    Log in
+  </Link>
+
+  <Link
+    href="/auth/signup"
+    onClick={() => setMobileOpen(false)}
+    className="rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-[0.99]"
+  >
+    Register your school
+  </Link>
+</div>
         </div>
       </div>
     </header>

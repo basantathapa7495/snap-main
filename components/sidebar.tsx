@@ -343,13 +343,6 @@ export default function Sidebar() {
           </button>
         </div>
 
-        {/* SCHOOL BANNER */}
-        <div className="border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 px-5 py-3">
-          <p className="truncate text-xs font-semibold text-blue-900">
-            🏫 {school?.name || 'My School'}
-          </p>
-        </div>
-
         {/* ===================================================
             NAVIGATION MENU
         =================================================== */}
@@ -372,7 +365,7 @@ export default function Sidebar() {
                         }`}
                       >
                         <Icon
-                          className={`h-[18px] w-[18px] flex-shrink-0 ${
+                          className={`h-[16px] w-[16px] flex-shrink-0 ${
                             isActive ? 'text-white' : 'text-gray-500'
                           }`}
                         />
@@ -410,7 +403,7 @@ export default function Sidebar() {
               }`}
             >
               <Settings
-                className={`h-[18px] w-[18px] ${
+                className={`h-[16px] w-[16px] ${
                   principalSettingsActive ? 'text-white' : 'text-gray-500'
                 }`}
               />

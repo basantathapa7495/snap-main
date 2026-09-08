@@ -4,6 +4,35 @@ import LandingNavbar from '@/components/LandingNavbar';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import {
+  ShieldCheck,
+  MapPin,
+  Smartphone,
+  BadgeDollarSign,
+  School,
+  Link2,
+  ArrowRight,
+  CheckCircle2,
+  Users,
+  ClipboardCheck,
+  WalletCards,
+  FilePenLine,
+  FileText,
+  Megaphone,
+  Inbox,
+  Cake,
+  GraduationCap,
+  UserRound,
+  LayoutDashboard,
+  Palette,
+  Sparkles,
+  Quote,
+  BadgeCheck,
+  Check, 
+  CalendarDays,
+  MessageCircle,
+  
+} from "lucide-react";
 
 export default function HomePage() {
   const [schools, setSchools] = useState<any[]>([]);
@@ -37,46 +66,115 @@ export default function HomePage() {
     { task: "Know who hasn't paid", old: 'Ask every parent', snap: 'Dues report + phone no.' },
   ];
 
+  function NepalIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M6 2v20M7 3l9 7H9l8 9H7"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
   return (
     <main className="bg-white text-gray-800 antialiased">
       {/* ===== Trust Badges Bar ===== */}
-      <div className="bg-blue-700 px-4 py-2.5 text-center text-xs font-medium text-white sm:text-sm">
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-          <span className="flex items-center gap-1">🔒 Data Secure</span>
-          <span className="hidden sm:inline text-blue-300">|</span>
-          <span className="flex items-center gap-1">🇳🇵 Made in Nepal</span>
-          <span className="hidden sm:inline text-blue-300">|</span>
-          <span className="flex items-center gap-1">📱 Works on Any Phone</span>
-          <span className="hidden sm:inline text-blue-300">|</span>
-          <span className="flex items-center gap-1">💰 No Hidden Fees</span>
-        </div>
-      </div>
+<div className="border-b border-blue-600 bg-blue-700 px-4 py-2.5 text-center text-xs font-medium text-white sm:text-sm">
+
+  {/* ===== Mobile Trust Bar ===== */}
+  <div className="flex items-center justify-center gap-2 sm:hidden">
+    <ShieldCheck
+      className="h-4 w-4 shrink-0 text-blue-200"
+      strokeWidth={2}
+    />
+
+    <span className="whitespace-nowrap">
+      Secure school data
+    </span>
+
+    <span className="text-blue-300">•</span>
+
+    <span className="whitespace-nowrap">
+      Made for Nepal
+    </span>
+  </div>
+
+  {/* ===== Desktop Trust Bar ===== */}
+  <div className="hidden flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:flex">
+
+    <span className="flex items-center gap-1.5">
+      <ShieldCheck
+        className="h-5 w-5 text-blue-200"
+        strokeWidth={2}
+      />
+      Data Secure
+    </span>
+
+    <span className="text-blue-400">|</span>
+
+    <span className="flex items-center gap-1.5">
+      <NepalIcon className="h-5 w-5 text-blue-200" />
+      Made in Nepal
+    </span>
+
+    <span className="text-blue-400">|</span>
+
+    <span className="flex items-center gap-1.5">
+      <Smartphone
+        className="h-5 w-5 text-blue-200"
+        strokeWidth={2}
+      />
+      Works on Any Phone
+    </span>
+
+    <span className="text-blue-400">|</span>
+
+    <span className="flex items-center gap-1.5">
+      <BadgeDollarSign
+        className="h-5 w-5 text-blue-200"
+        strokeWidth={2}
+      />
+      No Hidden Fees
+    </span>
+
+  </div>
+</div>
 
       {/* ===== Navbar ===== */}
       <LandingNavbar />
 
       {/* ===== Hero ===== */}
       <section className="relative overflow-hidden">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-2 md:py-24 lg:px-8">
+        <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-12 sm:gap-12 sm:px-6 sm:py-16 md:grid-cols-2 md:py-24 lg:px-8">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
               Ready to take your school digital?
             </p>
-            <h1 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-5xl">
+            <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-4xl md:text-5xl">
               Run your whole school from one phone
             </h1>
-            <p className="mt-5 text-lg leading-relaxed text-gray-600">
+            <p className="mt-5 max-w-prose text-base leading-relaxed text-gray-600 sm:text-lg">
               Attendance, fees, exams, reports, notices, students and teachers — manage from one place, without registers and endless photocopies.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/auth/signup" className="rounded-xl bg-blue-600 px-7 py-3.5 text-center font-semibold text-white shadow-lg shadow-blue-200 hover:bg-blue-700">
+              <Link href="/auth/signup" className="w-full rounded-xl bg-blue-600 px-7 py-3.5 text-center font-semibold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 sm:w-auto">
                 Register your school
               </Link>
               <a
                 href="/s/sunrise-valley-secondary"
                 target="_blank"
-                className="rounded-xl border-2 border-blue-600 bg-white px-6 py-3 text-center font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50"
+                className="w-full rounded-xl border-2 border-blue-600 bg-white px-6 py-3 text-center font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 sm:w-auto"
               >
                 👀 See Live Demo
               </a>
@@ -88,278 +186,752 @@ export default function HomePage() {
 
           {/* Hero photo with floating cards */}
           <div className="relative">
-            <img
-              src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1400&q=80"
-              alt="Students raising their hands in a classroom in Nepal"
-              className="aspect-[4/3] w-full rounded-2xl object-cover shadow-xl"
-              loading="eager"
-            />
-            <div className="absolute -bottom-5 -left-4 rounded-xl border border-gray-100 bg-white p-4 shadow-lg sm:-left-8">
-              <p className="text-xs text-gray-500">Today's attendance — Class 5A</p>
-              <p className="mt-1 text-lg font-bold text-gray-900">
-                38 / 40 present <span className="text-sm font-semibold text-green-600">95%</span>
-              </p>
-            </div>
-            <div className="absolute -top-5 -right-3 rounded-xl border border-gray-100 bg-white p-4 shadow-lg sm:-right-6">
-              <p className="text-xs text-gray-500">Monthly fee collected</p>
-              <p className="mt-1 text-lg font-bold text-green-700">NPR 1,24,500</p>
-            </div>
-          </div>
+  <img
+    src="/hero-image.png"
+    alt="SNAP school management platform for schools in Nepal"
+    className="w-full rounded-3xl object-cover shadow-2xl"
+    loading="eager"
+  />
+</div>
         </div>
       </section>
 
       {/* ===== Live schools ticker ===== */}
       {schools.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
-          <p className="text-center text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Schools already on SNAP
-          </p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            {schools.map((s, i) => (
-              <span key={i} className="rounded-full border border-gray-200 bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm">
-                🏫 {s.name}
-                {s.district ? ` · ${s.district}` : ''}
-              </span>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ===== Problem → Solution ===== */}
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-            Still running the school on registers and photocopies?
-          </h2>
-          <p className="mt-4 text-lg text-gray-600">Every month it's the same story. We built SNAP to change it.</p>
-        </div>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {/* Card 1: Fees */}
-          <div className="flex gap-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition hover:shadow-md">
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900">"Who hasn't paid fees?"</h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                You spend 3 days making a dues list by hand. With SNAP, open the Fee Dues Report and see every unpaid student — with the parent's phone number — in 10 seconds.
-              </p>
-            </div>
-            <img
-              src="/fees.png"
-              alt="Fee dues list made easy with SNAP"
-              className="aspect-[3/4] w-20 shrink-0 self-start rounded-xl object-cover md:w-32"
-              loading="lazy"
-            />
-          </div>
-
-          {/* Card 2: Notice Board */}
-          <div className="flex gap-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition hover:shadow-md">
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900">"Parents say 'we didn't know.'" </h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                Paper notices get lost in school bags. Post once, and every parent reads it on the school's own website — even from abroad.
-              </p>
-            </div>
-            <img
-              src="/notice.png"
-              alt="School notice board on the school website"
-              className="aspect-[3/4] w-20 shrink-0 self-start rounded-xl object-cover md:w-32"
-              loading="lazy"
-            />
-          </div>
-
-          {/* Card 3: Report Card */}
-          <div className="flex gap-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition hover:shadow-md">
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900">"Report cards take a week."</h3>
-              <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                Enter marks once. SNAP calculates percentage, grade and GPA the Nepal way — and prints a clean report card you can save as PDF.
-              </p>
-            </div>
-            <img
-              src="/report.png"
-              alt="Report card generated in seconds"
-              className="aspect-[3/4] w-20 shrink-0 self-start rounded-xl object-cover md:w-32"
-              loading="lazy"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ===== 🎥 VIDEO DEMO (PREMIUM UPGRADE!) ===== */}
-<section id="video" className="relative overflow-hidden bg-gradient-to-b from-gray-900 via-indigo-950 to-gray-900 py-24">
-  {/* Background glow effect */}
-  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-indigo-600/20 blur-[120px] pointer-events-none"></div>
-  
-  <div className="relative mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
-    {/* Badge */}
-    <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-indigo-500/10 px-4 py-1.5 text-sm font-semibold text-indigo-300 ring-1 ring-inset ring-indigo-500/20">
-      <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-      </span>
-      Live Product Preview
-    </div>
-
-    {/* Heading */}
-    <h2 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-      See SNAP in <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Action</span>
-    </h2>
-    <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-400">
-      Watch how principals, teachers, and students use SNAP to run their school effortlessly in just 2 minutes.
+  <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+    <p className="text-center text-xs font-semibold uppercase tracking-wider text-gray-400">
+      Schools already on SNAP
     </p>
 
-    {/* Premium Video Container */}
-    <div className="group relative mx-auto mt-12 max-w-4xl rounded-2xl bg-gray-800/50 p-2 ring-1 ring-white/10 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:shadow-indigo-500/20 hover:ring-indigo-500/30">
-      {/* Fake Browser/Window Top Bar */}
-      <div className="flex items-center gap-2 rounded-t-xl bg-gray-900/80 px-4 py-3 border-b border-white/5">
-        <div className="flex gap-1.5">
-          <div className="h-3 w-3 rounded-full bg-red-500/80"></div>
-          <div className="h-3 w-3 rounded-full bg-yellow-500/80"></div>
-          <div className="h-3 w-3 rounded-full bg-green-500/80"></div>
+    <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+      {schools.slice(0, 6).map((s, i) => (
+        <span
+          key={i}
+          className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm"
+        >
+          {/* School icon */}
+          <svg
+            className="h-4 w-4 shrink-0 text-blue-600"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 21h18" />
+            <path d="M5 21V9l7-4 7 4v12" />
+            <path d="M9 21v-5h6v5" />
+            <path d="M9 11h.01" />
+            <path d="M12 11h.01" />
+            <path d="M15 11h.01" />
+          </svg>
+
+          <span>
+            {s.name}
+            {s.district ? ` · ${s.district}` : ''}
+          </span>
+        </span>
+      ))}
+    </div>
+  </section>
+)}
+
+      {/* ===== Problem → Solution ===== */}
+<section className="relative overflow-hidden bg-white py-14 sm:py-20 lg:py-24">
+  {/* Background decoration */}
+  <div
+    className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_65%)]"
+    aria-hidden="true"
+  />
+
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {/* Section heading */}
+    <div className="mx-auto max-w-3xl text-center">
+      <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+        From manual to simple
+      </span>
+
+      <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
+        School work should not take
+        <span className="text-blue-600"> days of paperwork.</span>
+      </h2>
+
+      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+        Registers, photocopies and repeated calculations slow everyone down.
+        SNAP turns everyday school tasks into simple digital workflows.
+      </p>
+    </div>
+
+    {/* Cards */}
+    <div className="mt-14 grid gap-6 lg:grid-cols-3">
+      {/* Card 1 */}
+      <article className="group relative overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+        {/* Image */}
+        <div className="relative h-64 overflow-hidden bg-gray-100">
+          <img
+            src="/fees.png"
+            alt="Fee management with SNAP"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            loading="lazy"
+          />
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
+
+          <span className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-blue-600 shadow-md">
+            01
+          </span>
         </div>
-        <div className="mx-auto flex-1 text-center text-xs font-medium text-gray-500">
-          snap.com.np/demo
+
+        {/* Content */}
+        <div className="p-6 sm:p-7">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-red-500" />
+
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+              The problem
+            </p>
+          </div>
+
+          <h3 className="mt-3 text-xl font-bold text-gray-950">
+            “Who hasn&apos;t paid fees?”
+          </h3>
+
+          <p className="mt-3 text-sm leading-6 text-gray-600">
+            Staff spend hours checking registers and making dues lists by hand
+            just to find unpaid students.
+          </p>
+
+          <div className="my-6 h-px bg-gray-100" />
+
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-5 w-5"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 12l4 4L19 6"
+                />
+              </svg>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-gray-950">
+                With SNAP
+              </p>
+
+              <p className="mt-1 text-sm leading-6 text-gray-600">
+                Open the Fee Dues Report and see unpaid students with parent
+                contact details in seconds.
+              </p>
+            </div>
+          </div>
         </div>
+      </article>
+
+      {/* Card 2 */}
+      <article className="group relative overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+        {/* Image */}
+        <div className="relative h-64 overflow-hidden bg-gray-100">
+          <img
+            src="/notice.png"
+            alt="School notices managed digitally with SNAP"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            loading="lazy"
+          />
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
+
+          <span className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-blue-600 shadow-md">
+            02
+          </span>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 sm:p-7">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-red-500" />
+
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+              The problem
+            </p>
+          </div>
+
+          <h3 className="mt-3 text-xl font-bold text-gray-950">
+            “We didn&apos;t know about the notice.”
+          </h3>
+
+          <p className="mt-3 text-sm leading-6 text-gray-600">
+            Paper notices get forgotten, damaged or lost before they ever reach
+            parents.
+          </p>
+
+          <div className="my-6 h-px bg-gray-100" />
+
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-5 w-5"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 12l4 4L19 6"
+                />
+              </svg>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-gray-950">
+                With SNAP
+              </p>
+
+              <p className="mt-1 text-sm leading-6 text-gray-600">
+                Publish once and make important school notices available online
+                from the school website.
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      {/* Card 3 */}
+      <article className="group relative overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+        {/* Image */}
+        <div className="relative h-64 overflow-hidden bg-gray-100">
+          <img
+            src="/report.png"
+            alt="Report cards generated with SNAP"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            loading="lazy"
+          />
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
+
+          <span className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-blue-600 shadow-md">
+            03
+          </span>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 sm:p-7">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-red-500" />
+
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
+              The problem
+            </p>
+          </div>
+
+          <h3 className="mt-3 text-xl font-bold text-gray-950">
+            “Report cards take a week.”
+          </h3>
+
+          <p className="mt-3 text-sm leading-6 text-gray-600">
+            Teachers repeat calculations, check marks and prepare report cards
+            one student at a time.
+          </p>
+
+          <div className="my-6 h-px bg-gray-100" />
+
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="h-5 w-5"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 12l4 4L19 6"
+                />
+              </svg>
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold text-gray-950">
+                With SNAP
+              </p>
+
+              <p className="mt-1 text-sm leading-6 text-gray-600">
+                Enter marks once. SNAP calculates results and creates clean,
+                printable report cards.
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    {/* Bottom message */}
+    <div className="mt-12 flex justify-center">
+      <div className="flex max-w-full items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 px-5 py-3 text-sm text-gray-700 sm:items-center">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          className="h-5 w-5 shrink-0 text-blue-600"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 3v18M3 12h18"
+          />
+        </svg>
+
+        <span className="min-w-0">
+          And that&apos;s only the beginning —
+          <strong className="font-semibold text-gray-950">
+            {' '}
+            attendance, admissions, exams, students and teachers
+          </strong>{' '}
+          are managed from the same place.
+        </span>
       </div>
-      
-      {/* Video Iframe */}
-      <div className="overflow-hidden rounded-b-xl bg-black">
-        <iframe
-          className="aspect-video w-full"
-          src="https://www.youtube.com/embed/nigWHG_TH2U?rel=0&modestbranding=1"
-          title="SNAP Demo Video"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-        ></iframe>
-      </div>
-      
-      {/* Subtle glow behind the container on hover */}
-      <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-indigo-500 to-cyan-500 opacity-0 blur transition duration-500 group-hover:opacity-20 -z-10"></div>
     </div>
   </div>
 </section>
 
-      {/* ===== How it works ===== */}
-<section id="how" className="relative bg-gray-50 py-24 overflow-hidden">
-  {/* Subtle background pattern */}
-  <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#4f46e5 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
-  
+      {/* ===== Video Demo ===== */}
+<section
+  id="video"
+  className="relative scroll-mt-24 overflow-hidden bg-gray-950 py-14 sm:py-20 lg:py-28"
+>
+  {/* Background decoration */}
+  <div
+    className="pointer-events-none absolute inset-0"
+    aria-hidden="true"
+  >
+    <div className="absolute left-1/2 top-0 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-blue-600/20 blur-[120px]" />
+    <div className="absolute bottom-0 right-0 h-[300px] w-[300px] rounded-full bg-cyan-500/10 blur-[100px]" />
+  </div>
+
   <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {/* Heading */}
     <div className="mx-auto max-w-3xl text-center">
-      <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700 mb-4">
-        Simple & Fast
-      </span>
-      <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
-        How it works for your school
+      <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-300 backdrop-blur">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-70" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-400" />
+        </span>
+        Product Demo
+      </div>
+
+      <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+        See how SNAP works
+        <span className="block text-blue-400">
+          before you register
+        </span>
       </h2>
-      <p className="mt-4 text-lg text-gray-600 sm:text-xl">
-        Three simple steps. No computer needed. No IT person needed.
+
+      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-400 sm:text-lg">
+        Watch a quick walkthrough of how principals, teachers, and students use
+        SNAP for attendance, fees, exams, notices, and everyday school work.
       </p>
     </div>
 
-    <div className="mt-16 grid gap-8 md:grid-cols-3">
-      {/* Step 1 */}
-      <div className="group relative rounded-2xl border border-gray-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-blue-200">
-        <div className="absolute -top-6 left-8 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-2xl text-white shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
-          🏫
-        </div>
-        <div className="mt-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Step 1</span>
-          <h3 className="mt-2 text-xl font-bold text-gray-900">Register your school</h3>
-          <p className="mt-3 text-sm leading-relaxed text-gray-600">
-            Enter your school name and district. Takes 2 minutes. Your school instantly gets its own web link — like <span className="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs text-gray-800">/s/balkalyan-secondary</span>.
-          </p>
+    {/* Video area */}
+    <div className="mx-auto mt-12 max-w-5xl">
+      <div className="relative">
+        {/* Glow */}
+        <div
+          className="absolute -inset-4 -z-10 rounded-[2rem] bg-blue-500/10 blur-2xl"
+          aria-hidden="true"
+        />
+
+        {/* Browser frame */}
+        <div className="overflow-hidden rounded-[28px] border border-white/10 bg-gray-900 shadow-2xl shadow-black/40">
+          {/* Browser header */}
+          <div className="flex items-center gap-2 border-b border-white/10 bg-gray-900/90 px-3 py-3 sm:gap-4 sm:px-5">
+            <div className="flex shrink-0 items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
+              <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
+              <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
+            </div>
+
+            <div className="flex min-w-0 flex-1 justify-center">
+              <div className="flex min-w-0 max-w-sm flex-1 items-center justify-center gap-2 truncate rounded-lg border border-white/5 bg-white/5 px-3 py-1.5 text-xs text-gray-500">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  className="h-3.5 w-3.5 shrink-0"
+                  aria-hidden="true"
+                >
+                  <rect x="5" y="10" width="14" height="10" rx="2" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8 10V7a4 4 0 018 0v3"
+                  />
+                </svg>
+
+                <span className="truncate">snap.com.np/demo</span>
+              </div>
+            </div>
+
+            <div className="hidden w-[42px] shrink-0 sm:block" />
+          </div>
+
+          {/* Video */}
+          <div className="relative bg-black">
+            <iframe
+              className="aspect-video w-full"
+              src="https://www.youtube.com/embed/nigWHG_TH2U?rel=0&modestbranding=1"
+              title="SNAP school management system demo"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              loading="lazy"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Step 2 */}
-      <div className="group relative rounded-2xl border border-gray-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-blue-200">
-        <div className="absolute -top-6 left-8 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-2xl text-white shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
-          👥
-        </div>
-        <div className="mt-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Step 2</span>
-          <h3 className="mt-2 text-xl font-bold text-gray-900">Add your people</h3>
-          <p className="mt-3 text-sm leading-relaxed text-gray-600">
-            Add classes, teachers, and students. Create logins for teachers with one click. Each teacher manages their own class — the work is shared, not on one person.
-          </p>
-        </div>
-      </div>
+      {/* Bottom trust points */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-gray-400">
+        <span className="inline-flex items-center gap-2">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-4 w-4 text-blue-400"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 12l4 4L19 6"
+            />
+          </svg>
+          Principal dashboard
+        </span>
 
-      {/* Step 3 */}
-      <div className="group relative rounded-2xl border border-gray-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-blue-200">
-        <div className="absolute -top-6 left-8 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-2xl text-white shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
-          🚀
-        </div>
-        <div className="mt-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600">Step 3</span>
-          <h3 className="mt-2 text-xl font-bold text-gray-900">Share your link</h3>
-          <p className="mt-3 text-sm leading-relaxed text-gray-600">
-            Parents read notices on your school page. Students and teachers log in and see only their own data. You see everything from your dashboard.
-          </p>
-        </div>
+        <span className="inline-flex items-center gap-2">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-4 w-4 text-blue-400"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 12l4 4L19 6"
+            />
+          </svg>
+          Attendance & fees
+        </span>
+
+        <span className="inline-flex items-center gap-2">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-4 w-4 text-blue-400"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 12l4 4L19 6"
+            />
+          </svg>
+          Exams & notices
+        </span>
+
+        <span className="inline-flex items-center gap-2">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            className="h-4 w-4 text-blue-400"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 12l4 4L19 6"
+            />
+          </svg>
+          Student & teacher portals
+        </span>
+      </div>
+    </div>
+  </div>
+</section>
+
+      {/* ===== How It Works ===== */}
+<section
+  id="how"
+  className="relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
+>
+  {/* Background pattern */}
+  <div
+    className="pointer-events-none absolute inset-0 opacity-[0.035]"
+    style={{
+      backgroundImage:
+        'radial-gradient(circle, #2563eb 1px, transparent 1px)',
+      backgroundSize: '28px 28px',
+    }}
+    aria-hidden="true"
+  />
+
+  {/* Soft background glow */}
+  <div
+    className="pointer-events-none absolute left-1/2 top-20 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-blue-100/60 blur-[120px]"
+    aria-hidden="true"
+  />
+
+  <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {/* Heading */}
+    <div className="mx-auto max-w-3xl text-center">
+      <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+        Simple setup
+      </span>
+
+      <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
+        Start using SNAP in
+        <span className="text-blue-600"> three simple steps</span>
+      </h2>
+
+      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+        No complicated installation. No technical team required. Set up your
+        school, add your people, and start managing everything from one place.
+      </p>
+    </div>
+
+    {/* Steps */}
+    <div className="relative mt-16">
+      {/* Desktop connecting line */}
+      <div
+        className="absolute left-[16%] right-[16%] top-10 hidden h-px bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 lg:block"
+        aria-hidden="true"
+      />
+
+      <div className="grid gap-8 lg:grid-cols-3">
+        {/* Step 1 */}
+        <article className="group relative">
+          <div className="relative rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
+            {/* Number + Icon */}
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/20 transition-transform duration-300 group-hover:scale-105">
+                <School className="h-7 w-7" strokeWidth={1.8} />
+              </div>
+
+              <span className="text-5xl font-bold tracking-tight text-gray-100">
+                01
+              </span>
+            </div>
+
+            <div className="mt-7">
+              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-blue-600">
+                Step 1
+              </span>
+
+              <h3 className="mt-2 text-xl font-bold text-gray-950">
+                Register your school
+              </h3>
+
+              <p className="mt-3 text-sm leading-6 text-gray-600">
+                Create your school account and enter the basic school details.
+                SNAP prepares your school workspace and public school page.
+              </p>
+
+              <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+                <p className="text-xs font-medium text-gray-500">
+                  Your school page
+                </p>
+
+                <p className="mt-1 truncate font-mono text-xs font-medium text-gray-800">
+                  snap.com.np/s/your-school
+                </p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        {/* Step 2 */}
+        <article className="group relative">
+          <div className="relative rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/20 transition-transform duration-300 group-hover:scale-105">
+                <Users className="h-7 w-7" strokeWidth={1.8} />
+              </div>
+
+              <span className="text-5xl font-bold tracking-tight text-gray-100">
+                02
+              </span>
+            </div>
+
+            <div className="mt-7">
+              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-blue-600">
+                Step 2
+              </span>
+
+              <h3 className="mt-2 text-xl font-bold text-gray-950">
+                Add teachers and students
+              </h3>
+
+              <p className="mt-3 text-sm leading-6 text-gray-600">
+                Add your classes, teachers, and students. Give each person the
+                right access so school work is shared instead of depending on
+                one person.
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 gap-2">
+                <div className="rounded-xl bg-gray-50 px-3 py-3">
+                  <p className="text-xs font-semibold text-gray-900">
+                    Teachers
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Class access
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-gray-50 px-3 py-3">
+                  <p className="text-xs font-semibold text-gray-900">
+                    Students
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Personal portal
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        {/* Step 3 */}
+        <article className="group relative">
+          <div className="relative rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
+            <div className="relative z-10 flex items-center justify-between">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/20 transition-transform duration-300 group-hover:scale-105">
+                <Link2 className="h-7 w-7" strokeWidth={1.8} />
+              </div>
+
+              <span className="text-5xl font-bold tracking-tight text-gray-100">
+                03
+              </span>
+            </div>
+
+            <div className="mt-7">
+              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-blue-600">
+                Step 3
+              </span>
+
+              <h3 className="mt-2 text-xl font-bold text-gray-950">
+                Start running your school
+              </h3>
+
+              <p className="mt-3 text-sm leading-6 text-gray-600">
+                Manage attendance, fees, exams, notices, students, and teachers
+                from your dashboard while your school community uses their own
+                secure access.
+              </p>
+
+              <div className="mt-6 flex items-center gap-2 rounded-xl border border-green-100 bg-green-50 px-4 py-3">
+                <CheckCircle2
+                  className="h-5 w-5 shrink-0 text-green-600"
+                  strokeWidth={2}
+                />
+
+                <span className="text-sm font-semibold text-green-800">
+                  Your school is ready to go
+                </span>
+              </div>
+            </div>
+          </div>
+        </article>
       </div>
     </div>
 
-    {/* Enhanced Visual flow diagram */}
-    <div className="mt-20">
-      <div className="relative mx-auto max-w-4xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between sm:gap-4">
-          {/* Item 1 */}
-          <div className="flex flex-col items-center text-center sm:flex-1">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-2xl ring-4 ring-white">🏫</div>
-            <p className="mt-3 text-sm font-bold text-gray-900">Register</p>
-            <p className="text-xs text-gray-500">2 minutes</p>
-          </div>
-          
-          {/* Arrow 1 */}
-          <div className="hidden text-gray-300 sm:block">
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-          </div>
-          <div className="block text-gray-300 sm:hidden rotate-90">
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+    {/* Bottom simplified flow */}
+    <div className="mx-auto mt-14 max-w-4xl">
+      <div className="rounded-2xl border border-gray-200 bg-gray-50/70 px-5 py-5 sm:px-7">
+        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-5">
+          {/* Register */}
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm ring-1 ring-gray-200">
+              <School className="h-4 w-4" strokeWidth={1.8} />
+            </div>
+
+            <span className="text-sm font-semibold text-gray-800">
+              Register
+            </span>
           </div>
 
-          {/* Item 2 */}
-          <div className="flex flex-col items-center text-center sm:flex-1">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-2xl ring-4 ring-white">👥</div>
-            <p className="mt-3 text-sm font-bold text-gray-900">Add People</p>
-            <p className="text-xs text-gray-500">One click</p>
+          <ArrowRight
+            className="h-4 w-4 rotate-90 text-gray-300 sm:rotate-0"
+            aria-hidden="true"
+          />
+
+          {/* Add people */}
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm ring-1 ring-gray-200">
+              <Users className="h-4 w-4" strokeWidth={1.8} />
+            </div>
+
+            <span className="text-sm font-semibold text-gray-800">
+              Add people
+            </span>
           </div>
 
-          {/* Arrow 2 */}
-          <div className="hidden text-gray-300 sm:block">
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-          </div>
-          <div className="block text-gray-300 sm:hidden rotate-90">
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+          <ArrowRight
+            className="h-4 w-4 rotate-90 text-gray-300 sm:rotate-0"
+            aria-hidden="true"
+          />
+
+          {/* Start */}
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm ring-1 ring-gray-200">
+              <Link2 className="h-4 w-4" strokeWidth={1.8} />
+            </div>
+
+            <span className="text-sm font-semibold text-gray-800">
+              Start using SNAP
+            </span>
           </div>
 
-          {/* Item 3 */}
-          <div className="flex flex-col items-center text-center sm:flex-1">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-2xl ring-4 ring-white">📱</div>
-            <p className="mt-3 text-sm font-bold text-gray-900">Share Link</p>
-            <p className="text-xs text-gray-500">Instant access</p>
-          </div>
+          <ArrowRight
+            className="h-4 w-4 rotate-90 text-gray-300 sm:rotate-0"
+            aria-hidden="true"
+          />
 
-          {/* Arrow 3 */}
-          <div className="hidden text-gray-300 sm:block">
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-          </div>
-          <div className="block text-gray-300 sm:hidden rotate-90">
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-          </div>
+          {/* Done */}
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-600 ring-1 ring-green-100">
+              <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+            </div>
 
-          {/* Item 4 */}
-          <div className="flex flex-col items-center text-center sm:flex-1">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-50 text-2xl ring-4 ring-white">✅</div>
-            <p className="mt-3 text-sm font-bold text-green-700">Done!</p>
-            <p className="text-xs text-gray-500">Ready to go</p>
+            <span className="text-sm font-semibold text-green-700">
+              Ready
+            </span>
           </div>
-        </div>
-        
-        {/* Connecting line for desktop */}
-        <div className="absolute left-0 right-0 top-1/2 hidden -translate-y-1/2 px-12 sm:block">
-          <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
         </div>
       </div>
     </div>
@@ -367,7 +939,7 @@ export default function HomePage() {
 </section>
 
      {/* ===== ⚖️ COMPARISON TABLE ===== */}
-<section className="relative py-24 overflow-hidden">
+<section className="relative py-14 sm:py-20 lg:py-24 overflow-hidden">
   {/* Subtle background gradient */}
   <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50 to-white pointer-events-none"></div>
   
@@ -485,48 +1057,162 @@ export default function HomePage() {
   </div>
 </section>
 
-      {/* ===== Features (COMPACT) ===== */}
-<section id="features" className="bg-gray-50 py-16">
-  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div className="mx-auto max-w-2xl text-center">
-      <span className="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-700 mb-3">
-        ✨ Complete Solution
+      {/* ===== Features ===== */}
+<section
+  id="features"
+  className="relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
+>
+  {/* Background decoration */}
+  <div
+    className="pointer-events-none absolute inset-0 opacity-[0.03]"
+    style={{
+      backgroundImage:
+        'radial-gradient(circle, #2563eb 1px, transparent 1px)',
+      backgroundSize: '28px 28px',
+    }}
+    aria-hidden="true"
+  />
+
+  <div
+    className="pointer-events-none absolute left-1/2 top-0 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-blue-100/70 blur-[120px]"
+    aria-hidden="true"
+  />
+
+  <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {/* Heading */}
+    <div className="mx-auto max-w-3xl text-center">
+      <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+        <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+        Complete solution
       </span>
-      <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-        Everything in one place
+
+      <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
+        Everything your school needs,
+        <span className="text-blue-600"> in one place</span>
       </h2>
-      <p className="mt-3 text-gray-600">
-        All the tools your school needs — no more juggling multiple systems.
+
+      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+        Manage students, attendance, fees, exams, notices, and more without
+        switching between registers, spreadsheets, and separate systems.
       </p>
     </div>
 
-    <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    {/* Features grid */}
+    <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {[
-        ['👨‍🎓', 'Students', 'Full profiles with class, section, roll no and parent contact.'],
-        ['📋', 'Attendance', 'Mark whole class in one tap. Filter by date, class and section.'],
-        ['💰', 'Fees & Receipts', 'Record payments and print receipts. See dues instantly.'],
-        ['📝', 'Exams & Marks', 'Enter marks subject-wise. Auto-calculate percentage and grades.'],
-        ['📄', 'Report Cards', 'Clean, printable report cards with GPA. Save as PDF.'],
-        ['📢', 'Notice Board', 'Post once. Everyone sees it — parents, teachers, students.'],
-        ['📥', 'Online Admissions', 'Parents apply online. Approve with one click.'],
-        ['🎂', 'Birthday Alerts', 'See today\'s and upcoming birthdays at a glance.'],
-        ['👩‍🏫', 'Teacher Portal', 'Teachers see their classes, mark attendance, enter marks.'],
-        ['🎓', 'Student Portal', 'Students check attendance, fees, download receipts.'],
-        ['📊', 'Smart Dashboard', 'See everything at a glance — attendance, fees, alerts.'],
-        ['🎨', 'Custom Branding', 'Your logo, colors, and theme. Professional and unique.'],
-      ].map(([icon, title, desc], i) => (
-        <div key={i} className="group rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-xl group-hover:bg-indigo-100 transition-colors">
-              {icon}
+        {
+          icon: Users,
+          title: 'Students',
+          desc: 'Manage student profiles, class, section, roll number, parent details, and more.',
+        },
+        {
+          icon: ClipboardCheck,
+          title: 'Attendance',
+          desc: 'Mark attendance quickly and view records by date, class, and section.',
+        },
+        {
+          icon: WalletCards,
+          title: 'Fees & Receipts',
+          desc: 'Record payments, track collections, view dues, and generate receipts.',
+        },
+        {
+          icon: FilePenLine,
+          title: 'Exams & Marks',
+          desc: 'Enter subject marks and automatically calculate percentage, grade, and GPA.',
+        },
+        {
+          icon: FileText,
+          title: 'Report Cards',
+          desc: 'Create clean, printable student report cards and save them as PDF.',
+        },
+        {
+          icon: Megaphone,
+          title: 'Notice Board',
+          desc: 'Publish school notices for students, teachers, parents, or everyone.',
+        },
+        {
+          icon: Inbox,
+          title: 'Online Admissions',
+          desc: 'Accept applications online and manage approvals from one admissions inbox.',
+        },
+        {
+          icon: Cake,
+          title: 'Birthday Alerts',
+          desc: 'See today’s and upcoming student birthdays directly from the dashboard.',
+        },
+        {
+          icon: GraduationCap,
+          title: 'Teacher Portal',
+          desc: 'Teachers can manage classes, attendance, students, marks, and daily school work.',
+        },
+        {
+          icon: UserRound,
+          title: 'Student Portal',
+          desc: 'Students can view attendance, fees, exams, receipts, notices, and profile details.',
+        },
+        {
+          icon: LayoutDashboard,
+          title: 'Smart Dashboard',
+          desc: 'See attendance, fee progress, alerts, admissions, and school activity at a glance.',
+        },
+        {
+          icon: Palette,
+          title: 'Custom Branding',
+          desc: 'Add your school logo, theme color, gallery, programs, and public school website.',
+        },
+      ].map((feature, i) => {
+        const Icon = feature.icon;
+
+        return (
+          <article
+            key={feature.title}
+            className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
+          >
+            {/* Hover accent */}
+            <div
+              className="absolute inset-x-0 top-0 h-1 scale-x-0 bg-blue-600 transition-transform duration-300 group-hover:scale-x-100"
+              aria-hidden="true"
+            />
+
+            <div className="flex items-start gap-4">
+              {/* Icon */}
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-blue-100 transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white group-hover:ring-blue-600">
+                <Icon className="h-5 w-5" strokeWidth={1.8} />
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-gray-950">
+                    {feature.title}
+                  </h3>
+
+                  <span className="text-[10px] font-medium text-gray-300">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs leading-5 text-gray-600">
+                  {feature.desc}
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-gray-600">{desc}</p>
-            </div>
-          </div>
-        </div>
-      ))}
+          </article>
+        );
+      })}
+    </div>
+
+    {/* Bottom message */}
+    <div className="mt-12 flex justify-center">
+      <div className="flex max-w-full items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-5 py-3 text-sm text-gray-600">
+        <LayoutDashboard
+          className="h-5 w-5 shrink-0 text-blue-600"
+          strokeWidth={1.8}
+        />
+
+        <span className="min-w-0">
+          One login. One dashboard. One connected school system.
+        </span>
+      </div>
     </div>
   </div>
 </section>
@@ -534,374 +1220,735 @@ export default function HomePage() {
       
 
       {/* ===== Testimonials ===== */}
-<section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-  <div className="mx-auto max-w-2xl text-center">
-    <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">Success Stories</p>
-    <h2 className="mt-2 text-3xl font-bold text-gray-900 sm:text-4xl">
-      What school leaders say about SNAP
-    </h2>
-    <p className="mt-4 text-lg text-gray-600">
-      Real feedback from principals who transformed their school management.
-    </p>
-  </div>
-  
-  <div className="mt-12 grid gap-8 md:grid-cols-3">
-    {/* Card 1 */}
-    <div className="relative rounded-2xl border border-gray-100 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-      <div className="absolute -top-4 left-8 text-6xl text-blue-100 select-none">❝</div>
-      <p className="relative z-10 text-sm leading-relaxed text-gray-700 italic">
-        "Before, making the fee dues list took 3 days of manual work every month. Now, I just open the Dues Report and know exactly who to call. It paid for itself in the very first month."
+<section className="relative overflow-hidden bg-white py-14 sm:py-20 lg:py-28">
+  {/* Background glow */}
+  <div
+    className="pointer-events-none absolute left-1/2 top-0 h-[380px] w-[380px] -translate-x-1/2 rounded-full bg-blue-100/60 blur-[120px]"
+    aria-hidden="true"
+  />
+
+  <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    {/* Heading */}
+    <div className="mx-auto max-w-3xl text-center">
+      <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+        <Quote className="h-4 w-4" strokeWidth={1.8} />
+        School stories
+      </span>
+
+      <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
+        What school leaders say
+        <span className="text-blue-600"> about SNAP</span>
+      </h2>
+
+      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+        Simple tools matter most when they make everyday school work less tiring.
       </p>
-      <div className="mt-6 flex items-center gap-3 border-t border-gray-100 pt-6">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 font-bold text-white shadow-md">
-          SG
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5">
-            <p className="text-sm font-semibold text-gray-900">Sunita Gurung</p>
-            <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <p className="text-xs text-gray-500">Principal · Shree Himalaya Secondary, Kaski</p>
-        </div>
-      </div>
     </div>
 
-    {/* Card 2 */}
-    <div className="relative rounded-2xl border border-gray-100 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-      <div className="absolute -top-4 left-8 text-6xl text-green-100 select-none">❝</div>
-      <p className="relative z-10 text-sm leading-relaxed text-gray-700 italic">
-        "Our teachers used to be scared of 'software'. But since they already use Facebook on their phones, this was incredibly easy to learn. Now, attendance is marked before the first bell even rings."
-      </p>
-      <div className="mt-6 flex items-center gap-3 border-t border-gray-100 pt-6">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600 font-bold text-white shadow-md">
-          RT
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5">
-            <p className="text-sm font-semibold text-gray-900">Ram Bahadur Thapa</p>
-            <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
+    {/* Cards */}
+    <div className="mt-14 grid gap-6 lg:grid-cols-3">
+      {/* Testimonial 1 */}
+      <article className="group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-blue-200 bg-blue-50/40 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
+            <Quote className="h-5 w-5" strokeWidth={2} />
           </div>
-          <p className="text-xs text-gray-500">Vice Principal · Janata Basic School, Udayapur</p>
+
+          <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100">
+            Fees
+          </span>
         </div>
-      </div>
+
+        <p className="mt-7 text-[15px] leading-7 text-gray-700">
+          “Before SNAP, we had to check several registers just to know who still
+          had fees due. Now I can see the list in one place and call parents
+          directly. It saves a lot of unnecessary back-and-forth.”
+        </p>
+
+        <div className="mt-auto pt-8">
+          <div className="border-t border-blue-100 pt-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+                SG
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="truncate text-sm font-semibold text-gray-950">
+                    Sunita Gurung
+                  </p>
+
+                  <BadgeCheck
+                    className="h-4 w-4 shrink-0 text-blue-600"
+                    strokeWidth={2}
+                  />
+                </div>
+
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Principal
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">
+              <span className="inline-flex items-center gap-1.5">
+                <School className="h-3.5 w-3.5" strokeWidth={1.8} />
+                Shree Himalaya Secondary
+              </span>
+
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" strokeWidth={1.8} />
+                Kaski
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      {/* Testimonial 2 */}
+      <article className="group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+            <Quote className="h-5 w-5" strokeWidth={2} />
+          </div>
+
+          <span className="rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600 ring-1 ring-gray-200">
+            Attendance
+          </span>
+        </div>
+
+        <p className="mt-7 text-[15px] leading-7 text-gray-700">
+          “I thought some of our teachers would struggle with a new system, but
+          they understood it much faster than I expected. Attendance is probably
+          the part they use the most now.”
+        </p>
+
+        <div className="mt-auto pt-8">
+          <div className="border-t border-gray-100 pt-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-900 text-sm font-bold text-white">
+                RT
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="truncate text-sm font-semibold text-gray-950">
+                    Ram Bahadur Thapa
+                  </p>
+
+                  <BadgeCheck
+                    className="h-4 w-4 shrink-0 text-blue-600"
+                    strokeWidth={2}
+                  />
+                </div>
+
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Vice Principal
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">
+              <span className="inline-flex items-center gap-1.5">
+                <School className="h-3.5 w-3.5" strokeWidth={1.8} />
+                Janata Basic School
+              </span>
+
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" strokeWidth={1.8} />
+                Udayapur
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      {/* Testimonial 3 */}
+      <article className="group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+            <Quote className="h-5 w-5" strokeWidth={2} />
+          </div>
+
+          <span className="rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600 ring-1 ring-gray-200">
+            School website
+          </span>
+        </div>
+
+        <p className="mt-7 text-[15px] leading-7 text-gray-700">
+          “A lot of our parents are outside Nepal, so keeping them informed was
+          always difficult. Having one school page for notices and updates has
+          made communication much easier for us.”
+        </p>
+
+        <div className="mt-auto pt-8">
+          <div className="border-t border-gray-100 pt-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-900 text-sm font-bold text-white">
+                MT
+              </div>
+
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="truncate text-sm font-semibold text-gray-950">
+                    Maya Tamang
+                  </p>
+
+                  <BadgeCheck
+                    className="h-4 w-4 shrink-0 text-blue-600"
+                    strokeWidth={2}
+                  />
+                </div>
+
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Principal
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">
+              <span className="inline-flex items-center gap-1.5">
+                <School className="h-3.5 w-3.5" strokeWidth={1.8} />
+                Everest Model Academy
+              </span>
+
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" strokeWidth={1.8} />
+                Morang
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
     </div>
 
-    {/* Card 3 */}
-    <div className="relative rounded-2xl border border-gray-100 bg-white p-8 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-      <div className="absolute -top-4 left-8 text-6xl text-purple-100 select-none">❝</div>
-      <p className="relative z-10 text-sm leading-relaxed text-gray-700 italic">
-        "Many of our parents work abroad — in Qatar, Korea, or Malaysia. Being able to open the school's webpage and instantly see notices and their child's report card means everything to them."
+    {/* Bottom trust line */}
+    <div className="mt-10 flex justify-center">
+      <p className="max-w-2xl text-center text-sm leading-6 text-gray-500">
+        The best school software should feel simple enough to use every day,
+        not like another system staff have to fight with.
       </p>
-      <div className="mt-6 flex items-center gap-3 border-t border-gray-100 pt-6">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-600 font-bold text-white shadow-md">
-          MT
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5">
-            <p className="text-sm font-semibold text-gray-900">Maya Tamang</p>
-            <svg className="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <p className="text-xs text-gray-500">Principal · Everest Model Academy, Morang</p>
-        </div>
-      </div>
     </div>
   </div>
 </section>
 
       {/* ===== Pricing ===== */}
-<section id="pricing" className="bg-gray-50 py-20">
-  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<section
+  id="pricing"
+  className="relative scroll-mt-24 overflow-hidden bg-gray-50/70 py-14 sm:py-20 lg:py-28"
+>
+  {/* Background decoration */}
+  <div
+    className="pointer-events-none absolute inset-0 opacity-[0.035]"
+    style={{
+      backgroundImage:
+        'radial-gradient(circle, #2563eb 1px, transparent 1px)',
+      backgroundSize: '28px 28px',
+    }}
+    aria-hidden="true"
+  />
+
+  <div
+    className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-blue-100 blur-[120px]"
+    aria-hidden="true"
+  />
+
+  <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     {/* Heading */}
     <div className="mx-auto max-w-3xl text-center">
-      <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-        Simple pricing for every school
+      <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+        <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+        Simple pricing
+      </span>
+
+      <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
+        One SNAP.
+        <span className="text-blue-600"> Pricing based on school size.</span>
       </h2>
-      <p className="mt-4 text-lg text-gray-600">
-        Start free. Upgrade as your school grows. No hidden fees.
+
+      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
+        Every school gets full access to SNAP for 30 days. After that, your
+        price depends only on how many students your school has.
       </p>
+    </div>
+
+    {/* Free trial banner */}
+    <div className="mx-auto mt-10 max-w-4xl">
+      <div className="relative overflow-hidden rounded-2xl border border-blue-200 bg-blue-600 px-6 py-6 text-white shadow-lg shadow-blue-600/10 sm:px-8">
+        <div
+          className="absolute right-0 top-0 h-32 w-32 rounded-full bg-white/10 blur-2xl"
+          aria-hidden="true"
+        />
+
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
+              <CalendarDays className="h-5 w-5" strokeWidth={1.8} />
+            </div>
+
+            <div>
+              <p className="text-lg font-bold">
+                Your first 30 days are completely free
+              </p>
+
+              <p className="mt-1 max-w-xl text-sm leading-6 text-blue-100">
+                Try attendance, fees, exams, report cards, notices, admissions,
+                teacher accounts and everything else before paying.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/auth/signup"
+            className="flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 sm:inline-flex sm:w-auto"
+          >
+            Start free
+            <ArrowRight className="h-4 w-4" strokeWidth={2} />
+          </Link>
+        </div>
+      </div>
     </div>
 
     {/* Billing toggle */}
     <div className="mt-10 flex justify-center">
       <div className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 shadow-sm">
         <button
+          type="button"
           onClick={() => setYearly(false)}
-          className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
-            !yearly ? 'bg-blue-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
+          className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all ${
+            !yearly
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-950'
           }`}
         >
           Monthly
         </button>
+
         <button
+          type="button"
           onClick={() => setYearly(true)}
-          className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition ${
-            yearly ? 'bg-blue-600 text-white shadow' : 'text-gray-600 hover:text-gray-900'
+          className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all ${
+            yearly
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'text-gray-600 hover:text-gray-950'
           }`}
         >
           Yearly
-          <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-            yearly ? 'bg-green-400 text-green-950' : 'bg-green-100 text-green-700'
-          }`}>
-            −35%
+
+          <span
+            className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+              yearly
+                ? 'bg-green-400 text-green-950'
+                : 'bg-green-100 text-green-700'
+            }`}
+          >
+            2 months free
           </span>
         </button>
       </div>
     </div>
 
     {/* Pricing cards */}
-    <div className="mt-12 grid gap-6 lg:grid-cols-4">
+    <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
       {/* FREE */}
-      <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <article className="flex h-full flex-col rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-gray-500">Free</p>
-          <p className="mt-4 text-4xl font-extrabold text-gray-900">
-            NPR 0
-            <span className="text-base font-medium text-gray-500">/forever</span>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-gray-500">
+            Free
           </p>
-          <p className="mt-2 text-sm text-gray-500">Perfect to get started</p>
+
+          <div className="mt-5">
+            <div className="flex items-end gap-1">
+              <span className="text-4xl font-bold tracking-tight text-gray-950">
+                NPR 0
+              </span>
+
+              <span className="pb-1 text-sm font-medium text-gray-500">
+                / forever
+              </span>
+            </div>
+          </div>
+
+          <p className="mt-3 text-sm font-semibold text-blue-600">
+            Up to 100 students
+          </p>
+
+          <p className="mt-3 text-sm leading-6 text-gray-500">
+            Small schools can continue using SNAP without a monthly fee.
+          </p>
         </div>
-        <ul className="mt-6 flex-1 space-y-3 text-sm">
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>School website</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Up to 50 students</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Notice board</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Principal login</span>
-          </li>
-          <li className="flex items-start gap-2 text-gray-400">
-            <span>✗</span>
-            <span>Attendance tracking</span>
-          </li>
-          <li className="flex items-start gap-2 text-gray-400">
-            <span>✗</span>
-            <span>Fee management</span>
-          </li>
-          <li className="flex items-start gap-2 text-gray-400">
-            <span>✗</span>
-            <span>Exams & report cards</span>
-          </li>
+
+        <div className="my-6 h-px bg-gray-100" />
+
+        <ul className="flex-1 space-y-3">
+          {[
+            'All core SNAP features',
+            'Student management',
+            'Attendance & fees',
+            'Exams & report cards',
+            'Teacher & student portals',
+          ].map((feature) => (
+            <li
+              key={feature}
+              className="flex items-start gap-2.5 text-sm text-gray-700"
+            >
+              <Check
+                className="mt-0.5 h-4 w-4 shrink-0 text-green-600"
+                strokeWidth={2.2}
+              />
+              <span>{feature}</span>
+            </li>
+          ))}
         </ul>
+
         <Link
           href="/auth/signup"
-          className="mt-6 block rounded-lg border border-blue-600 py-2.5 text-center text-sm font-semibold text-blue-600 hover:bg-blue-50"
+          className="mt-7 flex items-center justify-center rounded-xl border border-blue-600 px-4 py-3 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
         >
-          Start free
+          Start 30-day trial
         </Link>
-      </div>
+      </article>
 
-      {/* BASIC - 200 students */}
-      <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      {/* SMALL */}
+      <article className="flex h-full flex-col rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">Basic</p>
-          <p className="mt-4 text-4xl font-extrabold text-gray-900">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-600">
+            Small
+          </p>
+
+          <div className="mt-5">
             {yearly ? (
               <>
-                NPR {Math.round(300 * 0.65).toLocaleString()}
-                <span className="text-base font-medium text-gray-500">/month</span>
+                <div className="flex items-end gap-1">
+                  <span className="text-4xl font-bold tracking-tight text-gray-950">
+                    NPR 2,990
+                  </span>
+
+                  <span className="pb-1 text-sm font-medium text-gray-500">
+                    / year
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs text-green-700">
+                  Save NPR 598 per year
+                </p>
               </>
             ) : (
-              <>
-                NPR 300
-                <span className="text-base font-medium text-gray-500">/month</span>
-              </>
+              <div className="flex items-end gap-1">
+                <span className="text-4xl font-bold tracking-tight text-gray-950">
+                  NPR 299
+                </span>
+
+                <span className="pb-1 text-sm font-medium text-gray-500">
+                  / month
+                </span>
+              </div>
             )}
+          </div>
+
+          <p className="mt-3 text-sm font-semibold text-blue-600">
+            101–300 students
           </p>
-          {yearly ? (
-            <p className="mt-2 text-sm text-gray-500">
-              <span className="line-through">NPR 300</span> · billed NPR {(300 * 12 * 0.65).toLocaleString()}/year
-            </p>
-          ) : (
-            <p className="mt-2 text-sm text-gray-500">billed monthly</p>
-          )}
-          <p className="mt-2 text-xs font-semibold text-blue-600">Up to 200 students</p>
+
+          <p className="mt-3 text-sm leading-6 text-gray-500">
+            For smaller schools ready to manage everyday work digitally.
+          </p>
         </div>
-        <ul className="mt-6 flex-1 space-y-3 text-sm">
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Everything in Free</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Up to 200 students</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Attendance tracking</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Teacher & student logins</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Basic reports</span>
-          </li>
-          <li className="flex items-start gap-2 text-gray-400">
-            <span>✗</span>
-            <span>Fee management</span>
-          </li>
-          <li className="flex items-start gap-2 text-gray-400">
-            <span>✗</span>
-            <span>Exams & report cards</span>
-          </li>
+
+        <div className="my-6 h-px bg-gray-100" />
+
+        <ul className="flex-1 space-y-3">
+          {[
+            'Everything in SNAP',
+            'Attendance tracking',
+            'Fee management & receipts',
+            'Exams & report cards',
+            'Teacher & student portals',
+          ].map((feature) => (
+            <li
+              key={feature}
+              className="flex items-start gap-2.5 text-sm text-gray-700"
+            >
+              <Check
+                className="mt-0.5 h-4 w-4 shrink-0 text-green-600"
+                strokeWidth={2.2}
+              />
+              <span>{feature}</span>
+            </li>
+          ))}
         </ul>
+
         <Link
           href="/auth/signup"
-          className="mt-6 block rounded-lg border border-blue-600 py-2.5 text-center text-sm font-semibold text-blue-600 hover:bg-blue-50"
+          className="mt-7 flex items-center justify-center rounded-xl border border-blue-600 px-4 py-3 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
         >
-          Get started
+          Start 30-day trial
         </Link>
-      </div>
+      </article>
 
-      {/* MEDIUM - 500 students (POPULAR) */}
-      <div className="relative flex flex-col rounded-2xl border-2 border-blue-600 bg-white p-6 shadow-lg">
-        <p className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-blue-600 px-4 py-1 text-xs font-semibold text-white">
-          MOST POPULAR
-        </p>
+      {/* GROWTH */}
+      <article className="relative flex h-full flex-col rounded-[24px] border-2 border-blue-600 bg-white p-6 shadow-xl shadow-blue-600/10 transition-all duration-300 hover:-translate-y-1">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-blue-600 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
+          Most popular
+        </div>
+
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">Medium</p>
-          <p className="mt-4 text-4xl font-extrabold text-gray-900">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-600">
+            Growth
+          </p>
+
+          <div className="mt-5">
             {yearly ? (
               <>
-                NPR {Math.round(500 * 0.65).toLocaleString()}
-                <span className="text-base font-medium text-gray-500">/month</span>
+                <div className="flex items-end gap-1">
+                  <span className="text-4xl font-bold tracking-tight text-gray-950">
+                    NPR 4,990
+                  </span>
+
+                  <span className="pb-1 text-sm font-medium text-gray-500">
+                    / year
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs font-medium text-green-700">
+                  Save NPR 998 per year
+                </p>
               </>
             ) : (
-              <>
-                NPR 500
-                <span className="text-base font-medium text-gray-500">/month</span>
-              </>
+              <div className="flex items-end gap-1">
+                <span className="text-4xl font-bold tracking-tight text-gray-950">
+                  NPR 499
+                </span>
+
+                <span className="pb-1 text-sm font-medium text-gray-500">
+                  / month
+                </span>
+              </div>
             )}
+          </div>
+
+          <p className="mt-3 text-sm font-semibold text-blue-600">
+            301–700 students
           </p>
-          {yearly ? (
-            <p className="mt-2 text-sm text-gray-500">
-              <span className="line-through">NPR 500</span> · billed NPR {(500 * 12 * 0.65).toLocaleString()}/year
-            </p>
-          ) : (
-            <p className="mt-2 text-sm text-gray-500">billed monthly</p>
-          )}
-          <p className="mt-2 text-xs font-semibold text-blue-600">Up to 500 students</p>
+
+          <p className="mt-3 text-sm leading-6 text-gray-500">
+            A good fit for growing schools with more students and staff.
+          </p>
         </div>
-        <ul className="mt-6 flex-1 space-y-3 text-sm">
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Everything in Basic</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Up to 500 students</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Fee management & receipts</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Exams & marks entry</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Report cards (PDF)</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Online admissions</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Priority support</span>
-          </li>
+
+        <div className="my-6 h-px bg-blue-100" />
+
+        <ul className="flex-1 space-y-3">
+          {[
+            'Everything in SNAP',
+            'Attendance tracking',
+            'Fee management & receipts',
+            'Exams & report cards',
+            'Admissions & school website',
+          ].map((feature) => (
+            <li
+              key={feature}
+              className="flex items-start gap-2.5 text-sm text-gray-700"
+            >
+              <Check
+                className="mt-0.5 h-4 w-4 shrink-0 text-green-600"
+                strokeWidth={2.2}
+              />
+              <span>{feature}</span>
+            </li>
+          ))}
         </ul>
+
         <Link
           href="/auth/signup"
-          className="mt-6 block rounded-lg bg-blue-600 py-2.5 text-center text-sm font-semibold text-white hover:bg-blue-700"
+          className="mt-7 flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
-          Get started
+          Start 30-day trial
+          <ArrowRight className="h-4 w-4" strokeWidth={2} />
         </Link>
-      </div>
+      </article>
 
-      {/* ENTERPRISE - 1000+ students */}
-      <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      {/* LARGE */}
+      <article className="flex h-full flex-col rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-gray-700">Enterprise</p>
-          <p className="mt-4 text-4xl font-extrabold text-gray-900">
-            Custom
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-600">
+            Large
           </p>
-          <p className="mt-2 text-sm text-gray-500">For large schools</p>
-          <p className="mt-2 text-xs font-semibold text-blue-600">1000+ students</p>
+
+          <div className="mt-5">
+            {yearly ? (
+              <>
+                <div className="flex items-end gap-1">
+                  <span className="text-4xl font-bold tracking-tight text-gray-950">
+                    NPR 7,990
+                  </span>
+
+                  <span className="pb-1 text-sm font-medium text-gray-500">
+                    / year
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs font-medium text-green-700">
+                  Save NPR 1,598 per year
+                </p>
+              </>
+            ) : (
+              <div className="flex items-end gap-1">
+                <span className="text-4xl font-bold tracking-tight text-gray-950">
+                  NPR 799
+                </span>
+
+                <span className="pb-1 text-sm font-medium text-gray-500">
+                  / month
+                </span>
+              </div>
+            )}
+          </div>
+
+          <p className="mt-3 text-sm font-semibold text-blue-600">
+            701–1,500 students
+          </p>
+
+          <p className="mt-3 text-sm leading-6 text-gray-500">
+            Built for larger schools managing more classes and school activity.
+          </p>
         </div>
-        <ul className="mt-6 flex-1 space-y-3 text-sm">
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Everything in Medium</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Unlimited students</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Custom branding</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Advanced analytics</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Dedicated support</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>On-site training</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-green-600 font-bold">✓</span>
-            <span>Custom integrations</span>
-          </li>
+
+        <div className="my-6 h-px bg-gray-100" />
+
+        <ul className="flex-1 space-y-3">
+          {[
+            'Everything in SNAP',
+            'Up to 1,500 students',
+            'All school management tools',
+            'Reports & analytics',
+            'Priority support',
+          ].map((feature) => (
+            <li
+              key={feature}
+              className="flex items-start gap-2.5 text-sm text-gray-700"
+            >
+              <Check
+                className="mt-0.5 h-4 w-4 shrink-0 text-green-600"
+                strokeWidth={2.2}
+              />
+              <span>{feature}</span>
+            </li>
+          ))}
         </ul>
+
+        <Link
+          href="/auth/signup"
+          className="mt-7 flex items-center justify-center rounded-xl border border-blue-600 px-4 py-3 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+        >
+          Start 30-day trial
+        </Link>
+      </article>
+
+      {/* ENTERPRISE */}
+      <article className="flex h-full flex-col rounded-[24px] border border-gray-200 bg-gray-950 p-6 text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-400">
+            Enterprise
+          </p>
+
+          <p className="mt-5 text-4xl font-bold tracking-tight">
+            Let's talk
+          </p>
+
+          <p className="mt-3 text-sm font-semibold text-blue-400">
+            1,501+ students
+          </p>
+
+          <p className="mt-3 text-sm leading-6 text-gray-400">
+            For large institutions that need additional support and flexibility.
+          </p>
+        </div>
+
+        <div className="my-6 h-px bg-white/10" />
+
+        <ul className="flex-1 space-y-3">
+          {[
+            'Everything in SNAP',
+            '1,501+ students',
+            'Priority onboarding',
+            'Dedicated support',
+            'Custom requirements',
+          ].map((feature) => (
+            <li
+              key={feature}
+              className="flex items-start gap-2.5 text-sm text-gray-300"
+            >
+              <Check
+                className="mt-0.5 h-4 w-4 shrink-0 text-green-400"
+                strokeWidth={2.2}
+              />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+
         <a
-          href="https://wa.me/9779806532844?text=Hi%2C%20I%20want%20to%20know%20about%20SNAP%20Enterprise%20plan%20for%20my%20school"
+          href="https://wa.me/9779806532844?text=Hi%2C%20I%20want%20to%20know%20about%20SNAP%20Enterprise%20for%20my%20school"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 block rounded-lg bg-green-600 py-2.5 text-center text-sm font-semibold text-white hover:bg-green-700"
+          className="mt-7 flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-950 transition hover:bg-gray-100"
         >
-          💬 Contact Us
+          <MessageCircle className="h-4 w-4" strokeWidth={2} />
+          Contact us
         </a>
+      </article>
+    </div>
+
+    {/* All plans explanation */}
+    <div className="mx-auto mt-12 max-w-4xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-7">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+          <ShieldCheck className="h-5 w-5" strokeWidth={1.8} />
+        </div>
+
+        <div>
+          <h3 className="text-base font-bold text-gray-950">
+            Every school gets the full SNAP experience
+          </h3>
+
+          <p className="mt-2 text-sm leading-6 text-gray-600">
+            We don't lock important school features behind expensive plans.
+            Attendance, fees, exams, report cards, notices, admissions, teacher
+            accounts, student accounts and your school website are included.
+            Your price changes mainly with the number of students.
+          </p>
+        </div>
       </div>
     </div>
 
-    {/* Savings message */}
-    {yearly && (
-      <p className="mt-6 text-center text-sm font-medium text-green-700">
-        🎉 Save 35% with annual billing
-      </p>
-    )}
+    {/* Promise line */}
+    <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-gray-600">
+      <span className="inline-flex items-center gap-2">
+        <Check className="h-4 w-4 text-green-600" strokeWidth={2} />
+        30 days free
+      </span>
 
-    {/* The promise line */}
-    <p className="mt-12 text-center text-base font-medium text-gray-700">
-      No setup fee · Cancel anytime · Your data is always yours
-    </p>
+      <span className="inline-flex items-center gap-2">
+        <Check className="h-4 w-4 text-green-600" strokeWidth={2} />
+        No setup fee
+      </span>
+
+      <span className="inline-flex items-center gap-2">
+        <Check className="h-4 w-4 text-green-600" strokeWidth={2} />
+        Cancel anytime
+      </span>
+
+      <span className="inline-flex items-center gap-2">
+        <Check className="h-4 w-4 text-green-600" strokeWidth={2} />
+        Your data stays yours
+      </span>
+    </div>
   </div>
 </section>
 
 {/* ===== FAQ ===== */}
-<section id="faq" className="relative bg-gradient-to-b from-gray-50 to-white py-24">
+<section id="faq" className="scroll-mt-24">
   {/* Subtle background pattern */}
   <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(#4f46e5 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
   
@@ -965,12 +2012,12 @@ export default function HomePage() {
     <div className="mt-16 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 text-center">
       <h3 className="text-xl font-bold text-gray-900">Still have questions?</h3>
       <p className="mt-2 text-gray-600">We're here to help. Reach out anytime.</p>
-      <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+      <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
         <a
           href="https://wa.me/9779806532844?text=Hi%2C%20I%20have%20a%20question%20about%20SNAP"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-green-700"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-green-700"
         >
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
@@ -979,7 +2026,7 @@ export default function HomePage() {
         </a>
         <a
           href="tel:+9779806532844"
-          className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -1015,7 +2062,7 @@ export default function HomePage() {
           <div className="grid gap-10 md:grid-cols-4">
             <div>
               <div className="flex items-center gap-3">
-                <img src="/logo3.png" alt="SNAP logo" className="h-10 w-auto" />
+                <img src="/logo1.png" alt="SNAP logo" className="h-10 w-auto" />
                 <img src="/logo4.png" alt="SNAP – School Nepal Administration Platform" className="h-10 w-auto" />
               </div>
               <p className="mt-3 text-sm leading-relaxed">
