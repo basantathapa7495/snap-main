@@ -34,6 +34,17 @@ interface School {
   district: string | null;
 }
 
+function formatSchoolName(name?: string | null) {
+  const shortenedName = name
+    ?.replace(/\b(?:primary|secondary)\s+school\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  if (!shortenedName) return 'School Name';
+
+  return shortenedName.charAt(0).toUpperCase() + shortenedName.slice(1);
+}
+
 export default function TopBar() {
   const router = useRouter();
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
@@ -110,7 +121,7 @@ export default function TopBar() {
       {/* Left: School Info */}
       <div className="flex flex-col shrink-0 max-w-[250px]">
         <h2 className="text-lg font-bold text-gray-900 leading-tight truncate">
-          {isLoading ? 'Loading...' : (school?.name || 'School Name')}
+          {isLoading ? 'Loading...' : formatSchoolName(school?.name)}
         </h2>
         <p className="text-xs text-gray-500 leading-tight truncate">
           {isLoading ? '' : (`${school?.municipality || 'City'}, ${school?.district || 'District'}`)}
