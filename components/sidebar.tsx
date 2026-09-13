@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -20,11 +21,8 @@ import {
   Folder,
   Settings,
   HelpCircle,
-  LogOut,
   Menu,
   X,
-  Globe,
-  ExternalLink,
   PenLine,
   Clock,
   MessageSquare,
@@ -47,6 +45,17 @@ type SchoolInfo = {
   name: string;
   slug: string | null;
 };
+
+function formatSchoolName(name?: string | null) {
+  const shortenedName = name
+    ?.replace(/\b(?:primary|secondary)\s+school\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  if (!shortenedName) return 'My School';
+
+  return shortenedName.charAt(0).toUpperCase() + shortenedName.slice(1);
+}
 
 // =========================================================
 // PRINCIPAL MENU
@@ -156,17 +165,6 @@ export default function Sidebar() {
     activeMenu = principalMenu;
   }
 
-  const currentPortal = isTeacherPath
-    ? 'Teacher'
-    : isStudentPath
-      ? 'Student'
-      : 'Principal';
-
-  // Close mobile menu after navigation
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
-
   // =========================================================
   // FETCH SCHOOL NAME + SLUG
   // =========================================================
@@ -231,21 +229,6 @@ export default function Sidebar() {
   }, []);
 
   // =========================================================
-  // LOGOUT
-  // =========================================================
-
-  async function handleLogout() {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error('Logout error:', error);
-      return;
-    }
-
-    window.location.href = '/auth/login';
-  }
-
-  // =========================================================
   // ACTIVE MENU ITEM
   // =========================================================
 
@@ -279,9 +262,11 @@ export default function Sidebar() {
           </button>
 
           <div className="flex items-center gap-2">
-            <img
+            <Image
               src="/logo1.png"
               alt="SNAP Logo"
+              width={32}
+              height={32}
               className="h-8 w-8 object-contain"
             />
             <span className="text-base font-bold text-gray-900">SNAP</span>
@@ -290,7 +275,7 @@ export default function Sidebar() {
 
         <div className="flex min-w-0 flex-col items-end">
           <span className="max-w-[140px] truncate text-xs font-semibold text-gray-700">
-            {school?.name || 'My School'}
+            {formatSchoolName(school?.name)}
           </span>
 
         </div>
@@ -317,9 +302,11 @@ export default function Sidebar() {
         {/* LOGO HEADER */}
         <div className="flex items-center justify-between border-b border-gray-100 px-5 pb-4 pt-5">
           <div className="flex items-center gap-2.5">
-            <img
+            <Image
               src="/logo1.png"
               alt="SNAP Logo"
+              width={48}
+              height={48}
               className="h-12 w-12 object-contain"
             />
 
@@ -346,7 +333,7 @@ export default function Sidebar() {
         {/* ===================================================
             NAVIGATION MENU
         =================================================== */}
-        <nav className="flex-1 overflow-y-auto px-3 py-3">
+        <nav className="flex-1 overflow-y-auto px-3 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {activeMenu.map((section, sectionIndex) => (
             <div key={sectionIndex} className="mb-2">
               <ul className="space-y-[2px]">
@@ -358,6 +345,7 @@ export default function Sidebar() {
                     <li key={item.href}>
                       <Link
                         href={item.href}
+                        onClick={() => setMobileOpen(false)}
                         className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[0.85rem] transition-all duration-200 ${
                           isActive
                             ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
@@ -396,6 +384,7 @@ export default function Sidebar() {
           {isPrincipalPath && (
             <Link
               href="/principal/settings"
+              onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[0.85rem] transition ${
                 principalSettingsActive
                   ? 'bg-blue-600 text-white'
@@ -411,14 +400,6 @@ export default function Sidebar() {
             </Link>
           )}
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[0.85rem] text-red-600 transition hover:bg-red-50"
-          >
-            <LogOut className="h-[18px] w-[18px]" />
-            <span className="font-medium">Log Out</span>
-          </button>
         </div>
       </aside>
     </>
