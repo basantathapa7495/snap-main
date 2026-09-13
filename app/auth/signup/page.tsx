@@ -91,6 +91,7 @@ export default function SignupPage() {
           principal: fullName,
           school_email: schoolEmail || null,
           pan_number: panNumber || null,
+          is_approved: true,
         })
         .select()
         .single();
@@ -122,7 +123,7 @@ export default function SignupPage() {
         await supabase.from('classes').insert(classRows);
       }
 
-      router.push('/pending');
+      router.replace('/principal');
     } catch (err: unknown) {
       setError(
         'Something went wrong: ' +
@@ -209,7 +210,7 @@ export default function SignupPage() {
                   Register your school
                 </h2>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
-                  Complete the three sections below. Your school will be reviewed before activation.
+                  Complete the three sections below and open your school dashboard immediately.
                 </p>
               </div>
               <Link href="/" className="hidden items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-500 transition hover:bg-white hover:text-slate-900 hover:shadow-sm lg:flex">
@@ -336,7 +337,7 @@ export default function SignupPage() {
                   <Globe2 className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Your school workspace is included</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">We will prepare your dashboard and school website after review.</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">Your dashboard opens immediately with full access to your 30-day free trial.</p>
                   </div>
                 </div>
                 <button type="submit" disabled={loading} className="group mt-4 flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 sm:mt-0 sm:w-auto">
