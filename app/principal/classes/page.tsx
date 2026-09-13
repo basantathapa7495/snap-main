@@ -1,193 +1,801 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
-import { 
-  Search, Plus, MoreVertical, Trash2, Edit3, Users, BookOpen, 
-  GraduationCap, UserX, Filter, ChevronRight, AlertCircle, CheckCircle
-} from 'lucide-react';
-import Sidebar from '@/components/sidebar';
-import TopBar from '@/components/TopBar';
+import { useMemo, useState } from "react";
+import {
+  AlertCircle,
+  BookOpen,
+  CheckCircle2,
+  Edit3,
+  GraduationCap,
+  Plus,
+  Search,
+  Trash2,
+  UserRound,
+  Users,
+  X,
+} from "lucide-react";
+import Sidebar from "@/components/sidebar";
+import TopBar from "@/components/TopBar";
 
-// --- Mock Data Generator ---
-const generateMockClasses = () => {
-  const teachers = ['Ram Sharma', 'Sita Poudel', 'Hari Thapa', 'Gita Rai', 'Bishnu KC'];
-  return Array.from({ length: 10 }, (_, i) => ({
-    id: `class-${i + 1}`,
-    name: `Class ${i + 1}`,
-    sections: [
-      { id: `s-${i+1}-a`, name: 'A', teacher: teachers[i % 5], students: Math.floor(Math.random() * 10) + 20 },
-      { id: `s-${i+1}-b`, name: 'B', teacher: i % 2 === 0 ? teachers[(i + 1) % 5] : null, students: Math.floor(Math.random() * 10) + 15 },
-      ...(i > 4 ? [{ id: `s-${i+1}-c`, name: 'C', teacher: teachers[(i + 2) % 5], students: Math.floor(Math.random() * 10) + 10 }] : [])
-    ]
-  }));
+type Section = {
+  id: string;
+  name: string;
+  teacher: string | null;
+  students: number;
 };
 
+type SchoolClass = {
+  id: string;
+  name: string;
+  sections: Section[];
+};
+
+type SectionForm = {
+  name: string;
+  teacher: string;
+  students: string;
+};
+
+const initialClasses: SchoolClass[] = [
+  {
+    id: "class-1",
+    name: "Class 1",
+    sections: [
+      { id: "class-1-a", name: "A", teacher: "Sita Poudel", students: 28 },
+      { id: "class-1-b", name: "B", teacher: "Ram Sharma", students: 25 },
+    ],
+  },
+  {
+    id: "class-2",
+    name: "Class 2",
+    sections: [
+      { id: "class-2-a", name: "A", teacher: "Gita Rai", students: 31 },
+      { id: "class-2-b", name: "B", teacher: null, students: 24 },
+    ],
+  },
+  {
+    id: "class-3",
+    name: "Class 3",
+    sections: [
+      { id: "class-3-a", name: "A", teacher: "Hari Thapa", students: 29 },
+    ],
+  },
+  {
+    id: "class-4",
+    name: "Class 4",
+    sections: [
+      { id: "class-4-a", name: "A", teacher: "Bishnu K.C.", students: 30 },
+      { id: "class-4-b", name: "B", teacher: null, students: 22 },
+    ],
+  },
+  {
+    id: "class-5",
+    name: "Class 5",
+    sections: [
+      { id: "class-5-a", name: "A", teacher: "Sita Poudel", students: 32 },
+      { id: "class-5-b", name: "B", teacher: "Ram Sharma", students: 27 },
+    ],
+  },
+  {
+    id: "class-6",
+    name: "Class 6",
+    sections: [
+      { id: "class-6-a", name: "A", teacher: "Gita Rai", students: 34 },
+    ],
+  },
+];
+
+const emptySection: SectionForm = {
+  name: "",
+  teacher: "",
+  students: "",
+};
+
+function titleCase(value: string) {
+  return value
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export default function ClassesPage() {
-  const [classes] = useState(generateMockClasses());
-  const [searchQuery, setSearchQuery] = useState('');
+  const [classes, setClasses] = useState<SchoolClass[]>(initialClasses);
+  const [search, setSearch] = useState("");
+  const [assignment, setAssignment] = useState<
+    "All" | "Assigned" | "Unassigned"
+  >("All");
+  const [classModalOpen, setClassModalOpen] = useState(false);
+  const [className, setClassName] = useState("");
+  const [activeClass, setActiveClass] = useState<SchoolClass | null>(null);
+  const [editingSection, setEditingSection] = useState<Section | null>(null);
+  const [sectionForm, setSectionForm] =
+    useState<SectionForm>(emptySection);
+  const [notice, setNotice] = useState("");
 
-  // Filter Logic
   const filteredClasses = useMemo(() => {
-    return classes.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [classes, searchQuery]);
+    const query = search.trim().toLowerCase();
 
-  // Stats Calculation
-  const stats = {
-    totalClasses: classes.length,
-    totalSections: classes.reduce((acc, c) => acc + c.sections.length, 0),
-    totalStudents: classes.reduce((acc, c) => acc + c.sections.reduce((sAcc, s) => sAcc + s.students, 0), 0),
-    unassignedSections: classes.reduce((acc, c) => acc + c.sections.filter(s => !s.teacher).length, 0),
-  };
+    return classes
+      .map((schoolClass) => ({
+        ...schoolClass,
+        sections: schoolClass.sections.filter((section) => {
+          const matchesQuery =
+            !query ||
+            schoolClass.name.toLowerCase().includes(query) ||
+            section.name.toLowerCase().includes(query) ||
+            section.teacher?.toLowerCase().includes(query);
 
-  const getInitials = (name: string) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?';
-  const getAvatarColor = (name: string) => {
-    const colors = ['bg-blue-100 text-blue-600', 'bg-purple-100 text-purple-600', 'bg-emerald-100 text-emerald-600', 'bg-amber-100 text-amber-600', 'bg-pink-100 text-pink-600'];
-    const index = name ? name.charCodeAt(0) % colors.length : 0;
-    return colors[index];
+          const matchesAssignment =
+            assignment === "All" ||
+            (assignment === "Assigned"
+              ? Boolean(section.teacher)
+              : !section.teacher);
+
+          return matchesQuery && matchesAssignment;
+        }),
+      }))
+      .filter(
+        (schoolClass) =>
+          schoolClass.sections.length > 0 ||
+          (assignment === "All" &&
+            schoolClass.name.toLowerCase().includes(query)),
+      );
+  }, [assignment, classes, search]);
+
+  const totalSections = classes.reduce(
+    (total, schoolClass) => total + schoolClass.sections.length,
+    0,
+  );
+  const totalStudents = classes.reduce(
+    (total, schoolClass) =>
+      total +
+      schoolClass.sections.reduce(
+        (sectionTotal, section) => sectionTotal + section.students,
+        0,
+      ),
+    0,
+  );
+  const unassignedSections = classes.reduce(
+    (total, schoolClass) =>
+      total +
+      schoolClass.sections.filter((section) => !section.teacher).length,
+    0,
+  );
+
+  function showNotice(message: string) {
+    setNotice(message);
+    window.setTimeout(() => setNotice(""), 3000);
+  }
+
+  function addClass(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = titleCase(className);
+    if (!name) return;
+
+    if (
+      classes.some(
+        (schoolClass) => schoolClass.name.toLowerCase() === name.toLowerCase(),
+      )
+    ) {
+      showNotice("A class with this name already exists.");
+      return;
+    }
+
+    setClasses((current) => [
+      ...current,
+      { id: crypto.randomUUID(), name, sections: [] },
+    ]);
+    setClassName("");
+    setClassModalOpen(false);
+    showNotice(`${name} added successfully.`);
+  }
+
+  function openAddSection(schoolClass: SchoolClass) {
+    setActiveClass(schoolClass);
+    setEditingSection(null);
+    setSectionForm(emptySection);
+  }
+
+  function openEditSection(schoolClass: SchoolClass, section: Section) {
+    setActiveClass(schoolClass);
+    setEditingSection(section);
+    setSectionForm({
+      name: section.name,
+      teacher: section.teacher || "",
+      students: String(section.students),
+    });
+  }
+
+  function saveSection(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!activeClass || !sectionForm.name.trim()) return;
+
+    const nextSection = {
+      id: editingSection?.id || crypto.randomUUID(),
+      name: sectionForm.name.trim().toUpperCase(),
+      teacher: sectionForm.teacher.trim()
+        ? titleCase(sectionForm.teacher)
+        : null,
+      students: Math.max(0, Number(sectionForm.students) || 0),
+    };
+
+    setClasses((current) =>
+      current.map((schoolClass) => {
+        if (schoolClass.id !== activeClass.id) return schoolClass;
+        return {
+          ...schoolClass,
+          sections: editingSection
+            ? schoolClass.sections.map((section) =>
+                section.id === editingSection.id ? nextSection : section,
+              )
+            : [...schoolClass.sections, nextSection],
+        };
+      }),
+    );
+
+    setActiveClass(null);
+    setEditingSection(null);
+    setSectionForm(emptySection);
+    showNotice(
+      editingSection ? "Section updated successfully." : "Section added successfully.",
+    );
+  }
+
+  function deleteSection(classId: string, section: Section) {
+    if (!window.confirm(`Delete Section ${section.name}?`)) return;
+    setClasses((current) =>
+      current.map((schoolClass) =>
+        schoolClass.id === classId
+          ? {
+              ...schoolClass,
+              sections: schoolClass.sections.filter(
+                (item) => item.id !== section.id,
+              ),
+            }
+          : schoolClass,
+      ),
+    );
+    showNotice("Section deleted.");
+  }
+
+  function deleteClass(schoolClass: SchoolClass) {
+    if (
+      !window.confirm(
+        `Delete ${schoolClass.name} and all of its sections? This cannot be undone.`,
+      )
+    )
+      return;
+    setClasses((current) =>
+      current.filter((item) => item.id !== schoolClass.id),
+    );
+    showNotice(`${schoolClass.name} deleted.`);
+  }
+
+  const hasFilters = Boolean(search.trim()) || assignment !== "All";
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Sidebar />
+      <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
+        <TopBar />
+
+        <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1500px]">
+            <header className="flex flex-col gap-5 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+                  Academic setup
+                </p>
+                <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                  Classes &amp; sections
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                  Organize every class, section, class teacher, and student count
+                  from one place.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setClassName("");
+                  setClassModalOpen(true);
+                }}
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:w-auto"
+              >
+                <Plus className="h-4 w-4" />
+                Add class
+              </button>
+            </header>
+
+            {notice && (
+              <div
+                role="status"
+                className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700"
+              >
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                {notice}
+              </div>
+            )}
+
+            <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatCard
+                icon={BookOpen}
+                label="Total classes"
+                value={classes.length}
+                tone="blue"
+              />
+              <StatCard
+                icon={Users}
+                label="Total sections"
+                value={totalSections}
+                tone="violet"
+              />
+              <StatCard
+                icon={GraduationCap}
+                label="Total students"
+                value={totalStudents}
+                tone="emerald"
+              />
+              <StatCard
+                icon={AlertCircle}
+                label="Need teachers"
+                value={unassignedSections}
+                tone="amber"
+              />
+            </section>
+
+            <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                <div className="relative w-full sm:max-w-md">
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search class, section, or teacher..."
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 rounded-xl bg-slate-100 p-1">
+                  {(["All", "Assigned", "Unassigned"] as const).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setAssignment(option)}
+                      className={`rounded-lg px-3 py-2 text-xs font-semibold transition sm:px-4 ${
+                        assignment === option
+                          ? "bg-white text-slate-900 shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {filteredClasses.length === 0 ? (
+                <EmptyState
+                  filtered={hasFilters}
+                  onAdd={() => setClassModalOpen(true)}
+                />
+              ) : (
+                <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3 sm:p-5">
+                  {filteredClasses.map((schoolClass) => (
+                    <ClassCard
+                      key={schoolClass.id}
+                      schoolClass={schoolClass}
+                      onAddSection={openAddSection}
+                      onEditSection={openEditSection}
+                      onDeleteSection={deleteSection}
+                      onDeleteClass={deleteClass}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        </main>
+      </div>
+
+      {classModalOpen && (
+        <Modal onClose={() => setClassModalOpen(false)} width="max-w-md">
+          <form onSubmit={addClass}>
+            <ModalHeader
+              title="Add a new class"
+              description="Create the class first, then add its sections."
+              onClose={() => setClassModalOpen(false)}
+            />
+            <div className="p-6">
+              <Field
+                label="Class name"
+                value={className}
+                onChange={setClassName}
+                placeholder="For example: Class 7"
+                required
+              />
+            </div>
+            <ModalFooter
+              submitLabel="Add class"
+              disabled={!className.trim()}
+              onCancel={() => setClassModalOpen(false)}
+            />
+          </form>
+        </Modal>
+      )}
+
+      {activeClass && (
+        <Modal onClose={() => setActiveClass(null)} width="max-w-lg">
+          <form onSubmit={saveSection}>
+            <ModalHeader
+              title={editingSection ? "Edit section" : "Add section"}
+              description={`${activeClass.name} · Add the section details and class teacher.`}
+              onClose={() => setActiveClass(null)}
+            />
+            <div className="grid gap-4 p-6 sm:grid-cols-2">
+              <Field
+                label="Section"
+                value={sectionForm.name}
+                onChange={(value) =>
+                  setSectionForm((current) => ({ ...current, name: value }))
+                }
+                placeholder="A"
+                required
+              />
+              <Field
+                label="Student count"
+                value={sectionForm.students}
+                onChange={(value) =>
+                  setSectionForm((current) => ({ ...current, students: value }))
+                }
+                placeholder="0"
+                type="number"
+              />
+              <div className="sm:col-span-2">
+                <Field
+                  label="Class teacher"
+                  value={sectionForm.teacher}
+                  onChange={(value) =>
+                    setSectionForm((current) => ({ ...current, teacher: value }))
+                  }
+                  placeholder="Leave empty if not assigned"
+                />
+              </div>
+            </div>
+            <ModalFooter
+              submitLabel={editingSection ? "Save changes" : "Add section"}
+              disabled={!sectionForm.name.trim()}
+              onCancel={() => setActiveClass(null)}
+            />
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: number;
+  tone: "blue" | "violet" | "emerald" | "amber";
+}) {
+  const colors = {
+    blue: "bg-blue-50 text-blue-600",
+    violet: "bg-violet-50 text-violet-600",
+    emerald: "bg-emerald-50 text-emerald-600",
+    amber: "bg-amber-50 text-amber-600",
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="lg:ml-64 pt-10 flex flex-col min-h-screen">
-        <TopBar />
-        <main className="flex-1 pt-24 p-4 sm:p-6 lg:p-8 pb-24">
-          
-          {/* Header */}
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Classes & Sections</h1>
-              <p className="mt-1.5 text-sm text-gray-500">Organize your school's academic structure and assign class teachers.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
-                <Filter className="h-4 w-4" /> Filter Level
-              </button>
-              <Link href="/classes/new" className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors">
-                <Plus className="h-4 w-4" /> Add Class
-              </Link>
-            </div>
-          </div>
-
-          {/* Stats Row */}
-          <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><BookOpen className="h-5 w-5" /></div>
-                <div><p className="text-sm font-medium text-gray-500">Total Classes</p><p className="text-2xl font-bold text-gray-900 tabular-nums">{stats.totalClasses}</p></div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600"><Users className="h-5 w-5" /></div>
-                <div><p className="text-sm font-medium text-gray-500">Total Sections</p><p className="text-2xl font-bold text-gray-900 tabular-nums">{stats.totalSections}</p></div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><GraduationCap className="h-5 w-5" /></div>
-                <div><p className="text-sm font-medium text-gray-500">Total Students</p><p className="text-2xl font-bold text-gray-900 tabular-nums">{stats.totalStudents}</p></div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600"><UserX className="h-5 w-5" /></div>
-                <div><p className="text-sm font-medium text-gray-500">Unassigned Teachers</p><p className="text-2xl font-bold text-amber-700 tabular-nums">{stats.unassignedSections}</p></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Search Bar */}
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full sm:max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search classes..." 
-                value={searchQuery} 
-                onChange={(e) => setSearchQuery(e.target.value)} 
-                className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all" 
-              />
-            </div>
-          </div>
-
-          {/* Classes Grid */}
-          {filteredClasses.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-2xl border border-gray-100 bg-white shadow-sm">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 mb-4"><BookOpen className="h-8 w-8 text-gray-400" /></div>
-              <h3 className="text-lg font-semibold text-gray-900">No classes found</h3>
-              <p className="mt-1 text-sm text-gray-500">Try adjusting your search.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {filteredClasses.map((cls) => {
-                const classTotalStudents = cls.sections.reduce((acc, s) => acc + s.students, 0);
-                return (
-                  <div key={cls.id} className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden flex flex-col">
-                    {/* Class Header */}
-                    <div className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 p-5 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">{cls.name}</h3>
-                        <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
-                          <Users className="h-3 w-3" /> {classTotalStudents} Students • {cls.sections.length} Sections
-                        </p>
-                      </div>
-                      <button className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors">
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-                    </div>
-
-                    {/* Sections List */}
-                    <div className="p-5 flex-1 space-y-3">
-                      {cls.sections.map((section) => (
-                        <div key={section.id} className="rounded-xl border border-gray-100 bg-gray-50/50 p-3 flex items-center justify-between group hover:border-blue-200 hover:bg-blue-50/30 transition-all">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white border border-gray-200 text-sm font-bold text-gray-700 shadow-sm">
-                              {section.name}
-                            </div>
-                            <div>
-                              {section.teacher ? (
-                                <div className="flex items-center gap-2">
-                                  <div className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${getAvatarColor(section.teacher)}`}>
-                                    {getInitials(section.teacher)}
-                                  </div>
-                                  <p className="text-sm font-medium text-gray-900">{section.teacher}</p>
-                                </div>
-                              ) : (
-                                <p className="text-sm font-medium text-amber-700 flex items-center gap-1.5">
-                                  <AlertCircle className="h-3.5 w-3.5" /> No Teacher Assigned
-                                </p>
-                              )}
-                              <p className="text-xs text-gray-500 mt-0.5">{section.students} Students</p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button className="rounded-md p-1.5 text-gray-400 hover:bg-white hover:text-blue-600 transition-colors" title="Edit">
-                              <Edit3 className="h-3.5 w-3.5" />
-                            </button>
-                            <button className="rounded-md p-1.5 text-gray-400 hover:bg-white hover:text-red-600 transition-colors" title="Delete Section">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Class Footer */}
-                    <div className="border-t border-gray-100 p-3 bg-gray-50/50">
-                      <button className="w-full flex items-center justify-center gap-2 rounded-lg py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 transition-colors">
-                        <Plus className="h-3.5 w-3.5" /> Add Section to {cls.name}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </main>
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className="flex items-center gap-3">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${colors[tone]}`}
+        >
+          <Icon className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium text-slate-500 sm:text-sm">
+            {label}
+          </p>
+          <p className="mt-0.5 text-xl font-bold tabular-nums text-slate-950 sm:text-2xl">
+            {value.toLocaleString()}
+          </p>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function ClassCard({
+  schoolClass,
+  onAddSection,
+  onEditSection,
+  onDeleteSection,
+  onDeleteClass,
+}: {
+  schoolClass: SchoolClass;
+  onAddSection: (schoolClass: SchoolClass) => void;
+  onEditSection: (schoolClass: SchoolClass, section: Section) => void;
+  onDeleteSection: (classId: string, section: Section) => void;
+  onDeleteClass: (schoolClass: SchoolClass) => void;
+}) {
+  const totalStudents = schoolClass.sections.reduce(
+    (total, section) => total + section.students,
+    0,
+  );
+
+  return (
+    <article className="flex min-h-64 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-blue-200 hover:shadow-md">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-100 bg-slate-50/70 p-4">
+        <div className="min-w-0">
+          <h2 className="truncate text-lg font-bold text-slate-950">
+            {schoolClass.name}
+          </h2>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+            <span>{schoolClass.sections.length} sections</span>
+            <span aria-hidden="true">·</span>
+            <span>{totalStudents} students</span>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onDeleteClass(schoolClass)}
+          className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+          aria-label={`Delete ${schoolClass.name}`}
+          title="Delete class"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="flex-1 space-y-2 p-4">
+        {schoolClass.sections.length === 0 ? (
+          <div className="flex h-28 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 text-center">
+            <Users className="h-5 w-5 text-slate-300" />
+            <p className="mt-2 text-sm font-medium text-slate-600">
+              No sections yet
+            </p>
+            <p className="mt-0.5 text-xs text-slate-400">
+              Add the first section below.
+            </p>
+          </div>
+        ) : (
+          schoolClass.sections.map((section) => (
+            <div
+              key={section.id}
+              className="group rounded-xl border border-slate-100 bg-slate-50/70 p-3 transition hover:border-blue-200 hover:bg-blue-50/40"
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700">
+                  {section.name}
+                </span>
+                <div className="min-w-0 flex-1">
+                  {section.teacher ? (
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
+                        {initials(section.teacher)}
+                      </span>
+                      <p className="truncate text-sm font-semibold text-slate-800">
+                        {section.teacher}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-700">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      Teacher not assigned
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-slate-500">
+                    {section.students} students
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => onEditSection(schoolClass, section)}
+                    className="rounded-lg p-2 text-slate-400 transition hover:bg-white hover:text-blue-600"
+                    aria-label={`Edit Section ${section.name}`}
+                  >
+                    <Edit3 className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDeleteSection(schoolClass.id, section)}
+                    className="rounded-lg p-2 text-slate-400 transition hover:bg-white hover:text-red-600"
+                    aria-label={`Delete Section ${section.name}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="border-t border-slate-100 p-3">
+        <button
+          type="button"
+          onClick={() => onAddSection(schoolClass)}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
+        >
+          <Plus className="h-4 w-4" />
+          Add section
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-sm font-medium text-slate-700">
+        {label}
+        {required && <span className="text-red-500"> *</span>}
+      </span>
+      <input
+        required={required}
+        min={type === "number" ? 0 : undefined}
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+      />
+    </label>
+  );
+}
+
+function ModalHeader({
+  title,
+  description,
+  onClose,
+}: {
+  title: string;
+  description: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6">
+      <div>
+        <h2 className="text-xl font-bold text-slate-950">{title}</h2>
+        <p className="mt-1 text-sm leading-5 text-slate-500">{description}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onClose}
+        className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+        aria-label="Close"
+      >
+        <X className="h-5 w-5" />
+      </button>
+    </div>
+  );
+}
+
+function ModalFooter({
+  submitLabel,
+  disabled,
+  onCancel,
+}: {
+  submitLabel: string;
+  disabled: boolean;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
+      <button
+        type="button"
+        onClick={onCancel}
+        className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
+      >
+        Cancel
+      </button>
+      <button
+        disabled={disabled}
+        className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {submitLabel}
+      </button>
+    </div>
+  );
+}
+
+function Modal({
+  children,
+  onClose,
+  width,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+  width: string;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        className={`max-h-[90vh] w-full overflow-y-auto rounded-2xl bg-white shadow-2xl ${width}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({
+  filtered,
+  onAdd,
+}: {
+  filtered: boolean;
+  onAdd: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center px-6 py-16 text-center">
+      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+        {filtered ? (
+          <Search className="h-5 w-5" />
+        ) : (
+          <UserRound className="h-5 w-5" />
+        )}
+      </span>
+      <h3 className="mt-4 font-bold text-slate-900">
+        {filtered ? "No matching classes" : "No classes added yet"}
+      </h3>
+      <p className="mt-1 text-sm text-slate-500">
+        {filtered
+          ? "Try changing the search or teacher filter."
+          : "Add your first class to create the academic structure."}
+      </p>
+      {!filtered && (
+        <button
+          type="button"
+          onClick={onAdd}
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"
+        >
+          <Plus className="h-4 w-4" />
+          Add class
+        </button>
+      )}
     </div>
   );
 }
