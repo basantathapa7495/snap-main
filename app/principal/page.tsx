@@ -12,7 +12,6 @@ import {
   Globe,
   GraduationCap,
   Megaphone,
-  Plus,
   ReceiptText,
   TrendingDown,
   TrendingUp,
@@ -159,6 +158,16 @@ function initials(name: string) {
     .join('')
     .slice(0, 2)
     .toUpperCase();
+}
+
+function formatSchoolName(name?: string | null) {
+  const normalizedName = name?.replace(/\s+/g, ' ').trim();
+  if (!normalizedName) return 'Your School';
+
+  return normalizedName
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 export default function PrincipalDashboardPage() {
@@ -430,6 +439,7 @@ export default function PrincipalDashboardPage() {
     year: 'numeric',
   });
   const firstName = dashboard.profile?.full_name?.split(' ')[0] || 'Principal';
+  const schoolName = formatSchoolName(dashboard.school?.name);
 
   const attentionCandidates: Array<AttentionData | null> = [
     dashboard.pendingAdmissions > 0
@@ -523,36 +533,66 @@ export default function PrincipalDashboardPage() {
         <TopBar />
         <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px]">
-            <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-500">{dateLabel}</p>
-                <h1 className="mt-1 text-2xl font-bold tracking-[-0.025em] text-slate-950 sm:text-3xl">
-                  {greeting}, <span className="text-blue-600">{firstName}</span>
-                </h1>
-                <p className="mt-2 text-sm text-slate-500">
-                  Here is what needs attention at{' '}
-                  <span className="font-semibold text-slate-700">
-                    {dashboard.school?.name || 'your school'}
-                  </span>
-                  .
-                </p>
-              </div>
+            <header className="relative overflow-hidden rounded-[28px] border border-blue-500/20 bg-[linear-gradient(120deg,#0f172a_0%,#172554_52%,#1d4ed8_100%)] p-5 text-white shadow-[0_24px_60px_-30px_rgba(30,64,175,0.8)] sm:p-7 lg:p-8">
+              <div aria-hidden="true" className="absolute -right-20 -top-24 h-64 w-64 rounded-full bg-cyan-400/20 blur-3xl" />
+              <div aria-hidden="true" className="absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-blue-400/20 blur-3xl" />
 
-              <div className="flex flex-wrap gap-2">
-                <QuickAction href="/principal/students" icon={UserPlus} label="Add student" />
-                <QuickAction href="/principal/fees" icon={ReceiptText} label="Record fee" />
-                <QuickAction href="/principal/communication" icon={Megaphone} label="Publish notice" />
-                {dashboard.school?.slug && (
-                  <Link
-                    href={`/s/${dashboard.school.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-blue-200 hover:text-blue-700"
-                  >
-                    <Globe className="h-4 w-4" />
-                    <span className="hidden sm:inline">School website</span>
-                  </Link>
-                )}
+              <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)] lg:items-stretch">
+                <div className="flex min-w-0 flex-col justify-between">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-blue-50 backdrop-blur-sm">
+                      <GraduationCap className="h-3.5 w-3.5" />
+                      Principal workspace
+                    </span>
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/15 px-3 py-1.5 text-xs font-medium text-blue-100">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      {dateLabel}
+                    </span>
+                  </div>
+
+                  <div className="mt-7 sm:mt-10">
+                    <p className="text-sm font-medium text-blue-200">
+                      {greeting}, {firstName}
+                    </p>
+                    <h1 className="mt-2 max-w-2xl text-3xl font-bold tracking-[-0.035em] text-white sm:text-4xl">
+                      {schoolName}
+                    </h1>
+                    <p className="mt-3 max-w-xl text-sm leading-6 text-blue-100/80 sm:text-base">
+                      Your school overview, priority work, and daily progress—all together in one place.
+                    </p>
+
+                    {dashboard.school?.slug && (
+                      <Link
+                        href={`/s/${dashboard.school.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white transition hover:text-cyan-200"
+                      >
+                        <Globe className="h-4 w-4" />
+                        View school website
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/15 bg-white/[0.08] p-3.5 backdrop-blur-sm sm:p-4">
+                  <div className="mb-3 flex items-center justify-between px-1">
+                    <div>
+                      <p className="text-sm font-semibold text-white">Quick actions</p>
+                      <p className="mt-0.5 text-xs text-blue-200">Start common school tasks</p>
+                    </div>
+                    <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-200">
+                      Ready
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <QuickAction href="/principal/students" icon={UserPlus} label="Add student" helper="Create record" />
+                    <QuickAction href="/principal/fees" icon={ReceiptText} label="Record fee" helper="Add payment" />
+                    <QuickAction href="/principal/communication" icon={Megaphone} label="Publish notice" helper="Inform everyone" />
+                    <QuickAction href="/principal/calendar" icon={CalendarDays} label="Open calendar" helper="Plan schedule" />
+                  </div>
+                </div>
               </div>
             </header>
 
@@ -776,12 +816,27 @@ export default function PrincipalDashboardPage() {
   );
 }
 
-function QuickAction({ href, icon: Icon, label }: { href: string; icon: ElementType; label: string }) {
+function QuickAction({ href, icon: Icon, label, helper }: {
+  href: string;
+  icon: ElementType;
+  label: string;
+  helper: string;
+}) {
   return (
-    <Link href={href} className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
-      <Icon className="h-4 w-4" />
-      <span className="hidden sm:inline">{label}</span>
-      <Plus className="h-3.5 w-3.5 sm:hidden" />
+    <Link
+      href={href}
+      className="group flex min-h-24 flex-col justify-between rounded-xl border border-white/10 bg-white/10 p-3 text-white transition hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.16]"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 text-blue-50">
+          <Icon className="h-4 w-4" />
+        </span>
+        <ArrowRight className="h-4 w-4 text-blue-200 transition group-hover:translate-x-0.5 group-hover:text-white" />
+      </div>
+      <div className="mt-3 min-w-0">
+        <p className="truncate text-sm font-semibold">{label}</p>
+        <p className="mt-0.5 truncate text-[11px] text-blue-200">{helper}</p>
+      </div>
     </Link>
   );
 }
