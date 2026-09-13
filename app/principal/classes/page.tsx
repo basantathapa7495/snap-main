@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   BookOpen,
@@ -8,6 +8,7 @@ import {
   Edit3,
   GraduationCap,
   Plus,
+  RefreshCw,
   Search,
   Trash2,
   UserRound,
@@ -16,13 +17,32 @@ import {
 } from "lucide-react";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
+import { supabase } from "@/lib/supabase";
 
 type Section = {
   id: string;
   name: string;
   teacher: string | null;
+  teacherId: string | null;
   students: number;
 };
+
+type Teacher = { id: string; name: string };
+
+type ClassRow = {
+  id: string;
+  school_id: string | null;
+  class_name: string | null;
+  class: string | null;
+  name: string | null;
+  class_number: string | null;
+  section: string | null;
+  section_name: string | null;
+  teacher_id: string | null;
+  created_at: string | null;
+};
+
+type StudentRow = { class: string | null; section: string | null };
 
 type SchoolClass = {
   id: string;
@@ -32,64 +52,65 @@ type SchoolClass = {
 
 type SectionForm = {
   name: string;
-  teacher: string;
-  students: string;
+  teacherId: string;
 };
-
-const initialClasses: SchoolClass[] = [
-  {
-    id: "class-1",
-    name: "Class 1",
-    sections: [
-      { id: "class-1-a", name: "A", teacher: "Sita Poudel", students: 28 },
-      { id: "class-1-b", name: "B", teacher: "Ram Sharma", students: 25 },
-    ],
-  },
-  {
-    id: "class-2",
-    name: "Class 2",
-    sections: [
-      { id: "class-2-a", name: "A", teacher: "Gita Rai", students: 31 },
-      { id: "class-2-b", name: "B", teacher: null, students: 24 },
-    ],
-  },
-  {
-    id: "class-3",
-    name: "Class 3",
-    sections: [
-      { id: "class-3-a", name: "A", teacher: "Hari Thapa", students: 29 },
-    ],
-  },
-  {
-    id: "class-4",
-    name: "Class 4",
-    sections: [
-      { id: "class-4-a", name: "A", teacher: "Bishnu K.C.", students: 30 },
-      { id: "class-4-b", name: "B", teacher: null, students: 22 },
-    ],
-  },
-  {
-    id: "class-5",
-    name: "Class 5",
-    sections: [
-      { id: "class-5-a", name: "A", teacher: "Sita Poudel", students: 32 },
-      { id: "class-5-b", name: "B", teacher: "Ram Sharma", students: 27 },
-    ],
-  },
-  {
-    id: "class-6",
-    name: "Class 6",
-    sections: [
-      { id: "class-6-a", name: "A", teacher: "Gita Rai", students: 34 },
-    ],
-  },
-];
 
 const emptySection: SectionForm = {
   name: "",
-  teacher: "",
-  students: "",
+  teacherId: "",
 };
+
+function normalize(value: string | null | undefined) {
+  return (value || "").trim().toLowerCase();
+}
+
+function classLabel(row: ClassRow) {
+  const value =
+    row.class_name || row.class || row.name || row.class_number || "Unnamed class";
+  return /^class\s/i.test(value.trim())
+    ? titleCase(value)
+    : `Class ${value.trim()}`;
+}
+
+function buildClasses(
+  rows: ClassRow[],
+  teachers: Teacher[],
+  students: StudentRow[],
+) {
+  const teacherNames = new Map(teachers.map((teacher) => [teacher.id, teacher.name]));
+  const groups = new Map<string, SchoolClass>();
+
+  for (const row of rows) {
+    const name = classLabel(row);
+    const key = normalize(name);
+    const current = groups.get(key) || { id: row.id, name, sections: [] };
+    const sectionName = (row.section_name || row.section || "").trim();
+
+    if (sectionName) {
+      const plainClass = name.replace(/^Class\s+/i, "");
+      const studentCount = students.filter(
+        (student) =>
+          [normalize(name), normalize(plainClass)].includes(normalize(student.class)) &&
+          normalize(student.section) === normalize(sectionName),
+      ).length;
+
+      current.sections.push({
+        id: row.id,
+        name: sectionName.toUpperCase(),
+        teacher: row.teacher_id
+          ? teacherNames.get(row.teacher_id) || "Teacher unavailable"
+          : null,
+        teacherId: row.teacher_id,
+        students: studentCount,
+      });
+    }
+    groups.set(key, current);
+  }
+
+  return Array.from(groups.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true }),
+  );
+}
 
 function titleCase(value: string) {
   return value
@@ -111,7 +132,13 @@ function initials(name: string) {
 }
 
 export default function ClassesPage() {
-  const [classes, setClasses] = useState<SchoolClass[]>(initialClasses);
+  const [classes, setClasses] = useState<SchoolClass[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [schoolId, setSchoolId] = useState<string | null>(null);
+  const [authenticated, setAuthenticated] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState("");
   const [assignment, setAssignment] = useState<
     "All" | "Assigned" | "Unassigned"
@@ -123,6 +150,79 @@ export default function ClassesPage() {
   const [sectionForm, setSectionForm] =
     useState<SectionForm>(emptySection);
   const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadClasses() {
+      setRefreshing(true);
+      setError("");
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        if (!user) {
+          if (!cancelled) setAuthenticated(false);
+          return;
+        }
+
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("school_id")
+          .eq("user_id", user.id)
+          .single();
+        if (profileError || !profile?.school_id) {
+          throw new Error("Your school profile could not be loaded.");
+        }
+
+        const [classesResult, teachersResult, studentsResult] =
+          await Promise.all([
+            supabase
+              .from("classes")
+              .select("id, school_id, class_name, class, name, class_number, section, section_name, teacher_id, created_at")
+              .eq("school_id", profile.school_id)
+              .order("created_at", { ascending: true }),
+            supabase
+              .from("teachers")
+              .select("id, name")
+              .eq("school_id", profile.school_id)
+              .order("name", { ascending: true }),
+            supabase
+              .from("students")
+              .select("class, section")
+              .eq("school_id", profile.school_id),
+          ]);
+
+        if (classesResult.error) throw classesResult.error;
+        if (teachersResult.error) throw teachersResult.error;
+        if (studentsResult.error) throw studentsResult.error;
+
+        if (!cancelled) {
+          const teacherRows = (teachersResult.data || []) as Teacher[];
+          setSchoolId(profile.school_id);
+          setTeachers(teacherRows);
+          setClasses(buildClasses(
+            (classesResult.data || []) as ClassRow[],
+            teacherRows,
+            (studentsResult.data || []) as StudentRow[],
+          ));
+        }
+      } catch (loadError) {
+        console.error("Classes page load error", loadError);
+        if (!cancelled) setError(
+          loadError instanceof Error ? loadError.message : "Classes could not be loaded.",
+        );
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    }
+
+    loadClasses();
+    return () => { cancelled = true };
+  }, [refreshKey]);
 
   const filteredClasses = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -179,27 +279,31 @@ export default function ClassesPage() {
     window.setTimeout(() => setNotice(""), 3000);
   }
 
-  function addClass(event: React.FormEvent<HTMLFormElement>) {
+  async function addClass(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const name = titleCase(className);
-    if (!name) return;
-
-    if (
-      classes.some(
-        (schoolClass) => schoolClass.name.toLowerCase() === name.toLowerCase(),
-      )
-    ) {
-      showNotice("A class with this name already exists.");
+    if (!schoolId || !name) return;
+    if (classes.some((item) => normalize(item.name) === normalize(name))) {
+      setError("A class with this name already exists.");
       return;
     }
 
-    setClasses((current) => [
-      ...current,
-      { id: crypto.randomUUID(), name, sections: [] },
-    ]);
+    setError("");
+    const { error: insertError } = await supabase.from("classes").insert({
+      school_id: schoolId,
+      class_name: name,
+      name,
+      class_number: name.replace(/^Class\s+/i, "").trim() || null,
+    });
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+
     setClassName("");
     setClassModalOpen(false);
     showNotice(`${name} added successfully.`);
+    setRefreshKey((value) => value + 1);
   }
 
   function openAddSection(schoolClass: SchoolClass) {
@@ -213,77 +317,104 @@ export default function ClassesPage() {
     setEditingSection(section);
     setSectionForm({
       name: section.name,
-      teacher: section.teacher || "",
-      students: String(section.students),
+      teacherId: section.teacherId || "",
     });
   }
 
-  function saveSection(event: React.FormEvent<HTMLFormElement>) {
+  async function saveSection(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!activeClass || !sectionForm.name.trim()) return;
+    if (!schoolId || !activeClass || !sectionForm.name.trim()) return;
 
-    const nextSection = {
-      id: editingSection?.id || crypto.randomUUID(),
-      name: sectionForm.name.trim().toUpperCase(),
-      teacher: sectionForm.teacher.trim()
-        ? titleCase(sectionForm.teacher)
-        : null,
-      students: Math.max(0, Number(sectionForm.students) || 0),
-    };
-
-    setClasses((current) =>
-      current.map((schoolClass) => {
-        if (schoolClass.id !== activeClass.id) return schoolClass;
-        return {
-          ...schoolClass,
-          sections: editingSection
-            ? schoolClass.sections.map((section) =>
-                section.id === editingSection.id ? nextSection : section,
-              )
-            : [...schoolClass.sections, nextSection],
-        };
-      }),
+    const sectionName = sectionForm.name.trim().toUpperCase();
+    const duplicate = activeClass.sections.some(
+      (section) =>
+        section.id !== editingSection?.id &&
+        normalize(section.name) === normalize(sectionName),
     );
+    if (duplicate) {
+      setError(`Section ${sectionName} already exists in ${activeClass.name}.`);
+      return;
+    }
+
+    setError("");
+    const payload = {
+      school_id: schoolId,
+      class_name: activeClass.name,
+      name: activeClass.name,
+      class_number: activeClass.name.replace(/^Class\s+/i, "").trim() || null,
+      section: sectionName,
+      section_name: sectionName,
+      teacher_id: sectionForm.teacherId || null,
+    };
+    const result = editingSection
+      ? await supabase.from("classes").update(payload)
+          .eq("id", editingSection.id).eq("school_id", schoolId)
+      : await supabase.from("classes").insert(payload);
+
+    if (result.error) {
+      setError(result.error.message);
+      return;
+    }
 
     setActiveClass(null);
     setEditingSection(null);
     setSectionForm(emptySection);
-    showNotice(
-      editingSection ? "Section updated successfully." : "Section added successfully.",
-    );
+    showNotice(editingSection ? "Section updated successfully." : "Section added successfully.");
+    setRefreshKey((value) => value + 1);
   }
 
-  function deleteSection(classId: string, section: Section) {
-    if (!window.confirm(`Delete Section ${section.name}?`)) return;
-    setClasses((current) =>
-      current.map((schoolClass) =>
-        schoolClass.id === classId
-          ? {
-              ...schoolClass,
-              sections: schoolClass.sections.filter(
-                (item) => item.id !== section.id,
-              ),
-            }
-          : schoolClass,
-      ),
-    );
-    showNotice("Section deleted.");
-  }
-
-  function deleteClass(schoolClass: SchoolClass) {
-    if (
-      !window.confirm(
-        `Delete ${schoolClass.name} and all of its sections? This cannot be undone.`,
-      )
-    )
+  async function deleteSection(_classId: string, section: Section) {
+    if (!schoolId || !window.confirm(`Delete Section ${section.name}?`)) return;
+    setError("");
+    const { error: deleteError } = await supabase
+      .from("classes").delete().eq("id", section.id).eq("school_id", schoolId);
+    if (deleteError) {
+      setError(deleteError.message);
       return;
-    setClasses((current) =>
-      current.filter((item) => item.id !== schoolClass.id),
-    );
+    }
+    showNotice("Section deleted.");
+    setRefreshKey((value) => value + 1);
+  }
+
+  async function deleteClass(schoolClass: SchoolClass) {
+    if (!schoolId || !window.confirm(
+      `Delete ${schoolClass.name} and all of its sections? This cannot be undone.`,
+    )) return;
+
+    setError("");
+    const ids = Array.from(new Set([
+      schoolClass.id,
+      ...schoolClass.sections.map((section) => section.id),
+    ]));
+    const { error: deleteError } = await supabase
+      .from("classes").delete().in("id", ids).eq("school_id", schoolId);
+    if (deleteError) {
+      setError(deleteError.message);
+      return;
+    }
     showNotice(`${schoolClass.name} deleted.`);
+    setRefreshKey((value) => value + 1);
   }
 
   const hasFilters = Boolean(search.trim()) || assignment !== "All";
+
+  if (loading) return <ClassesSkeleton />;
+
+  if (!authenticated) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Sidebar />
+        <div className="pt-10 lg:ml-64">
+          <TopBar />
+          <main className="px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-[1500px] rounded-2xl border border-amber-200 bg-amber-50 p-6 text-amber-800">
+              Please sign in again to manage classes.
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -306,18 +437,41 @@ export default function ClassesPage() {
                   from one place.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setClassName("");
-                  setClassModalOpen(true);
-                }}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:w-auto"
-              >
-                <Plus className="h-4 w-4" />
-                Add class
-              </button>
+              <div className="flex w-full gap-2 sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setRefreshKey((value) => value + 1)}
+                  disabled={refreshing}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                  aria-label="Refresh classes"
+                >
+                  <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError("");
+                    setClassName("");
+                    setClassModalOpen(true);
+                  }}
+                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:flex-none"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add class
+                </button>
+              </div>
             </header>
+
+            {error && (
+              <div
+                role="alert"
+                className="mt-5 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
 
             {notice && (
               <div
@@ -454,23 +608,14 @@ export default function ClassesPage() {
                 placeholder="A"
                 required
               />
-              <Field
-                label="Student count"
-                value={sectionForm.students}
-                onChange={(value) =>
-                  setSectionForm((current) => ({ ...current, students: value }))
-                }
-                placeholder="0"
-                type="number"
-              />
               <div className="sm:col-span-2">
-                <Field
+                <SelectField
                   label="Class teacher"
-                  value={sectionForm.teacher}
+                  value={sectionForm.teacherId}
                   onChange={(value) =>
-                    setSectionForm((current) => ({ ...current, teacher: value }))
+                    setSectionForm((current) => ({ ...current, teacherId: value }))
                   }
-                  placeholder="Leave empty if not assigned"
+                  options={teachers}
                 />
               </div>
             </div>
@@ -680,6 +825,39 @@ function Field({
   );
 }
 
+function SelectField({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: Teacher[];
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-sm font-medium text-slate-700">{label}</span>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+      >
+        <option value="">Not assigned</option>
+        {options.map((teacher) => (
+          <option key={teacher.id} value={teacher.id}>{teacher.name}</option>
+        ))}
+      </select>
+      {options.length === 0 && (
+        <span className="mt-1.5 block text-xs text-amber-600">
+          Add teachers from the Teachers page first.
+        </span>
+      )}
+    </label>
+  );
+}
+
 function ModalHeader({
   title,
   description,
@@ -796,6 +974,29 @@ function EmptyState({
           Add class
         </button>
       )}
+    </div>
+  );
+}
+
+
+function ClassesSkeleton() {
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Sidebar />
+      <div className="pt-10 lg:ml-64">
+        <TopBar />
+        <main className="px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1500px] animate-pulse">
+            <div className="h-24 border-b border-slate-200" />
+            <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {Array.from({ length: 4 }, (_, index) => (
+                <div key={index} className="h-24 rounded-2xl bg-white" />
+              ))}
+            </div>
+            <div className="mt-6 h-96 rounded-2xl bg-white" />
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
