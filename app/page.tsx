@@ -30,7 +30,6 @@ import {
   BadgeCheck,
   Check, 
   CalendarDays,
-  MessageCircle,
   
 } from "lucide-react";
 
@@ -52,10 +51,11 @@ export default function HomePage() {
   }, []);
 
   const plans = [
-    { label: 'Up to 200 students', monthly: 300, popular: false },
-    { label: '201–500 students', monthly: 500, popular: true },
-    { label: '501–1,000 students', monthly: 800, popular: false },
-    { label: '1,000+ students', monthly: 1000, popular: false },
+    { label: 'Up to 100 students', monthly: 0, yearly: 0, popular: false },
+    { label: '101–200 students', monthly: 300, yearly: 2340, popular: false },
+    { label: '201–500 students', monthly: 500, yearly: 3900, popular: true },
+    { label: '501–1,000 students', monthly: 800, yearly: 6240, popular: false },
+    { label: '1,000+ students', monthly: 1000, yearly: 7800, popular: false },
   ];
 
   const compareRows = [
@@ -1542,362 +1542,78 @@ export default function HomePage() {
                 : 'bg-green-100 text-green-700'
             }`}
           >
-            2 months free
+            Save 35%
           </span>
         </button>
       </div>
     </div>
 
-    {/* Pricing cards */}
+    {/* Pricing cards — every school receives the same complete SNAP product. */}
     <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-      {/* FREE */}
-      <article className="flex h-full flex-col rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-gray-500">
-            Free
-          </p>
+      {plans.map((plan) => {
+        const isFree = plan.monthly === 0;
+        const displayPrice = yearly ? plan.yearly : plan.monthly;
+        const saving = plan.monthly * 12 - plan.yearly;
 
-          <div className="mt-5">
-            <div className="flex items-end gap-1">
+        return (
+          <article
+            key={plan.label}
+            className={`relative flex min-h-[335px] flex-col rounded-[24px] bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
+              plan.popular
+                ? 'border-2 border-blue-600 shadow-xl shadow-blue-600/10'
+                : 'border border-gray-200 shadow-sm hover:border-blue-200'
+            }`}
+          >
+            {plan.popular && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-blue-600 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
+                Most popular
+              </div>
+            )}
+
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-600">
+              School size
+            </p>
+
+            <p className="mt-3 text-lg font-bold text-gray-950">{plan.label}</p>
+
+            <div className="mt-5 flex items-end gap-1">
               <span className="text-4xl font-bold tracking-tight text-gray-950">
-                NPR 0
+                NPR {displayPrice.toLocaleString()}
               </span>
-
               <span className="pb-1 text-sm font-medium text-gray-500">
-                / forever
+                {isFree ? '/ forever' : yearly ? '/ year' : '/ month'}
               </span>
             </div>
-          </div>
 
-          <p className="mt-3 text-sm font-semibold text-blue-600">
-            Up to 100 students
-          </p>
-
-          <p className="mt-3 text-sm leading-6 text-gray-500">
-            Small schools can continue using SNAP without a monthly fee.
-          </p>
-        </div>
-
-        <div className="my-6 h-px bg-gray-100" />
-
-        <ul className="flex-1 space-y-3">
-          {[
-            'All core SNAP features',
-            'Student management',
-            'Attendance & fees',
-            'Exams & report cards',
-            'Teacher & student portals',
-          ].map((feature) => (
-            <li
-              key={feature}
-              className="flex items-start gap-2.5 text-sm text-gray-700"
-            >
-              <Check
-                className="mt-0.5 h-4 w-4 shrink-0 text-green-600"
-                strokeWidth={2.2}
-              />
-              <span>{feature}</span>
-            </li>
-          ))}
-        </ul>
-
-        <Link
-          href="/auth/signup"
-          className="mt-7 flex items-center justify-center rounded-xl border border-blue-600 px-4 py-3 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
-        >
-          Start 30-day trial
-        </Link>
-      </article>
-
-      {/* SMALL */}
-      <article className="flex h-full flex-col rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-600">
-            Small
-          </p>
-
-          <div className="mt-5">
-            {yearly ? (
-              <>
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-bold tracking-tight text-gray-950">
-                    NPR 2,990
-                  </span>
-
-                  <span className="pb-1 text-sm font-medium text-gray-500">
-                    / year
-                  </span>
-                </div>
-
-                <p className="mt-2 text-xs text-green-700">
-                  Save NPR 598 per year
-                </p>
-              </>
-            ) : (
-              <div className="flex items-end gap-1">
-                <span className="text-4xl font-bold tracking-tight text-gray-950">
-                  NPR 299
-                </span>
-
-                <span className="pb-1 text-sm font-medium text-gray-500">
-                  / month
-                </span>
-              </div>
+            {!isFree && yearly && (
+              <p className="mt-2 text-xs font-semibold text-green-700">
+                Save NPR {saving.toLocaleString()} per year
+              </p>
             )}
-          </div>
 
-          <p className="mt-3 text-sm font-semibold text-blue-600">
-            101–300 students
-          </p>
+            <div className="my-6 h-px bg-gray-100" />
 
-          <p className="mt-3 text-sm leading-6 text-gray-500">
-            For smaller schools ready to manage everyday work digitally.
-          </p>
-        </div>
+            <div className="flex flex-1 items-start gap-2.5 text-sm leading-6 text-gray-700">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" strokeWidth={2.2} />
+              <p>
+                <strong className="font-semibold text-gray-950">Full SNAP access.</strong>{' '}
+                Every school receives the same tools; only the student count changes the price.
+              </p>
+            </div>
 
-        <div className="my-6 h-px bg-gray-100" />
-
-        <ul className="flex-1 space-y-3">
-          {[
-            'Everything in SNAP',
-            'Attendance tracking',
-            'Fee management & receipts',
-            'Exams & report cards',
-            'Teacher & student portals',
-          ].map((feature) => (
-            <li
-              key={feature}
-              className="flex items-start gap-2.5 text-sm text-gray-700"
+            <Link
+              href="/auth/signup"
+              className={`mt-7 flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition ${
+                plan.popular
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'border border-blue-600 text-blue-600 hover:bg-blue-50'
+              }`}
             >
-              <Check
-                className="mt-0.5 h-4 w-4 shrink-0 text-green-600"
-                strokeWidth={2.2}
-              />
-              <span>{feature}</span>
-            </li>
-          ))}
-        </ul>
-
-        <Link
-          href="/auth/signup"
-          className="mt-7 flex items-center justify-center rounded-xl border border-blue-600 px-4 py-3 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
-        >
-          Start 30-day trial
-        </Link>
-      </article>
-
-      {/* GROWTH */}
-      <article className="relative flex h-full flex-col rounded-[24px] border-2 border-blue-600 bg-white p-6 shadow-xl shadow-blue-600/10 transition-all duration-300 hover:-translate-y-1">
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-blue-600 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
-          Most popular
-        </div>
-
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-600">
-            Growth
-          </p>
-
-          <div className="mt-5">
-            {yearly ? (
-              <>
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-bold tracking-tight text-gray-950">
-                    NPR 4,990
-                  </span>
-
-                  <span className="pb-1 text-sm font-medium text-gray-500">
-                    / year
-                  </span>
-                </div>
-
-                <p className="mt-2 text-xs font-medium text-green-700">
-                  Save NPR 998 per year
-                </p>
-              </>
-            ) : (
-              <div className="flex items-end gap-1">
-                <span className="text-4xl font-bold tracking-tight text-gray-950">
-                  NPR 499
-                </span>
-
-                <span className="pb-1 text-sm font-medium text-gray-500">
-                  / month
-                </span>
-              </div>
-            )}
-          </div>
-
-          <p className="mt-3 text-sm font-semibold text-blue-600">
-            301–700 students
-          </p>
-
-          <p className="mt-3 text-sm leading-6 text-gray-500">
-            A good fit for growing schools with more students and staff.
-          </p>
-        </div>
-
-        <div className="my-6 h-px bg-blue-100" />
-
-        <ul className="flex-1 space-y-3">
-          {[
-            'Everything in SNAP',
-            'Attendance tracking',
-            'Fee management & receipts',
-            'Exams & report cards',
-            'Admissions & school website',
-          ].map((feature) => (
-            <li
-              key={feature}
-              className="flex items-start gap-2.5 text-sm text-gray-700"
-            >
-              <Check
-                className="mt-0.5 h-4 w-4 shrink-0 text-green-600"
-                strokeWidth={2.2}
-              />
-              <span>{feature}</span>
-            </li>
-          ))}
-        </ul>
-
-        <Link
-          href="/auth/signup"
-          className="mt-7 flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-        >
-          Start 30-day trial
-          <ArrowRight className="h-4 w-4" strokeWidth={2} />
-        </Link>
-      </article>
-
-      {/* LARGE */}
-      <article className="flex h-full flex-col rounded-[24px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-600">
-            Large
-          </p>
-
-          <div className="mt-5">
-            {yearly ? (
-              <>
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-bold tracking-tight text-gray-950">
-                    NPR 7,990
-                  </span>
-
-                  <span className="pb-1 text-sm font-medium text-gray-500">
-                    / year
-                  </span>
-                </div>
-
-                <p className="mt-2 text-xs font-medium text-green-700">
-                  Save NPR 1,598 per year
-                </p>
-              </>
-            ) : (
-              <div className="flex items-end gap-1">
-                <span className="text-4xl font-bold tracking-tight text-gray-950">
-                  NPR 799
-                </span>
-
-                <span className="pb-1 text-sm font-medium text-gray-500">
-                  / month
-                </span>
-              </div>
-            )}
-          </div>
-
-          <p className="mt-3 text-sm font-semibold text-blue-600">
-            701–1,500 students
-          </p>
-
-          <p className="mt-3 text-sm leading-6 text-gray-500">
-            Built for larger schools managing more classes and school activity.
-          </p>
-        </div>
-
-        <div className="my-6 h-px bg-gray-100" />
-
-        <ul className="flex-1 space-y-3">
-          {[
-            'Everything in SNAP',
-            'Up to 1,500 students',
-            'All school management tools',
-            'Reports & analytics',
-            'Priority support',
-          ].map((feature) => (
-            <li
-              key={feature}
-              className="flex items-start gap-2.5 text-sm text-gray-700"
-            >
-              <Check
-                className="mt-0.5 h-4 w-4 shrink-0 text-green-600"
-                strokeWidth={2.2}
-              />
-              <span>{feature}</span>
-            </li>
-          ))}
-        </ul>
-
-        <Link
-          href="/auth/signup"
-          className="mt-7 flex items-center justify-center rounded-xl border border-blue-600 px-4 py-3 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
-        >
-          Start 30-day trial
-        </Link>
-      </article>
-
-      {/* ENTERPRISE */}
-      <article className="flex h-full flex-col rounded-[24px] border border-gray-200 bg-gray-950 p-6 text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-400">
-            Enterprise
-          </p>
-
-          <p className="mt-5 text-4xl font-bold tracking-tight">
-            Let's talk
-          </p>
-
-          <p className="mt-3 text-sm font-semibold text-blue-400">
-            1,501+ students
-          </p>
-
-          <p className="mt-3 text-sm leading-6 text-gray-400">
-            For large institutions that need additional support and flexibility.
-          </p>
-        </div>
-
-        <div className="my-6 h-px bg-white/10" />
-
-        <ul className="flex-1 space-y-3">
-          {[
-            'Everything in SNAP',
-            '1,501+ students',
-            'Priority onboarding',
-            'Dedicated support',
-            'Custom requirements',
-          ].map((feature) => (
-            <li
-              key={feature}
-              className="flex items-start gap-2.5 text-sm text-gray-300"
-            >
-              <Check
-                className="mt-0.5 h-4 w-4 shrink-0 text-green-400"
-                strokeWidth={2.2}
-              />
-              <span>{feature}</span>
-            </li>
-          ))}
-        </ul>
-
-        <a
-          href="https://wa.me/9779806532844?text=Hi%2C%20I%20want%20to%20know%20about%20SNAP%20Enterprise%20for%20my%20school"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-7 flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-gray-950 transition hover:bg-gray-100"
-        >
-          <MessageCircle className="h-4 w-4" strokeWidth={2} />
-          Contact us
-        </a>
-      </article>
+              Start 30-day trial
+            </Link>
+          </article>
+        );
+      })}
     </div>
 
     {/* All plans explanation */}
@@ -1916,7 +1632,7 @@ export default function HomePage() {
             We don't lock important school features behind expensive plans.
             Attendance, fees, exams, report cards, notices, admissions, teacher
             accounts, student accounts and your school website are included.
-            Your price changes mainly with the number of students.
+            The only difference is the number of students at your school.
           </p>
         </div>
       </div>
