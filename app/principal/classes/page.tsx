@@ -47,6 +47,9 @@ type StudentRow = { class: string | null; section: string | null };
 type SchoolClass = {
   id: string;
   name: string;
+  teacher: string | null;
+  teacherId: string | null;
+  students: number;
   sections: Section[];
 };
 
@@ -83,11 +86,27 @@ function buildClasses(
   for (const row of rows) {
     const name = classLabel(row);
     const key = normalize(name);
-    const current = groups.get(key) || { id: row.id, name, sections: [] };
+    const plainClass = name.replace(/^Class\s+/i, "");
+    const classStudentCount = students.filter((student) =>
+      [normalize(name), normalize(plainClass)].includes(normalize(student.class)),
+    ).length;
+    const current = groups.get(key) || {
+      id: row.id,
+      name,
+      teacher: null,
+      teacherId: null,
+      students: classStudentCount,
+      sections: [],
+    };
     const sectionName = (row.section_name || row.section || "").trim();
 
-    if (sectionName) {
-      const plainClass = name.replace(/^Class\s+/i, "");
+    if (!sectionName) {
+      current.id = row.id;
+      current.teacherId = row.teacher_id;
+      current.teacher = row.teacher_id
+        ? teacherNames.get(row.teacher_id) || "Teacher unavailable"
+        : null;
+    } else {
       const studentCount = students.filter(
         (student) =>
           [normalize(name), normalize(plainClass)].includes(normalize(student.class)) &&
@@ -144,7 +163,9 @@ export default function ClassesPage() {
     "All" | "Assigned" | "Unassigned"
   >("All");
   const [classModalOpen, setClassModalOpen] = useState(false);
+  const [editingClass, setEditingClass] = useState<SchoolClass | null>(null);
   const [className, setClassName] = useState("");
+  const [classTeacherId, setClassTeacherId] = useState("");
   const [activeClass, setActiveClass] = useState<SchoolClass | null>(null);
   const [editingSection, setEditingSection] = useState<Section | null>(null);
   const [sectionForm, setSectionForm] =
@@ -227,31 +248,29 @@ export default function ClassesPage() {
   const filteredClasses = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return classes
-      .map((schoolClass) => ({
-        ...schoolClass,
-        sections: schoolClass.sections.filter((section) => {
-          const matchesQuery =
-            !query ||
-            schoolClass.name.toLowerCase().includes(query) ||
+    return classes.filter((schoolClass) => {
+      const matchesSearch =
+        !query ||
+        schoolClass.name.toLowerCase().includes(query) ||
+        schoolClass.teacher?.toLowerCase().includes(query) ||
+        schoolClass.sections.some(
+          (section) =>
             section.name.toLowerCase().includes(query) ||
-            section.teacher?.toLowerCase().includes(query);
+            section.teacher?.toLowerCase().includes(query),
+        );
 
-          const matchesAssignment =
-            assignment === "All" ||
-            (assignment === "Assigned"
-              ? Boolean(section.teacher)
-              : !section.teacher);
+      const hasAssigned =
+        Boolean(schoolClass.teacherId) ||
+        schoolClass.sections.some((section) => Boolean(section.teacherId));
+      const hasUnassigned =
+        !schoolClass.teacherId ||
+        schoolClass.sections.some((section) => !section.teacherId);
+      const matchesAssignment =
+        assignment === "All" ||
+        (assignment === "Assigned" ? hasAssigned : hasUnassigned);
 
-          return matchesQuery && matchesAssignment;
-        }),
-      }))
-      .filter(
-        (schoolClass) =>
-          schoolClass.sections.length > 0 ||
-          (assignment === "All" &&
-            schoolClass.name.toLowerCase().includes(query)),
-      );
+      return matchesSearch && matchesAssignment;
+    });
   }, [assignment, classes, search]);
 
   const totalSections = classes.reduce(
@@ -259,18 +278,14 @@ export default function ClassesPage() {
     0,
   );
   const totalStudents = classes.reduce(
-    (total, schoolClass) =>
-      total +
-      schoolClass.sections.reduce(
-        (sectionTotal, section) => sectionTotal + section.students,
-        0,
-      ),
+    (total, schoolClass) => total + schoolClass.students,
     0,
   );
   const unassignedSections = classes.reduce(
     (total, schoolClass) =>
       total +
-      schoolClass.sections.filter((section) => !section.teacher).length,
+      (schoolClass.teacherId ? 0 : 1) +
+      schoolClass.sections.filter((section) => !section.teacherId).length,
     0,
   );
 
@@ -279,30 +294,48 @@ export default function ClassesPage() {
     window.setTimeout(() => setNotice(""), 3000);
   }
 
-  async function addClass(event: React.FormEvent<HTMLFormElement>) {
+  async function saveClass(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const name = titleCase(className);
     if (!schoolId || !name) return;
-    if (classes.some((item) => normalize(item.name) === normalize(name))) {
+
+    if (
+      classes.some(
+        (item) =>
+          item.id !== editingClass?.id &&
+          normalize(item.name) === normalize(name),
+      )
+    ) {
       setError("A class with this name already exists.");
       return;
     }
 
     setError("");
-    const { error: insertError } = await supabase.from("classes").insert({
+    const payload = {
       school_id: schoolId,
       class_name: name,
       name,
       class_number: name.replace(/^Class\s+/i, "").trim() || null,
-    });
-    if (insertError) {
-      setError(insertError.message);
+      teacher_id: classTeacherId || null,
+    };
+    const result = editingClass
+      ? await supabase
+          .from("classes")
+          .update(payload)
+          .eq("id", editingClass.id)
+          .eq("school_id", schoolId)
+      : await supabase.from("classes").insert(payload);
+
+    if (result.error) {
+      setError(result.error.message);
       return;
     }
 
     setClassName("");
+    setClassTeacherId("");
+    setEditingClass(null);
     setClassModalOpen(false);
-    showNotice(`${name} added successfully.`);
+    showNotice(editingClass ? "Class updated successfully." : `${name} added successfully.`);
     setRefreshKey((value) => value + 1);
   }
 
@@ -452,7 +485,9 @@ export default function ClassesPage() {
                   type="button"
                   onClick={() => {
                     setError("");
+                    setEditingClass(null);
                     setClassName("");
+                    setClassTeacherId("");
                     setClassModalOpen(true);
                   }}
                   className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:flex-none"
@@ -543,7 +578,12 @@ export default function ClassesPage() {
               {filteredClasses.length === 0 ? (
                 <EmptyState
                   filtered={hasFilters}
-                  onAdd={() => setClassModalOpen(true)}
+                  onAdd={() => {
+                    setEditingClass(null);
+                    setClassName("");
+                    setClassTeacherId("");
+                    setClassModalOpen(true);
+                  }}
                 />
               ) : (
                 <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3 sm:p-5">
@@ -552,6 +592,13 @@ export default function ClassesPage() {
                       key={schoolClass.id}
                       schoolClass={schoolClass}
                       onAddSection={openAddSection}
+                      onEditClass={(item) => {
+                        setError("");
+                        setEditingClass(item);
+                        setClassName(item.name);
+                        setClassTeacherId(item.teacherId || "");
+                        setClassModalOpen(true);
+                      }}
                       onEditSection={openEditSection}
                       onDeleteSection={deleteSection}
                       onDeleteClass={deleteClass}
@@ -566,13 +613,17 @@ export default function ClassesPage() {
 
       {classModalOpen && (
         <Modal onClose={() => setClassModalOpen(false)} width="max-w-md">
-          <form onSubmit={addClass}>
+                   <form onSubmit={saveClass}>
             <ModalHeader
-              title="Add a new class"
-              description="Create the class first, then add its sections."
+              title={editingClass ? "Edit class" : "Add a new class"}
+              description={
+                editingClass
+                  ? "Update the class name or assigned class teacher."
+                  : "Create the class and optionally assign its class teacher."
+              }
               onClose={() => setClassModalOpen(false)}
             />
-            <div className="p-6">
+            <div className="space-y-4 p-6">
               <Field
                 label="Class name"
                 value={className}
@@ -580,9 +631,15 @@ export default function ClassesPage() {
                 placeholder="For example: Class 7"
                 required
               />
+              <SelectField
+                label="Class teacher"
+                value={classTeacherId}
+                onChange={setClassTeacherId}
+                options={teachers}
+              />
             </div>
             <ModalFooter
-              submitLabel="Add class"
+              submitLabel={editingClass ? "Save changes" : "Add class"}
               disabled={!className.trim()}
               onCancel={() => setClassModalOpen(false)}
             />
@@ -673,20 +730,19 @@ function StatCard({
 function ClassCard({
   schoolClass,
   onAddSection,
+  onEditClass,
   onEditSection,
   onDeleteSection,
   onDeleteClass,
 }: {
   schoolClass: SchoolClass;
   onAddSection: (schoolClass: SchoolClass) => void;
+  onEditClass: (schoolClass: SchoolClass) => void;
   onEditSection: (schoolClass: SchoolClass, section: Section) => void;
   onDeleteSection: (classId: string, section: Section) => void;
   onDeleteClass: (schoolClass: SchoolClass) => void;
 }) {
-  const totalStudents = schoolClass.sections.reduce(
-    (total, section) => total + section.students,
-    0,
-  );
+  const totalStudents = schoolClass.students;
 
   return (
     <article className="flex min-h-64 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-blue-200 hover:shadow-md">
@@ -701,18 +757,49 @@ function ClassCard({
             <span>{totalStudents} students</span>
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => onDeleteClass(schoolClass)}
-          className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-          aria-label={`Delete ${schoolClass.name}`}
-          title="Delete class"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onEditClass(schoolClass)}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+            aria-label={`Edit ${schoolClass.name}`}
+            title="Edit class"
+          >
+            <Edit3 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onDeleteClass(schoolClass)}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+            aria-label={`Delete ${schoolClass.name}`}
+            title="Delete class"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 space-y-2 p-4">
+        <div className="mb-3 rounded-xl border border-slate-100 bg-white p-3">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            Class teacher
+          </p>
+          {schoolClass.teacher ? (
+            <div className="mt-2 flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
+                {initials(schoolClass.teacher)}
+              </span>
+              <p className="text-sm font-semibold text-slate-800">
+                {schoolClass.teacher}
+              </p>
+            </div>
+          ) : (
+            <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-amber-700">
+              <AlertCircle className="h-3.5 w-3.5" />
+              Teacher not assigned
+            </p>
+          )}
+        </div>
         {schoolClass.sections.length === 0 ? (
           <div className="flex h-28 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 text-center">
             <Users className="h-5 w-5 text-slate-300" />
