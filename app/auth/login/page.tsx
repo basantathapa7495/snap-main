@@ -4,22 +4,91 @@ import Link from 'next/link';
 import {
   ArrowLeft,
   BarChart3,
+  BellRing,
+  BookOpenCheck,
+  CalendarCheck2,
   CheckCircle2,
   ClipboardCheck,
+  FileCheck2,
   GraduationCap,
   ShieldCheck,
   Smartphone,
+  UserCheck,
+  Users,
   WalletCards,
 } from 'lucide-react';
 import LoginForm from '@/components/LoginForm';
 
-const highlights = [
-  { icon: ClipboardCheck, label: 'Attendance' },
-  { icon: WalletCards, label: 'Fees' },
-  { icon: BarChart3, label: 'Results' },
-];
+type PortalRole = 'principal' | 'teacher' | 'student';
 
-export default function LoginPage() {
+const portalStories = {
+  principal: {
+    badge: 'Principal workspace',
+    title: 'Lead your whole school',
+    accent: 'from-blue-300 to-cyan-200',
+    description:
+      'See what needs attention, manage staff and students, follow fees and keep every part of your school connected.',
+    highlights: [
+      { icon: BarChart3, label: 'School overview' },
+      { icon: Users, label: 'Staff & students' },
+      { icon: WalletCards, label: 'Fees & reports' },
+    ],
+    calloutTitle: 'Make decisions with clarity',
+    calloutText: 'Important numbers, pending work and school activity are ready when you sign in.',
+    calloutIcon: ShieldCheck,
+  },
+  teacher: {
+    badge: 'Teacher workspace',
+    title: 'Teach with less paperwork',
+    accent: 'from-sky-300 to-blue-200',
+    description:
+      'Open your assigned classes, mark attendance, enter marks and keep students updated without carrying extra registers.',
+    highlights: [
+      { icon: ClipboardCheck, label: 'Mark attendance' },
+      { icon: BookOpenCheck, label: 'Manage classes' },
+      { icon: FileCheck2, label: 'Enter marks' },
+    ],
+    calloutTitle: 'Focus more on your students',
+    calloutText: 'Your classes and daily teaching work stay organized in one simple workspace.',
+    calloutIcon: GraduationCap,
+  },
+  student: {
+    badge: 'Student workspace',
+    title: 'Stay ready for every school day',
+    accent: 'from-emerald-300 to-cyan-200',
+    description:
+      'Check assignments, attendance, exam results, fees and school notices from one personal dashboard.',
+    highlights: [
+      { icon: CalendarCheck2, label: 'Assignments' },
+      { icon: UserCheck, label: 'Attendance' },
+      { icon: BellRing, label: 'Notices & results' },
+    ],
+    calloutTitle: 'Everything you need to stay on track',
+    calloutText: 'See upcoming work and important school updates without missing information.',
+    calloutIcon: BookOpenCheck,
+  },
+} satisfies Record<PortalRole, {
+  badge: string;
+  title: string;
+  accent: string;
+  description: string;
+  highlights: Array<{ icon: typeof ShieldCheck; label: string }>;
+  calloutTitle: string;
+  calloutText: string;
+  calloutIcon: typeof ShieldCheck;
+}>;
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ role?: string }>;
+}) {
+  const requestedRole = (await searchParams).role;
+  const role: PortalRole =
+    requestedRole === 'teacher' || requestedRole === 'student' ? requestedRole : 'principal';
+  const story = portalStories[role];
+  const CalloutIcon = story.calloutIcon;
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-950">
       <div className="pointer-events-none absolute inset-0 lg:hidden" aria-hidden="true">
@@ -48,23 +117,22 @@ export default function LoginPage() {
             <div className="my-auto max-w-2xl py-16">
               <div className="inline-flex items-center gap-2 rounded-full border border-blue-300/20 bg-blue-300/10 px-3.5 py-1.5 text-xs font-semibold text-blue-200">
                 <ShieldCheck className="h-4 w-4" strokeWidth={1.9} />
-                Secure access for your school
+                {story.badge}
               </div>
 
               <h1 className="mt-7 max-w-xl text-5xl font-bold leading-[1.06] tracking-[-0.045em] text-white xl:text-[58px]">
-                Your school day,
-                <span className="block bg-gradient-to-r from-blue-300 to-cyan-200 bg-clip-text text-transparent">
-                  all in one place.
+                {story.title.split(' ').slice(0, -2).join(' ')}
+                <span className={`block bg-gradient-to-r ${story.accent} bg-clip-text text-transparent`}>
+                  {story.title.split(' ').slice(-2).join(' ')}.
                 </span>
               </h1>
 
               <p className="mt-6 max-w-xl text-base leading-7 text-slate-300/80">
-                Sign in to manage students, teachers, attendance, fees, results,
-                notices and everyday school work from any device.
+                {story.description}
               </p>
 
               <div className="mt-9 flex flex-wrap gap-3">
-                {highlights.map(({ icon: Icon, label }) => (
+                {story.highlights.map(({ icon: Icon, label }) => (
                   <div
                     key={label}
                     className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-medium text-slate-200 backdrop-blur-sm"
@@ -78,12 +146,12 @@ export default function LoginPage() {
               <div className="mt-12 max-w-lg rounded-2xl border border-white/10 bg-white/[0.055] p-5 backdrop-blur-sm">
                 <div className="flex items-start gap-4">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-400/15 text-blue-200">
-                    <GraduationCap className="h-5 w-5" strokeWidth={1.8} />
+                    <CalloutIcon className="h-5 w-5" strokeWidth={1.8} />
                   </div>
                   <div>
-                    <p className="font-semibold text-white">Built for schools in Nepal</p>
+                    <p className="font-semibold text-white">{story.calloutTitle}</p>
                     <p className="mt-1.5 text-sm leading-6 text-slate-400">
-                      Simple enough for daily use, powerful enough to keep the whole school connected.
+                      {story.calloutText}
                     </p>
                   </div>
                 </div>
