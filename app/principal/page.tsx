@@ -1,694 +1,853 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ElementType } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import {
+  AlertCircle,
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardCheck,
+  FileText,
+  Globe,
+  GraduationCap,
+  Megaphone,
+  Plus,
+  ReceiptText,
+  TrendingDown,
+  TrendingUp,
+  UserPlus,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
-// @ts-ignore
-import NepaliDate from 'nepali-date-converter';
-import { 
-  Users, 
-  GraduationCap, 
-  ClipboardCheck, 
-  Wallet, 
-  FileText, 
-  UserPlus, 
-  TrendingUp, 
-  TrendingDown, 
-  Calendar, 
-  MoreHorizontal, 
-  Cake, 
-  Bell, 
-  Megaphone, 
-  Send, 
-  UserX, 
-  CheckCircle, 
-  AlertCircle, 
-  CloudSun, 
-  CalendarDays,
-  Globe
-} from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
-// Recharts Components
-import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend 
-} from 'recharts';
+type Profile = {
+  full_name: string | null;
+  school_id: string;
+};
 
-// --- Mock Data for Charts (We will connect real data later) ---
-const attendanceData = [
-  { name: 'Mon', attendance: 92 },
-  { name: 'Tue', attendance: 94 },
-  { name: 'Wed', attendance: 93 },
-  { name: 'Thu', attendance: 95 },
-  { name: 'Fri', attendance: 94 },
-  { name: 'Sat', attendance: 91 },
-];
+type SchoolRecord = {
+  name: string | null;
+  slug: string | null;
+};
 
-const feeData = [
-  { name: 'Collected', value: 840000, color: '#10b981' }, // Emerald 500
-  { name: 'Pending', value: 260000, color: '#f59e0b' },   // Amber 500
-  { name: 'Overdue', value: 120000, color: '#ef4444' },   // Red 500
-];
+type StudentRecord = {
+  id: string;
+  name: string;
+  class: string | null;
+  section: string | null;
+  created_at: string | null;
+};
 
-const healthMetrics = [
-  { label: 'Attendance', value: 94, color: 'bg-emerald-500' },
-  { label: 'Fee Collection', value: 82, color: 'bg-amber-500' },
-  { label: 'Academic Performance', value: 89, color: 'bg-emerald-500' },
-  { label: 'Teacher Attendance', value: 96, color: 'bg-emerald-500' },
-  { label: 'Pending Tasks', value: 91, color: 'bg-emerald-500' },
-];
+type AttendanceRecord = {
+  student_id: string | null;
+  attendance_date: string;
+  status: string;
+};
 
-export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null);
-  const [school, setSchool] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [stats, setStats] = useState({ students: 0, teachers: 0, classes: 0, exams: 0 });
-  const [todayRate, setTodayRate] = useState(0);
-  const [yesterdayRate, setYesterdayRate] = useState(0);
-  const [feeMonth, setFeeMonth] = useState({ collected: 0, paidStudents: 0 });
-  const [upcomingExams, setUpcomingExams] = useState(0);
-  const [recentStudents, setRecentStudents] = useState<any[]>([]);
-  const [newStudentsThisMonth, setNewStudentsThisMonth] = useState(0);
-  const [pendingAdmissions, setPendingAdmissions] = useState(0);
-  const [birthdaysToday, setBirthdaysToday] = useState(0);
+type FeeRecord = {
+  student_id: string | null;
+  amount: number | string | null;
+  payment_date: string;
+};
+
+type ExamRecord = {
+  id: string;
+  name: string;
+  start_date: string | null;
+};
+
+type EventRecord = {
+  id: string;
+  title: string;
+  event_date: string | null;
+  event_time: string | null;
+};
+
+type AttendancePoint = {
+  day: string;
+  date: string;
+  attendance: number;
+};
+
+type ScheduleItem = {
+  id: string;
+  title: string;
+  date: string;
+  time: string | null;
+  type: 'Exam' | 'Event';
+};
+
+type AttentionData = {
+  icon: ElementType;
+  title: string;
+  description: string;
+  href: string;
+  action: string;
+  tone: 'amber' | 'red' | 'orange' | 'blue';
+};
+
+type DashboardData = {
+  profile: Profile | null;
+  school: SchoolRecord | null;
+  students: number;
+  teachers: number;
+  classes: number;
+  todayAttendance: number;
+  yesterdayAttendance: number;
+  feesCollected: number;
+  paidStudents: number;
+  pendingAdmissions: number;
+  lowAttendance: number;
+  upcomingExams: number;
+  attendanceTrend: AttendancePoint[];
+  recentStudents: StudentRecord[];
+  schedule: ScheduleItem[];
+};
+
+const initialData: DashboardData = {
+  profile: null,
+  school: null,
+  students: 0,
+  teachers: 0,
+  classes: 0,
+  todayAttendance: 0,
+  yesterdayAttendance: 0,
+  feesCollected: 0,
+  paidStudents: 0,
+  pendingAdmissions: 0,
+  lowAttendance: 0,
+  upcomingExams: 0,
+  attendanceTrend: [],
+  recentStudents: [],
+  schedule: [],
+};
+
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function attendanceRate(records: AttendanceRecord[]) {
+  const marked = records.filter((record) => record.status !== 'unmarked');
+  if (marked.length === 0) return 0;
+  const present = marked.filter(
+    (record) => record.status === 'present' || record.status === 'late'
+  ).length;
+  return Math.round((present / marked.length) * 100);
+}
+
+function initials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+export default function PrincipalDashboardPage() {
+  const [dashboard, setDashboard] = useState<DashboardData>(initialData);
   const [loading, setLoading] = useState(true);
-  const [birthdaysThisWeek, setBirthdaysThisWeek] = useState(0);
-  const [activeNotices, setActiveNotices] = useState(0);
-  const [upcomingEvents, setUpcomingEvents] = useState(0);
-  const [lowAttendanceCount, setLowAttendanceCount] = useState(0);
-  const [unreadNotices, setUnreadNotices] = useState(0);
+  const [authenticated, setAuthenticated] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    async function getData() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (!user) { setLoading(false); return; }
+    let cancelled = false;
 
-      const { data: profileData } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
-      setProfile(profileData);
+    async function loadDashboard() {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
-      if (profileData?.school_id) {
-        const schoolId = profileData.school_id;
-        const { data: schoolData } = await supabase.from('schools').select('*').eq('id', schoolId).single();
-        setSchool(schoolData);
+        if (userError) throw userError;
+        if (!user) {
+          if (!cancelled) setAuthenticated(false);
+          return;
+        }
 
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name, school_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileError || !profileData?.school_id) {
+          throw new Error('Your school profile could not be loaded.');
+        }
+
+        const profile = profileData as Profile;
+        const schoolId = profile.school_id;
         const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
-        const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
-        const monthKey = todayStr.slice(0, 7);
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+        const sixDaysAgo = new Date(today);
+        sixDaysAgo.setDate(today.getDate() - 6);
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-          const [studentsRes, teachersRes, classesRes, examsRes, attendanceTodayRes, attendanceYesterdayRes, feesRes, recentRes, newStudentsRes, admissionsRes, birthdaysRes, noticesRes, eventsRes, attendanceMonthRes] = await Promise.all([
-          supabase.from('students').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
-          supabase.from('teachers').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
-          supabase.from('classes').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
-          supabase.from('exams').select('id, exam_date').eq('school_id', schoolId),
-          supabase.from('attendance').select('status').eq('school_id', schoolId).eq('attendance_date', todayStr),
-          supabase.from('attendance').select('status').eq('school_id', schoolId).eq('attendance_date', yesterdayStr),
-          supabase.from('fee_records').select('amount, student_id, payment_date').eq('school_id', schoolId),
-          supabase.from('students').select('*').eq('school_id', schoolId).order('created_at', { ascending: false }).limit(4),
-          supabase.from('students').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).gte('created_at', monthKey + '-01'),
-          supabase.from('admission_applications').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('status', 'pending'),
-          supabase.from('students').select('dob').eq('school_id', schoolId),
-          supabase.from('notices').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).gte('publish_date', todayStr),
-          supabase.from('news_events').select('*', { count: 'exact', head: true }).eq('school_id', schoolId).eq('is_event', true).gte('event_date', todayStr),
-          supabase.from('attendance').select('student_id, status').eq('school_id', schoolId).gte('attendance_date', monthKey + '-01'),
+        const todayKey = toDateKey(today);
+        const yesterdayKey = toDateKey(yesterday);
+        const weekStartKey = toDateKey(sixDaysAgo);
+        const monthStartKey = toDateKey(monthStart);
+        const monthEndKey = toDateKey(monthEnd);
+
+        const [
+          schoolResult,
+          studentsResult,
+          teachersResult,
+          classesResult,
+          weekAttendanceResult,
+          monthAttendanceResult,
+          feesResult,
+          recentStudentsResult,
+          admissionsResult,
+          examsResult,
+          eventsResult,
+        ] = await Promise.all([
+          supabase.from('schools').select('name, slug').eq('id', schoolId).single(),
+          supabase.from('students').select('id', { count: 'exact', head: true }).eq('school_id', schoolId),
+          supabase.from('teachers').select('id', { count: 'exact', head: true }).eq('school_id', schoolId),
+          supabase.from('classes').select('id', { count: 'exact', head: true }).eq('school_id', schoolId),
+          supabase
+            .from('attendance')
+            .select('student_id, attendance_date, status')
+            .eq('school_id', schoolId)
+            .gte('attendance_date', weekStartKey)
+            .lte('attendance_date', todayKey),
+          supabase
+            .from('attendance')
+            .select('student_id, attendance_date, status')
+            .eq('school_id', schoolId)
+            .gte('attendance_date', monthStartKey)
+            .lte('attendance_date', todayKey),
+          supabase
+            .from('fee_records')
+            .select('student_id, amount, payment_date')
+            .eq('school_id', schoolId)
+            .gte('payment_date', monthStartKey)
+            .lte('payment_date', monthEndKey),
+          supabase
+            .from('students')
+            .select('id, name, class, section, created_at')
+            .eq('school_id', schoolId)
+            .order('created_at', { ascending: false })
+            .limit(5),
+          supabase
+            .from('admission_applications')
+            .select('id', { count: 'exact', head: true })
+            .eq('school_id', schoolId)
+            .eq('status', 'pending'),
+          supabase
+            .from('exams')
+            .select('id, name, start_date')
+            .eq('school_id', schoolId)
+            .gte('start_date', todayKey)
+            .order('start_date', { ascending: true })
+            .limit(5),
+          supabase
+            .from('news_events')
+            .select('id, title, event_date, event_time')
+            .eq('school_id', schoolId)
+            .eq('is_event', true)
+            .gte('event_date', todayKey)
+            .order('event_date', { ascending: true })
+            .limit(5),
         ]);
 
-        const attToday = attendanceTodayRes.data || [];
-        const presentToday = attToday.filter((a: any) => a.status === 'present').length;
-        const absentToday = attToday.filter((a: any) => a.status === 'absent').length;
-        setTodayRate(presentToday + absentToday > 0 ? Math.round((presentToday / (presentToday + absentToday)) * 100) : 0);
+        const firstError = [
+          schoolResult.error,
+          studentsResult.error,
+          teachersResult.error,
+          classesResult.error,
+          weekAttendanceResult.error,
+          monthAttendanceResult.error,
+          feesResult.error,
+          recentStudentsResult.error,
+          admissionsResult.error,
+          examsResult.error,
+          eventsResult.error,
+        ].find(Boolean);
 
-        const attYesterday = attendanceYesterdayRes.data || [];
-        const presentYesterday = attYesterday.filter((a: any) => a.status === 'present').length;
-        const absentYesterday = attYesterday.filter((a: any) => a.status === 'absent').length;
-        setYesterdayRate(presentYesterday + absentYesterday > 0 ? Math.round((presentYesterday / (presentYesterday + absentYesterday)) * 100) : 0);
+        if (firstError) throw firstError;
 
-        const monthFees = (feesRes.data || []).filter((r: any) => (r.payment_date || '').startsWith(monthKey));
-        setFeeMonth({
-          collected: monthFees.reduce((s: number, r: any) => s + (r.amount || 0), 0),
-          paidStudents: new Set(monthFees.map((r: any) => r.student_id)).size,
+        const weekAttendance = (weekAttendanceResult.data || []) as AttendanceRecord[];
+        const monthAttendance = (monthAttendanceResult.data || []) as AttendanceRecord[];
+        const fees = (feesResult.data || []) as FeeRecord[];
+        const exams = (examsResult.data || []) as ExamRecord[];
+        const events = (eventsResult.data || []) as EventRecord[];
+
+        const attendanceTrend = Array.from({ length: 7 }, (_, index) => {
+          const date = new Date(sixDaysAgo);
+          date.setDate(sixDaysAgo.getDate() + index);
+          const dateKey = toDateKey(date);
+          return {
+            day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+            date: dateKey,
+            attendance: attendanceRate(
+              weekAttendance.filter((record) => record.attendance_date === dateKey)
+            ),
+          };
         });
 
-        setUpcomingExams((examsRes.data || []).filter((e: any) => e.exam_date >= todayStr).length);
-        setStats({ students: studentsRes.count || 0, teachers: teachersRes.count || 0, classes: classesRes.count || 0, exams: examsRes.count || 0 });
-        setRecentStudents(recentRes.data || []);
-        setNewStudentsThisMonth(newStudentsRes.count || 0);
-        setPendingAdmissions(admissionsRes.count || 0);
-
-        const todayMonth = today.getMonth() + 1; const todayDay = today.getDate();
-        setBirthdaysToday((birthdaysRes.data || []).filter((s: any) => { if (!s.dob) return false; const d = new Date(s.dob); return d.getMonth() + 1 === todayMonth && d.getDate() === todayDay; }).length);
-                // --- NEW: Upcoming This Week & Needs Action Data ---
-        
-        // 1. Birthdays this week (reuses the birthdaysRes data we already fetched)
-        const weekFromNow = new Date();
-        weekFromNow.setDate(weekFromNow.getDate() + 7);
-        const bdaysThisWeek = (birthdaysRes.data || []).filter((s: any) => {
-          if (!s.dob) return false;
-          const d = new Date(s.dob);
-          const thisYear = today.getFullYear();
-          const bdayThisYear = new Date(thisYear, d.getMonth(), d.getDate());
-          return bdayThisYear >= today && bdayThisYear <= weekFromNow;
+        const studentAttendance = new Map<string, { present: number; total: number }>();
+        monthAttendance.forEach((record) => {
+          if (!record.student_id || record.status === 'unmarked') return;
+          const current = studentAttendance.get(record.student_id) || { present: 0, total: 0 };
+          current.total += 1;
+          if (record.status === 'present' || record.status === 'late') current.present += 1;
+          studentAttendance.set(record.student_id, current);
         });
-        setBirthdaysThisWeek(bdaysThisWeek.length);
 
-        // 2. Active Notices
-        setActiveNotices(noticesRes.count || 0);
-
-        // 3. Upcoming Events this month
-        const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
-        const { count: eventsCount } = await supabase
-          .from('news_events')
-          .select('*', { count: 'exact', head: true })
-          .eq('school_id', schoolId)
-          .eq('is_event', true)
-          .gte('event_date', todayStr)
-          .lte('event_date', monthEnd);
-        setUpcomingEvents(eventsCount || 0);
-
-        // 4. Low Attendance Students (< 75% this month)
-        const studentAttendanceMap = new Map();
-        (attendanceMonthRes.data || []).forEach((a: any) => {
-          if (!studentAttendanceMap.has(a.student_id)) {
-            studentAttendanceMap.set(a.student_id, { present: 0, total: 0 });
-          }
-          const stats = studentAttendanceMap.get(a.student_id);
-          stats.total++;
-          if (a.status === 'present') stats.present++;
+        let lowAttendance = 0;
+        studentAttendance.forEach(({ present, total }) => {
+          if (total > 0 && (present / total) * 100 < 75) lowAttendance += 1;
         });
-        let lowAttCount = 0;
-        studentAttendanceMap.forEach((stats: any) => {
-          const rate = (stats.present / stats.total) * 100;
-          if (rate < 75) lowAttCount++;
-        });
-        setLowAttendanceCount(lowAttCount);
 
-        // 5. Unread Notices (Placeholder for now)
-        setUnreadNotices(0); 
+        const schedule: ScheduleItem[] = [
+          ...exams
+            .filter((exam): exam is ExamRecord & { start_date: string } => Boolean(exam.start_date))
+            .map((exam) => ({
+              id: `exam-${exam.id}`,
+              title: exam.name,
+              date: exam.start_date,
+              time: null,
+              type: 'Exam' as const,
+            })),
+          ...events
+            .filter((event): event is EventRecord & { event_date: string } => Boolean(event.event_date))
+            .map((event) => ({
+              id: `event-${event.id}`,
+              title: event.title,
+              date: event.event_date,
+              time: event.event_time,
+              type: 'Event' as const,
+            })),
+        ]
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .slice(0, 5);
+
+        const todayRecords = weekAttendance.filter(
+          (record) => record.attendance_date === todayKey
+        );
+        const yesterdayRecords = weekAttendance.filter(
+          (record) => record.attendance_date === yesterdayKey
+        );
+
+        if (!cancelled) {
+          setDashboard({
+            profile,
+            school: schoolResult.data as SchoolRecord,
+            students: studentsResult.count || 0,
+            teachers: teachersResult.count || 0,
+            classes: classesResult.count || 0,
+            todayAttendance: attendanceRate(todayRecords),
+            yesterdayAttendance: attendanceRate(yesterdayRecords),
+            feesCollected: fees.reduce(
+              (total, record) => total + Number(record.amount || 0),
+              0
+            ),
+            paidStudents: new Set(
+              fees.map((record) => record.student_id).filter(Boolean)
+            ).size,
+            pendingAdmissions: admissionsResult.count || 0,
+            lowAttendance,
+            upcomingExams: exams.length,
+            attendanceTrend,
+            recentStudents: (recentStudentsResult.data || []) as StudentRecord[],
+            schedule,
+          });
+        }
+      } catch (loadError) {
+        console.error('Principal dashboard error:', loadError);
+        if (!cancelled) {
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : 'The dashboard could not be loaded.'
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     }
-    getData();
+
+    loadDashboard();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  if (loading) return <div className="flex h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div></div>;
-  if (!user) return <div className="flex h-screen items-center justify-center">Please log in</div>;
+  if (loading) return <DashboardSkeleton />;
 
-  const feePercent = stats.students > 0 ? Math.min(100, Math.round((feeMonth.paidStudents / stats.students) * 100)) : 0;
-  const duesCount = Math.max(0, stats.students - feeMonth.paidStudents);
-  const health = stats.students > 0 ? Math.round((todayRate + feePercent) / 2) : 0;
-  const attendanceTrend = todayRate - yesterdayRate;
+  if (!authenticated) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
+        <div className="max-w-sm rounded-2xl border border-slate-200 bg-white p-7 text-center shadow-sm">
+          <h1 className="text-xl font-bold text-slate-950">Please sign in</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Sign in with your principal account to open this dashboard.
+          </p>
+          <Link href="/auth/login?role=principal" className="mt-5 inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700">
+            Go to login
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  const attendanceDifference =
+    dashboard.todayAttendance - dashboard.yesterdayAttendance;
+  const feeProgress =
+    dashboard.students > 0
+      ? Math.min(100, Math.round((dashboard.paidStudents / dashboard.students) * 100))
+      : 0;
+  const unpaidStudents = Math.max(0, dashboard.students - dashboard.paidStudents);
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  let npDate = '';
-  try { npDate = new NepaliDate(new Date()).format('DD MMMM YYYY'); } catch { npDate = ''; }
+  const greeting =
+    hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const dateLabel = new Date().toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const firstName = dashboard.profile?.full_name?.split(' ')[0] || 'Principal';
 
-  const attention: { icon: string; text: string; href: string; link: string }[] = [];
-  if (pendingAdmissions > 0) attention.push({ icon: '🔴', text: `${pendingAdmissions} admission application${pendingAdmissions === 1 ? '' : 's'} waiting for review`, href: '/principal/admissions', link: 'Review →' });
-  if (duesCount > 0) attention.push({ icon: '🟠', text: `${duesCount} student${duesCount === 1 ? '' : 's'} haven't paid fees this month`, href: '/principal/fees/dues', link: 'See dues →' });
-  if (todayRate > 0 && todayRate < 80) attention.push({ icon: '🟡', text: `Today's attendance is low (${todayRate}%)`, href: '/principal/attendance/history', link: 'View →' });
-  if (upcomingExams > 0) attention.push({ icon: '📝', text: `${upcomingExams} exam${upcomingExams === 1 ? '' : 's'} coming up`, href: '/principal/exams', link: 'View →' });
-  if (birthdaysToday > 0) attention.push({ icon: '🎂', text: `${birthdaysToday} student${birthdaysToday === 1 ? '' : 's'} have birthday today!`, href: '/principal/birthdays', link: 'Wish them →' });
+  const attentionCandidates: Array<AttentionData | null> = [
+    dashboard.pendingAdmissions > 0
+      ? {
+          icon: UserPlus,
+          title: `${dashboard.pendingAdmissions} pending admission${dashboard.pendingAdmissions === 1 ? '' : 's'}`,
+          description: 'Applications are waiting for your review.',
+          href: '/principal/admission',
+          action: 'Review',
+          tone: 'amber',
+        }
+      : null,
+    unpaidStudents > 0
+      ? {
+          icon: Wallet,
+          title: `${unpaidStudents} student${unpaidStudents === 1 ? '' : 's'} without a payment record`,
+          description: 'Check this month’s fee collection and follow up.',
+          href: '/principal/fees',
+          action: 'View fees',
+          tone: 'red',
+        }
+      : null,
+    dashboard.lowAttendance > 0
+      ? {
+          icon: ClipboardCheck,
+          title: `${dashboard.lowAttendance} low-attendance student${dashboard.lowAttendance === 1 ? '' : 's'}`,
+          description: 'Attendance is below 75% for this month.',
+          href: '/principal/attendance',
+          action: 'Check',
+          tone: 'orange',
+        }
+      : null,
+    dashboard.upcomingExams > 0
+      ? {
+          icon: FileText,
+          title: `${dashboard.upcomingExams} upcoming exam${dashboard.upcomingExams === 1 ? '' : 's'}`,
+          description: 'Review the schedule and prepare results.',
+          href: '/principal/results',
+          action: 'Open exams',
+          tone: 'blue',
+        }
+      : null,
+  ];
+  const attentionItems = attentionCandidates.filter(
+    (item): item is AttentionData => item !== null
+  );
 
-  
+  const statCards = [
+    {
+      label: 'Students',
+      value: dashboard.students.toLocaleString(),
+      helper: `${dashboard.classes} active class${dashboard.classes === 1 ? '' : 'es'}`,
+      icon: Users,
+      iconClass: 'bg-blue-50 text-blue-600',
+      href: '/principal/students',
+    },
+    {
+      label: 'Teachers',
+      value: dashboard.teachers.toLocaleString(),
+      helper: 'School staff accounts',
+      icon: GraduationCap,
+      iconClass: 'bg-violet-50 text-violet-600',
+      href: '/principal/teachers',
+    },
+    {
+      label: 'Today’s attendance',
+      value: `${dashboard.todayAttendance}%`,
+      helper:
+        dashboard.yesterdayAttendance > 0
+          ? `${attendanceDifference >= 0 ? '+' : ''}${attendanceDifference}% from yesterday`
+          : 'No previous-day comparison',
+      icon: ClipboardCheck,
+      iconClass: 'bg-emerald-50 text-emerald-600',
+      href: '/principal/attendance',
+      trend: dashboard.yesterdayAttendance > 0 ? attendanceDifference : null,
+    },
+    {
+      label: 'Fees this month',
+      value: `NPR ${dashboard.feesCollected.toLocaleString()}`,
+      helper: `${dashboard.paidStudents} of ${dashboard.students} students recorded`,
+      icon: Wallet,
+      iconClass: 'bg-amber-50 text-amber-600',
+      href: '/principal/fees',
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <Sidebar />
-      <div className="lg:ml-64 pt-10 flex flex-col min-h-screen">
+      <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
-        
-        <main className="flex-1 pt-24 p-4 sm:p-6 lg:p-8 pb-24">
-          
-                 {/* ✅ 1. Upgraded Header */}
-       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-         <div>
-           <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-             {greeting}, <span className="text-blue-600">{profile?.full_name?.split(' ')[0] || 'Principal'}</span> 👋
-           </h1>
-           <p className="mt-1.5 text-sm text-gray-500">
-             Here's what's happening at <span className="font-medium text-gray-700">{school?.name || 'your school'}</span> today.
-           </p>
-           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-             <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 font-medium text-red-700 ring-1 ring-red-100">{npDate} B.S.</span>
-             <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-700 ring-1 ring-gray-200">
-               <Calendar className="h-3.5 w-3.5 text-gray-500" /> {dateStr}
-             </span>
-           </div>
-         </div>
-         
-         {/* ✅ View Website Button (Right Side) */}
-         {school?.slug && (
-           <Link 
-             href={`/s/${school.slug}`} 
-             target="_blank" 
-             rel="noopener noreferrer"
-             className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-all hover:-translate-y-0.5"
-           >
-             <Globe className="h-4 w-4" />
-             View Your Website
-           </Link>
-         )}
-       </div>
+        <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1500px]">
+            <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500">{dateLabel}</p>
+                <h1 className="mt-1 text-2xl font-bold tracking-[-0.025em] text-slate-950 sm:text-3xl">
+                  {greeting}, <span className="text-blue-600">{firstName}</span>
+                </h1>
+                <p className="mt-2 text-sm text-slate-500">
+                  Here is what needs attention at{' '}
+                  <span className="font-semibold text-slate-700">
+                    {dashboard.school?.name || 'your school'}
+                  </span>
+                  .
+                </p>
+              </div>
 
-          {/* ✅ 2. Premium Stats Grid */}
-          <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            <div className="group flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-gray-500">Students</p>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-100"><Users className="h-5 w-5" /></div>
+              <div className="flex flex-wrap gap-2">
+                <QuickAction href="/principal/students" icon={UserPlus} label="Add student" />
+                <QuickAction href="/principal/fees" icon={ReceiptText} label="Record fee" />
+                <QuickAction href="/principal/communication" icon={Megaphone} label="Publish notice" />
+                {dashboard.school?.slug && (
+                  <Link
+                    href={`/s/${dashboard.school.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-blue-200 hover:text-blue-700"
+                  >
+                    <Globe className="h-4 w-4" />
+                    <span className="hidden sm:inline">School website</span>
+                  </Link>
+                )}
               </div>
-              <p className="mt-4 text-3xl font-bold tracking-tight text-gray-900 tabular-nums">{stats.students}</p>
-              {newStudentsThisMonth > 0 && <div className="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700"><TrendingUp className="h-3 w-3" /> +{newStudentsThisMonth} this month</div>}
-            </div>
-            <div className="group flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-gray-500">Teachers</p>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 transition-colors group-hover:bg-purple-100"><GraduationCap className="h-5 w-5" /></div>
-              </div>
-              <p className="mt-4 text-3xl font-bold tracking-tight text-gray-900 tabular-nums">{stats.teachers}</p>
-            </div>
-            <div className="group flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-gray-500">Attendance</p>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-600 transition-colors group-hover:bg-teal-100"><ClipboardCheck className="h-5 w-5" /></div>
-              </div>
-              <p className="mt-4 text-3xl font-bold tracking-tight text-gray-900 tabular-nums">{todayRate}%</p>
-              {yesterdayRate > 0 && <div className={`mt-3 inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${attendanceTrend >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{attendanceTrend >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />} {attendanceTrend >= 0 ? '+' : ''}{attendanceTrend}% vs yesterday</div>}
-            </div>
-            <div className="group flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-gray-500">Fees Collected</p>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-100"><Wallet className="h-5 w-5" /></div>
-              </div>
-              <p className="mt-4 text-3xl font-bold tracking-tight text-gray-900 tabular-nums">NPR {feeMonth.collected.toLocaleString()}</p>
-              <p className="mt-3 text-xs text-gray-400">{feeMonth.paidStudents} of {stats.students} students paid</p>
-            </div>
-            <div className="group flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-gray-500">Upcoming Exams</p>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition-colors group-hover:bg-amber-100"><FileText className="h-5 w-5" /></div>
-              </div>
-              <p className="mt-4 text-3xl font-bold tracking-tight text-gray-900 tabular-nums">{upcomingExams}</p>
-            </div>
-            <div className="group flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-gray-500">Pending Admissions</p>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition-colors group-hover:bg-indigo-100"><UserPlus className="h-5 w-5" /></div>
-              </div>
-              <p className="mt-4 text-3xl font-bold tracking-tight text-gray-900 tabular-nums">{pendingAdmissions}</p>
-            </div>
-          </div>
+            </header>
 
-          {/* ✅ 3. NEW: Analytics Charts Section */}
-          <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            
-            {/* Attendance Overview (Line/Area Chart) */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900">Attendance Overview</h3>
-                <div className="flex gap-1 rounded-lg bg-gray-100 p-1 text-xs font-medium text-gray-500">
-                  <button className="rounded-md bg-white px-3 py-1.5 text-gray-900 shadow-sm">This week</button>
-                  <button className="rounded-md px-3 py-1.5 hover:bg-gray-50">This month</button>
-                  <button className="rounded-md px-3 py-1.5 hover:bg-gray-50">This term</button>
-                </div>
+            {error && (
+              <div role="alert" className="mt-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                {error}
               </div>
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={attendanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorAttendance" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                    <YAxis domain={[80, 100]} axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                    <Area type="monotone" dataKey="attendance" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorAttendance)" dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+            )}
 
-            {/* Fee Collection (Donut Chart) */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-              <h3 className="mb-4 text-lg font-bold text-gray-900">Fee Collection</h3>
-              <div className="grid grid-cols-2 gap-4 mb-2">
-                <div><p className="text-xs text-gray-500">Expected</p><p className="text-lg font-bold text-gray-900">NPR 12,00,000</p></div>
-                <div><p className="text-xs text-gray-500">Collected</p><p className="text-lg font-bold text-emerald-600">NPR 8,40,000</p></div>
-                <div><p className="text-xs text-gray-500">Pending</p><p className="text-lg font-bold text-amber-600">NPR 2,60,000</p></div>
-                <div><p className="text-xs text-gray-500">Overdue</p><p className="text-lg font-bold text-red-600">NPR 1,20,000</p></div>
-              </div>
-              <div className="h-48 w-full flex justify-center relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={feeData} innerRadius={60} outerRadius={80} paddingAngle={2} dataKey="value" stroke="none">
-                      {feeData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}
-                    </Pie>
-                    <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Custom Legend below chart */}
-                <div className="absolute bottom-0 flex gap-4 text-xs font-medium text-gray-600">
-                  <div className="flex items-center gap-1.5"><div className="h-3 w-3 rounded-sm bg-emerald-500"></div>Collected</div>
-                  <div className="flex items-center gap-1.5"><div className="h-3 w-3 rounded-sm bg-amber-500"></div>Pending</div>
-                  <div className="flex items-center gap-1.5"><div className="h-3 w-3 rounded-sm bg-red-500"></div>Overdue</div>
-                </div>
-              </div>
-              <div className="mt-6">
-                <div className="flex justify-between text-xs font-medium text-gray-500 mb-1.5">
-                  <span>Collection Progress</span>
-                  <span>70%</span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-gray-100">
-                  <div className="h-full rounded-full bg-blue-500" style={{ width: '70%' }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ✅ 4. School Health Score (Gauge & Metrics) */}
-          <div className="mb-8 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <div className="flex flex-col md:flex-row gap-8 items-center">
-              
-              {/* Left: Big Circle Score */}
-              <div className="flex items-center gap-6 w-full md:w-auto">
-                <div className="relative h-32 w-32 flex-shrink-0">
-                  <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
-                    <path className="text-gray-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
-                    <path className="text-emerald-500" strokeDasharray={`${health}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-3xl font-bold text-gray-900">{health}%</span>
+            <section aria-label="School overview" className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {statCards.map((stat) => (
+                <Link
+                  key={stat.label}
+                  href={stat.href}
+                  className="group rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                      <p className="mt-3 text-2xl font-bold tracking-[-0.025em] text-slate-950 tabular-nums sm:text-3xl">
+                        {stat.value}
+                      </p>
+                    </div>
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${stat.iconClass}`}>
+                      <stat.icon className="h-5 w-5" strokeWidth={1.8} />
+                    </span>
                   </div>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">School Health Score: {health}%</h3>
-                  <p className="mt-1 flex items-center gap-2 text-sm text-gray-500">
-                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> School is doing well
+                  <p className={`mt-3 flex items-center gap-1.5 text-xs ${
+                    stat.trend === undefined || stat.trend === null
+                      ? 'text-slate-400'
+                      : stat.trend >= 0
+                        ? 'text-emerald-600'
+                        : 'text-red-600'
+                  }`}>
+                    {stat.trend !== undefined && stat.trend !== null &&
+                      (stat.trend >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />)}
+                    {stat.helper}
                   </p>
-                  <p className="mt-2 text-sm text-gray-400 max-w-xs">Fee collection is currently 8% below the monthly target.</p>
-                  <button className="mt-3 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">View detailed analysis</button>
+                </Link>
+              ))}
+            </section>
+
+            <section className="mt-6 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-950">Needs your attention</h2>
+                  <p className="mt-1 text-sm text-slate-500">Important school work, ordered in one place.</p>
+                </div>
+                {attentionItems.length > 0 && (
+                  <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-600">
+                    {attentionItems.length} active
+                  </span>
+                )}
+              </div>
+
+              {attentionItems.length === 0 ? (
+                <div className="mt-5 flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-4">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-emerald-600 shadow-sm">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-900">Everything looks good</p>
+                    <p className="mt-0.5 text-xs text-emerald-700">There are no urgent items requiring your attention.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-5 grid gap-3 lg:grid-cols-2">
+                  {attentionItems.map((item) => (
+                    <AttentionItem key={item.title} {...item} />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.8fr)]">
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-950">Attendance trend</h2>
+                    <p className="mt-1 text-sm text-slate-500">The last seven days of recorded attendance.</p>
+                  </div>
+                  <Link href="/principal/attendance" className="text-xs font-semibold text-blue-600 hover:text-blue-800">
+                    View details
+                  </Link>
+                </div>
+                <div className="mt-5 h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={dashboard.attendanceTrend} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="attendanceFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
+                          <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
+                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <Tooltip
+                        formatter={(value) => [`${value}%`, 'Attendance']}
+                        contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 10px 30px -15px rgba(15,23,42,.35)' }}
+                      />
+                      <Area type="monotone" dataKey="attendance" stroke="#2563eb" strokeWidth={2.5} fill="url(#attendanceFill)" dot={{ r: 3, fill: '#2563eb', strokeWidth: 0 }} activeDot={{ r: 5 }} />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
-              {/* Right: Progress Bars */}
-              <div className="flex-1 w-full space-y-4">
-                {healthMetrics.map((metric) => (
-                  <div key={metric.label}>
-                    <div className="flex justify-between text-sm font-medium text-gray-700 mb-1.5">
-                      <span>{metric.label}</span>
-                      <span>{metric.value}%</span>
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-950">Fee collection</h2>
+                    <p className="mt-1 text-sm text-slate-500">Current month</p>
+                  </div>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                    <Wallet className="h-5 w-5" />
+                  </span>
+                </div>
+                <p className="mt-8 text-3xl font-bold tracking-[-0.03em] text-slate-950 tabular-nums">
+                  NPR {dashboard.feesCollected.toLocaleString()}
+                </p>
+                <p className="mt-1 text-sm text-slate-500">Total recorded payments</p>
+
+                <div className="mt-8">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-slate-600">Students recorded</span>
+                    <span className="font-bold text-slate-900">{feeProgress}%</span>
+                  </div>
+                  <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 transition-all" style={{ width: `${feeProgress}%` }} />
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-emerald-50 p-3">
+                      <p className="text-xs text-emerald-700">Paid records</p>
+                      <p className="mt-1 text-xl font-bold text-emerald-900">{dashboard.paidStudents}</p>
                     </div>
-                    <div className="h-2 w-full rounded-full bg-gray-100">
-                      <div className={`h-full rounded-full ${metric.color} transition-all duration-500`} style={{ width: `${metric.value}%` }}></div>
+                    <div className="rounded-xl bg-red-50 p-3">
+                      <p className="text-xs text-red-700">Not recorded</p>
+                      <p className="mt-1 text-xl font-bold text-red-900">{unpaidStudents}</p>
                     </div>
                   </div>
-                ))}
+                </div>
+                <Link href="/principal/fees" className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800">
+                  Open fee management <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </section>
+
+            <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
+              <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-5 sm:px-6">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-950">Recently added students</h2>
+                    <p className="mt-1 text-sm text-slate-500">The newest student records at your school.</p>
+                  </div>
+                  <Link href="/principal/students" className="text-xs font-semibold text-blue-600 hover:text-blue-800">View all</Link>
+                </div>
+                {dashboard.recentStudents.length === 0 ? (
+                  <EmptyState icon={Users} title="No students added yet" text="Add your first student to begin building the school directory." href="/principal/students" action="Add student" />
+                ) : (
+                  <div className="divide-y divide-slate-100 px-5 sm:px-6">
+                    {dashboard.recentStudents.map((student) => (
+                      <div key={student.id} className="flex items-center gap-3 py-4">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">
+                          {initials(student.name)}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-slate-900">{student.name}</p>
+                          <p className="mt-0.5 text-xs text-slate-500">
+                            {student.class ? `Class ${student.class}` : 'Class not assigned'}
+                            {student.section ? ` · Section ${student.section}` : ''}
+                          </p>
+                        </div>
+                        <span className="hidden text-xs text-slate-400 sm:block">
+                          {student.created_at
+                            ? new Date(student.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                            : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
+              <div className="rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-5 sm:px-6">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-950">Coming up</h2>
+                    <p className="mt-1 text-sm text-slate-500">Upcoming exams and events.</p>
+                  </div>
+                  <CalendarDays className="h-5 w-5 text-slate-400" />
+                </div>
+                {dashboard.schedule.length === 0 ? (
+                  <EmptyState icon={CalendarDays} title="Nothing scheduled" text="New exams and calendar events will appear here." href="/principal/calendar" action="Open calendar" />
+                ) : (
+                  <div className="divide-y divide-slate-100 px-5 sm:px-6">
+                    {dashboard.schedule.map((item) => {
+                      const itemDate = new Date(`${item.date}T00:00:00`);
+                      return (
+                        <div key={item.id} className="flex gap-3 py-4">
+                          <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-slate-100">
+                            <span className="text-[10px] font-bold uppercase text-slate-500">{itemDate.toLocaleDateString('en-US', { month: 'short' })}</span>
+                            <span className="text-lg font-bold leading-none text-slate-900">{itemDate.getDate()}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <span className={`text-[10px] font-bold uppercase tracking-wide ${item.type === 'Exam' ? 'text-amber-600' : 'text-blue-600'}`}>{item.type}</span>
+                            <p className="truncate text-sm font-semibold text-slate-900">{item.title}</p>
+                            {item.time && <p className="mt-0.5 text-xs text-slate-400">{item.time}</p>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function QuickAction({ href, icon: Icon, label }: { href: string; icon: ElementType; label: string }) {
+  return (
+    <Link href={href} className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
+      <Icon className="h-4 w-4" />
+      <span className="hidden sm:inline">{label}</span>
+      <Plus className="h-3.5 w-3.5 sm:hidden" />
+    </Link>
+  );
+}
+
+const attentionTones = {
+  amber: 'border-amber-100 bg-amber-50/70 text-amber-700',
+  red: 'border-red-100 bg-red-50/70 text-red-700',
+  orange: 'border-orange-100 bg-orange-50/70 text-orange-700',
+  blue: 'border-blue-100 bg-blue-50/70 text-blue-700',
+};
+
+function AttentionItem({ icon: Icon, title, description, href, action, tone }: AttentionData) {
+  return (
+    <div className={`flex items-center gap-3 rounded-xl border p-3.5 ${attentionTones[tone]}`}>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/80 shadow-sm">
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-slate-900">{title}</p>
+        <p className="mt-0.5 truncate text-xs text-slate-500">{description}</p>
+      </div>
+      <Link href={href} className="shrink-0 rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-black/5 transition hover:text-blue-700">
+        {action}
+      </Link>
+    </div>
+  );
+}
+
+function EmptyState({ icon: Icon, title, text, href, action }: {
+  icon: ElementType;
+  title: string;
+  text: string;
+  href: string;
+  action: string;
+}) {
+  return (
+    <div className="px-6 py-10 text-center">
+      <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+        <Icon className="h-5 w-5" />
+      </span>
+      <p className="mt-3 text-sm font-semibold text-slate-900">{title}</p>
+      <p className="mx-auto mt-1 max-w-xs text-xs leading-5 text-slate-500">{text}</p>
+      <Link href={href} className="mt-4 inline-flex text-xs font-semibold text-blue-600 hover:text-blue-800">{action}</Link>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Sidebar />
+      <div className="pt-10 lg:ml-64">
+        <TopBar />
+        <main className="px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1500px] animate-pulse">
+            <div className="h-8 w-72 rounded-lg bg-slate-200" />
+            <div className="mt-3 h-4 w-96 max-w-full rounded bg-slate-200" />
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {Array.from({ length: 4 }, (_, index) => <div key={index} className="h-36 rounded-2xl bg-white ring-1 ring-slate-200" />)}
+            </div>
+            <div className="mt-6 h-52 rounded-2xl bg-white ring-1 ring-slate-200" />
+            <div className="mt-6 grid gap-6 xl:grid-cols-2">
+              <div className="h-80 rounded-2xl bg-white ring-1 ring-slate-200" />
+              <div className="h-80 rounded-2xl bg-white ring-1 ring-slate-200" />
             </div>
           </div>
-          
-        {/* ✅ Upcoming This Week + Needs Action Section */}
-<div className="mb-8 space-y-6">
-  
-  {/* Row 1: Upcoming This Week (4 Cards) */}
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-    
-    {/*  Upcoming Exams */}
-    <div className="rounded-xl border border-orange-100 bg-gradient-to-br from-orange-50 to-white p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-orange-600">Upcoming Exams</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">{upcomingExams}</p>
-          <p className="mt-1 text-xs text-gray-500">This week</p>
-        </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
-          <FileText className="h-5 w-5" />
-        </div>
-      </div>
-      <Link href="/exams" className="mt-4 inline-flex items-center text-sm font-semibold text-orange-600 hover:text-orange-700">
-        View Schedule →
-      </Link>
-    </div>
-
-    {/* 🎂 Birthdays This Week */}
-    <div className="rounded-xl border border-pink-100 bg-gradient-to-br from-pink-50 to-white p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-pink-600">Birthdays</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">{birthdaysThisWeek}</p>
-          <p className="mt-1 text-xs text-gray-500">This week</p>
-        </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-pink-100 text-pink-600">
-          <Cake className="h-5 w-5" />
-        </div>
-      </div>
-      <Link href="/principal/birthdays" className="mt-4 inline-flex items-center text-sm font-semibold text-pink-600 hover:text-pink-700">
-        See Who →
-      </Link>
-    </div>
-
-    {/*  Active Notices */}
-    <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">Active Notices</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">{activeNotices}</p>
-          <p className="mt-1 text-xs text-gray-500">Published</p>
-        </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-          <Bell className="h-5 w-5" />
-        </div>
-      </div>
-      <Link href="/notices" className="mt-4 inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700">
-        Manage →
-      </Link>
-    </div>
-
-    {/* 🏫 School Events */}
-    <div className="rounded-xl border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-purple-600">Events</p>
-          <p className="mt-2 text-2xl font-bold text-gray-900">{upcomingEvents}</p>
-          <p className="mt-1 text-xs text-gray-500">This month</p>
-        </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
-          <Calendar className="h-5 w-5" />
-        </div>
-      </div>
-      <Link href="/principal/website" className="mt-4 inline-flex items-center text-sm font-semibold text-purple-600 hover:text-purple-700">
-        View All →
-      </Link>
-    </div>
-  </div>
-
-  {/* Row 2: Needs Action (4 Stat Boxes + Action Buttons) */}
-  <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-    <h3 className="mb-4 text-lg font-bold text-gray-900">⚡ Needs Your Action</h3>
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      
-      {/* Pending Admissions */}
-      <div className="flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50 p-4">
-        <div>
-          <p className="text-sm font-medium text-amber-700">Pending Admissions</p>
-          <p className="mt-1 text-3xl font-bold text-amber-900">{pendingAdmissions}</p>
-        </div>
-        <Link 
-          href="/principal/admissions" 
-          className="rounded-lg bg-amber-600 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-700 transition-colors"
-        >
-          Review
-        </Link>
-      </div>
-
-      {/* Fee Defaulters */}
-      <div className="flex items-center justify-between rounded-xl border border-red-100 bg-red-50 p-4">
-        <div>
-          <p className="text-sm font-medium text-red-700">Fee Defaulters</p>
-          <p className="mt-1 text-3xl font-bold text-red-900">{duesCount}</p>
-        </div>
-        <Link 
-          href="/fees/dues" 
-          className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700 transition-colors"
-        >
-          Remind
-        </Link>
-      </div>
-
-      {/* Low Attendance Students */}
-      <div className="flex items-center justify-between rounded-xl border border-orange-100 bg-orange-50 p-4">
-        <div>
-          <p className="text-sm font-medium text-orange-700">Low Attendance</p>
-          <p className="mt-1 text-3xl font-bold text-orange-900">{lowAttendanceCount}</p>
-        </div>
-        <Link 
-          href="/attendance/history" 
-          className="rounded-lg bg-orange-600 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-700 transition-colors"
-        >
-          Check
-        </Link>
-      </div>
-
-      {/* Unread Messages/Notices */}
-      <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50 p-4">
-        <div>
-          <p className="text-sm font-medium text-indigo-700">Unread Notices</p>
-          <p className="mt-1 text-3xl font-bold text-indigo-900">{unreadNotices}</p>
-        </div>
-        <Link 
-          href="/notices" 
-          className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors"
-        >
-          Publish
-        </Link>
-      </div>
-
-    </div>
-  </div>
-            {/* ✅ NEW: Daily Operations & Productivity Widgets (2x2 Grid) */}
-          <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-            
-            {/* 1. Quick Broadcast Publisher */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <Megaphone className="h-5 w-5 text-blue-600" /> Quick Broadcast
-                </h3>
-                <span className="text-xs font-medium text-gray-400">Send to Parents/Teachers</span>
-              </div>
-              <textarea
-                placeholder="e.g., School will remain closed tomorrow due to heavy rainfall..."
-                className="w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
-                rows={3}
-              />
-              <div className="mt-3 flex items-center justify-between">
-                <select className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                  <option>All Parents</option>
-                  <option>All Teachers</option>
-                  <option>Both</option>
-                </select>
-                <button className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors">
-                  <Send className="h-4 w-4" /> Broadcast Now
-                </button>
-              </div>
-            </div>
-
-            {/* 2. Staff on Leave Today */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <UserX className="h-5 w-5 text-red-500" /> Staff on Leave Today
-                </h3>
-                <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-700">3 Absent</span>
-              </div>
-              <div className="space-y-3">
-                {/* Mock Data - Replace with real DB query later */}
-                <div className="flex items-center justify-between rounded-xl bg-gray-50 p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-sm font-bold text-red-600">RK</div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Ram K. Shrestha</p>
-                      <p className="text-xs text-gray-500">Sick Leave • Class 10 Math</p>
-                    </div>
-                  </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-[10px] font-bold text-green-700">
-                    <CheckCircle className="h-3 w-3" /> Sub Assigned
-                  </span>
-                </div>
-                <div className="flex items-center justify-between rounded-xl bg-gray-50 p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-600">SP</div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Sita Poudel</p>
-                      <p className="text-xs text-gray-500">Personal • Class 8 Science</p>
-                    </div>
-                  </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-700">
-                    <AlertCircle className="h-3 w-3" /> Needs Sub
-                  </span>
-                </div>
-                <div className="flex items-center justify-between rounded-xl bg-gray-50 p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">HT</div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Hari Thapa</p>
-                      <p className="text-xs text-gray-500">Sick Leave • Class 9 English</p>
-                    </div>
-                  </div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-[10px] font-bold text-green-700">
-                    <CheckCircle className="h-3 w-3" /> Sub Assigned
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* 3. Daily Cash Flow / Petty Cash */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-emerald-500" /> Daily Cash Flow
-                </h3>
-                <span className="text-xs font-medium text-gray-400">Today, {dateStr.split(',')[0]}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-xl bg-emerald-50 p-4 border border-emerald-100">
-                  <p className="text-xs font-medium text-emerald-700">Today's Income</p>
-                  <p className="mt-1 text-2xl font-bold text-emerald-900 tabular-nums">NPR 12,500</p>
-                  <p className="mt-1 text-[10px] text-emerald-600 flex items-center gap-1"><TrendingUp className="h-3 w-3"/> +12% vs yesterday</p>
-                </div>
-                <div className="rounded-xl bg-red-50 p-4 border border-red-100">
-                  <p className="text-xs font-medium text-red-700">Today's Expenses</p>
-                  <p className="mt-1 text-2xl font-bold text-red-900 tabular-nums">NPR 2,400</p>
-                  <p className="mt-1 text-[10px] text-red-600 flex items-center gap-1"><TrendingDown className="h-3 w-3"/> Petty cash & supplies</p>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center justify-between rounded-lg bg-gray-50 px-4 py-2.5">
-                <span className="text-sm font-medium text-gray-600">Net Cash Flow Today</span>
-                <span className="text-sm font-bold text-gray-900 tabular-nums">+ NPR 10,100</span>
-              </div>
-            </div>
-
-            {/* 4. Local Weather & Next Holiday */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <CloudSun className="h-5 w-5 text-sky-500" /> Local Context
-                </h3>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {/* Weather Widget (Mock Data - Connect OpenWeather API later) */}
-                <div className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-sky-50 to-blue-50 p-4 border border-sky-100 text-center">
-                  <CloudSun className="h-10 w-10 text-sky-500 mb-2" />
-                  <p className="text-2xl font-bold text-gray-900">22°C</p>
-                  <p className="text-xs font-medium text-gray-600">Light Rain</p>
-                  <p className="mt-1 text-[10px] text-gray-400">{school?.municipality || 'Syangja'}</p>
-                </div>
-                {/* Next Holiday Widget */}
-                <div className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 p-4 border border-purple-100 text-center">
-                  <CalendarDays className="h-10 w-10 text-purple-500 mb-2" />
-                  <p className="text-lg font-bold text-gray-900 leading-tight">Constitution Day</p>
-                  <p className="text-xs font-medium text-gray-600 mt-1">Nov 9, 2024</p>
-                  <p className="mt-1 text-[10px] text-purple-600 font-semibold">In 14 Days</p>
-                </div>
-              </div>
-              <div className="mt-4 rounded-lg bg-amber-50 border border-amber-100 px-4 py-2.5 flex items-start gap-2">
-                <span className="text-amber-500 text-sm">💡</span>
-                <p className="text-xs text-amber-800 font-medium">Monsoon season may affect attendance. Ensure roof drainage is checked.</p>
-              </div>
-            </div>
-
-          </div>
-
-</div>
-
         </main>
       </div>
     </div>
