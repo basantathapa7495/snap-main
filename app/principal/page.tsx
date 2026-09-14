@@ -518,7 +518,7 @@ export default function PrincipalDashboardPage() {
       <main className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
         <div className="max-w-sm rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-7 text-center shadow-sm">
           <h1 className="text-xl font-bold text-slate-950 dark:text-slate-50">Please sign in</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400 dark:text-slate-500">
+          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">
             Sign in with your principal account to open this dashboard.
           </p>
           <Link
@@ -709,7 +709,7 @@ export default function PrincipalDashboardPage() {
                     {greeting},{" "}
                     <span className="text-blue-600">{firstName}</span>
                   </h1>
-                  <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
+                  <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
                     Manage today’s work for{" "}
                     <span className="font-semibold text-slate-700 dark:text-slate-200">
                       {schoolName}
@@ -749,7 +749,7 @@ export default function PrincipalDashboardPage() {
                     key={option}
                     type="button"
                     onClick={() => setRange(option)}
-                    className={`rounded-lg px-3 py-2 text-xs font-semibold ${range === option ? "bg-slate-900 text-white" : "text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:bg-slate-800"}`}
+                    className={`rounded-lg px-3 py-2 text-xs font-semibold ${range === option ? "bg-slate-900 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
                   >
                     {rangeLabels[option]}
                   </button>
@@ -792,16 +792,16 @@ export default function PrincipalDashboardPage() {
                         <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-100">Getting started</p>
                         <h2 className="mt-1 text-xl font-bold">Finish your school setup</h2>
                       </div>
-                      <span className="shrink-0 rounded-full bg-white dark:bg-slate-900/15 px-3 py-1 text-xs font-bold">{completedSetup}/{setupTasks.length} complete</span>
+                      <span className="shrink-0 rounded-full bg-white/15 px-3 py-1 text-xs font-bold">{completedSetup}/{setupTasks.length} complete</span>
                     </div>
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white dark:bg-slate-900/20">
-                      <div className="h-full rounded-full bg-white dark:bg-slate-900 transition-all" style={{ width: `${setupProgress}%` }} />
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/20">
+                      <div className="h-full rounded-full bg-white transition-all" style={{ width: `${setupProgress}%` }} />
                     </div>
                     <p className="mt-3 text-sm leading-6 text-blue-100">Complete these basics so attendance, fees, reports and your public website work correctly.</p>
                   </div>
                   <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[440px]">
                     {setupTasks.filter((task) => !task.complete).slice(0, 4).map((task) => (
-                      <Link key={task.label} href={task.href} className="group flex items-center justify-between rounded-xl border border-white/15 bg-white dark:bg-slate-900/10 px-4 py-3 text-sm font-semibold backdrop-blur hover:bg-white dark:bg-slate-900/20">
+                      <Link key={task.label} href={task.href} className="group flex items-center justify-between rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold backdrop-blur hover:bg-white/20">
                         <span>{task.label}</span>
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                       </Link>
@@ -819,7 +819,7 @@ export default function PrincipalDashboardPage() {
                 >
                   <div className="flex justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-500">
+                      <p className="truncate text-sm font-medium text-slate-500 dark:text-slate-400">
                         {stat.label}
                       </p>
                       <p className="mt-3 truncate text-2xl font-bold text-slate-950 dark:text-slate-50">
@@ -852,7 +852,7 @@ export default function PrincipalDashboardPage() {
                   <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">
                     Needs your attention
                   </h2>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     The three most urgent items, ordered by priority.
                   </p>
                 </div>
@@ -889,7 +889,7 @@ export default function PrincipalDashboardPage() {
                     <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">
                       Attendance overview
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                       Seven-day trend; totals follow the selected date range.
                     </p>
                   </div>
@@ -997,7 +997,7 @@ export default function PrincipalDashboardPage() {
                     <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">
                       Fee collection
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                       {rangeLabels[range]} payments vs monthly goal
                     </p>
                   </div>
@@ -1006,7 +1006,7 @@ export default function PrincipalDashboardPage() {
                 <p className="mt-7 text-3xl font-bold text-slate-950 dark:text-slate-50">
                   {money(dashboard.feesCollected)}
                 </p>
-                <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   Collected from {dashboard.paidStudents} students
                 </p>
                 {dashboard.expectedFees == null ? (
@@ -1083,7 +1083,7 @@ export default function PrincipalDashboardPage() {
                                 </span>
                               )}
                           </div>
-                          <p className="truncate text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
+                          <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                             {student.class
                               ? `Class ${student.class}`
                               : "Class not assigned"}
@@ -1175,7 +1175,7 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold ${primary ? "bg-blue-600 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:bg-slate-800"}`}
+      className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold ${primary ? "bg-blue-600 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
     >
       <Icon className="h-4 w-4" />
       {label}
@@ -1203,7 +1203,7 @@ function AttentionItem({
       <Icon className="h-5 w-5 shrink-0" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</p>
-        <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
+        <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
           {description}
         </p>
       </div>
@@ -1268,7 +1268,7 @@ function Heading({
     <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 px-5 py-5">
       <div>
         <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">{title}</h2>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">{text}</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{text}</p>
       </div>
       <Link href={href} className="text-xs font-semibold text-blue-600">
         View all
@@ -1293,7 +1293,7 @@ function Empty({
     <div className="flex min-h-56 flex-col items-center justify-center px-6 text-center">
       <Icon className="h-6 w-6 text-slate-400 dark:text-slate-500" />
       <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</p>
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">{text}</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{text}</p>
       <Link href={href} className="mt-4 text-xs font-semibold text-blue-600">
         {action}
       </Link>
