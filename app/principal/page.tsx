@@ -515,10 +515,10 @@ export default function PrincipalDashboardPage() {
   if (loading) return <DashboardSkeleton />;
   if (!authenticated)
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
-        <div className="max-w-sm rounded-2xl border border-slate-200 bg-white p-7 text-center shadow-sm">
-          <h1 className="text-xl font-bold text-slate-950">Please sign in</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
+        <div className="max-w-sm rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-7 text-center shadow-sm">
+          <h1 className="text-xl font-bold text-slate-950 dark:text-slate-50">Please sign in</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400 dark:text-slate-500">
             Sign in with your principal account to open this dashboard.
           </p>
           <Link
@@ -627,7 +627,7 @@ export default function PrincipalDashboardPage() {
       value: dashboard.students.toLocaleString(),
       helper: `${dashboard.activeStudents} active login account${dashboard.activeStudents === 1 ? "" : "s"}`,
       icon: Users,
-      color: "bg-blue-50 text-blue-600",
+      color: "bg-blue-50 dark:bg-blue-950/40 text-blue-600",
       href: "/principal/students",
     },
     {
@@ -635,7 +635,7 @@ export default function PrincipalDashboardPage() {
       value: dashboard.teachers.toLocaleString(),
       helper: `${dashboard.activeTeachers} active login account${dashboard.activeTeachers === 1 ? "" : "s"}`,
       icon: GraduationCap,
-      color: "bg-violet-50 text-violet-600",
+      color: "bg-violet-50 dark:bg-violet-950/35 text-violet-600",
       href: "/principal/teachers",
     },
     {
@@ -648,7 +648,7 @@ export default function PrincipalDashboardPage() {
         ? `${dashboard.attendance.present + dashboard.attendance.late} of ${dashboard.attendance.total} present`
         : "No attendance records",
       icon: ClipboardCheck,
-      color: "bg-emerald-50 text-emerald-600",
+      color: "bg-emerald-50 dark:bg-emerald-950/35 text-emerald-600",
       href: "/principal/attendance",
       trend: range === "today" ? difference : null,
     },
@@ -657,38 +657,67 @@ export default function PrincipalDashboardPage() {
       value: money(dashboard.feesCollected),
       helper: `${dashboard.paidStudents} student payment record${dashboard.paidStudents === 1 ? "" : "s"}`,
       icon: Wallet,
-      color: "bg-amber-50 text-amber-600",
+      color: "bg-amber-50 dark:bg-amber-950/35 text-amber-600",
       href: "/principal/fees",
     },
   ];
+  const setupTasks = [
+    {
+      label: "Complete school website",
+      href: "/principal/edit_website",
+      complete: Boolean(dashboard.school?.name && dashboard.school?.slug),
+    },
+    {
+      label: "Create classes",
+      href: "/principal/classes",
+      complete: dashboard.classes > 0,
+    },
+    {
+      label: "Add teachers",
+      href: "/principal/teachers",
+      complete: dashboard.teachers > 0,
+    },
+    {
+      label: "Add students",
+      href: "/principal/students",
+      complete: dashboard.students > 0,
+    },
+    {
+      label: "Configure monthly fees",
+      href: "/principal/fees",
+      complete: dashboard.expectedFees !== null,
+    },
+  ];
+  const completedSetup = setupTasks.filter((task) => task.complete).length;
+  const setupProgress = Math.round((completedSetup / setupTasks.length) * 100);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
         <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px]">
-            <header className="border-b border-slate-200 pb-5">
+            <header className="border-b border-slate-200 dark:border-slate-800 pb-5">
               <div className="grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_auto]">
                 <div>
-                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">
+                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
                     <CalendarDays className="h-3.5 w-3.5" />
                     {fullDate}
                   </p>
-                  <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                  <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-50 sm:text-3xl">
                     {greeting},{" "}
                     <span className="text-blue-600">{firstName}</span>
                   </h1>
-                  <p className="mt-1.5 text-sm text-slate-500">
+                  <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
                     Manage today’s work for{" "}
-                    <span className="font-semibold text-slate-700">
+                    <span className="font-semibold text-slate-700 dark:text-slate-200">
                       {schoolName}
                     </span>{" "}
                     and review what needs your attention.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm sm:flex">
+                <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-sm sm:flex">
                   <QuickAction
                     href="/principal/attendance"
                     icon={ClipboardCheck}
@@ -714,19 +743,19 @@ export default function PrincipalDashboardPage() {
               </div>
             </header>
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="inline-flex w-fit rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+              <div className="inline-flex w-fit rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-sm">
                 {(Object.keys(rangeLabels) as DateRange[]).map((option) => (
                   <button
                     key={option}
                     type="button"
                     onClick={() => setRange(option)}
-                    className={`rounded-lg px-3 py-2 text-xs font-semibold ${range === option ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100"}`}
+                    className={`rounded-lg px-3 py-2 text-xs font-semibold ${range === option ? "bg-slate-900 text-white" : "text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:bg-slate-800"}`}
                   >
                     {rangeLabels[option]}
                   </button>
                 ))}
               </div>
-              <div className="flex items-center gap-3 text-xs text-slate-400">
+              <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
                 <span>
                   {dashboard.updatedAt
                     ? `Updated ${new Date(dashboard.updatedAt).toLocaleTimeString("en-US", { timeZone: "Asia/Kathmandu", hour: "numeric", minute: "2-digit" })}`
@@ -736,7 +765,7 @@ export default function PrincipalDashboardPage() {
                   type="button"
                   onClick={() => setRefreshKey((value) => value + 1)}
                   disabled={refreshing}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 font-semibold text-slate-600 disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-2 font-semibold text-slate-600 dark:text-slate-300 disabled:opacity-60"
                 >
                   <RefreshCw
                     className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
@@ -748,25 +777,52 @@ export default function PrincipalDashboardPage() {
             {warning && (
               <div
                 role="alert"
-                className="mt-4 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+                className="mt-4 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/35 px-4 py-3 text-sm text-amber-800"
               >
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 {warning}
               </div>
             )}
-            <section className="mt-5 grid auto-cols-[82%] grid-flow-col gap-4 overflow-x-auto pb-2 [scrollbar-width:none] sm:grid-flow-row sm:grid-cols-2 sm:overflow-visible xl:grid-cols-4 [&::-webkit-scrollbar]:hidden">
+            {completedSetup < setupTasks.length && (
+              <section className="mt-5 overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-600 to-indigo-700 p-5 text-white shadow-sm sm:p-6">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="max-w-xl">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-100">Getting started</p>
+                        <h2 className="mt-1 text-xl font-bold">Finish your school setup</h2>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-white dark:bg-slate-900/15 px-3 py-1 text-xs font-bold">{completedSetup}/{setupTasks.length} complete</span>
+                    </div>
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white dark:bg-slate-900/20">
+                      <div className="h-full rounded-full bg-white dark:bg-slate-900 transition-all" style={{ width: `${setupProgress}%` }} />
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-blue-100">Complete these basics so attendance, fees, reports and your public website work correctly.</p>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[440px]">
+                    {setupTasks.filter((task) => !task.complete).slice(0, 4).map((task) => (
+                      <Link key={task.label} href={task.href} className="group flex items-center justify-between rounded-xl border border-white/15 bg-white dark:bg-slate-900/10 px-4 py-3 text-sm font-semibold backdrop-blur hover:bg-white dark:bg-slate-900/20">
+                        <span>{task.label}</span>
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
+            <section className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {stats.map((stat) => (
                 <Link
                   key={stat.label}
                   href={stat.href}
-                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-blue-200"
+                  className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:border-blue-200"
                 >
                   <div className="flex justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-500">
+                      <p className="truncate text-sm font-medium text-slate-500 dark:text-slate-400 dark:text-slate-500">
                         {stat.label}
                       </p>
-                      <p className="mt-3 truncate text-2xl font-bold text-slate-950">
+                      <p className="mt-3 truncate text-2xl font-bold text-slate-950 dark:text-slate-50">
                         {stat.value}
                       </p>
                     </div>
@@ -777,7 +833,7 @@ export default function PrincipalDashboardPage() {
                     </span>
                   </div>
                   <p
-                    className={`mt-3 flex items-center gap-1 truncate text-xs ${stat.trend == null ? "text-slate-400" : stat.trend >= 0 ? "text-emerald-600" : "text-red-600"}`}
+                    className={`mt-3 flex items-center gap-1 truncate text-xs ${stat.trend == null ? "text-slate-400 dark:text-slate-500" : stat.trend >= 0 ? "text-emerald-600" : "text-red-600"}`}
                   >
                     {stat.trend != null &&
                       (stat.trend >= 0 ? (
@@ -790,18 +846,18 @@ export default function PrincipalDashboardPage() {
                 </Link>
               ))}
             </section>
-            <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
               <div className="flex justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-950">
+                  <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">
                     Needs your attention
                   </h2>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
                     The three most urgent items, ordered by priority.
                   </p>
                 </div>
                 {attentionItems.length > 0 && (
-                  <span className="h-fit rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-600">
+                  <span className="h-fit rounded-full bg-red-50 dark:bg-red-950/35 px-2.5 py-1 text-xs font-bold text-red-600">
                     {attentionItems.length} active
                   </span>
                 )}
@@ -813,7 +869,7 @@ export default function PrincipalDashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="mt-5 flex items-center gap-3 rounded-xl bg-emerald-50 p-4">
+                <div className="mt-5 flex items-center gap-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/35 p-4">
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                   <div>
                     <p className="text-sm font-semibold text-emerald-900">
@@ -827,13 +883,13 @@ export default function PrincipalDashboardPage() {
               )}
             </section>
             <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.85fr)]">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
                 <div className="flex justify-between">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-950">
+                    <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">
                       Attendance overview
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
                       Seven-day trend; totals follow the selected date range.
                     </p>
                   </div>
@@ -935,26 +991,26 @@ export default function PrincipalDashboardPage() {
                   />
                 )}
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
                 <div className="flex justify-between">
                   <div>
-                    <h2 className="text-lg font-bold text-slate-950">
+                    <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">
                       Fee collection
                     </h2>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
                       {rangeLabels[range]} payments vs monthly goal
                     </p>
                   </div>
                   <Wallet className="h-5 w-5 text-amber-600" />
                 </div>
-                <p className="mt-7 text-3xl font-bold text-slate-950">
+                <p className="mt-7 text-3xl font-bold text-slate-950 dark:text-slate-50">
                   {money(dashboard.feesCollected)}
                 </p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">
                   Collected from {dashboard.paidStudents} students
                 </p>
                 {dashboard.expectedFees == null ? (
-                  <div className="mt-6 rounded-xl bg-blue-50 p-4">
+                  <div className="mt-6 rounded-xl bg-blue-50 dark:bg-blue-950/40 p-4">
                     <p className="text-sm font-semibold text-blue-900">
                       Monthly goal not configured
                     </p>
@@ -969,7 +1025,7 @@ export default function PrincipalDashboardPage() {
                       <span>Collection progress</span>
                       <strong>{feeProgress}%</strong>
                     </div>
-                    <div className="mt-2 h-2.5 rounded-full bg-slate-100">
+                    <div className="mt-2 h-2.5 rounded-full bg-slate-100 dark:bg-slate-800">
                       <div
                         className="h-full rounded-full bg-blue-600"
                         style={{ width: `${feeProgress}%` }}
@@ -997,21 +1053,21 @@ export default function PrincipalDashboardPage() {
               </div>
             </section>
             <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
-              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
                 <Heading
                   title="Recently added students"
                   text="Open student management from any record."
                   href="/principal/students"
                 />
                 {dashboard.recentStudents.length ? (
-                  <div className="divide-y divide-slate-100 px-5">
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800 px-5">
                     {dashboard.recentStudents.map((student) => (
                       <Link
                         key={student.id}
                         href={`/principal/students?student=${student.id}`}
                         className="group flex items-center gap-3 py-4"
                       >
-                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/40 text-xs font-bold text-blue-700">
                           {initials(student.name)}
                         </span>
                         <div className="min-w-0 flex-1">
@@ -1022,12 +1078,12 @@ export default function PrincipalDashboardPage() {
                             {student.created_at &&
                               student.created_at.slice(0, 10) >=
                                 shiftDateKey(today, -7) && (
-                                <span className="rounded-full bg-emerald-50 px-2 text-[10px] font-bold text-emerald-700">
+                                <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/35 px-2 text-[10px] font-bold text-emerald-700">
                                   New
                                 </span>
                               )}
                           </div>
-                          <p className="truncate text-xs text-slate-500">
+                          <p className="truncate text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
                             {student.class
                               ? `Class ${student.class}`
                               : "Class not assigned"}
@@ -1051,21 +1107,21 @@ export default function PrincipalDashboardPage() {
                   />
                 )}
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
                 <Heading
                   title="Coming up"
                   text="Upcoming exams and events."
                   href="/principal/calendar"
                 />
                 {dashboard.schedule.length ? (
-                  <div className="divide-y divide-slate-100 px-5">
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800 px-5">
                     {dashboard.schedule.map((item) => (
                       <Link
                         key={item.id}
                         href={item.href}
                         className="group flex items-center gap-3 py-4"
                       >
-                        <span className="flex h-12 w-16 items-center justify-center rounded-xl bg-slate-100 text-[10px] font-bold uppercase text-slate-600">
+                        <span className="flex h-12 w-16 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300">
                           {dateLabel(item.date, today)}
                         </span>
                         <div className="min-w-0 flex-1">
@@ -1078,7 +1134,7 @@ export default function PrincipalDashboardPage() {
                             {item.title}
                           </p>
                           {item.time && (
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-slate-400 dark:text-slate-500">
                               {item.time}
                             </p>
                           )}
@@ -1119,7 +1175,7 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold ${primary ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+      className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold ${primary ? "bg-blue-600 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:bg-slate-800"}`}
     >
       <Icon className="h-4 w-4" />
       {label}
@@ -1127,10 +1183,10 @@ function QuickAction({
   );
 }
 const tones = {
-  amber: "border-amber-100 bg-amber-50/70 text-amber-700",
-  red: "border-red-100 bg-red-50/70 text-red-700",
-  orange: "border-orange-100 bg-orange-50/70 text-orange-700",
-  blue: "border-blue-100 bg-blue-50/70 text-blue-700",
+  amber: "border-amber-100 bg-amber-50 dark:bg-amber-950/35/70 text-amber-700",
+  red: "border-red-100 bg-red-50 dark:bg-red-950/35/70 text-red-700",
+  orange: "border-orange-100 bg-orange-50 dark:bg-orange-950/35/70 text-orange-700",
+  blue: "border-blue-100 bg-blue-50 dark:bg-blue-950/40/70 text-blue-700",
 };
 function AttentionItem({
   icon: Icon,
@@ -1146,14 +1202,14 @@ function AttentionItem({
     >
       <Icon className="h-5 w-5 shrink-0" />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-slate-900">{title}</p>
-        <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</p>
+        <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
           {description}
         </p>
       </div>
       <Link
         href={href}
-        className="shrink-0 rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm"
+        className="shrink-0 rounded-lg bg-white dark:bg-slate-900 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm"
       >
         {action}
       </Link>
@@ -1170,9 +1226,9 @@ function Count({
   color: "emerald" | "red" | "amber";
 }) {
   const colors = {
-    emerald: "bg-emerald-50 text-emerald-700",
-    red: "bg-red-50 text-red-700",
-    amber: "bg-amber-50 text-amber-700",
+    emerald: "bg-emerald-50 dark:bg-emerald-950/35 text-emerald-700",
+    red: "bg-red-50 dark:bg-red-950/35 text-red-700",
+    amber: "bg-amber-50 dark:bg-amber-950/35 text-amber-700",
   };
   return (
     <div className={`rounded-xl p-3 ${colors[color]}`}>
@@ -1192,7 +1248,7 @@ function Metric({
 }) {
   return (
     <div
-      className={`rounded-xl p-3 ${red ? "bg-red-50 text-red-800" : "bg-slate-50 text-slate-800"}`}
+      className={`rounded-xl p-3 ${red ? "bg-red-50 dark:bg-red-950/35 text-red-800" : "bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200"}`}
     >
       <p className="text-xs">{label}</p>
       <p className="mt-1 truncate text-sm font-bold">{value}</p>
@@ -1209,10 +1265,10 @@ function Heading({
   href: string;
 }) {
   return (
-    <div className="flex justify-between border-b border-slate-100 px-5 py-5">
+    <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 px-5 py-5">
       <div>
-        <h2 className="text-lg font-bold text-slate-950">{title}</h2>
-        <p className="mt-1 text-sm text-slate-500">{text}</p>
+        <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">{title}</h2>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500">{text}</p>
       </div>
       <Link href={href} className="text-xs font-semibold text-blue-600">
         View all
@@ -1235,9 +1291,9 @@ function Empty({
 }) {
   return (
     <div className="flex min-h-56 flex-col items-center justify-center px-6 text-center">
-      <Icon className="h-6 w-6 text-slate-400" />
-      <p className="mt-3 text-sm font-semibold text-slate-900">{title}</p>
-      <p className="mt-1 text-xs text-slate-500">{text}</p>
+      <Icon className="h-6 w-6 text-slate-400 dark:text-slate-500" />
+      <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">{text}</p>
       <Link href={href} className="mt-4 text-xs font-semibold text-blue-600">
         {action}
       </Link>
@@ -1246,20 +1302,20 @@ function Empty({
 }
 function DashboardSkeleton() {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
       <div className="pt-10 lg:ml-64">
         <TopBar />
         <main className="px-4 pb-24 pt-24 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px] animate-pulse">
-            <div className="h-24 border-b border-slate-200" />
+            <div className="h-24 border-b border-slate-200 dark:border-slate-800" />
             <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {Array.from({ length: 4 }, (_, index) => (
-                <div key={index} className="h-36 rounded-2xl bg-white" />
+                <div key={index} className="h-36 rounded-2xl bg-white dark:bg-slate-900" />
               ))}
             </div>
-            <div className="mt-6 h-48 rounded-2xl bg-white" />
-            <div className="mt-6 h-80 rounded-2xl bg-white" />
+            <div className="mt-6 h-48 rounded-2xl bg-white dark:bg-slate-900" />
+            <div className="mt-6 h-80 rounded-2xl bg-white dark:bg-slate-900" />
           </div>
         </main>
       </div>
