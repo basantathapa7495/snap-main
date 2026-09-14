@@ -25,7 +25,7 @@ on conflict (id) do update set
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
-create policy "School members can view their documents"
+create policy "School admins can view their documents"
 on storage.objects for select
 to authenticated
 using (
@@ -34,10 +34,11 @@ using (
     select 1 from public.profiles
     where profiles.user_id = auth.uid()
       and profiles.school_id::text = (storage.foldername(name))[1]
+      and profiles.role = 'admin'
   )
 );
 
-create policy "School members can upload their documents"
+create policy "School admins can upload their documents"
 on storage.objects for insert
 to authenticated
 with check (
@@ -46,10 +47,11 @@ with check (
     select 1 from public.profiles
     where profiles.user_id = auth.uid()
       and profiles.school_id::text = (storage.foldername(name))[1]
+      and profiles.role = 'admin'
   )
 );
 
-create policy "School members can update their documents"
+create policy "School admins can update their documents"
 on storage.objects for update
 to authenticated
 using (
@@ -58,6 +60,7 @@ using (
     select 1 from public.profiles
     where profiles.user_id = auth.uid()
       and profiles.school_id::text = (storage.foldername(name))[1]
+      and profiles.role = 'admin'
   )
 )
 with check (
@@ -66,10 +69,11 @@ with check (
     select 1 from public.profiles
     where profiles.user_id = auth.uid()
       and profiles.school_id::text = (storage.foldername(name))[1]
+      and profiles.role = 'admin'
   )
 );
 
-create policy "School members can delete their documents"
+create policy "School admins can delete their documents"
 on storage.objects for delete
 to authenticated
 using (
@@ -78,5 +82,6 @@ using (
     select 1 from public.profiles
     where profiles.user_id = auth.uid()
       and profiles.school_id::text = (storage.foldername(name))[1]
+      and profiles.role = 'admin'
   )
 );
