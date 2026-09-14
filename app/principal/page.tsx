@@ -523,7 +523,7 @@ export default function PrincipalDashboardPage() {
           </p>
           <Link
             href="/auth/login?role=principal"
-            className="mt-5 inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white"
+            className="mt-4 inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white"
           >
             Go to login
           </Link>
@@ -694,13 +694,13 @@ export default function PrincipalDashboardPage() {
   return (
     <div className="min-h-screen bg-[#f6f7fb] text-slate-900 dark:bg-[#080b12] dark:text-slate-100">
       <Sidebar />
-      <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
+      <div className="flex min-h-screen flex-col lg:ml-64">
         <TopBar />
-        <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-[1480px]">
-            <section className="relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_18px_60px_-35px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900">
+        <main className="flex-1 px-3 pb-16 pt-20 sm:px-4 lg:px-5">
+          <div className="w-full">
+            <section className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_60px_-35px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900">
               <div className="absolute inset-y-0 right-0 hidden w-2/5 bg-gradient-to-l from-blue-50 to-transparent dark:from-blue-950/30 lg:block" />
-              <div className="relative grid gap-6 p-5 sm:p-7 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+              <div className="relative grid gap-4 p-4 sm:p-5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
@@ -730,7 +730,7 @@ export default function PrincipalDashboardPage() {
               </div>
             </section>
 
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="inline-flex w-full rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:w-auto">
                 {(Object.keys(rangeLabels) as DateRange[]).map((option) => (
                   <button
@@ -762,8 +762,8 @@ export default function PrincipalDashboardPage() {
             )}
 
             {completedSetup < setupTasks.length && (
-              <section className="mt-5 rounded-2xl border border-indigo-200 bg-indigo-50/70 p-5 dark:border-indigo-900/60 dark:bg-indigo-950/25">
-                <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+              <section className="mt-4 rounded-2xl border border-indigo-200 bg-indigo-50/70 p-5 dark:border-indigo-900/60 dark:bg-indigo-950/25">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                   <div className="xl:max-w-sm">
                     <div className="flex items-center justify-between gap-4">
                       <div>
@@ -792,12 +792,12 @@ export default function PrincipalDashboardPage() {
               </section>
             )}
 
-            <section className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <section className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {stats.map((stat, index) => (
                 <Link
                   key={stat.label}
                   href={stat.href}
-                  className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
+                  className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
                 >
                   <span className={"absolute inset-x-0 top-0 h-1 " + (index === 0 ? "bg-blue-500" : index === 1 ? "bg-violet-500" : index === 2 ? "bg-emerald-500" : "bg-amber-500")} />
                   <div className="flex items-start justify-between gap-4">
@@ -817,8 +817,8 @@ export default function PrincipalDashboardPage() {
               ))}
             </section>
 
-            <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)]">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+            <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)]">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5">
                 <SectionHeading
                   eyebrow="Priority inbox"
                   title="Needs your attention"
@@ -826,21 +826,21 @@ export default function PrincipalDashboardPage() {
                   badge={attentionItems.length ? attentionItems.length + " active" : undefined}
                 />
                 {attentionItems.length ? (
-                  <div className="mt-5 grid gap-3 lg:grid-cols-3">
+                  <div className="mt-4 grid gap-3 lg:grid-cols-3">
                     {attentionItems.map((item) => <AttentionCard key={item.title} {...item} />)}
                   </div>
                 ) : (
-                  <div className="mt-5 flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 dark:border-emerald-900/60 dark:bg-emerald-950/30">
+                  <div className="mt-4 flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 dark:border-emerald-900/60 dark:bg-emerald-950/30">
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-emerald-600 shadow-sm dark:bg-slate-900"><CheckCircle2 className="h-6 w-6" /></span>
                     <div><p className="font-bold text-emerald-950 dark:text-emerald-200">You are all caught up</p><p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">No urgent school tasks need your attention.</p></div>
                   </div>
                 )}
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+              <div className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5">
                 <p className="text-xs font-extrabold uppercase tracking-wider text-blue-400">Today at a glance</p>
                 <h2 className="mt-1 text-lg font-bold">School activity</h2>
-                <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="mt-4 grid grid-cols-2 gap-3">
                   <MiniMetric label="Present" value={dashboard.todayAttendance.present} tone="emerald" />
                   <MiniMetric label="Absent" value={dashboard.todayAttendance.absent} tone="red" />
                   <MiniMetric label="Pending admission" value={dashboard.pendingAdmissions} tone="amber" />
@@ -849,12 +849,12 @@ export default function PrincipalDashboardPage() {
               </div>
             </section>
 
-            <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(330px,0.75fr)]">
-              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+            <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(330px,0.75fr)]">
+              <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5">
                 <SectionHeading eyebrow="Attendance" title="Seven-day attendance" description="Daily attendance rate and selected-period totals." href="/principal/attendance" />
                 {dashboard.attendanceTrend.some((point) => point.rate !== null) ? (
                   <>
-                    <div className="mt-5 h-64">
+                    <div className="mt-4 h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={dashboard.attendanceTrend} margin={{ top: 8, right: 5, left: -24 }}>
                           <defs>
@@ -882,7 +882,7 @@ export default function PrincipalDashboardPage() {
                 )}
               </article>
 
-              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+              <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-5">
                 <SectionHeading eyebrow="Finance" title="Fee collection" description={rangeLabels[range] + " payment progress."} href="/principal/fees" />
                 <div className="mt-7">
                   <p className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-white">{money(dashboard.feesCollected)}</p>
@@ -898,7 +898,7 @@ export default function PrincipalDashboardPage() {
                   <div className="mt-6">
                     <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300"><span>Monthly target</span><span>{feeProgress}%</span></div>
                     <div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"><div className="h-full rounded-full bg-gradient-to-r from-blue-600 to-emerald-500" style={{ width: (feeProgress || 0) + "%" }} /></div>
-                    <div className="mt-5 grid grid-cols-2 gap-3">
+                    <div className="mt-4 grid grid-cols-2 gap-3">
                       <SmallFinance label="Expected" value={money(dashboard.expectedFees)} />
                       <SmallFinance label="Remaining" value={money(remaining || 0)} danger />
                     </div>
@@ -907,7 +907,7 @@ export default function PrincipalDashboardPage() {
               </article>
             </section>
 
-            <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
+            <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
               <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <SectionHeading padded eyebrow="Students" title="Recently added" description="Your newest student records." href="/principal/students" />
                 {dashboard.recentStudents.length ? (
@@ -989,7 +989,7 @@ const attentionTones = {
 
 function AttentionCard({ icon: Icon, title, description, href, action, tone }: AttentionData) {
   return (
-    <article className={"flex min-h-48 flex-col rounded-2xl border p-4 " + attentionTones[tone]}>
+    <article className={"flex min-h-40 flex-col rounded-2xl border p-4 " + attentionTones[tone]}>
       <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 shadow-sm dark:bg-slate-900/70"><Icon className="h-5 w-5" /></span>
       <h3 className="mt-4 text-sm font-extrabold text-slate-950 dark:text-white">{title}</h3>
       <p className="mt-1.5 flex-1 text-xs leading-5 opacity-80">{description}</p>
@@ -1056,11 +1056,11 @@ function SmallFinance({ label, value, danger = false }: { label: string; value: 
 
 function EmptyState({ icon: Icon, title, text, href, action }: { icon: ElementType; title: string; text: string; href: string; action: string }) {
   return (
-    <div className="flex min-h-64 flex-col items-center justify-center px-6 py-10 text-center">
+    <div className="flex min-h-52 flex-col items-center justify-center px-6 py-10 text-center">
       <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"><Icon className="h-7 w-7" /></span>
       <p className="mt-4 text-sm font-extrabold text-slate-900 dark:text-white">{title}</p>
       <p className="mt-1.5 max-w-xs text-xs leading-5 text-slate-500 dark:text-slate-400">{text}</p>
-      <Link href={href} className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-sm hover:bg-blue-700">{action}<ArrowRight className="h-3.5 w-3.5" /></Link>
+      <Link href={href} className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-sm hover:bg-blue-700">{action}<ArrowRight className="h-3.5 w-3.5" /></Link>
     </div>
   );
 }
@@ -1069,15 +1069,15 @@ function DashboardSkeleton() {
   return (
     <div className="min-h-screen bg-[#f6f7fb] dark:bg-[#080b12]">
       <Sidebar />
-      <div className="pt-10 lg:ml-64">
+      <div className="lg:ml-64">
         <TopBar />
-        <main className="px-4 pb-24 pt-24 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-[1480px] animate-pulse">
-            <div className="h-44 rounded-[28px] bg-white dark:bg-slate-900" />
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <main className="px-3 pb-16 pt-20 sm:px-4 lg:px-5">
+          <div className="w-full animate-pulse">
+            <div className="h-36 rounded-2xl bg-white dark:bg-slate-900" />
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {Array.from({ length: 4 }, (_, index) => <div key={index} className="h-36 rounded-2xl bg-white dark:bg-slate-900" />)}
             </div>
-            <div className="mt-5 grid gap-5 xl:grid-cols-2"><div className="h-72 rounded-2xl bg-white dark:bg-slate-900" /><div className="h-72 rounded-2xl bg-white dark:bg-slate-900" /></div>
+            <div className="mt-4 grid gap-4 xl:grid-cols-2"><div className="h-72 rounded-2xl bg-white dark:bg-slate-900" /><div className="h-72 rounded-2xl bg-white dark:bg-slate-900" /></div>
           </div>
         </main>
       </div>
