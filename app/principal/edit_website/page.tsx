@@ -108,7 +108,7 @@ function Field({ label, value, onChange, type = 'text', placeholder = '' }: {
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
+        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 dark:text-slate-100 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
       />
     </label>
   );
@@ -125,7 +125,7 @@ function TextArea({ label, value, onChange, rows = 4, placeholder = '' }: {
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full resize-y rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
+        className="w-full resize-y rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 dark:text-slate-100 outline-none placeholder:text-gray-400 dark:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
       />
     </label>
   );
@@ -397,7 +397,7 @@ export default function WebsiteEditorPage() {
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
-                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium ' + (activeTab === tab.id ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300' : 'text-gray-600 hover:bg-gray-50 dark:text-slate-300 dark:hover:bg-slate-800')}>
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium ' + (activeTab === tab.id ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300' : 'text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:text-slate-300 dark:hover:bg-slate-800')}>
                       <Icon className="h-4 w-4" /> {tab.label}
                     </button>
                   );
@@ -430,7 +430,7 @@ export default function WebsiteEditorPage() {
                         <label className="flex min-h-48 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 text-center hover:border-blue-500 dark:border-slate-700 dark:bg-slate-950">
                           {form[field] ? <img src={form[field]} alt="" className="h-48 w-full object-cover" /> : (
                             <>
-                              {uploading === field ? <Loader2 className="mb-2 h-8 w-8 animate-spin text-blue-600" /> : field === 'logo_url' ? <Upload className="mb-2 h-8 w-8 text-gray-400" /> : <ImageIcon className="mb-2 h-8 w-8 text-gray-400" />}
+                              {uploading === field ? <Loader2 className="mb-2 h-8 w-8 animate-spin text-blue-600" /> : field === 'logo_url' ? <Upload className="mb-2 h-8 w-8 text-gray-400 dark:text-slate-500" /> : <ImageIcon className="mb-2 h-8 w-8 text-gray-400 dark:text-slate-500" />}
                               <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">Choose image</span>
                               <span className="mt-1 text-xs text-gray-500 dark:text-slate-400">PNG, JPG or WebP, maximum 5 MB</span>
                             </>
@@ -441,7 +441,7 @@ export default function WebsiteEditorPage() {
                     ))}
                   </div>
                   <div className="mt-8">
-                    <p className="mb-3 text-sm font-medium text-gray-700">Primary color</p>
+                    <p className="mb-3 text-sm font-medium text-gray-700 dark:text-slate-200">Primary color</p>
                     <div className="flex flex-wrap gap-3">
                       {colors.map((color) => (
                         <button key={color.id} type="button" aria-label={color.id} onClick={() => setField('theme_color', color.id)} className={'h-12 w-12 rounded-xl border-4 transition-transform hover:scale-105 ' + (form.theme_color === color.id ? 'border-gray-900 dark:border-slate-100' : 'border-white ring-1 ring-gray-200 dark:border-slate-900 dark:ring-slate-700')} style={{ backgroundColor: color.value }} />
@@ -459,12 +459,12 @@ export default function WebsiteEditorPage() {
                     <TextArea label="Vision" value={form.vision} onChange={(value) => setField('vision', value)} />
                     <div>
                       <div className="mb-3 flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-700">Why choose us</p>
+                        <p className="text-sm font-medium text-gray-700 dark:text-slate-200">Why choose us</p>
                         <button type="button" onClick={() => setField('why_choose_us', [...form.why_choose_us, { icon: '✓', title: '', desc: '' }])} className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600"><Plus className="h-4 w-4" /> Add reason</button>
                       </div>
                       <div className="space-y-3">
                         {form.why_choose_us.map((item, index) => (
-                          <div key={index} className="grid gap-3 rounded-xl border border-gray-200 p-4 dark:border-slate-700 dark:bg-slate-950/40 dark:border-slate-700 dark:bg-slate-950/40 md:grid-cols-[80px_1fr_2fr_auto]">
+                          <div key={index} className="grid gap-3 rounded-xl border border-gray-200 p-4 dark:border-slate-700 dark:bg-slate-950/40 md:grid-cols-[80px_1fr_2fr_auto]">
                             <Field label="Icon" value={item.icon || ''} onChange={(value) => updateReason(index, 'icon', value)} />
                             <Field label="Title" value={item.title} onChange={(value) => updateReason(index, 'title', value)} />
                             <Field label="Description" value={item.desc} onChange={(value) => updateReason(index, 'desc', value)} />
@@ -481,7 +481,7 @@ export default function WebsiteEditorPage() {
                 <Card title="Academic programs" description="Add the programs displayed on your public website.">
                   <div className="space-y-4">
                     {form.programs.map((program, index) => (
-                      <div key={index} className="grid gap-3 rounded-xl border border-gray-200 p-4 dark:border-slate-700 dark:bg-slate-950/40 dark:border-slate-700 dark:bg-slate-950/40 md:grid-cols-[1fr_2fr_auto]">
+                      <div key={index} className="grid gap-3 rounded-xl border border-gray-200 p-4 dark:border-slate-700 dark:bg-slate-950/40 md:grid-cols-[1fr_2fr_auto]">
                         <Field label="Program title" value={program.title} onChange={(value) => updateProgram(index, 'title', value)} />
                         <Field label="Description" value={program.desc} onChange={(value) => updateProgram(index, 'desc', value)} />
                         <button type="button" aria-label="Remove program" onClick={() => setField('programs', form.programs.filter((_, itemIndex) => itemIndex !== index))} className="self-end rounded-lg p-3 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"><Trash2 className="h-4 w-4" /></button>
@@ -531,7 +531,7 @@ export default function WebsiteEditorPage() {
                       ['show_awards', 'Awards'],
                       ['show_achievements', 'Achievements'],
                     ] as Array<[keyof WebsiteForm, string]>).map(([key, label]) => (
-                      <label key={key} className="flex items-center justify-between rounded-xl border border-gray-200 p-4 dark:border-slate-700 dark:bg-slate-950/40 dark:border-slate-700 dark:bg-slate-950/40">
+                      <label key={key} className="flex items-center justify-between rounded-xl border border-gray-200 p-4 dark:border-slate-700 dark:bg-slate-950/40">
                         <span className="text-sm font-medium text-gray-800 dark:text-slate-100">{label}</span>
                         <input type="checkbox" checked={Boolean(form[key])} onChange={(event) => setField(key, event.target.checked as never)} className="h-5 w-5 rounded border-gray-300 bg-white text-blue-600 dark:border-slate-600 dark:bg-slate-950" />
                       </label>
@@ -540,7 +540,7 @@ export default function WebsiteEditorPage() {
                       <p className="mb-2 text-sm font-medium text-gray-700 dark:text-slate-200">Admission highlights</p>
                       {form.admission_cta_items.map((item, index) => (
                         <div key={index} className="mb-2 flex gap-2">
-                          <input value={item} onChange={(event) => setField('admission_cta_items', form.admission_cta_items.map((value, itemIndex) => itemIndex === index ? event.target.value : value))} className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+                          <input value={item} onChange={(event) => setField('admission_cta_items', form.admission_cta_items.map((value, itemIndex) => itemIndex === index ? event.target.value : value))} className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
                           <button type="button" onClick={() => setField('admission_cta_items', form.admission_cta_items.filter((_, itemIndex) => itemIndex !== index))} className="rounded-lg p-3 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"><Trash2 className="h-4 w-4" /></button>
                         </div>
                       ))}
