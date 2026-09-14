@@ -27,6 +27,7 @@ export default function SignupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
@@ -42,6 +43,7 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     if (!selectedProvince || !selectedDistrict || !selectedLocalLevel || !selectedWard) {
       setError('Please select your complete location (Province to Ward).');
@@ -64,35 +66,45 @@ export default function SignupPage() {
     // Auto-generate the school website link (slug)
     const slug = schoolName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
+    const schoolLevel = formData.get('school_level') as string;
+    const pendingSchool = {
+      name: schoolName,
+      slug,
+      province: provinceName,
+      district: districtName,
+      municipality: localLevelName,
+      ward: selectedWard,
+      school_type: formData.get('school_type'),
+      school_level: schoolLevel,
+      phone: formData.get('phone'),
+      principal: fullName,
+      school_email: schoolEmail || null,
+      pan_number: panNumber || null,
+    };
+
     try {
       // 1. Create Auth User
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName } },
+        options: { data: { full_name: fullName, pending_school: pendingSchool } },
       });
       if (authError) { setError(authError.message); setLoading(false); return; }
       const userId = authData.user?.id;
       if (!userId) { setError('No user created'); setLoading(false); return; }
 
+      // With email confirmation enabled Supabase does not create a browser session yet.
+      // Keep the school details in Auth metadata; LoginForm completes setup after confirmation.
+      if (!authData.session) {
+        setSuccess('Account created. Check your email, confirm your address, then sign in to finish creating your school workspace.');
+        setLoading(false);
+        return;
+      }
+
       // 2. Create School Record (Without registration number & motto)
       const { data: schoolData, error: schoolError } = await supabase
         .from('schools')
-        .insert({
-          name: schoolName,
-          slug,
-          province: provinceName,
-          district: districtName,
-          municipality: localLevelName,
-          ward: selectedWard,
-          school_type: formData.get('school_type'),
-          school_level: formData.get('school_level'),
-          phone: formData.get('phone'),
-          principal: fullName,
-          school_email: schoolEmail || null,
-          pan_number: panNumber || null,
-          is_approved: true,
-        })
+        .insert({ ...pendingSchool, is_approved: false })
         .select()
         .single();
       if (schoolError) { setError('Could not create school: ' + schoolError.message); setLoading(false); return; }
@@ -104,7 +116,6 @@ export default function SignupPage() {
       if (profileError) { setError('Could not create profile: ' + profileError.message); setLoading(false); return; }
 
       // 4. Auto-generate classes based on school level
-      const schoolLevel = formData.get('school_level') as string;
       let classNumbers: number[] = [];
       if (schoolLevel === 'Primary') classNumbers = [1, 2, 3, 4, 5];
       else if (schoolLevel === 'Basic') classNumbers = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -231,6 +242,21 @@ export default function SignupPage() {
                 </div>
               ))}
             </div>
+
+            {success && (
+              <div role="status" className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                  <div>
+                    <p className="text-sm font-semibold text-emerald-900">Registration started successfully</p>
+                    <p className="mt-1 text-sm leading-6 text-emerald-700">{success}</p>
+                    <Link href="/auth/login?role=principal" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 hover:text-emerald-950">
+                      Go to principal login <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div role="alert" className="mt-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3.5">
