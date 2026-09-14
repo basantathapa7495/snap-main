@@ -665,22 +665,22 @@ export default function PrincipalDashboardPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <Sidebar />
-      <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
-        <TopBar />
-        <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+      <div className="flex min-h-screen flex-col pt-14 lg:ml-64 lg:pt-0">
+        <div className="hidden lg:block"><TopBar /></div>
+        <main className="flex-1 px-3.5 pb-24 pt-5 sm:px-6 sm:pt-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="border-b border-slate-200 pb-5">
-              <div className="grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_auto]">
+            <header className="border-b border-slate-200 pb-4 sm:pb-5">
+              <div className="grid items-center gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-5">
                 <div>
-                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">
+                  <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 sm:gap-2 sm:text-xs sm:tracking-[0.08em]">
                     <CalendarDays className="h-3.5 w-3.5" />
                     {fullDate}
                   </p>
-                  <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                  <h1 className="mt-1.5 text-xl font-bold tracking-tight text-slate-950 sm:mt-2 sm:text-3xl">
                     {greeting},{" "}
                     <span className="text-blue-600">{firstName}</span>
                   </h1>
-                  <p className="mt-1.5 text-sm text-slate-500">
+                  <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-slate-500">
                     Manage today’s work for{" "}
                     <span className="font-semibold text-slate-700">
                       {schoolName}
@@ -688,7 +688,7 @@ export default function PrincipalDashboardPage() {
                     and review what needs your attention.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm sm:flex">
+                <div className="grid w-full grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm sm:flex sm:w-auto">
                   <QuickAction
                     href="/principal/attendance"
                     icon={ClipboardCheck}
@@ -713,20 +713,20 @@ export default function PrincipalDashboardPage() {
                 </div>
               </div>
             </header>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="inline-flex w-fit rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+            <div className="mt-4 flex flex-col gap-3 sm:mt-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="inline-flex w-full rounded-xl border border-slate-200 bg-white p-1 shadow-sm sm:w-fit">
                 {(Object.keys(rangeLabels) as DateRange[]).map((option) => (
                   <button
                     key={option}
                     type="button"
                     onClick={() => setRange(option)}
-                    className={`rounded-lg px-3 py-2 text-xs font-semibold ${range === option ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100"}`}
+                    className={`min-h-11 flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition sm:min-h-0 sm:flex-none ${range === option ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:bg-slate-100"}`}
                   >
                     {rangeLabels[option]}
                   </button>
                 ))}
               </div>
-              <div className="flex items-center gap-3 text-xs text-slate-400">
+              <div className="flex items-center justify-between gap-3 text-xs text-slate-400 sm:justify-start">
                 <span>
                   {dashboard.updatedAt
                     ? `Updated ${new Date(dashboard.updatedAt).toLocaleTimeString("en-US", { timeZone: "Asia/Kathmandu", hour: "numeric", minute: "2-digit" })}`
@@ -736,7 +736,7 @@ export default function PrincipalDashboardPage() {
                   type="button"
                   onClick={() => setRefreshKey((value) => value + 1)}
                   disabled={refreshing}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-2 font-semibold text-slate-600 disabled:opacity-60"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-60 sm:min-h-0 sm:px-2.5"
                 >
                   <RefreshCw
                     className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
@@ -754,19 +754,19 @@ export default function PrincipalDashboardPage() {
                 {warning}
               </div>
             )}
-            <section className="mt-5 grid auto-cols-[82%] grid-flow-col gap-4 overflow-x-auto pb-2 [scrollbar-width:none] sm:grid-flow-row sm:grid-cols-2 sm:overflow-visible xl:grid-cols-4 [&::-webkit-scrollbar]:hidden">
+            <section className="mt-4 grid grid-cols-2 gap-3 sm:mt-5 sm:gap-4 xl:grid-cols-4">
               {stats.map((stat) => (
                 <Link
                   key={stat.label}
                   href={stat.href}
-                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-blue-200"
+                  className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md sm:p-5"
                 >
                   <div className="flex justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-500">
+                      <p className="truncate text-xs font-medium text-slate-500 sm:text-sm">
                         {stat.label}
                       </p>
-                      <p className="mt-3 truncate text-2xl font-bold text-slate-950">
+                      <p className="mt-2 truncate text-xl font-bold text-slate-950 sm:mt-3 sm:text-2xl">
                         {stat.value}
                       </p>
                     </div>
@@ -777,7 +777,7 @@ export default function PrincipalDashboardPage() {
                     </span>
                   </div>
                   <p
-                    className={`mt-3 flex items-center gap-1 truncate text-xs ${stat.trend == null ? "text-slate-400" : stat.trend >= 0 ? "text-emerald-600" : "text-red-600"}`}
+                    className={`mt-2 line-clamp-2 min-h-8 text-[11px] leading-4 sm:mt-3 sm:min-h-0 sm:text-xs ${stat.trend == null ? "text-slate-400" : stat.trend >= 0 ? "text-emerald-600" : "text-red-600"}`}
                   >
                     {stat.trend != null &&
                       (stat.trend >= 0 ? (
@@ -790,7 +790,7 @@ export default function PrincipalDashboardPage() {
                 </Link>
               ))}
             </section>
-            <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-6 sm:p-5">
               <div className="flex justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-bold text-slate-950">
@@ -826,8 +826,8 @@ export default function PrincipalDashboardPage() {
                 </div>
               )}
             </section>
-            <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.85fr)]">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <section className="mt-5 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.85fr)]">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                 <div className="flex justify-between">
                   <div>
                     <h2 className="text-lg font-bold text-slate-950">
@@ -848,7 +848,7 @@ export default function PrincipalDashboardPage() {
                   (point) => point.rate !== null,
                 ) ? (
                   <>
-                    <div className="mt-5 h-60">
+                    <div className="mt-4 h-52 sm:mt-5 sm:h-60">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart
                           data={dashboard.attendanceTrend}
@@ -935,7 +935,7 @@ export default function PrincipalDashboardPage() {
                   />
                 )}
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                 <div className="flex justify-between">
                   <div>
                     <h2 className="text-lg font-bold text-slate-950">
@@ -996,7 +996,7 @@ export default function PrincipalDashboardPage() {
                 </Link>
               </div>
             </section>
-            <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
+            <section className="mt-5 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
               <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <Heading
                   title="Recently added students"
@@ -1119,9 +1119,9 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold ${primary ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-2.5 text-xs font-semibold transition sm:min-h-10 sm:px-3 sm:text-sm ${primary ? "bg-blue-600 text-white shadow-sm hover:bg-blue-700" : "border border-slate-100 text-slate-600 hover:bg-slate-100"}`}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
       {label}
     </Link>
   );
@@ -1209,7 +1209,7 @@ function Heading({
   href: string;
 }) {
   return (
-    <div className="flex justify-between border-b border-slate-100 px-5 py-5">
+    <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-4 sm:px-5 sm:py-5">
       <div>
         <h2 className="text-lg font-bold text-slate-950">{title}</h2>
         <p className="mt-1 text-sm text-slate-500">{text}</p>
@@ -1249,8 +1249,8 @@ function DashboardSkeleton() {
     <div className="min-h-screen bg-slate-50">
       <Sidebar />
       <div className="pt-10 lg:ml-64">
-        <TopBar />
-        <main className="px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+        <div className="hidden lg:block"><TopBar /></div>
+        <main className="px-3.5 pb-24 pt-5 sm:px-6 sm:pt-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px] animate-pulse">
             <div className="h-24 border-b border-slate-200" />
             <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
