@@ -250,12 +250,12 @@ export default function Sidebar() {
       {/* =====================================================
           MOBILE TOP BAR
       ===================================================== */}
-      <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 lg:hidden">
+      <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center justify-between border-b border-blue-800 bg-gradient-to-r from-slate-950 to-blue-950 px-4 text-white shadow-md lg:hidden">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+            className="rounded-lg p-2 text-slate-200 transition hover:bg-white/10"
             aria-label="Open sidebar"
           >
             <Menu className="h-5 w-5" />
@@ -269,12 +269,12 @@ export default function Sidebar() {
               height={32}
               className="h-8 w-8 object-contain"
             />
-            <span className="text-base font-bold text-gray-900">SNAP</span>
+            <span className="text-base font-bold text-white">SNAP</span>
           </div>
         </div>
 
         <div className="flex min-w-0 flex-col items-end">
-          <span className="max-w-[140px] truncate text-xs font-semibold text-gray-700">
+          <span className="max-w-[140px] truncate text-xs font-semibold text-blue-100">
             {formatSchoolName(school?.name)}
           </span>
 
@@ -295,12 +295,12 @@ export default function Sidebar() {
           SIDEBAR
       ===================================================== */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-screen w-[260px] flex-col border-r border-gray-200 bg-white transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-slate-800 bg-gradient-to-b from-slate-950 via-[#0b1730] to-[#07101f] text-white shadow-2xl transition-transform duration-300 lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* LOGO HEADER */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 pb-4 pt-5">
+        <div className="flex items-center justify-between border-b border-white/10 px-5 pb-4 pt-5">
           <div className="flex items-center gap-2.5">
             <Image
               src="/logo1.png"
@@ -311,10 +311,10 @@ export default function Sidebar() {
             />
 
             <div className="flex flex-col justify-center">
-              <span className="text-lg font-bold leading-tight text-gray-900">
+              <span className="text-lg font-bold leading-tight text-white">
                 SNAP
               </span>
-              <span className="text-[12px] font-medium leading-tight tracking-wide text-gray-400">
+              <span className="text-[12px] font-medium leading-tight tracking-wide text-blue-200/70">
                 School Nepal Platform
               </span>
             </div>
@@ -323,7 +323,7 @@ export default function Sidebar() {
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 lg:hidden"
+            className="rounded-lg p-1.5 text-slate-300 transition hover:bg-white/10 lg:hidden"
             aria-label="Close sidebar"
           >
             <X className="h-5 w-5" />
@@ -348,13 +348,13 @@ export default function Sidebar() {
                         onClick={() => setMobileOpen(false)}
                         className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[0.85rem] transition-all duration-200 ${
                           isActive
-                            ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                            ? 'bg-blue-500 text-white shadow-lg shadow-blue-950/40 ring-1 ring-blue-400/40'
+                            : 'text-slate-300 hover:bg-white/10 hover:text-white'
                         }`}
                       >
                         <Icon
                           className={`h-[16px] w-[16px] flex-shrink-0 ${
-                            isActive ? 'text-white' : 'text-gray-500'
+                            isActive ? 'text-white' : 'text-slate-400'
                           }`}
                         />
 
@@ -370,7 +370,7 @@ export default function Sidebar() {
               </ul>
 
               {sectionIndex < activeMenu.length - 1 && (
-                <hr className="mx-3 my-3 border-t border-gray-200" />
+                <hr className="mx-3 my-3 border-t border-white/10" />
               )}
             </div>
           ))}
@@ -380,20 +380,20 @@ export default function Sidebar() {
         {/* ===================================================
             BOTTOM ACTIONS
         =================================================== */}
-        <div className="border-t border-gray-100 p-3">
+        <div className="border-t border-white/10 p-3">
           {isPrincipalPath && (
             <Link
               href="/principal/settings"
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[0.85rem] transition ${
                 principalSettingsActive
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-blue-500 text-white'
+                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
               }`}
             >
               <Settings
                 className={`h-[16px] w-[16px] ${
-                  principalSettingsActive ? 'text-white' : 'text-gray-500'
+                  principalSettingsActive ? 'text-white' : 'text-slate-400'
                 }`}
               />
               <span className="font-medium">Settings</span>
