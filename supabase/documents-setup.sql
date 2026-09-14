@@ -25,6 +25,11 @@ on conflict (id) do update set
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
+drop policy if exists "School admins can view their documents" on storage.objects;
+drop policy if exists "School admins can upload their documents" on storage.objects;
+drop policy if exists "School admins can update their documents" on storage.objects;
+drop policy if exists "School admins can delete their documents" on storage.objects;
+
 create policy "School admins can view their documents"
 on storage.objects for select
 to authenticated
