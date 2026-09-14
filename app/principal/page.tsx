@@ -696,7 +696,7 @@ export default function PrincipalDashboardPage() {
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
-        <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+        <main className="flex-1 px-4 pb-24 pt-14 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px]">
             <header className="border-b border-slate-200 dark:border-slate-800 pb-5">
               <div className="grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_auto]">
