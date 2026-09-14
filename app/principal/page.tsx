@@ -692,467 +692,262 @@ export default function PrincipalDashboardPage() {
   const setupProgress = Math.round((completedSetup / setupTasks.length) * 100);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-[#f6f7fb] text-slate-900 dark:bg-[#080b12] dark:text-slate-100">
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
-        <main className="flex-1 px-4 pb-24 pt-14 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-[1500px]">
-            <header className="border-b border-slate-200 dark:border-slate-800 pb-5">
-              <div className="grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1480px]">
+            <section className="relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_18px_60px_-35px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900">
+              <div className="absolute inset-y-0 right-0 hidden w-2/5 bg-gradient-to-l from-blue-50 to-transparent dark:from-blue-950/30 lg:block" />
+              <div className="relative grid gap-6 p-5 sm:p-7 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
                 <div>
-                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    {fullDate}
-                  </p>
-                  <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 dark:text-slate-50 sm:text-3xl">
-                    {greeting},{" "}
-                    <span className="text-blue-600">{firstName}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      {fullDate}
+                    </span>
+                    {dashboard.updatedAt && (
+                      <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
+                        Updated {new Date(dashboard.updatedAt).toLocaleTimeString("en-US", { timeZone: "Asia/Kathmandu", hour: "numeric", minute: "2-digit" })}
+                      </span>
+                    )}
+                  </div>
+                  <h1 className="mt-4 text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">
+                    {greeting}, <span className="text-blue-600 dark:text-blue-400">{firstName}</span>
                   </h1>
-                  <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-                    Manage today’s work for{" "}
-                    <span className="font-semibold text-slate-700 dark:text-slate-200">
-                      {schoolName}
-                    </span>{" "}
-                    and review what needs your attention.
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">
+                    Here is what is happening at <span className="font-bold text-slate-800 dark:text-slate-200">{schoolName}</span> today.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-sm sm:flex">
-                  <QuickAction
-                    href="/principal/attendance"
-                    icon={ClipboardCheck}
-                    label="Take attendance"
-                    primary
-                  />
-                  <QuickAction
-                    href="/principal/students"
-                    icon={UserPlus}
-                    label="Add student"
-                  />
-                  <QuickAction
-                    href="/principal/fees"
-                    icon={ReceiptText}
-                    label="Record fee"
-                  />
-                  <QuickAction
-                    href="/principal/results"
-                    icon={FileText}
-                    label="Create exam"
-                  />
+
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <ActionButton href="/principal/attendance" icon={ClipboardCheck} label="Attendance" primary />
+                  <ActionButton href="/principal/students" icon={UserPlus} label="Add student" />
+                  <ActionButton href="/principal/fees" icon={ReceiptText} label="Record fee" />
+                  <ActionButton href="/principal/results" icon={FileText} label="Create exam" />
                 </div>
               </div>
-            </header>
+            </section>
+
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="inline-flex w-fit rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1 shadow-sm">
+              <div className="inline-flex w-full rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:w-auto">
                 {(Object.keys(rangeLabels) as DateRange[]).map((option) => (
                   <button
                     key={option}
                     type="button"
                     onClick={() => setRange(option)}
-                    className={`rounded-lg px-3 py-2 text-xs font-semibold ${range === option ? "bg-slate-900 text-white" : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+                    className={"flex-1 rounded-lg px-4 py-2.5 text-xs font-bold transition sm:flex-none " + (range === option ? "bg-slate-950 text-white shadow-sm dark:bg-blue-600" : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800")}
                   >
                     {rangeLabels[option]}
                   </button>
                 ))}
               </div>
-              <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-500">
-                <span>
-                  {dashboard.updatedAt
-                    ? `Updated ${new Date(dashboard.updatedAt).toLocaleTimeString("en-US", { timeZone: "Asia/Kathmandu", hour: "numeric", minute: "2-digit" })}`
-                    : "Not updated"}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setRefreshKey((value) => value + 1)}
-                  disabled={refreshing}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 py-2 font-semibold text-slate-600 dark:text-slate-300 disabled:opacity-60"
-                >
-                  <RefreshCw
-                    className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
-                  />
-                  Refresh
-                </button>
-              </div>
-            </div>
-            {warning && (
-              <div
-                role="alert"
-                className="mt-4 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/35 px-4 py-3 text-sm text-amber-800"
+              <button
+                type="button"
+                onClick={() => setRefreshKey((value) => value + 1)}
+                disabled={refreshing}
+                className="inline-flex items-center justify-center gap-2 self-end rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 shadow-sm transition hover:border-blue-200 hover:text-blue-600 disabled:opacity-60 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
               >
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                {warning}
+                <RefreshCw className={"h-4 w-4 " + (refreshing ? "animate-spin" : "")} />
+                {refreshing ? "Refreshing" : "Refresh data"}
+              </button>
+            </div>
+
+            {warning && (
+              <div role="alert" className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/35 dark:text-amber-200">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+                <div><p className="font-bold">Some information is unavailable</p><p className="mt-0.5 text-xs opacity-80">{warning}</p></div>
               </div>
             )}
+
             {completedSetup < setupTasks.length && (
-              <section className="mt-5 overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-600 to-indigo-700 p-5 text-white shadow-sm sm:p-6">
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="max-w-xl">
+              <section className="mt-5 rounded-2xl border border-indigo-200 bg-indigo-50/70 p-5 dark:border-indigo-900/60 dark:bg-indigo-950/25">
+                <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                  <div className="xl:max-w-sm">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-100">Getting started</p>
-                        <h2 className="mt-1 text-xl font-bold">Finish your school setup</h2>
+                        <p className="text-xs font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Launch checklist</p>
+                        <h2 className="mt-1 text-lg font-bold text-slate-950 dark:text-white">Prepare your school workspace</h2>
                       </div>
-                      <span className="shrink-0 rounded-full bg-white/15 px-3 py-1 text-xs font-bold">{completedSetup}/{setupTasks.length} complete</span>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-indigo-700 shadow-sm dark:bg-slate-900 dark:text-indigo-300">{setupProgress}%</span>
                     </div>
-                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/20">
-                      <div className="h-full rounded-full bg-white transition-all" style={{ width: `${setupProgress}%` }} />
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-indigo-100 dark:bg-indigo-950">
+                      <div className="h-full rounded-full bg-indigo-600 transition-all" style={{ width: setupProgress + "%" }} />
                     </div>
-                    <p className="mt-3 text-sm leading-6 text-blue-100">Complete these basics so attendance, fees, reports and your public website work correctly.</p>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:min-w-[440px]">
-                    {setupTasks.filter((task) => !task.complete).slice(0, 4).map((task) => (
-                      <Link key={task.label} href={task.href} className="group flex items-center justify-between rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold backdrop-blur hover:bg-white/20">
+                  <div className="grid flex-1 gap-2 sm:grid-cols-2 xl:grid-cols-5">
+                    {setupTasks.map((task) => (
+                      <Link
+                        key={task.label}
+                        href={task.href}
+                        className={"flex min-h-12 items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition " + (task.complete ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300" : "border-white bg-white text-slate-600 shadow-sm hover:border-indigo-300 hover:text-indigo-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300")}
+                      >
+                        {task.complete ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <span className="h-2 w-2 shrink-0 rounded-full bg-indigo-500" />}
                         <span>{task.label}</span>
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                       </Link>
                     ))}
                   </div>
                 </div>
               </section>
             )}
+
             <section className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {stats.map((stat) => (
+              {stats.map((stat, index) => (
                 <Link
                   key={stat.label}
                   href={stat.href}
-                  className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm hover:border-blue-200"
+                  className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900"
                 >
-                  <div className="flex justify-between gap-3">
+                  <span className={"absolute inset-x-0 top-0 h-1 " + (index === 0 ? "bg-blue-500" : index === 1 ? "bg-violet-500" : index === 2 ? "bg-emerald-500" : "bg-amber-500")} />
+                  <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-500 dark:text-slate-400">
-                        {stat.label}
-                      </p>
-                      <p className="mt-3 truncate text-2xl font-bold text-slate-950 dark:text-slate-50">
-                        {stat.value}
-                      </p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{stat.label}</p>
+                      <p className="mt-3 truncate text-2xl font-extrabold text-slate-950 dark:text-white sm:text-3xl">{stat.value}</p>
                     </div>
-                    <span
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${stat.color}`}
-                    >
+                    <span className={"flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition group-hover:scale-105 " + stat.color}>
                       <stat.icon className="h-5 w-5" />
                     </span>
                   </div>
-                  <p
-                    className={`mt-3 flex items-center gap-1 truncate text-xs ${stat.trend == null ? "text-slate-400 dark:text-slate-500" : stat.trend >= 0 ? "text-emerald-600" : "text-red-600"}`}
-                  >
-                    {stat.trend != null &&
-                      (stat.trend >= 0 ? (
-                        <TrendingUp className="h-3.5 w-3.5" />
-                      ) : (
-                        <TrendingDown className="h-3.5 w-3.5" />
-                      ))}
+                  <p className={"mt-4 flex items-center gap-1.5 truncate text-xs font-medium " + (stat.trend == null ? "text-slate-500 dark:text-slate-400" : stat.trend >= 0 ? "text-emerald-600" : "text-red-600")}>
+                    {stat.trend != null && (stat.trend >= 0 ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />)}
                     {stat.helper}
                   </p>
                 </Link>
               ))}
             </section>
-            <section className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
-              <div className="flex justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">
-                    Needs your attention
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                    The three most urgent items, ordered by priority.
-                  </p>
-                </div>
-                {attentionItems.length > 0 && (
-                  <span className="h-fit rounded-full bg-red-50 dark:bg-red-950/35 px-2.5 py-1 text-xs font-bold text-red-600">
-                    {attentionItems.length} active
-                  </span>
+
+            <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)]">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+                <SectionHeading
+                  eyebrow="Priority inbox"
+                  title="Needs your attention"
+                  description="Important work that should be handled next."
+                  badge={attentionItems.length ? attentionItems.length + " active" : undefined}
+                />
+                {attentionItems.length ? (
+                  <div className="mt-5 grid gap-3 lg:grid-cols-3">
+                    {attentionItems.map((item) => <AttentionCard key={item.title} {...item} />)}
+                  </div>
+                ) : (
+                  <div className="mt-5 flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 dark:border-emerald-900/60 dark:bg-emerald-950/30">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-emerald-600 shadow-sm dark:bg-slate-900"><CheckCircle2 className="h-6 w-6" /></span>
+                    <div><p className="font-bold text-emerald-950 dark:text-emerald-200">You are all caught up</p><p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">No urgent school tasks need your attention.</p></div>
+                  </div>
                 )}
               </div>
-              {attentionItems.length ? (
-                <div className="mt-5 grid gap-3 lg:grid-cols-3">
-                  {attentionItems.map((item) => (
-                    <AttentionItem key={item.title} {...item} />
-                  ))}
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-950 p-5 text-white shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+                <p className="text-xs font-extrabold uppercase tracking-wider text-blue-400">Today at a glance</p>
+                <h2 className="mt-1 text-lg font-bold">School activity</h2>
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <MiniMetric label="Present" value={dashboard.todayAttendance.present} tone="emerald" />
+                  <MiniMetric label="Absent" value={dashboard.todayAttendance.absent} tone="red" />
+                  <MiniMetric label="Pending admission" value={dashboard.pendingAdmissions} tone="amber" />
+                  <MiniMetric label="Classes" value={dashboard.classes} tone="blue" />
                 </div>
-              ) : (
-                <div className="mt-5 flex items-center gap-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/35 p-4">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                  <div>
-                    <p className="text-sm font-semibold text-emerald-900">
-                      Everything looks good
-                    </p>
-                    <p className="text-xs text-emerald-700">
-                      There are no urgent items.
-                    </p>
-                  </div>
-                </div>
-              )}
+              </div>
             </section>
-            <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.85fr)]">
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
-                <div className="flex justify-between">
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">
-                      Attendance overview
-                    </h2>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                      Seven-day trend; totals follow the selected date range.
-                    </p>
-                  </div>
-                  <Link
-                    href="/principal/attendance"
-                    className="text-xs font-semibold text-blue-600"
-                  >
-                    View details
-                  </Link>
-                </div>
-                {dashboard.attendanceTrend.some(
-                  (point) => point.rate !== null,
-                ) ? (
+
+            <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(330px,0.75fr)]">
+              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+                <SectionHeading eyebrow="Attendance" title="Seven-day attendance" description="Daily attendance rate and selected-period totals." href="/principal/attendance" />
+                {dashboard.attendanceTrend.some((point) => point.rate !== null) ? (
                   <>
-                    <div className="mt-5 h-60">
+                    <div className="mt-5 h-64">
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart
-                          data={dashboard.attendanceTrend}
-                          margin={{ top: 8, right: 4, left: -24 }}
-                        >
+                        <AreaChart data={dashboard.attendanceTrend} margin={{ top: 8, right: 5, left: -24 }}>
                           <defs>
-                            <linearGradient
-                              id="attendanceFill"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="5%"
-                                stopColor="#2563eb"
-                                stopOpacity={0.2}
-                              />
-                              <stop
-                                offset="95%"
-                                stopColor="#2563eb"
-                                stopOpacity={0}
-                              />
+                            <linearGradient id="dashboardAttendanceFill" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#2563eb" stopOpacity={0.28} />
+                              <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                             </linearGradient>
                           </defs>
-                          <CartesianGrid
-                            stroke="#e2e8f0"
-                            strokeDasharray="4 4"
-                            vertical={false}
-                          />
-                          <XAxis
-                            dataKey="day"
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            domain={[0, 100]}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <Tooltip
-                            formatter={(value) =>
-                              value == null
-                                ? ["Not marked", "Attendance"]
-                                : [`${value}%`, "Attendance"]
-                            }
-                          />
-                          <Area
-                            connectNulls={false}
-                            type="monotone"
-                            dataKey="rate"
-                            stroke="#2563eb"
-                            strokeWidth={2.5}
-                            fill="url(#attendanceFill)"
-                          />
+                          <CartesianGrid stroke="#cbd5e1" strokeOpacity={0.35} strokeDasharray="4 4" vertical={false} />
+                          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 12 }} />
+                          <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 12 }} />
+                          <Tooltip formatter={(value) => value == null ? ["Not marked", "Attendance"] : [String(value) + "%", "Attendance"]} />
+                          <Area connectNulls={false} type="monotone" dataKey="rate" stroke="#2563eb" strokeWidth={3} fill="url(#dashboardAttendanceFill)" />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
                     <div className="mt-4 grid grid-cols-3 gap-3">
-                      <Count
-                        label="Present"
-                        value={dashboard.attendance.present}
-                        color="emerald"
-                      />
-                      <Count
-                        label="Absent"
-                        value={dashboard.attendance.absent}
-                        color="red"
-                      />
-                      <Count
-                        label="Late"
-                        value={dashboard.attendance.late}
-                        color="amber"
-                      />
+                      <StatusMetric label="Present" value={dashboard.attendance.present} tone="emerald" />
+                      <StatusMetric label="Absent" value={dashboard.attendance.absent} tone="red" />
+                      <StatusMetric label="Late" value={dashboard.attendance.late} tone="amber" />
                     </div>
                   </>
                 ) : (
-                  <Empty
-                    icon={ClipboardCheck}
-                    title="Attendance has not been marked"
-                    text="The chart will appear after attendance is added."
-                    href="/principal/attendance"
-                    action="Take attendance"
-                  />
+                  <EmptyState icon={ClipboardCheck} title="Attendance has not been marked" text="Take attendance to unlock daily trends and student insights." href="/principal/attendance" action="Take attendance" />
                 )}
-              </div>
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
-                <div className="flex justify-between">
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">
-                      Fee collection
-                    </h2>
-                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                      {rangeLabels[range]} payments vs monthly goal
-                    </p>
-                  </div>
-                  <Wallet className="h-5 w-5 text-amber-600" />
+              </article>
+
+              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+                <SectionHeading eyebrow="Finance" title="Fee collection" description={rangeLabels[range] + " payment progress."} href="/principal/fees" />
+                <div className="mt-7">
+                  <p className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-white">{money(dashboard.feesCollected)}</p>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Collected from {dashboard.paidStudents} students</p>
                 </div>
-                <p className="mt-7 text-3xl font-bold text-slate-950 dark:text-slate-50">
-                  {money(dashboard.feesCollected)}
-                </p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Collected from {dashboard.paidStudents} students
-                </p>
                 {dashboard.expectedFees == null ? (
-                  <div className="mt-6 rounded-xl bg-blue-50 dark:bg-blue-950/40 p-4">
-                    <p className="text-sm font-semibold text-blue-900">
-                      Monthly goal not configured
-                    </p>
-                    <p className="mt-1 text-xs text-blue-700">
-                      Create a Monthly or Tuition fee type to enable expected
-                      totals.
-                    </p>
+                  <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
+                    <p className="text-sm font-bold text-blue-950 dark:text-blue-200">Set your monthly target</p>
+                    <p className="mt-1 text-xs leading-5 text-blue-700 dark:text-blue-400">Create a Monthly or Tuition fee type to calculate expected collection.</p>
+                    <Link href="/principal/fees" className="mt-4 inline-flex items-center gap-1 text-xs font-extrabold text-blue-700 dark:text-blue-300">Configure fees <ArrowRight className="h-3.5 w-3.5" /></Link>
                   </div>
                 ) : (
                   <div className="mt-6">
-                    <div className="flex justify-between text-sm">
-                      <span>Collection progress</span>
-                      <strong>{feeProgress}%</strong>
-                    </div>
-                    <div className="mt-2 h-2.5 rounded-full bg-slate-100 dark:bg-slate-800">
-                      <div
-                        className="h-full rounded-full bg-blue-600"
-                        style={{ width: `${feeProgress}%` }}
-                      />
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                      <Metric
-                        label="Monthly expected"
-                        value={money(dashboard.expectedFees)}
-                      />
-                      <Metric
-                        label="Remaining"
-                        value={money(remaining || 0)}
-                        red
-                      />
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300"><span>Monthly target</span><span>{feeProgress}%</span></div>
+                    <div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"><div className="h-full rounded-full bg-gradient-to-r from-blue-600 to-emerald-500" style={{ width: (feeProgress || 0) + "%" }} /></div>
+                    <div className="mt-5 grid grid-cols-2 gap-3">
+                      <SmallFinance label="Expected" value={money(dashboard.expectedFees)} />
+                      <SmallFinance label="Remaining" value={money(remaining || 0)} danger />
                     </div>
                   </div>
                 )}
-                <Link
-                  href="/principal/fees"
-                  className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-blue-600"
-                >
-                  Open fee management <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
+              </article>
             </section>
-            <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-                <Heading
-                  title="Recently added students"
-                  text="Open student management from any record."
-                  href="/principal/students"
-                />
+
+            <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
+              <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <SectionHeading padded eyebrow="Students" title="Recently added" description="Your newest student records." href="/principal/students" />
                 {dashboard.recentStudents.length ? (
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800 px-5">
+                  <div className="divide-y divide-slate-100 px-5 dark:divide-slate-800">
                     {dashboard.recentStudents.map((student) => (
-                      <Link
-                        key={student.id}
-                        href={`/principal/students?student=${student.id}`}
-                        className="group flex items-center gap-3 py-4"
-                      >
-                        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/40 text-xs font-bold text-blue-700">
-                          {initials(student.name)}
-                        </span>
+                      <Link key={student.id} href={"/principal/students?student=" + student.id} className="group flex items-center gap-3 py-4">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-xs font-extrabold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">{initials(student.name)}</span>
                         <div className="min-w-0 flex-1">
-                          <div className="flex gap-2">
-                            <p className="truncate text-sm font-semibold group-hover:text-blue-700">
-                              {student.name}
-                            </p>
-                            {student.created_at &&
-                              student.created_at.slice(0, 10) >=
-                                shiftDateKey(today, -7) && (
-                                <span className="rounded-full bg-emerald-50 dark:bg-emerald-950/35 px-2 text-[10px] font-bold text-emerald-700">
-                                  New
-                                </span>
-                              )}
-                          </div>
-                          <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                            {student.class
-                              ? `Class ${student.class}`
-                              : "Class not assigned"}
-                            {student.section ? ` · ${student.section}` : ""}
-                            {student.roll_no
-                              ? ` · Roll ${student.roll_no}`
-                              : ""}
-                          </p>
+                          <div className="flex items-center gap-2"><p className="truncate text-sm font-bold text-slate-800 group-hover:text-blue-700 dark:text-slate-200">{student.name}</p>{student.created_at && student.created_at.slice(0, 10) >= shiftDateKey(today, -7) && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">New</span>}</div>
+                          <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">{student.class ? "Class " + student.class : "Class not assigned"}{student.section ? " · " + student.section : ""}{student.roll_no ? " · Roll " + student.roll_no : ""}</p>
                         </div>
-                        <ArrowRight className="h-4 w-4 text-slate-300" />
+                        <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-blue-500 dark:text-slate-600" />
                       </Link>
                     ))}
                   </div>
                 ) : (
-                  <Empty
-                    icon={Users}
-                    title="No students added yet"
-                    text="Add your first student record."
-                    href="/principal/students"
-                    action="Add student"
-                  />
+                  <EmptyState icon={Users} title="No students yet" text="Add your first student to begin managing the school." href="/principal/students" action="Add student" />
                 )}
-              </div>
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
-                <Heading
-                  title="Coming up"
-                  text="Upcoming exams and events."
-                  href="/principal/calendar"
-                />
+              </article>
+
+              <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <SectionHeading padded eyebrow="Schedule" title="Coming up" description="Upcoming exams and school events." href="/principal/calendar" />
                 {dashboard.schedule.length ? (
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800 px-5">
+                  <div className="divide-y divide-slate-100 px-5 dark:divide-slate-800">
                     {dashboard.schedule.map((item) => (
-                      <Link
-                        key={item.id}
-                        href={item.href}
-                        className="group flex items-center gap-3 py-4"
-                      >
-                        <span className="flex h-12 w-16 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-[10px] font-bold uppercase text-slate-600 dark:text-slate-300">
-                          {dateLabel(item.date, today)}
-                        </span>
+                      <Link key={item.id} href={item.href} className="group flex items-center gap-3 py-4">
+                        <span className="flex h-12 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 px-2 text-center text-[10px] font-extrabold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">{dateLabel(item.date, today)}</span>
                         <div className="min-w-0 flex-1">
-                          <span
-                            className={`text-[10px] font-bold uppercase ${item.type === "Exam" ? "text-amber-600" : "text-blue-600"}`}
-                          >
-                            {item.type}
-                          </span>
-                          <p className="truncate text-sm font-semibold group-hover:text-blue-700">
-                            {item.title}
-                          </p>
-                          {item.time && (
-                            <p className="text-xs text-slate-400 dark:text-slate-500">
-                              {item.time}
-                            </p>
-                          )}
+                          <span className={"text-[10px] font-extrabold uppercase tracking-wider " + (item.type === "Exam" ? "text-amber-600" : "text-blue-600")}>{item.type}</span>
+                          <p className="truncate text-sm font-bold text-slate-800 group-hover:text-blue-700 dark:text-slate-200">{item.title}</p>
+                          {item.time && <p className="mt-0.5 text-xs text-slate-400">{item.time}</p>}
                         </div>
-                        <ArrowRight className="h-4 w-4 text-slate-300" />
+                        <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-blue-500 dark:text-slate-600" />
                       </Link>
                     ))}
                   </div>
                 ) : (
-                  <Empty
-                    icon={CalendarDays}
-                    title="Nothing scheduled"
-                    text="Events and exams will appear here."
-                    href="/principal/calendar"
-                    action="Open calendar"
-                  />
+                  <EmptyState icon={CalendarDays} title="Nothing scheduled" text="Your next exams and events will appear here." href="/principal/calendar" action="Open calendar" />
                 )}
-              </div>
+              </article>
             </section>
           </div>
         </main>
@@ -1161,7 +956,7 @@ export default function PrincipalDashboardPage() {
   );
 }
 
-function QuickAction({
+function ActionButton({
   href,
   icon: Icon,
   label,
@@ -1175,147 +970,114 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-sm font-semibold ${primary ? "bg-blue-600 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"}`}
+      className={"group flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border px-3 text-center text-xs font-bold transition hover:-translate-y-0.5 hover:shadow-md " + (primary ? "border-blue-600 bg-blue-600 text-white shadow-blue-200 dark:shadow-none" : "border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200")}
     >
-      <Icon className="h-4 w-4" />
+      <span className={"flex h-8 w-8 items-center justify-center rounded-xl " + (primary ? "bg-white/15" : "bg-slate-100 text-slate-600 group-hover:bg-blue-50 group-hover:text-blue-600 dark:bg-slate-700 dark:text-slate-200")}>
+        <Icon className="h-4 w-4" />
+      </span>
       {label}
     </Link>
   );
 }
-const tones = {
-  amber: "border-amber-100 bg-amber-50 dark:bg-amber-950/35/70 text-amber-700",
-  red: "border-red-100 bg-red-50 dark:bg-red-950/35/70 text-red-700",
-  orange: "border-orange-100 bg-orange-50 dark:bg-orange-950/35/70 text-orange-700",
-  blue: "border-blue-100 bg-blue-50 dark:bg-blue-950/40/70 text-blue-700",
+
+const attentionTones = {
+  amber: "border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300",
+  red: "border-red-100 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
+  orange: "border-orange-100 bg-orange-50 text-orange-700 dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-300",
+  blue: "border-blue-100 bg-blue-50 text-blue-700 dark:border-blue-900/60 dark:bg-blue-950/30 dark:text-blue-300",
 };
-function AttentionItem({
-  icon: Icon,
+
+function AttentionCard({ icon: Icon, title, description, href, action, tone }: AttentionData) {
+  return (
+    <article className={"flex min-h-48 flex-col rounded-2xl border p-4 " + attentionTones[tone]}>
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/80 shadow-sm dark:bg-slate-900/70"><Icon className="h-5 w-5" /></span>
+      <h3 className="mt-4 text-sm font-extrabold text-slate-950 dark:text-white">{title}</h3>
+      <p className="mt-1.5 flex-1 text-xs leading-5 opacity-80">{description}</p>
+      <Link href={href} className="mt-4 inline-flex items-center gap-1 text-xs font-extrabold">{action}<ArrowRight className="h-3.5 w-3.5" /></Link>
+    </article>
+  );
+}
+
+function SectionHeading({
+  eyebrow,
   title,
   description,
   href,
-  action,
-  tone,
-}: AttentionData) {
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-xl border p-3.5 ${tones[tone]}`}
-    >
-      <Icon className="h-5 w-5 shrink-0" />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</p>
-        <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
-          {description}
-        </p>
-      </div>
-      <Link
-        href={href}
-        className="shrink-0 rounded-lg bg-white dark:bg-slate-900 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm"
-      >
-        {action}
-      </Link>
-    </div>
-  );
-}
-function Count({
-  label,
-  value,
-  color,
+  badge,
+  padded = false,
 }: {
-  label: string;
-  value: number;
-  color: "emerald" | "red" | "amber";
-}) {
-  const colors = {
-    emerald: "bg-emerald-50 dark:bg-emerald-950/35 text-emerald-700",
-    red: "bg-red-50 dark:bg-red-950/35 text-red-700",
-    amber: "bg-amber-50 dark:bg-amber-950/35 text-amber-700",
-  };
-  return (
-    <div className={`rounded-xl p-3 ${colors[color]}`}>
-      <p className="text-xs">{label}</p>
-      <p className="mt-1 text-xl font-bold">{value}</p>
-    </div>
-  );
-}
-function Metric({
-  label,
-  value,
-  red = false,
-}: {
-  label: string;
-  value: string;
-  red?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-xl p-3 ${red ? "bg-red-50 dark:bg-red-950/35 text-red-800" : "bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200"}`}
-    >
-      <p className="text-xs">{label}</p>
-      <p className="mt-1 truncate text-sm font-bold">{value}</p>
-    </div>
-  );
-}
-function Heading({
-  title,
-  text,
-  href,
-}: {
+  eyebrow: string;
   title: string;
-  text: string;
-  href: string;
+  description: string;
+  href?: string;
+  badge?: string;
+  padded?: boolean;
 }) {
   return (
-    <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 px-5 py-5">
+    <div className={"flex items-start justify-between gap-4 " + (padded ? "border-b border-slate-100 px-5 py-5 dark:border-slate-800" : "")}>
       <div>
-        <h2 className="text-lg font-bold text-slate-950 dark:text-slate-50">{title}</h2>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{text}</p>
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.15em] text-blue-600 dark:text-blue-400">{eyebrow}</p>
+        <h2 className="mt-1 text-lg font-extrabold text-slate-950 dark:text-white">{title}</h2>
+        <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</p>
       </div>
-      <Link href={href} className="text-xs font-semibold text-blue-600">
-        View all
-      </Link>
+      {badge && <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-extrabold text-red-600 dark:bg-red-950/40 dark:text-red-300">{badge}</span>}
+      {href && <Link href={href} className="shrink-0 rounded-lg bg-slate-50 px-3 py-2 text-[10px] font-extrabold text-slate-600 transition hover:bg-blue-50 hover:text-blue-700 dark:bg-slate-800 dark:text-slate-300">View all</Link>}
     </div>
   );
 }
-function Empty({
-  icon: Icon,
-  title,
-  text,
-  href,
-  action,
-}: {
-  icon: ElementType;
-  title: string;
-  text: string;
-  href: string;
-  action: string;
-}) {
+
+function MiniMetric({ label, value, tone }: { label: string; value: number; tone: "emerald" | "red" | "amber" | "blue" }) {
+  const colors = { emerald: "text-emerald-400", red: "text-red-400", amber: "text-amber-400", blue: "text-blue-400" };
   return (
-    <div className="flex min-h-56 flex-col items-center justify-center px-6 text-center">
-      <Icon className="h-6 w-6 text-slate-400 dark:text-slate-500" />
-      <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</p>
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{text}</p>
-      <Link href={href} className="mt-4 text-xs font-semibold text-blue-600">
-        {action}
-      </Link>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <p className={"text-2xl font-extrabold " + colors[tone]}>{value}</p>
+      <p className="mt-1 text-[11px] font-medium text-slate-400">{label}</p>
     </div>
   );
 }
+
+function StatusMetric({ label, value, tone }: { label: string; value: number; tone: "emerald" | "red" | "amber" }) {
+  const colors = {
+    emerald: "border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300",
+    red: "border-red-100 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300",
+    amber: "border-amber-100 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300",
+  };
+  return <div className={"rounded-xl border p-3 " + colors[tone]}><p className="text-[10px] font-bold uppercase tracking-wider opacity-75">{label}</p><p className="mt-1 text-xl font-extrabold">{value}</p></div>;
+}
+
+function SmallFinance({ label, value, danger = false }: { label: string; value: string; danger?: boolean }) {
+  return (
+    <div className={"rounded-xl border p-3 " + (danger ? "border-red-100 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30" : "border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-950")}>
+      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
+      <p className={"mt-1 truncate text-sm font-extrabold " + (danger ? "text-red-700 dark:text-red-300" : "text-slate-800 dark:text-slate-200")}>{value}</p>
+    </div>
+  );
+}
+
+function EmptyState({ icon: Icon, title, text, href, action }: { icon: ElementType; title: string; text: string; href: string; action: string }) {
+  return (
+    <div className="flex min-h-64 flex-col items-center justify-center px-6 py-10 text-center">
+      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"><Icon className="h-7 w-7" /></span>
+      <p className="mt-4 text-sm font-extrabold text-slate-900 dark:text-white">{title}</p>
+      <p className="mt-1.5 max-w-xs text-xs leading-5 text-slate-500 dark:text-slate-400">{text}</p>
+      <Link href={href} className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-sm hover:bg-blue-700">{action}<ArrowRight className="h-3.5 w-3.5" /></Link>
+    </div>
+  );
+}
+
 function DashboardSkeleton() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-[#f6f7fb] dark:bg-[#080b12]">
       <Sidebar />
       <div className="pt-10 lg:ml-64">
         <TopBar />
         <main className="px-4 pb-24 pt-24 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-[1500px] animate-pulse">
-            <div className="h-24 border-b border-slate-200 dark:border-slate-800" />
+          <div className="mx-auto max-w-[1480px] animate-pulse">
+            <div className="h-44 rounded-[28px] bg-white dark:bg-slate-900" />
             <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {Array.from({ length: 4 }, (_, index) => (
-                <div key={index} className="h-36 rounded-2xl bg-white dark:bg-slate-900" />
-              ))}
+              {Array.from({ length: 4 }, (_, index) => <div key={index} className="h-36 rounded-2xl bg-white dark:bg-slate-900" />)}
             </div>
-            <div className="mt-6 h-48 rounded-2xl bg-white dark:bg-slate-900" />
-            <div className="mt-6 h-80 rounded-2xl bg-white dark:bg-slate-900" />
+            <div className="mt-5 grid gap-5 xl:grid-cols-2"><div className="h-72 rounded-2xl bg-white dark:bg-slate-900" /><div className="h-72 rounded-2xl bg-white dark:bg-slate-900" /></div>
           </div>
         </main>
       </div>
