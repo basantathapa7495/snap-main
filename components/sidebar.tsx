@@ -268,7 +268,7 @@ export default function Sidebar() {
             aria-label="Open principal dashboard"
           >
             <Image
-              src="/logo2.png"
+              src="/logo4.png"
               alt="SNAP"
               width={42}
               height={42}
