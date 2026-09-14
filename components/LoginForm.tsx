@@ -32,6 +32,45 @@ type RoleConfig = {
   focusRing: string;
 };
 
+async function finishPendingSchoolRegistration(user: { id: string; user_metadata?: Record<string, unknown> }) {
+  const pending = user.user_metadata?.pending_school as Record<string, unknown> | undefined;
+  if (!pending?.name || !pending?.slug) return null;
+
+  const { data: school, error: schoolError } = await supabase
+    .from('schools')
+    .insert({ ...pending, is_approved: false })
+    .select('id')
+    .single();
+  if (schoolError) throw new Error('Could not create your school workspace: ' + schoolError.message);
+
+  const fullName = String(user.user_metadata?.full_name || pending.principal || '');
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .insert({ user_id: user.id, school_id: school.id, role: 'admin', full_name: fullName });
+  if (profileError) throw new Error('Could not create your principal profile: ' + profileError.message);
+
+  const level = String(pending.school_level || '');
+  const numbers =
+    level === 'Primary' ? [1, 2, 3, 4, 5] :
+    level === 'Basic' ? [1, 2, 3, 4, 5, 6, 7, 8] :
+    level === 'Secondary' ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] :
+    level === 'Higher Secondary' ? [11, 12] : [];
+
+  if (numbers.length) {
+    const { error: classError } = await supabase.from('classes').insert(
+      numbers.map((number) => ({
+        school_id: school.id,
+        class_number: String(number),
+        section_name: null,
+        class_name: `Class ${number}`,
+        name: `Class ${number}`,
+      }))
+    );
+    if (classError) console.error('Default classes could not be created:', classError);
+  }
+  return { role: 'admin', school_id: school.id };
+}
+
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -157,13 +196,19 @@ export default function LoginForm() {
         .eq('user_id', authData.user.id)
         .single();
 
-      if (profileError || !profile) {
+      let resolvedProfile = profile;
+      if (profileError || !resolvedProfile) {
+        try {
+          resolvedProfile = await finishPendingSchoolRegistration(authData.user);
+        } catch (setupError) {
+          setError(setupError instanceof Error ? setupError.message : 'Your school workspace could not be created.');
+          return;
+        }
+      }
+
+      if (!resolvedProfile) {
         await supabase.auth.signOut();
-
-        setError(
-          'Your account profile could not be found. Contact your school administrator.'
-        );
-
+        setError('Your account profile could not be found. Contact your school administrator.');
         return;
       }
 
@@ -171,7 +216,7 @@ export default function LoginForm() {
       // 3. ROLE VALIDATION
       // -------------------------------------------------------
 
-      const databaseRole = profile.role;
+      const databaseRole = resolvedProfile.role;
 
       const expectedDatabaseRole =
         role === 'principal'
