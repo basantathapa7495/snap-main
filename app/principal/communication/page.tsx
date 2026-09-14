@@ -16,7 +16,6 @@ type Notice = {
   description: string | null;
   event_date: string | null;
   is_event: boolean | null;
-  created_at: string | null;
 };
 type FormState = { title: string; description: string; publishDate: string };
 
@@ -65,7 +64,7 @@ export default function CommunicationPage() {
 
         const { data, error: noticesError } = await supabase
           .from('news_events')
-          .select('id, title, description, event_date, is_event, created_at')
+          .select('id, title, description, event_date, is_event')
           .eq('school_id', profile.school_id)
           .eq('is_event', false)
           .order('event_date', { ascending: false });
@@ -202,7 +201,7 @@ export default function CommunicationPage() {
                   {filtered.map((item) => <article key={item.id} className="flex min-h-60 flex-col rounded-2xl border border-slate-200 p-5 transition hover:border-blue-200 hover:shadow-md">
                     <div className="flex items-start gap-3">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Bell className="h-5 w-5" /></span>
-                      <div className="min-w-0 flex-1"><h3 className="line-clamp-2 font-bold text-slate-950">{item.title}</h3><p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500"><CalendarDays className="h-3.5 w-3.5" />{dateLabel(item.event_date || item.created_at)}</p></div>
+                      <div className="min-w-0 flex-1"><h3 className="line-clamp-2 font-bold text-slate-950">{item.title}</h3><p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500"><CalendarDays className="h-3.5 w-3.5" />{dateLabel(item.event_date)}</p></div>
                     </div>
                     <p className="mt-4 line-clamp-4 flex-1 whitespace-pre-wrap text-sm leading-6 text-slate-600">{item.description || 'No message added.'}</p>
                     <div className="mt-5 flex gap-1 border-t border-slate-100 pt-4">
