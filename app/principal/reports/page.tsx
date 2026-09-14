@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertCircle, CalendarDays, Check, ClipboardCheck, Download, FileSpreadsheet,
-  FileText, GraduationCap, Loader2, RefreshCw, Users, Wallet,
+  GraduationCap, RefreshCw, Users, Wallet,
 } from 'lucide-react';
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
