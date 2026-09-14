@@ -87,10 +87,10 @@ const colors = [
 
 function Card({ title, description, children }: { title: string; description: string; children: ReactNode }) {
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8">
-      <div className="mb-6 border-b border-gray-100 pb-4">
-        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-        <p className="mt-1 text-sm text-gray-500">{description}</p>
+    <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+      <div className="mb-6 border-b border-gray-100 pb-4 dark:border-slate-800">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">{title}</h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">{description}</p>
       </div>
       {children}
     </section>
@@ -102,13 +102,13 @@ function Field({ label, value, onChange, type = 'text', placeholder = '' }: {
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-gray-700">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-200">{label}</span>
       <input
         type={type}
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+        className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
       />
     </label>
   );
@@ -119,13 +119,13 @@ function TextArea({ label, value, onChange, rows = 4, placeholder = '' }: {
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-gray-700">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-slate-200">{label}</span>
       <textarea
         rows={rows}
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full resize-y rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+        className="w-full resize-y rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500"
       />
     </label>
   );
@@ -351,7 +351,7 @@ export default function WebsiteEditorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
         <Sidebar />
         <div className="flex min-h-screen items-center justify-center lg:ml-64">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -361,19 +361,19 @@ export default function WebsiteEditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
         <main className="flex-1 p-4 pb-24 pt-24 sm:p-6 sm:pt-24 lg:p-8 lg:pt-24">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Website editor</h1>
-              <p className="mt-1 text-sm text-gray-500">Everything saved here is shown on your public school website.</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 sm:text-3xl">Website editor</h1>
+              <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Everything saved here is shown on your public school website.</p>
             </div>
             <div className="flex flex-wrap gap-3">
               {form.slug && (
-                <Link href={'/s/' + form.slug} target="_blank" className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50">
+                <Link href={'/s/' + form.slug} target="_blank" className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-slate-200 shadow-sm hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
                   <Eye className="h-4 w-4" /> Preview
                 </Link>
               )}
@@ -393,11 +393,11 @@ export default function WebsiteEditorPage() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
             <aside className="lg:col-span-1">
-              <nav className="sticky top-28 space-y-1 rounded-2xl border border-gray-100 bg-white p-2 shadow-sm">
+              <nav className="sticky top-28 space-y-1 rounded-2xl border border-gray-100 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
-                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium ' + (activeTab === tab.id ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50')}>
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium ' + (activeTab === tab.id ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300' : 'text-gray-600 hover:bg-gray-50 dark:text-slate-300 dark:hover:bg-slate-800')}>
                       <Icon className="h-4 w-4" /> {tab.label}
                     </button>
                   );
@@ -426,13 +426,13 @@ export default function WebsiteEditorPage() {
                   <div className="grid gap-6 md:grid-cols-2">
                     {(['logo_url', 'banner_url'] as const).map((field) => (
                       <div key={field}>
-                        <p className="mb-2 text-sm font-medium text-gray-700">{field === 'logo_url' ? 'School logo' : 'Hero banner'}</p>
-                        <label className="flex min-h-48 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 text-center hover:border-blue-500">
+                        <p className="mb-2 text-sm font-medium text-gray-700 dark:text-slate-200">{field === 'logo_url' ? 'School logo' : 'Hero banner'}</p>
+                        <label className="flex min-h-48 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 text-center hover:border-blue-500 dark:border-slate-700 dark:bg-slate-950">
                           {form[field] ? <img src={form[field]} alt="" className="h-48 w-full object-cover" /> : (
                             <>
                               {uploading === field ? <Loader2 className="mb-2 h-8 w-8 animate-spin text-blue-600" /> : field === 'logo_url' ? <Upload className="mb-2 h-8 w-8 text-gray-400" /> : <ImageIcon className="mb-2 h-8 w-8 text-gray-400" />}
-                              <span className="text-sm font-semibold text-gray-700">Choose image</span>
-                              <span className="mt-1 text-xs text-gray-500">PNG, JPG or WebP, maximum 5 MB</span>
+                              <span className="text-sm font-semibold text-gray-700 dark:text-slate-200">Choose image</span>
+                              <span className="mt-1 text-xs text-gray-500 dark:text-slate-400">PNG, JPG or WebP, maximum 5 MB</span>
                             </>
                           )}
                           <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(event) => uploadImage(event, field)} disabled={uploading !== null} />
@@ -444,7 +444,7 @@ export default function WebsiteEditorPage() {
                     <p className="mb-3 text-sm font-medium text-gray-700">Primary color</p>
                     <div className="flex flex-wrap gap-3">
                       {colors.map((color) => (
-                        <button key={color.id} type="button" aria-label={color.id} onClick={() => setField('theme_color', color.id)} className={'h-12 w-12 rounded-xl border-4 transition-transform hover:scale-105 ' + (form.theme_color === color.id ? 'border-gray-900' : 'border-white ring-1 ring-gray-200')} style={{ backgroundColor: color.value }} />
+                        <button key={color.id} type="button" aria-label={color.id} onClick={() => setField('theme_color', color.id)} className={'h-12 w-12 rounded-xl border-4 transition-transform hover:scale-105 ' + (form.theme_color === color.id ? 'border-gray-900 dark:border-slate-100' : 'border-white ring-1 ring-gray-200 dark:border-slate-900 dark:ring-slate-700')} style={{ backgroundColor: color.value }} />
                       ))}
                     </div>
                   </div>
@@ -464,11 +464,11 @@ export default function WebsiteEditorPage() {
                       </div>
                       <div className="space-y-3">
                         {form.why_choose_us.map((item, index) => (
-                          <div key={index} className="grid gap-3 rounded-xl border border-gray-200 p-4 md:grid-cols-[80px_1fr_2fr_auto]">
+                          <div key={index} className="grid gap-3 rounded-xl border border-gray-200 p-4 dark:border-slate-700 dark:bg-slate-950/40 dark:border-slate-700 dark:bg-slate-950/40 md:grid-cols-[80px_1fr_2fr_auto]">
                             <Field label="Icon" value={item.icon || ''} onChange={(value) => updateReason(index, 'icon', value)} />
                             <Field label="Title" value={item.title} onChange={(value) => updateReason(index, 'title', value)} />
                             <Field label="Description" value={item.desc} onChange={(value) => updateReason(index, 'desc', value)} />
-                            <button type="button" aria-label="Remove reason" onClick={() => setField('why_choose_us', form.why_choose_us.filter((_, itemIndex) => itemIndex !== index))} className="self-end rounded-lg p-3 text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
+                            <button type="button" aria-label="Remove reason" onClick={() => setField('why_choose_us', form.why_choose_us.filter((_, itemIndex) => itemIndex !== index))} className="self-end rounded-lg p-3 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"><Trash2 className="h-4 w-4" /></button>
                           </div>
                         ))}
                       </div>
@@ -481,13 +481,13 @@ export default function WebsiteEditorPage() {
                 <Card title="Academic programs" description="Add the programs displayed on your public website.">
                   <div className="space-y-4">
                     {form.programs.map((program, index) => (
-                      <div key={index} className="grid gap-3 rounded-xl border border-gray-200 p-4 md:grid-cols-[1fr_2fr_auto]">
+                      <div key={index} className="grid gap-3 rounded-xl border border-gray-200 p-4 dark:border-slate-700 dark:bg-slate-950/40 dark:border-slate-700 dark:bg-slate-950/40 md:grid-cols-[1fr_2fr_auto]">
                         <Field label="Program title" value={program.title} onChange={(value) => updateProgram(index, 'title', value)} />
                         <Field label="Description" value={program.desc} onChange={(value) => updateProgram(index, 'desc', value)} />
-                        <button type="button" aria-label="Remove program" onClick={() => setField('programs', form.programs.filter((_, itemIndex) => itemIndex !== index))} className="self-end rounded-lg p-3 text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
+                        <button type="button" aria-label="Remove program" onClick={() => setField('programs', form.programs.filter((_, itemIndex) => itemIndex !== index))} className="self-end rounded-lg p-3 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     ))}
-                    <button type="button" onClick={() => setField('programs', [...form.programs, { title: '', desc: '' }])} className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"><Plus className="h-4 w-4" /> Add program</button>
+                    <button type="button" onClick={() => setField('programs', [...form.programs, { title: '', desc: '' }])} className="inline-flex items-center gap-2 rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-300 dark:hover:bg-blue-950/40"><Plus className="h-4 w-4" /> Add program</button>
                   </div>
                 </Card>
               )}
@@ -531,17 +531,17 @@ export default function WebsiteEditorPage() {
                       ['show_awards', 'Awards'],
                       ['show_achievements', 'Achievements'],
                     ] as Array<[keyof WebsiteForm, string]>).map(([key, label]) => (
-                      <label key={key} className="flex items-center justify-between rounded-xl border border-gray-200 p-4">
-                        <span className="text-sm font-medium text-gray-800">{label}</span>
-                        <input type="checkbox" checked={Boolean(form[key])} onChange={(event) => setField(key, event.target.checked as never)} className="h-5 w-5 rounded border-gray-300 text-blue-600" />
+                      <label key={key} className="flex items-center justify-between rounded-xl border border-gray-200 p-4 dark:border-slate-700 dark:bg-slate-950/40 dark:border-slate-700 dark:bg-slate-950/40">
+                        <span className="text-sm font-medium text-gray-800 dark:text-slate-100">{label}</span>
+                        <input type="checkbox" checked={Boolean(form[key])} onChange={(event) => setField(key, event.target.checked as never)} className="h-5 w-5 rounded border-gray-300 bg-white text-blue-600 dark:border-slate-600 dark:bg-slate-950" />
                       </label>
                     ))}
                     <div className="pt-3">
-                      <p className="mb-2 text-sm font-medium text-gray-700">Admission highlights</p>
+                      <p className="mb-2 text-sm font-medium text-gray-700 dark:text-slate-200">Admission highlights</p>
                       {form.admission_cta_items.map((item, index) => (
                         <div key={index} className="mb-2 flex gap-2">
-                          <input value={item} onChange={(event) => setField('admission_cta_items', form.admission_cta_items.map((value, itemIndex) => itemIndex === index ? event.target.value : value))} className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm" />
-                          <button type="button" onClick={() => setField('admission_cta_items', form.admission_cta_items.filter((_, itemIndex) => itemIndex !== index))} className="rounded-lg p-3 text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
+                          <input value={item} onChange={(event) => setField('admission_cta_items', form.admission_cta_items.map((value, itemIndex) => itemIndex === index ? event.target.value : value))} className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" />
+                          <button type="button" onClick={() => setField('admission_cta_items', form.admission_cta_items.filter((_, itemIndex) => itemIndex !== index))} className="rounded-lg p-3 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"><Trash2 className="h-4 w-4" /></button>
                         </div>
                       ))}
                       <button type="button" onClick={() => setField('admission_cta_items', [...form.admission_cta_items, ''])} className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-blue-600"><Plus className="h-4 w-4" /> Add highlight</button>
