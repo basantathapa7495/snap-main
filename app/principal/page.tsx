@@ -695,7 +695,7 @@ export default function PrincipalDashboardPage() {
     <div className="min-h-screen bg-[#f6f7fb] text-slate-900 dark:bg-[#080b12] dark:text-slate-100">
       <Sidebar />
       <div className="flex min-h-screen flex-col lg:ml-64">
-        <TopBar />
+        <div className="hidden lg:block"><TopBar /></div>
         <main className="flex-1 px-3 pb-16 pt-20 sm:px-4 lg:px-5">
           <div className="w-full">
             <section className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_60px_-35px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900">
@@ -1070,7 +1070,7 @@ function DashboardSkeleton() {
     <div className="min-h-screen bg-[#f6f7fb] dark:bg-[#080b12]">
       <Sidebar />
       <div className="lg:ml-64">
-        <TopBar />
+        <div className="hidden lg:block"><TopBar /></div>
         <main className="px-3 pb-16 pt-20 sm:px-4 lg:px-5">
           <div className="w-full animate-pulse">
             <div className="h-36 rounded-2xl bg-white dark:bg-slate-900" />
