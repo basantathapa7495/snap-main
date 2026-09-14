@@ -21,13 +21,11 @@ type Student = {
   roll_no: string | null;
   parent_phone: string | null;
 };
-type FeeType = { id: string; name: string; amount: number | string | null };
+type FeeType = { name: string; amount: number | string | null };
 type Payment = {
-  id: string;
   student_id: string;
   amount: number | string | null;
   payment_date: string;
-  created_at: string | null;
 };
 type StudentBalance = Student & { paid: number; due: number; status: 'Paid' | 'Partial' | 'Unpaid' };
 
@@ -100,11 +98,11 @@ export default function FeesPage() {
             .eq('school_id', profile.school_id)
             .order('name'),
           supabase.from('fee_types')
-            .select('id, name, amount')
+            .select('name, amount')
             .eq('school_id', profile.school_id)
             .order('name'),
           supabase.from('fee_records')
-            .select('id, student_id, amount, payment_date, created_at')
+            .select('student_id, amount, payment_date')
             .eq('school_id', profile.school_id)
             .order('payment_date', { ascending: false }),
         ]);
@@ -295,7 +293,7 @@ export default function FeesPage() {
                 <h2 className="font-bold text-slate-950">Fee structure</h2>
                 <p className="mt-1 text-xs text-slate-500">Fees expected from every student each month.</p>
                 <div className="mt-4 divide-y divide-slate-100">
-                  {feeTypes.map((fee) => <div key={fee.id} className="flex items-center justify-between gap-3 py-3"><span className="text-sm font-medium text-slate-700">{fee.name}</span><span className="text-sm font-bold text-slate-950">{money(Number(fee.amount || 0))}</span></div>)}
+                  {feeTypes.map((fee) => <div key={fee.name} className="flex items-center justify-between gap-3 py-3"><span className="text-sm font-medium text-slate-700">{fee.name}</span><span className="text-sm font-bold text-slate-950">{money(Number(fee.amount || 0))}</span></div>)}
                   {!feeTypes.length && <div className="py-8 text-center"><FileText className="mx-auto h-6 w-6 text-slate-300" /><p className="mt-2 text-sm text-slate-500">No fee structure yet.</p><button type="button" onClick={() => setFeeModal(true)} className="mt-3 text-sm font-semibold text-blue-600">Add your first fee</button></div>}
                 </div>
                 {!!feeTypes.length && <div className="mt-3 flex justify-between border-t border-slate-200 pt-4 text-sm"><span className="font-semibold text-slate-600">Total per student</span><span className="font-bold text-slate-950">{money(expectedPerStudent)}</span></div>}
