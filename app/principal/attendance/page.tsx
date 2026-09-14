@@ -19,7 +19,6 @@ type Student = {
   roll_no: string | null;
 };
 type Attendance = {
-  id?: string;
   student_id: string;
   attendance_date: string;
   status: Status;
@@ -89,7 +88,7 @@ export default function AttendancePage() {
             .order('class', { ascending: true })
             .order('roll_no', { ascending: true }),
           supabase.from('attendance')
-            .select('id, student_id, attendance_date, status')
+            .select('student_id, attendance_date, status')
             .eq('school_id', profile.school_id)
             .gte('attendance_date', dateDaysAgo(89))
             .lte('attendance_date', nepalDateKey()),
