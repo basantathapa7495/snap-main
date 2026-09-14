@@ -250,35 +250,33 @@ export default function Sidebar() {
       {/* =====================================================
           MOBILE TOP BAR
       ===================================================== */}
-      <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center justify-between border-b border-blue-800 bg-gradient-to-r from-slate-950 to-blue-950 px-4 text-white shadow-md lg:hidden">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
-            className="rounded-lg p-2 text-slate-200 transition hover:bg-white/10"
-            aria-label="Open sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
+      <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center border-b border-blue-800 bg-gradient-to-r from-slate-950 to-blue-950 px-3 text-white shadow-md lg:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="relative z-10 flex h-10 w-10 items-center justify-center rounded-xl text-slate-100 transition hover:bg-white/10 active:scale-95"
+          aria-label="Open sidebar"
+          aria-expanded={mobileOpen}
+        >
+          <Menu className="h-5 w-5" />
+        </button>
 
-          <div className="flex items-center gap-2">
-            <Image
-              src="/logo1.png"
-              alt="SNAP Logo"
-              width={32}
-              height={32}
-              className="h-8 w-8 object-contain"
-            />
-            <span className="text-base font-bold text-white">SNAP</span>
-          </div>
-        </div>
+        <Link
+          href={isPrincipalPath ? '/principal' : isTeacherPath ? '/teacher' : '/student'}
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          aria-label="Open dashboard"
+        >
+          <Image
+            src="/logo2.png"
+            alt="SNAP"
+            width={42}
+            height={42}
+            priority
+            className="h-10 w-10 object-contain"
+          />
+        </Link>
 
-        <div className="flex min-w-0 flex-col items-end">
-          <span className="max-w-[140px] truncate text-xs font-semibold text-blue-100">
-            {formatSchoolName(school?.name)}
-          </span>
-
-        </div>
+        <div className="ml-auto h-10 w-10" aria-hidden="true" />
       </div>
 
       {/* =====================================================
