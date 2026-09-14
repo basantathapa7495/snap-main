@@ -1,711 +1,419 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { CSSProperties, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { useParams } from 'next/navigation';
 import {
-  GraduationCap, BookOpen, Users, MapPin, Phone, Mail, Clock,
-  Award, Star, Quote, ArrowRight, Menu, X, ChevronDown, ChevronUp,
-  ArrowUp, Globe, Calendar,
-  Building, Lightbulb, Shield, Heart, Trophy, Newspaper,
-  CheckCircle, User, MailOpen
+  ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2,
+  Clock, ExternalLink, GraduationCap, Image as ImageIcon, Loader2, Mail,
+  MapPin, Menu, Newspaper, Phone, Quote, ShieldCheck, Target, Trophy, X,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
-// --- Mock Data (Replace with Supabase fetch later) ---
-const schoolData = {
-  name: 'Sunrise Valley Secondary School',
-  motto: 'Knowledge is Light, Character is Strength',
-  slug: 'sunrise-valley',
-  themeColor: 'blue', // blue, green, purple, red, orange, teal
-  about: 'Founded in 2050 B.S., Sunrise Valley Secondary School has been a beacon of academic excellence in the Gandaki Province. We are dedicated to nurturing young minds through a holistic approach that balances rigorous academics with moral and physical development.',
-  principalMessage: 'Welcome to Sunrise Valley. We believe that every child is unique and possesses immense potential. Our mission is to provide a safe, stimulating, and supportive environment where students can discover their passions and achieve their dreams.',
-  principalName: 'Mr. Basanta Adhikari',
-  stats: { students: 450, teachers: 32, classes: 24 },
-  programs: [
-    { title: 'Primary Level (1-5)', desc: 'Foundation building with activity-based learning.', icon: BookOpen },
-    { title: 'Secondary Level (6-10)', desc: 'Rigorous academics preparing for SEE examinations.', icon: GraduationCap },
-    { title: 'Science Stream (11-12)', desc: 'Advanced physics, chemistry, and biology for future innovators.', icon: Lightbulb },
-  ],
-  whyChooseUs: [
-    { title: 'Experienced Faculty', desc: 'Highly qualified and dedicated teaching staff.', icon: User },
-    { title: 'Modern Facilities', desc: 'Smart classrooms, science labs, and computer centers.', icon: Building },
-    { title: 'Holistic Development', desc: 'Focus on sports, arts, and moral education.', icon: Heart },
-    { title: 'Safe Environment', desc: 'Secure campus with CCTV surveillance and caring staff.', icon: Shield },
-  ],
-  teachers: [
-    { name: 'Ram K. Shrestha', subject: 'Mathematics', qualification: 'M.Ed' },
-    { name: 'Sita Poudel', subject: 'Science', qualification: 'M.Sc' },
-    { name: 'Hari Thapa', subject: 'English', qualification: 'M.A' },
-    { name: 'Gita Rai', subject: 'Social Studies', qualification: 'M.A' },
-  ],
-  events: [
-    { title: 'Annual Sports Day', date: 'Dec 15, 2081', location: 'School Ground', category: 'Sports' },
-    { title: 'Parent-Teacher Meeting', date: 'Nov 28, 2081', location: 'Main Hall', category: 'Meeting' },
-    { title: 'Science Exhibition', date: 'Nov 10, 2081', location: 'Science Block', category: 'Academic' },
-  ],
-  news: [
-    { title: '100% Pass Rate in SEE 2081', date: 'Oct 20, 2081', category: 'Result', featured: true },
-    { title: 'New Computer Lab Inaugurated', date: 'Oct 15, 2081', category: 'News', featured: false },
-    { title: 'Winter Vacation Notice', date: 'Oct 10, 2081', category: 'Notice', featured: false },
-  ],
-  testimonials: [
-    { name: 'Rajesh Sharma', role: 'Parent of Class 10 Student', text: 'The teachers here are incredibly dedicated. My son has shown remarkable improvement in both academics and confidence.' },
-    { name: 'Sunita Gurung', role: 'Parent of Class 8 Student', text: 'The holistic approach to education at Sunrise Valley is exactly what we were looking for. Highly recommended!' },
-  ],
-  awards: [
-    { title: 'Best School Award 2080', org: 'District Education Office' },
-    { title: 'Excellence in Sports', org: 'Regional Sports Council' },
-    { title: 'Green School Certification', org: 'Ministry of Environment' },
-  ],
-  contact: {
-    phones: ['9841234567', '063-520123'],
-    emails: ['info@sunrisevalley.edu.np', 'admission@sunrisevalley.edu.np'],
-    address: 'Ward No. 5, Harinas, Syangja, Gandaki Province, Nepal',
-    hours: 'Sun - Fri: 10:00 AM - 4:00 PM',
-    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.123456789!2d83.628123!3d28.123456!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjjCsDA3JzI0LjQiTiA4M8KwMzcnNDEuMiJF!5e0!3m2!1sen!2snp!4v1234567890'
+type Program = { title: string; desc: string };
+type Reason = { icon?: string; title: string; desc: string };
+type School = {
+  id: string;
+  name: string | null;
+  slug: string | null;
+  school_type: string | null;
+  school_level: string | null;
+  established_year: number | null;
+  principal: string | null;
+  motto: string | null;
+  short_description: string | null;
+  principal_message: string | null;
+  about_text: string | null;
+  mission: string | null;
+  vision: string | null;
+  logo_url: string | null;
+  banner_url: string | null;
+  theme_color: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  school_email: string | null;
+  phones: unknown;
+  emails: unknown;
+  office_hours: string | null;
+  website: string | null;
+  facebook: string | null;
+  instagram: string | null;
+  youtube: string | null;
+  map_location: string | null;
+  facilities: string | null;
+  activities: string | null;
+  programs: unknown;
+  why_choose_us: unknown;
+  admission_cta_items: unknown;
+  show_programs: boolean | null;
+  show_news: boolean | null;
+  show_notices: boolean | null;
+  show_testimonials: boolean | null;
+  show_awards: boolean | null;
+  show_achievements: boolean | null;
+};
+
+type NewsItem = {
+  id: string; title: string; content: string | null; event_date: string | null;
+  event_time: string | null; location: string | null; is_event: boolean | null;
+  category: string | null; is_featured: boolean | null; created_at: string | null;
+};
+type AwardItem = { id: string; title: string; year: string | null; description: string | null };
+type Testimonial = { id: string; name: string; role: string | null; content: string | null };
+type GalleryItem = { id: string; image_url: string; label: string | null };
+
+const themeMap: Record<string, { brand: string; dark: string; soft: string }> = {
+  blue: { brand: '#2563eb', dark: '#1d4ed8', soft: '#eff6ff' },
+  green: { brand: '#16a34a', dark: '#15803d', soft: '#f0fdf4' },
+  emerald: { brand: '#059669', dark: '#047857', soft: '#ecfdf5' },
+  purple: { brand: '#7c3aed', dark: '#6d28d9', soft: '#f5f3ff' },
+  red: { brand: '#dc2626', dark: '#b91c1c', soft: '#fef2f2' },
+  orange: { brand: '#ea580c', dark: '#c2410c', soft: '#fff7ed' },
+  amber: { brand: '#d97706', dark: '#b45309', soft: '#fffbeb' },
+  teal: { brand: '#0d9488', dark: '#0f766e', soft: '#f0fdfa' },
+};
+
+const asStrings = (value: unknown) => Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string' && Boolean(item.trim())) : [];
+const asPrograms = (value: unknown): Program[] => Array.isArray(value)
+  ? value.map((item) => {
+      const row = item as Record<string, unknown>;
+      return { title: typeof row?.title === 'string' ? row.title : '', desc: typeof (row?.desc || row?.description) === 'string' ? String(row.desc || row.description) : '' };
+    }).filter((item) => item.title || item.desc)
+  : [];
+const asReasons = (value: unknown): Reason[] => Array.isArray(value)
+  ? value.map((item) => {
+      const row = item as Record<string, unknown>;
+      return {
+        icon: typeof row?.icon === 'string' ? row.icon : '✓',
+        title: typeof row?.title === 'string' ? row.title : '',
+        desc: typeof (row?.desc || row?.description) === 'string' ? String(row.desc || row.description) : '',
+      };
+    }).filter((item) => item.title || item.desc)
+  : [];
+const safeUrl = (value: string | null | undefined) => {
+  if (!value) return '';
+  const candidate = /^https?:\/\//i.test(value) ? value : 'https://' + value;
+  try {
+    const parsed = new URL(candidate);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.toString() : '';
+  } catch {
+    return '';
   }
 };
+const displayDate = (value: string | null) => value
+  ? new Intl.DateTimeFormat('en-NP', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value + 'T00:00:00'))
+  : '';
 
-// Theme color mapping
-const themeColors: Record<string, { primary: string; hover: string; light: string; text: string; border: string }> = {
-  blue: { primary: 'bg-blue-600', hover: 'hover:bg-blue-700', light: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
-  green: { primary: 'bg-emerald-600', hover: 'hover:bg-emerald-700', light: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
-  purple: { primary: 'bg-purple-600', hover: 'hover:bg-purple-700', light: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
-  red: { primary: 'bg-red-600', hover: 'hover:bg-red-700', light: 'bg-red-50', text: 'text-red-600', border: 'border-red-200' },
-  orange: { primary: 'bg-orange-600', hover: 'hover:bg-orange-700', light: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200' },
-  teal: { primary: 'bg-teal-600', hover: 'hover:bg-teal-700', light: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-200' },
-};
+function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    <div className="mb-10 text-center">
+      <p className="mb-2 text-sm font-bold uppercase tracking-[0.18em]" style={{ color: 'var(--brand)' }}>{eyebrow}</p>
+      <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">{title}</h2>
+    </div>
+  );
+}
 
-export default function PublicSchoolPage() {
+export default function SchoolWebsitePage() {
   const params = useParams();
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showBackToTop, setShowBackToTop] = useState(false);
-  
-  const theme = themeColors[schoolData.themeColor] || themeColors.blue;
+  const slug = typeof params.slug === 'string' ? params.slug : Array.isArray(params.slug) ? params.slug[0] : '';
+  const [school, setSchool] = useState<School | null>(null);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [awards, setAwards] = useState<AwardItem[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-      setShowBackToTop(window.scrollY > 500);
+    const loadSchool = async () => {
+      if (!slug) return;
+      setLoading(true);
+      setNotFound(false);
+
+      const { data, error } = await supabase
+        .from('schools')
+        .select('id,name,slug,school_type,school_level,established_year,principal,motto,short_description,principal_message,about_text,mission,vision,logo_url,banner_url,theme_color,address,phone,email,school_email,phones,emails,office_hours,website,facebook,instagram,youtube,map_location,facilities,activities,programs,why_choose_us,admission_cta_items,show_programs,show_news,show_notices,show_testimonials,show_awards,show_achievements')
+        .eq('slug', slug)
+        .eq('is_approved', true)
+        .maybeSingle();
+
+      if (error || !data) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+
+      setSchool(data as School);
+      const [newsResult, awardsResult, testimonialsResult, galleryResult] = await Promise.all([
+        supabase.from('news_events').select('id,title,content,event_date,event_time,location,is_event,category,is_featured,created_at').eq('school_id', data.id).order('event_date', { ascending: false }).limit(8),
+        supabase.from('awards').select('id,title,year,description').eq('school_id', data.id).order('created_at', { ascending: false }).limit(6),
+        supabase.from('testimonials').select('id,name,role,content').eq('school_id', data.id).order('created_at', { ascending: false }).limit(6),
+        supabase.from('gallery_images').select('id,image_url,label').eq('school_id', data.id).order('created_at', { ascending: false }).limit(8),
+      ]);
+
+      setNews((newsResult.data || []) as NewsItem[]);
+      setAwards((awardsResult.data || []) as AwardItem[]);
+      setTestimonials((testimonialsResult.data || []) as Testimonial[]);
+      setGallery((galleryResult.data || []) as GalleryItem[]);
+      setLoading(false);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+    void loadSchool();
+  }, [slug]);
 
-  const navLinks = [
-    { name: 'Home', href: '#' },
-    { name: 'About', href: '#about' },
-    { name: 'Programs', href: '#programs' },
-    { name: 'Faculty', href: '#faculty' },
-    { name: 'News & Events', href: '#news' },
-    { name: 'Contact', href: '#contact' },
+  const programs = useMemo(() => school ? asPrograms(school.programs) : [], [school]);
+  const reasons = useMemo(() => school ? asReasons(school.why_choose_us) : [], [school]);
+  const admissionItems = useMemo(() => school ? asStrings(school.admission_cta_items) : [], [school]);
+  const phones = useMemo(() => school ? [school.phone, ...asStrings(school.phones)].filter((item, index, all): item is string => Boolean(item) && all.indexOf(item) === index) : [], [school]);
+  const emails = useMemo(() => school ? [school.email || school.school_email, ...asStrings(school.emails)].filter((item, index, all): item is string => Boolean(item) && all.indexOf(item) === index) : [], [school]);
+  const items = useMemo(() => news.filter((item) => school?.show_notices !== false || item.category?.toLowerCase() !== 'notice'), [news, school]);
+  const theme = themeMap[school?.theme_color || 'blue'] || themeMap.blue;
+  const siteStyle = { '--brand': theme.brand, '--brand-dark': theme.dark, '--brand-soft': theme.soft } as CSSProperties;
+  const navItems = [
+    { label: 'Home', href: '#home' },
+    { label: 'About', href: '#about' },
+    ...(school?.show_programs !== false && programs.length ? [{ label: 'Programs', href: '#programs' }] : []),
+    ...(school?.show_news !== false && items.length ? [{ label: 'News', href: '#news' }] : []),
+    { label: 'Contact', href: '#contact' },
   ];
 
+  if (loading) {
+    return <main className="flex min-h-screen items-center justify-center bg-slate-50"><Loader2 className="h-9 w-9 animate-spin text-blue-600" /></main>;
+  }
+
+  if (notFound || !school) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6 text-center">
+        <div>
+          <GraduationCap className="mx-auto mb-4 h-14 w-14 text-slate-300" />
+          <h1 className="text-2xl font-bold text-slate-900">School website not found</h1>
+          <p className="mt-2 text-slate-500">Check the website address or contact the school.</p>
+        </div>
+      </main>
+    );
+  }
+
+  const socialLinks = [
+    ['Website', school.website],
+    ['Facebook', school.facebook],
+    ['Instagram', school.instagram],
+    ['YouTube', school.youtube],
+  ].map(([label, value]) => ({ label, url: safeUrl(value) })).filter((item) => item.url);
+
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans antialiased">
-      
-      {/* ✅ Sticky Navbar */}
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md py-3' : 'bg-transparent py-5'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className={`h-10 w-10 rounded-lg ${theme.primary} flex items-center justify-center text-white font-bold text-xl`}>
-              S
+    <div style={siteStyle} className="min-h-screen bg-white text-slate-700">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+          <a href="#home" className="flex min-w-0 items-center gap-3">
+            {school.logo_url ? <img src={school.logo_url} alt={school.name || 'School logo'} className="h-12 w-12 rounded-xl border border-slate-200 object-contain" /> : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl text-xl font-bold text-white" style={{ backgroundColor: theme.brand }}>{(school.name || 'S').charAt(0).toUpperCase()}</div>
+            )}
+            <div className="min-w-0">
+              <p className="truncate font-bold text-slate-900 sm:text-lg">{school.name || 'School'}</p>
+              {school.motto && <p className="hidden truncate text-xs text-slate-500 sm:block">{school.motto}</p>}
             </div>
-            <div>
-              <h1 className={`font-bold text-lg leading-tight ${isScrolled ? 'text-gray-900' : 'text-white'}`}>
-                {schoolData.name}
-              </h1>
-              <p className={`text-xs ${isScrolled ? 'text-gray-500' : 'text-blue-100'}`}>
-                Est. 2050 B.S.
-              </p>
-            </div>
-          </Link>
-
-          {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a 
-                key={link.name} 
-                href={link.href}
-                className={`text-sm font-medium transition-colors ${
-                  isScrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'
-                }`}
-              >
-                {link.name}
-              </a>
-            ))}
+          </a>
+          <nav className="hidden items-center gap-7 md:flex">
+            {navItems.map((item) => <a key={item.href} href={item.href} className="text-sm font-semibold text-slate-600 hover:text-[var(--brand)]">{item.label}</a>)}
+            <Link href={'/s/' + school.slug + '/admission'} className="rounded-lg px-4 py-2.5 text-sm font-bold text-white" style={{ backgroundColor: theme.brand }}>Apply now</Link>
           </nav>
-
-          <div className="hidden lg:flex items-center gap-3">
-            <Link 
-              href={`/s/${schoolData.slug}/login`}
-              className={`text-sm font-medium px-4 py-2 rounded-lg transition-colors ${
-                isScrolled ? 'text-gray-700 hover:bg-gray-100' : 'text-white hover:bg-white/10'
-              }`}
-            >
-              Portal Login
-            </Link>
-            <Link 
-              href={`/s/${schoolData.slug}/admission`}
-              className={`text-sm font-semibold px-5 py-2.5 rounded-lg text-white shadow-sm transition-all ${theme.primary} ${theme.hover}`}
-            >
-              Apply Now
-            </Link>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`lg:hidden p-2 rounded-lg ${isScrolled ? 'text-gray-700' : 'text-white'}`}
-          >
-            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          <button type="button" onClick={() => setMenuOpen(!menuOpen)} className="rounded-lg p-2 text-slate-700 md:hidden" aria-label="Open navigation">
+            {menuOpen ? <X /> : <Menu />}
           </button>
         </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-t border-gray-100 shadow-lg py-4 px-4 flex flex-col gap-4">
-            {navLinks.map((link) => (
-              <a 
-                key={link.name} 
-                href={link.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="text-base font-medium text-gray-700 hover:text-blue-600 py-2"
-              >
-                {link.name}
-              </a>
-            ))}
-            <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
-              <Link href={`/s/${schoolData.slug}/login`} className="text-center py-2.5 rounded-lg border border-gray-200 text-gray-700 font-medium">
-                Portal Login
-              </Link>
-              <Link href={`/s/${schoolData.slug}/admission`} className={`text-center py-2.5 rounded-lg text-white font-semibold ${theme.primary}`}>
-                Apply Now
-              </Link>
-            </div>
-          </div>
+        {menuOpen && (
+          <nav className="border-t border-slate-100 bg-white px-4 py-4 md:hidden">
+            {navItems.map((item) => <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2.5 font-medium text-slate-700 hover:bg-slate-50">{item.label}</a>)}
+            <Link href={'/s/' + school.slug + '/admission'} className="mt-2 block rounded-lg px-3 py-2.5 text-center font-bold text-white" style={{ backgroundColor: theme.brand }}>Apply now</Link>
+          </nav>
         )}
       </header>
 
-      {/* ✅ Hero Section */}
-      <section className="relative h-[600px] flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-        
-        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center text-white">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-1.5 text-sm font-medium mb-6">
-            <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-            Admissions Open for 2082 B.S.
-          </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
-            {schoolData.name}
-          </h1>
-          <p className="text-xl sm:text-2xl text-blue-100 font-light italic mb-8 max-w-3xl mx-auto">
-            "{schoolData.motto}"
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link 
-              href={`/s/${schoolData.slug}/admission`}
-              className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-lg text-white font-semibold shadow-lg transition-all ${theme.primary} ${theme.hover}`}
-            >
-              Start Admission <ArrowRight className="h-5 w-5" />
-            </Link>
-            <a 
-              href="#about"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
-            >
-              Learn More
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ✅ Floating Stats Bar */}
-      <div className="relative z-20 max-w-6xl mx-auto px-4 -mt-16">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-3 gap-8">
-          <div className="flex items-center gap-4">
-            <div className={`h-12 w-12 rounded-xl ${theme.light} ${theme.text} flex items-center justify-center`}>
-              <Users className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-gray-900">{schoolData.stats.students}+</p>
-              <p className="text-sm text-gray-500">Happy Students</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className={`h-12 w-12 rounded-xl ${theme.light} ${theme.text} flex items-center justify-center`}>
-              <GraduationCap className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-gray-900">{schoolData.stats.teachers}+</p>
-              <p className="text-sm text-gray-500">Expert Teachers</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className={`h-12 w-12 rounded-xl ${theme.light} ${theme.text} flex items-center justify-center`}>
-              <Building className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-gray-900">{schoolData.stats.classes}</p>
-              <p className="text-sm text-gray-500">Modern Classrooms</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ✅ About Section */}
-      <section id="about" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <span className={`inline-block text-sm font-bold uppercase tracking-wider ${theme.text} mb-3`}>About Our School</span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-                Nurturing Minds, Building Futures Since 2050 B.S.
-              </h2>
-              <p className="text-lg text-gray-600 leading-relaxed mb-8">
-                {schoolData.about}
-              </p>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className={`h-6 w-6 ${theme.text} flex-shrink-0 mt-1`} />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Academic Excellence</h4>
-                    <p className="text-sm text-gray-500">Consistently high SEE results</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <CheckCircle className={`h-6 w-6 ${theme.text} flex-shrink-0 mt-1`} />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Moral Education</h4>
-                    <p className="text-sm text-gray-500">Focus on character building</p>
-                  </div>
-                </div>
+      <main>
+        <section id="home" className="relative isolate flex min-h-[660px] items-center overflow-hidden bg-slate-950">
+          {school.banner_url && <img src={school.banner_url} alt="" className="absolute inset-0 -z-20 h-full w-full object-cover" />}
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-slate-950/30" />
+          <div className="mx-auto w-full max-w-7xl px-4 py-28 sm:px-6 lg:px-8">
+            <div className="max-w-3xl">
+              {(school.school_type || school.school_level) && (
+                <p className="mb-5 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur">{[school.school_type, school.school_level].filter(Boolean).join(' · ')}</p>
+              )}
+              <h1 className="text-4xl font-extrabold leading-tight text-white sm:text-6xl">{school.name}</h1>
+              {school.motto && <p className="mt-5 text-xl font-medium text-white/90 sm:text-2xl">{school.motto}</p>}
+              {school.short_description && <p className="mt-5 max-w-2xl text-base leading-8 text-slate-200 sm:text-lg">{school.short_description}</p>}
+              <div className="mt-9 flex flex-wrap gap-4">
+                <Link href={'/s/' + school.slug + '/admission'} className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 font-bold text-white shadow-lg" style={{ backgroundColor: theme.brand }}>Start admission <ArrowRight className="h-5 w-5" /></Link>
+                <a href="#about" className="rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 font-bold text-white backdrop-blur hover:bg-white/20">Explore our school</a>
               </div>
             </div>
-            
-            {/* Principal's Message */}
-            <div className={`rounded-2xl ${theme.light} p-8 sm:p-10 border ${theme.border} relative`}>
-              <Quote className={`absolute top-6 right-6 h-12 w-12 ${theme.text} opacity-20`} />
-              <div className="flex items-center gap-4 mb-6">
-                <div className={`h-14 w-14 rounded-full ${theme.primary} flex items-center justify-center text-white text-xl font-bold`}>
-                  {schoolData.principalName.charAt(0)}
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Principal's Message</h3>
-                  <p className={`text-sm font-medium ${theme.text}`}>{schoolData.principalName}</p>
-                </div>
-              </div>
-              <p className="text-gray-700 leading-relaxed italic">
-                "{schoolData.principalMessage}"
-              </p>
-            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ✅ Academic Programs */}
-      <section id="programs" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <span className={`inline-block text-sm font-bold uppercase tracking-wider ${theme.text} mb-3`}>Our Programs</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Academic Levels We Offer</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {schoolData.programs.map((program, idx) => {
-              const Icon = program.icon;
-              return (
-                <div key={idx} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-shadow group">
-                  <div className={`h-14 w-14 rounded-xl ${theme.light} ${theme.text} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                    <Icon className="h-7 w-7" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{program.title}</h3>
-                  <p className="text-gray-600">{program.desc}</p>
-                </div>
-              );
+        <section className="border-b border-slate-100 bg-white">
+          <div className="mx-auto grid max-w-7xl grid-cols-1 divide-y divide-slate-100 px-4 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:px-6 lg:px-8">
+            {[
+              { icon: CalendarDays, label: 'Established', value: school.established_year ? school.established_year + ' B.S.' : 'Growing every year' },
+              { icon: GraduationCap, label: 'School level', value: school.school_level || 'Quality education' },
+              { icon: ShieldCheck, label: 'School type', value: school.school_type || 'Student focused' },
+            ].map((stat) => {
+              const Icon = stat.icon;
+              return <div key={stat.label} className="flex items-center justify-center gap-4 px-6 py-8"><Icon className="h-8 w-8" style={{ color: theme.brand }} /><div><p className="text-xs font-bold uppercase tracking-wider text-slate-400">{stat.label}</p><p className="font-bold text-slate-900">{stat.value}</p></div></div>;
             })}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ✅ Why Choose Us */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <span className={`inline-block text-sm font-bold uppercase tracking-wider ${theme.text} mb-3`}>Why Choose Us</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">What Makes Us Different</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {schoolData.whyChooseUs.map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <div key={idx} className="text-center p-6 rounded-2xl hover:bg-gray-50 transition-colors">
-                  <div className={`h-16 w-16 mx-auto rounded-full ${theme.light} ${theme.text} flex items-center justify-center mb-5`}>
-                    <Icon className="h-8 w-8" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
-                  <p className="text-sm text-gray-600">{item.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ✅ Faculty Section */}
-      <section id="faculty" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <span className={`inline-block text-sm font-bold uppercase tracking-wider ${theme.text} mb-3`}>Our Team</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Meet Our Expert Faculty</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {schoolData.teachers.map((teacher, idx) => (
-              <div key={idx} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                <div className={`h-32 ${theme.primary} relative`}>
-                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 h-20 w-20 rounded-full bg-white p-1">
-                    <div className={`h-full w-full rounded-full ${theme.light} ${theme.text} flex items-center justify-center text-2xl font-bold`}>
-                      {teacher.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                  </div>
-                </div>
-                <div className="pt-12 pb-6 px-6 text-center">
-                  <h3 className="text-lg font-bold text-gray-900">{teacher.name}</h3>
-                  <p className={`text-sm font-medium ${theme.text} mb-1`}>{teacher.subject}</p>
-                  <p className="text-xs text-gray-500">{teacher.qualification}</p>
-                </div>
+        {(school.about_text || school.principal_message || school.mission || school.vision) && (
+          <section id="about" className="py-20 sm:py-28">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <SectionTitle eyebrow="About us" title="A school built for every learner" />
+              <div className="grid gap-8 lg:grid-cols-2">
+                <article className="rounded-3xl border border-slate-100 bg-slate-50 p-7 sm:p-10">
+                  <Building2 className="mb-5 h-10 w-10" style={{ color: theme.brand }} />
+                  <h3 className="text-2xl font-bold text-slate-900">Our story</h3>
+                  <p className="mt-4 whitespace-pre-line leading-8 text-slate-600">{school.about_text || school.short_description}</p>
+                </article>
+                {school.principal_message && (
+                  <article className="rounded-3xl p-7 text-white sm:p-10" style={{ backgroundColor: theme.dark }}>
+                    <Quote className="mb-5 h-10 w-10 text-white/40" />
+                    <p className="whitespace-pre-line text-lg leading-8 text-white/90">{school.principal_message}</p>
+                    <p className="mt-6 font-bold">{school.principal || 'School Principal'}</p>
+                    <p className="text-sm text-white/70">Principal</p>
+                  </article>
+                )}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              {(school.mission || school.vision) && (
+                <div className="mt-8 grid gap-6 md:grid-cols-2">
+                  {school.mission && <article className="rounded-2xl border border-slate-200 p-7"><Target className="mb-4 h-8 w-8" style={{ color: theme.brand }} /><h3 className="text-xl font-bold text-slate-900">Our mission</h3><p className="mt-3 whitespace-pre-line leading-7">{school.mission}</p></article>}
+                  {school.vision && <article className="rounded-2xl border border-slate-200 p-7"><Award className="mb-4 h-8 w-8" style={{ color: theme.brand }} /><h3 className="text-xl font-bold text-slate-900">Our vision</h3><p className="mt-3 whitespace-pre-line leading-7">{school.vision}</p></article>}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
-      {/* ✅ News & Events */}
-      <section id="news" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            
-            {/* Upcoming Events */}
-            <div>
-              <div className="flex items-center gap-3 mb-8">
-                <Calendar className={`h-6 w-6 ${theme.text}`} />
-                <h2 className="text-2xl font-bold text-gray-900">Upcoming Events</h2>
-              </div>
-              <div className="space-y-4">
-                {schoolData.events.map((event, idx) => (
-                  <div key={idx} className="flex gap-4 p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
-                    <div className={`flex-shrink-0 h-14 w-14 rounded-lg ${theme.light} ${theme.text} flex flex-col items-center justify-center`}>
-                      <Calendar className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-bold text-gray-900">{event.title}</h3>
-                        <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${theme.light} ${theme.text}`}>
-                          {event.category}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-500 flex items-center gap-1.5">
-                        <Clock className="h-3 w-3" /> {event.date}
-                      </p>
-                      <p className="text-sm text-gray-500 flex items-center gap-1.5">
-                        <MapPin className="h-3 w-3" /> {event.location}
-                      </p>
-                    </div>
-                  </div>
+        {school.show_programs !== false && programs.length > 0 && (
+          <section id="programs" className="bg-slate-50 py-20 sm:py-28">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <SectionTitle eyebrow="Academics" title="Programs for meaningful learning" />
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {programs.map((program, index) => (
+                  <article key={index} className="rounded-2xl border border-slate-100 bg-white p-7 shadow-sm">
+                    <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl" style={{ backgroundColor: theme.soft, color: theme.brand }}><BookOpen className="h-6 w-6" /></div>
+                    <h3 className="text-xl font-bold text-slate-900">{program.title}</h3>
+                    {program.desc && <p className="mt-3 leading-7 text-slate-600">{program.desc}</p>}
+                  </article>
                 ))}
               </div>
             </div>
+          </section>
+        )}
 
-            {/* Latest News */}
-            <div>
-              <div className="flex items-center gap-3 mb-8">
-                <Newspaper className={`h-6 w-6 ${theme.text}`} />
-                <h2 className="text-2xl font-bold text-gray-900">Latest News</h2>
+        {reasons.length > 0 && (
+          <section className="py-20 sm:py-28">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <SectionTitle eyebrow="Why choose us" title="A place to learn, belong and grow" />
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {reasons.map((reason, index) => (
+                  <article key={index} className="rounded-2xl border border-slate-200 p-6">
+                    <div className="mb-4 text-3xl">{reason.icon || '✓'}</div>
+                    <h3 className="font-bold text-slate-900">{reason.title}</h3>
+                    {reason.desc && <p className="mt-2 text-sm leading-6 text-slate-600">{reason.desc}</p>}
+                  </article>
+                ))}
               </div>
-              <div className="space-y-4">
-                {schoolData.news.map((news, idx) => (
-                  <div key={idx} className={`p-5 rounded-xl border ${news.featured ? `${theme.border} ${theme.light}` : 'border-gray-100'} hover:shadow-sm transition-all`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${news.featured ? 'bg-white text-gray-900' : 'bg-gray-100 text-gray-600'}`}>
-                        {news.category}
-                      </span>
-                      <span className="text-xs text-gray-500">{news.date}</span>
+            </div>
+          </section>
+        )}
+
+        {school.show_news !== false && items.length > 0 && (
+          <section id="news" className="bg-slate-50 py-20 sm:py-28">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <SectionTitle eyebrow="Latest updates" title="News, notices and events" />
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {items.map((item) => (
+                  <article key={item.id} className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <span className="rounded-full px-3 py-1 text-xs font-bold" style={{ backgroundColor: theme.soft, color: theme.brand }}>{item.category || (item.is_event ? 'Event' : 'News')}</span>
+                      <span className="text-xs text-slate-400">{displayDate(item.event_date) || (item.created_at ? displayDate(item.created_at.slice(0, 10)) : '')}</span>
                     </div>
-                    <h3 className={`font-bold ${news.featured ? theme.text : 'text-gray-900'}`}>
-                      {news.title}
-                    </h3>
-                  </div>
+                    <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
+                    {item.content && <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">{item.content}</p>}
+                    {(item.event_time || item.location) && <p className="mt-4 flex flex-wrap gap-3 text-xs text-slate-500">{item.event_time && <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{item.event_time}</span>}{item.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{item.location}</span>}</p>}
+                  </article>
                 ))}
               </div>
             </div>
+          </section>
+        )}
 
-          </div>
-        </div>
-      </section>
-
-      {/* ✅ Testimonials */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <span className={`inline-block text-sm font-bold uppercase tracking-wider ${theme.text} mb-3`}>Testimonials</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">What Parents Say About Us</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {schoolData.testimonials.map((t, idx) => (
-              <div key={idx} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 relative">
-                <Quote className={`absolute top-6 right-6 h-8 w-8 ${theme.text} opacity-20`} />
-                <p className="text-gray-700 italic mb-6 relative z-10">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-full ${theme.primary} flex items-center justify-center text-white font-bold`}>
-                    {t.name.charAt(0)}
-                  </div>
-                  <div>
-                    <p className="font-bold text-gray-900">{t.name}</p>
-                    <p className="text-xs text-gray-500">{t.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ✅ Awards & Achievements */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <span className={`inline-block text-sm font-bold uppercase tracking-wider ${theme.text} mb-3`}>Our Pride</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Awards & Achievements</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {schoolData.awards.map((award, idx) => (
-              <div key={idx} className="flex items-center gap-4 p-6 rounded-2xl border border-gray-100 hover:border-gray-200 transition-colors">
-                <div className={`h-12 w-12 rounded-xl ${theme.light} ${theme.text} flex items-center justify-center flex-shrink-0`}>
-                  <Trophy className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900">{award.title}</h3>
-                  <p className="text-sm text-gray-500">{award.org}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ✅ Admissions CTA Banner */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`rounded-3xl ${theme.primary} p-10 sm:p-16 text-center text-white relative overflow-hidden`}>
-            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '30px 30px' }}></div>
-            <div className="relative z-10">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Admissions Open for 2082 B.S.</h2>
-              <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-                Give your child the gift of quality education. Join the Sunrise Valley family today and watch them thrive.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link 
-                  href={`/s/${schoolData.slug}/admission`}
-                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-white text-gray-900 font-semibold shadow-lg hover:bg-gray-100 transition-all"
-                >
-                  Apply Online <ArrowRight className="h-5 w-5" />
-                </Link>
-                <a 
-                  href="#contact"
-                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/20 transition-all"
-                >
-                  <Phone className="h-5 w-5" /> Contact Us
-                </a>
+        {gallery.length > 0 && (
+          <section className="py-20">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <SectionTitle eyebrow="Campus life" title="Inside our school" />
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {gallery.map((item) => <figure key={item.id} className="group relative aspect-square overflow-hidden rounded-2xl bg-slate-100"><img src={item.image_url} alt={item.label || 'School gallery'} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />{item.label && <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-10 text-sm font-semibold text-white">{item.label}</figcaption>}</figure>)}
               </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
+        )}
 
-      {/* ✅ Contact Section */}
-      <section id="contact" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <span className={`inline-block text-sm font-bold uppercase tracking-wider ${theme.text} mb-3`}>Get in Touch</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Contact Information</h2>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            {/* Contact Info */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
-                <div className={`h-12 w-12 rounded-xl ${theme.light} ${theme.text} flex items-center justify-center flex-shrink-0`}>
-                  <MapPin className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-1">Our Address</h3>
-                  <p className="text-gray-600">{schoolData.contact.address}</p>
-                </div>
-              </div>
-              
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
-                <div className={`h-12 w-12 rounded-xl ${theme.light} ${theme.text} flex items-center justify-center flex-shrink-0`}>
-                  <Phone className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-1">Phone Numbers</h3>
-                  {schoolData.contact.phones.map((phone, idx) => (
-                    <p key={idx} className="text-gray-600">{phone}</p>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
-                <div className={`h-12 w-12 rounded-xl ${theme.light} ${theme.text} flex items-center justify-center flex-shrink-0`}>
-                  <Mail className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-1">Email Addresses</h3>
-                  {schoolData.contact.emails.map((email, idx) => (
-                    <p key={idx} className="text-gray-600">{email}</p>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
-                <div className={`h-12 w-12 rounded-xl ${theme.light} ${theme.text} flex items-center justify-center flex-shrink-0`}>
-                  <Clock className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-1">Office Hours</h3>
-                  <p className="text-gray-600">{schoolData.contact.hours}</p>
-                </div>
+        {school.show_testimonials !== false && testimonials.length > 0 && (
+          <section className="bg-slate-50 py-20">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <SectionTitle eyebrow="Community voices" title="What families say" />
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {testimonials.map((item) => <article key={item.id} className="rounded-2xl bg-white p-7 shadow-sm"><Quote className="mb-4 h-7 w-7" style={{ color: theme.brand }} /><p className="leading-7 text-slate-600">{item.content}</p><p className="mt-5 font-bold text-slate-900">{item.name}</p>{item.role && <p className="text-sm text-slate-500">{item.role}</p>}</article>)}
               </div>
             </div>
+          </section>
+        )}
 
-            {/* Map Placeholder */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden h-full min-h-[400px] flex items-center justify-center relative">
-              <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-500 font-medium">Google Maps Integration</p>
-                  <p className="text-xs text-gray-400 mt-1">Connect your Google Maps API key</p>
-                </div>
+        {school.show_awards !== false && awards.length > 0 && (
+          <section className="py-20">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <SectionTitle eyebrow="Achievements" title="Recognition we are proud of" />
+              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {awards.map((item) => <article key={item.id} className="flex gap-4 rounded-2xl border border-slate-200 p-6"><Trophy className="h-8 w-8 shrink-0" style={{ color: theme.brand }} /><div><h3 className="font-bold text-slate-900">{item.title}</h3>{item.year && <p className="text-sm font-semibold" style={{ color: theme.brand }}>{item.year}</p>}{item.description && <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>}</div></article>)}
               </div>
             </div>
+          </section>
+        )}
 
+        <section className="px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl px-6 py-14 text-center text-white sm:px-12" style={{ backgroundColor: theme.brand }}>
+            <h2 className="text-3xl font-extrabold sm:text-4xl">Admissions are open</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-white/85">Take the next step toward a strong education and a brighter future.</p>
+            {admissionItems.length > 0 && <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2">{admissionItems.map((item, index) => <span key={index} className="inline-flex items-center gap-2 text-sm font-semibold"><CheckCircle2 className="h-4 w-4" />{item}</span>)}</div>}
+            <Link href={'/s/' + school.slug + '/admission'} className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 font-bold text-slate-900 shadow-lg">Apply online <ArrowRight className="h-5 w-5" /></Link>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ✅ Rich Footer */}
-      <footer className="bg-gray-900 text-white pt-16 pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-            
-            {/* Brand */}
+        <section id="contact" className="bg-slate-950 py-20 text-white">
+          <div className="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
             <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className={`h-10 w-10 rounded-lg ${theme.primary} flex items-center justify-center text-white font-bold text-xl`}>
-                  S
-                </div>
-                <h3 className="font-bold text-lg">{schoolData.name}</h3>
-              </div>
-              <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                {schoolData.motto}
-              </p>
-                            <div className="flex items-center gap-3">
-                {/* Facebook */}
-                <a href="#" className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />
-                  </svg>
-                </a>
-                {/* Instagram */}
-                <a href="#" className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" />
-                  </svg>
-                </a>
-                {/* YouTube */}
-                <a href="#" className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
-                  </svg>
-                </a>
-              </div>
+              <p className="text-sm font-bold uppercase tracking-[0.18em]" style={{ color: theme.brand }}>Contact us</p>
+              <h2 className="mt-3 text-3xl font-bold">{school.name}</h2>
+              {school.address && <p className="mt-7 flex items-start gap-3 text-slate-300"><MapPin className="mt-0.5 h-5 w-5 shrink-0" />{school.address}</p>}
+              {phones.map((phone) => <a key={phone} href={'tel:' + phone} className="mt-4 flex items-center gap-3 text-slate-300 hover:text-white"><Phone className="h-5 w-5" />{phone}</a>)}
+              {emails.map((email) => <a key={email} href={'mailto:' + email} className="mt-4 flex items-center gap-3 text-slate-300 hover:text-white"><Mail className="h-5 w-5" />{email}</a>)}
+              {school.office_hours && <p className="mt-4 flex items-start gap-3 whitespace-pre-line text-slate-300"><Clock className="mt-0.5 h-5 w-5 shrink-0" />{school.office_hours}</p>}
+              {socialLinks.length > 0 && <div className="mt-7 flex flex-wrap gap-3">{socialLinks.map((item) => <a key={item.label} href={item.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold hover:bg-white/10">{item.label}<ExternalLink className="h-3.5 w-3.5" /></a>)}</div>}
             </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className="font-bold text-lg mb-6">Quick Links</h4>
-              <ul className="space-y-3">
-                {navLinks.map((link) => (
-                  <li key={link.name}>
-                    <a href={link.href} className="text-gray-400 hover:text-white transition-colors text-sm">
-                      {link.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+            <div className="flex min-h-72 items-center justify-center rounded-3xl border border-white/10 bg-white/5 p-8 text-center">
+              {safeUrl(school.map_location) ? <a href={safeUrl(school.map_location)} target="_blank" rel="noreferrer" className="group"><MapPin className="mx-auto h-12 w-12 transition-transform group-hover:scale-110" style={{ color: theme.brand }} /><p className="mt-4 font-bold">Open school location</p><p className="mt-2 text-sm text-slate-400">View directions in Google Maps</p></a> : <div><ImageIcon className="mx-auto h-12 w-12 text-slate-600" /><p className="mt-4 font-bold">Visit our campus</p><p className="mt-2 text-sm text-slate-400">{school.address || 'Contact the school for directions.'}</p></div>}
             </div>
-
-            {/* Academics */}
-            <div>
-              <h4 className="font-bold text-lg mb-6">Academics</h4>
-              <ul className="space-y-3">
-                {schoolData.programs.map((p) => (
-                  <li key={p.title}>
-                    <a href="#programs" className="text-gray-400 hover:text-white transition-colors text-sm">
-                      {p.title}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Contact */}
-            <div>
-              <h4 className="font-bold text-lg mb-6">Contact Us</h4>
-              <ul className="space-y-4 text-sm text-gray-400">
-                <li className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                  <span>{schoolData.contact.address}</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 flex-shrink-0" />
-                  <span>{schoolData.contact.phones[0]}</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 flex-shrink-0" />
-                  <span>{schoolData.contact.emails[0]}</span>
-                </li>
-              </ul>
-            </div>
-
           </div>
+        </section>
+      </main>
 
-          <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-500">
-              © 2024 {schoolData.name}. All rights reserved.
-            </p>
-            <p className="text-sm text-gray-500 flex items-center gap-1.5">
-              Powered by <Globe className="h-4 w-4" /> SNAP
-            </p>
-          </div>
+      <footer className="border-t border-slate-800 bg-slate-950 py-7 text-slate-400">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <p>© {new Date().getFullYear()} {school.name}. All rights reserved.</p>
+          <p className="inline-flex items-center gap-2"><Newspaper className="h-4 w-4" /> Powered by SNAP</p>
         </div>
       </footer>
-
-      {/* ✅ Back to Top Button */}
-      {showBackToTop && (
-        <button 
-          onClick={scrollToTop}
-          className={`fixed bottom-8 right-8 z-50 h-12 w-12 rounded-full ${theme.primary} text-white shadow-lg flex items-center justify-center hover:scale-110 transition-transform`}
-          aria-label="Back to top"
-        >
-          <ArrowUp className="h-5 w-5" />
-        </button>
-      )}
-
     </div>
   );
 }
