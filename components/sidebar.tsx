@@ -250,35 +250,32 @@ export default function Sidebar() {
       {/* =====================================================
           MOBILE TOP BAR
       ===================================================== */}
-      <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 lg:hidden">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
-            className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
-            aria-label="Open sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
+      <div className="fixed left-0 right-0 top-0 z-40 grid h-14 grid-cols-[44px_1fr_44px] items-center border-b border-gray-200 bg-white px-4 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition hover:bg-gray-100"
+          aria-label="Open sidebar"
+        >
+          <Menu className="h-6 w-6" aria-hidden="true" />
+        </button>
 
-          <div className="flex items-center gap-2">
-            <Image
-              src="/logo1.png"
-              alt="SNAP Logo"
-              width={32}
-              height={32}
-              className="h-8 w-8 object-contain"
-            />
-            <span className="text-base font-bold text-gray-900">SNAP</span>
-          </div>
-        </div>
+        <Link
+          href="/principal"
+          className="justify-self-center"
+          aria-label="Go to SNAP dashboard"
+        >
+          <Image
+            src="/logo4.png"
+            alt="SNAP"
+            width={44}
+            height={44}
+            priority
+            className="h-11 w-11 object-contain"
+          />
+        </Link>
 
-        <div className="flex min-w-0 flex-col items-end">
-          <span className="max-w-[140px] truncate text-xs font-semibold text-gray-700">
-            {formatSchoolName(school?.name)}
-          </span>
-
-        </div>
+        <span aria-hidden="true" />
       </div>
 
       {/* =====================================================
