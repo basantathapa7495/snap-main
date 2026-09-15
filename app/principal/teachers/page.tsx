@@ -202,10 +202,6 @@ export default function TeachersPage() {
   }, [account, search, subject, teachers]);
 
   const activeAccounts = teachers.filter((teacher) => teacher.user_id).length;
-  const missingDetails = teachers.filter(
-    (teacher) => !teacher.email || !teacher.phone || !teacher.subject,
-  ).length;
-
   function openCreateForm() {
     setEditingTeacher(null);
     setForm(emptyForm);
