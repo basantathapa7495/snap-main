@@ -161,7 +161,11 @@ export async function POST(request: Request) {
       password,
       email_confirm: true,
       user_metadata: { full_name: teacher.name },
-      app_metadata: { role: "teacher", school_id: profile.school_id },
+      app_metadata: {
+        role: "teacher",
+        school_id: profile.school_id,
+        must_change_password: true,
+      },
     });
   if (authError)
     return NextResponse.json({ error: authError.message }, { status: 400 });
