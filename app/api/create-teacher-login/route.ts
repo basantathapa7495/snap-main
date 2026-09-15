@@ -52,20 +52,50 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: profile, error: profileError } = await admin
+  let { data: profile, error: profileError } = await admin
     .from("profiles")
     .select("school_id, role")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
+
+  // Some projects restrict profile reads for server keys. Fall back to the
+  // signed-in user's RLS-protected profile lookup before denying access.
+  if (profileError || !profile) {
+    const publishableKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (publishableKey) {
+      const authenticated = createClient(supabaseUrl, publishableKey, {
+        global: {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const fallback = await authenticated
+        .from("profiles")
+        .select("school_id, role")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      profile = fallback.data;
+      profileError = fallback.error;
+    }
+  }
+
   const role = profile?.role?.trim().toLowerCase();
   const canManageTeacherLogins =
     role === "principal" || role === "admin" || role === "school_admin";
 
-  if (profileError) {
+  if (profileError || !profile) {
+    console.error("Teacher login profile verification failed", {
+      code: profileError?.code,
+      userId: user.id,
+    });
     return NextResponse.json(
       {
         error:
-          "Your account profile could not be verified. Please sign out and sign in again.",
+          "SNAP could not load your school-admin profile. Check that the deployed Supabase keys belong to the same project.",
       },
       { status: 403 },
     );
