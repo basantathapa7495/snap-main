@@ -20,7 +20,6 @@ import {
   Trash2,
   UserCheck,
   UserRound,
-  Users,
   X,
 } from "lucide-react";
 import Sidebar from "@/components/sidebar";
