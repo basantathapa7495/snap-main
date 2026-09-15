@@ -125,7 +125,7 @@ export async function POST(request: Request) {
   if (teacherError || !teacher) {
     const fallback = await authenticated
       .from("teachers")
-      .select("id, name, user_id")
+      .select("id, name, phone, user_id")
       .eq("id", teacherId)
       .eq("school_id", profile.school_id)
       .maybeSingle();
