@@ -55,11 +55,28 @@ export async function POST(request: Request) {
   const canManageTeacherLogins =
     role === "principal" || role === "admin" || role === "school_admin";
 
-  if (profileError || !canManageTeacherLogins || !profile?.school_id) {
+  if (profileError) {
     return NextResponse.json(
       {
         error:
-          "Your account does not have permission to create teacher logins.",
+          "Your account profile could not be verified. Please sign out and sign in again.",
+      },
+      { status: 403 },
+    );
+  }
+  if (!profile?.school_id) {
+    return NextResponse.json(
+      {
+        error:
+          "Your account is not linked to a school yet. Complete school setup first.",
+      },
+      { status: 403 },
+    );
+  }
+  if (!canManageTeacherLogins) {
+    return NextResponse.json(
+      {
+        error: `Your current role (${profile.role || "none"}) cannot create teacher logins.`,
       },
       { status: 403 },
     );
