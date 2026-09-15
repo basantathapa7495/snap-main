@@ -54,6 +54,10 @@ export default function TeacherDashboardPage() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
       if (!user) { setLoading(false); return; }
+      if (user.app_metadata?.must_change_password === true) {
+        window.location.replace('/auth/change-password');
+        return;
+      }
 
       const { data: profileData } = await supabase
         .from('profiles')
