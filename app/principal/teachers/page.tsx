@@ -483,7 +483,7 @@ export default function TeachersPage() {
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Search name, subject, phone or email"
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 caret-blue-600 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 [color-scheme:light]"
                   />
                 </label>
                 <Select
@@ -1010,7 +1010,7 @@ function Field({
         min={type === "number" ? "0" : undefined}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 caret-blue-600 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 [color-scheme:light]"
       />
     </label>
   );
@@ -1082,7 +1082,7 @@ function LoginModal({
                 type={showPassword ? "text" : "password"}
                 minLength={8}
                 required
-                className="h-11 w-full rounded-xl border border-slate-200 px-3 pr-20 font-mono text-sm outline-none focus:border-blue-400"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 pr-20 font-mono text-sm text-slate-900 caret-blue-600 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 [color-scheme:light]"
               />
               <button
                 type="button"
@@ -1147,7 +1147,7 @@ function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className={`max-h-[90vh] w-full overflow-y-auto rounded-2xl bg-white shadow-2xl ${width}`}
+        className={`max-h-[90vh] w-full overflow-y-auto rounded-2xl bg-white text-slate-900 shadow-2xl [color-scheme:light] ${width}`}
       >
         {children}
       </div>
