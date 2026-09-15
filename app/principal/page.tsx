@@ -97,6 +97,7 @@ type DashboardData = {
   todayAttendance: AttendanceSummary;
   yesterdayAttendance: AttendanceSummary;
   feesCollected: number;
+  monthlyFeesCollected: number;
   paidStudents: number;
   expectedFees: number | null;
   pendingAdmissions: number;
@@ -127,6 +128,7 @@ const initialData: DashboardData = {
   todayAttendance: emptyAttendance,
   yesterdayAttendance: emptyAttendance,
   feesCollected: 0,
+  monthlyFeesCollected: 0,
   paidStudents: 0,
   expectedFees: null,
   pendingAdmissions: 0,
@@ -302,7 +304,7 @@ export default function PrincipalDashboardPage() {
             .from("fee_records")
             .select("student_id, amount, payment_date")
             .eq("school_id", schoolId)
-            .gte("payment_date", rangeStart)
+            .gte("payment_date", monthStart)
             .lte("payment_date", today),
           supabase
             .from("fee_types")
@@ -377,6 +379,9 @@ export default function PrincipalDashboardPage() {
           (row) => row.attendance_date >= monthStart,
         );
         const feeRows = (fees.data || []) as FeeRecord[];
+        const periodFeeRows = feeRows.filter(
+          (row) => row.payment_date >= rangeStart,
+        );
         const feeTypeRows = (feeTypes.data || []) as FeeType[];
         const exams = (examsResult.data || []) as ExamRecord[];
         const events = (eventsResult.data || []) as EventRecord[];
@@ -475,11 +480,21 @@ export default function PrincipalDashboardPage() {
             lowAttendance: attendance.error ? old.lowAttendance : lowAttendance,
             feesCollected: fees.error
               ? old.feesCollected
-              : feeRows.reduce((sum, fee) => sum + Number(fee.amount || 0), 0),
+              : periodFeeRows.reduce(
+                  (sum, fee) => sum + Number(fee.amount || 0),
+                  0,
+                ),
+            monthlyFeesCollected: fees.error
+              ? old.monthlyFeesCollected
+              : feeRows.reduce(
+                  (sum, fee) => sum + Number(fee.amount || 0),
+                  0,
+                ),
             paidStudents: fees.error
               ? old.paidStudents
-              : new Set(feeRows.map((fee) => fee.student_id).filter(Boolean))
-                  .size,
+              : new Set(
+                  periodFeeRows.map((fee) => fee.student_id).filter(Boolean),
+                ).size,
             expectedFees: feeTypes.error
               ? old.expectedFees
               : monthlyFee
@@ -1143,8 +1158,8 @@ function MobilePrincipalDashboard({
   const present = dashboard.todayAttendance.present + dashboard.todayAttendance.late;
   const studentTotal = dashboard.students;
   const monthlyProgress =
-    dashboard.expectedFees && dashboard.feesCollected
-      ? Math.min(100, Math.round((dashboard.feesCollected / dashboard.expectedFees) * 100))
+    dashboard.expectedFees && dashboard.monthlyFeesCollected
+      ? Math.min(100, Math.round((dashboard.monthlyFeesCollected / dashboard.expectedFees) * 100))
       : 0;
   const attention = [
     dashboard.todayAttendance.rate === null
@@ -1239,7 +1254,7 @@ function MobilePrincipalDashboard({
         <MobileKpi
           href="/principal/fees"
           label="Fees this month"
-          value={money(dashboard.feesCollected)}
+          value={money(dashboard.monthlyFeesCollected)}
           meta={
             dashboard.expectedFees === null
               ? "Monthly target not set"
