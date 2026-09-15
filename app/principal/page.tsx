@@ -669,26 +669,26 @@ export default function PrincipalDashboardPage() {
         <div className="hidden lg:block"><TopBar /></div>
         <main className="flex-1 px-3.5 pb-24 pt-5 sm:px-6 sm:pt-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="border-b border-slate-200 pb-4 sm:pb-5">
+            <header className="rounded-2xl bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 p-4 shadow-lg shadow-blue-200/50 sm:rounded-none sm:border-b sm:border-slate-200 sm:bg-none sm:p-0 sm:pb-5 sm:shadow-none">
               <div className="grid items-center gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-5">
                 <div>
-                  <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 sm:gap-2 sm:text-xs sm:tracking-[0.08em]">
-                    <CalendarDays className="h-3.5 w-3.5" />
+                  <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-blue-100 sm:gap-2 sm:text-xs sm:tracking-[0.08em] sm:text-slate-400">
+                    <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                     {fullDate}
                   </p>
-                  <h1 className="mt-1.5 text-xl font-bold tracking-tight text-slate-950 sm:mt-2 sm:text-3xl">
+                  <h1 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl sm:text-slate-950">
                     {greeting},{" "}
-                    <span className="text-blue-600">{firstName}</span>
+                    <span className="text-blue-100 sm:text-blue-600">{firstName}</span>
                   </h1>
-                  <p className="mt-1.5 line-clamp-2 text-sm leading-5 text-slate-500">
+                  <p className="mt-2 line-clamp-2 text-sm leading-5 text-blue-100 sm:mt-1.5 sm:text-slate-500">
                     Manage today’s work for{" "}
-                    <span className="font-semibold text-slate-700">
+                    <span className="font-semibold text-white sm:text-slate-700">
                       {schoolName}
                     </span>{" "}
                     and review what needs your attention.
                   </p>
                 </div>
-                <div className="grid w-full grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm sm:flex sm:w-auto">
+                <div className="grid w-full grid-cols-2 gap-2 rounded-xl bg-white/95 p-1.5 shadow-sm ring-1 ring-white/40 sm:flex sm:w-auto sm:border sm:border-slate-200 sm:bg-white sm:ring-0">
                   <QuickAction
                     href="/principal/attendance"
                     icon={ClipboardCheck}
@@ -713,7 +713,7 @@ export default function PrincipalDashboardPage() {
                 </div>
               </div>
             </header>
-            <div className="mt-4 flex flex-col gap-3 sm:mt-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-3 flex flex-col gap-2.5 sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
               <div className="inline-flex w-full rounded-xl border border-slate-200 bg-white p-1 shadow-sm sm:w-fit">
                 {(Object.keys(rangeLabels) as DateRange[]).map((option) => (
                   <button
@@ -754,30 +754,30 @@ export default function PrincipalDashboardPage() {
                 {warning}
               </div>
             )}
-            <section className="mt-4 grid grid-cols-2 gap-3 sm:mt-5 sm:gap-4 xl:grid-cols-4">
+            <section className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-5 sm:gap-4 xl:grid-cols-4">
               {stats.map((stat) => (
                 <Link
                   key={stat.label}
                   href={stat.href}
-                  className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md sm:p-5"
+                  className="min-w-0 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition hover:border-blue-200 hover:shadow-md sm:rounded-2xl sm:p-5"
                 >
-                  <div className="flex justify-between gap-3">
+                  <div className="flex items-start justify-between gap-2 sm:gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-medium text-slate-500 sm:text-sm">
+                      <p className="line-clamp-2 min-h-8 text-xs font-medium leading-4 text-slate-500 sm:min-h-0 sm:truncate sm:text-sm">
                         {stat.label}
                       </p>
-                      <p className="mt-2 truncate text-xl font-bold text-slate-950 sm:mt-3 sm:text-2xl">
+                      <p className="mt-1.5 break-words text-xl font-bold leading-tight text-slate-950 sm:mt-3 sm:truncate sm:text-2xl">
                         {stat.value}
                       </p>
                     </div>
                     <span
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${stat.color}`}
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 sm:rounded-xl ${stat.color}`}
                     >
-                      <stat.icon className="h-5 w-5" />
+                      <stat.icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
                     </span>
                   </div>
                   <p
-                    className={`mt-2 line-clamp-2 min-h-8 text-[11px] leading-4 sm:mt-3 sm:min-h-0 sm:text-xs ${stat.trend == null ? "text-slate-400" : stat.trend >= 0 ? "text-emerald-600" : "text-red-600"}`}
+                    className={`mt-2 line-clamp-2 min-h-8 text-[10px] leading-4 sm:mt-3 sm:min-h-0 sm:text-xs ${stat.trend == null ? "text-slate-400" : stat.trend >= 0 ? "text-emerald-600" : "text-red-600"}`}
                   >
                     {stat.trend != null &&
                       (stat.trend >= 0 ? (
