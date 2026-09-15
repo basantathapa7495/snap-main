@@ -384,38 +384,57 @@ export default function TeachersPage() {
         <TopBar />
         <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px]">
-            <header className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
+            <header className="flex flex-col gap-5 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.08em] text-blue-600">
-                  School directory
+                  Staff management
                 </p>
                 <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                  Teachers
+                  Manage teachers
                 </h1>
                 <p className="mt-1.5 text-sm text-slate-500">
-                  Manage staff details and teacher login access.
+                  Add staff, maintain their records, and control login access.
                 </p>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRefreshKey((value) => value + 1)}
-                  disabled={refreshing}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-600 shadow-sm disabled:opacity-60"
-                >
-                  <RefreshCw
-                    className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-                  />
-                  Refresh
-                </button>
-                <button
-                  type="button"
-                  onClick={openCreateForm}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add teacher
-                </button>
+
+              <div className="flex flex-col gap-3 lg:items-end">
+                <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:flex">
+                  {[
+                    { label: "Teachers", value: teachers.length, tone: "text-blue-700" },
+                    { label: "Login active", value: activeAccounts, tone: "text-emerald-700" },
+                    { label: "Subjects", value: Math.max(0, subjects.length - 1), tone: "text-violet-700" },
+                    { label: "Incomplete", value: missingDetails, tone: missingDetails ? "text-amber-700" : "text-slate-700" },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex min-w-[112px] items-center justify-between gap-3 border-b border-r border-slate-100 px-3 py-2.5 last:border-r-0 sm:border-b-0"
+                    >
+                      <span className="text-[11px] font-medium text-slate-500">{item.label}</span>
+                      <strong className={`text-sm ${item.tone}`}>{item.value}</strong>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setRefreshKey((value) => value + 1)}
+                    disabled={refreshing}
+                    className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-600 shadow-sm disabled:opacity-60"
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                    />
+                    Refresh
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openCreateForm}
+                    className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 sm:flex-none"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add teacher
+                  </button>
+                </div>
               </div>
             </header>
 
@@ -443,39 +462,20 @@ export default function TeachersPage() {
               </div>
             )}
 
-            <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <Stat
-                icon={Users}
-                label="Total teachers"
-                value={teachers.length}
-                helper="Staff records"
-                color="blue"
-              />
-              <Stat
-                icon={UserCheck}
-                label="Login active"
-                value={activeAccounts}
-                helper={`${teachers.length - activeAccounts} still need access`}
-                color="emerald"
-              />
-              <Stat
-                icon={GraduationCap}
-                label="Subjects"
-                value={Math.max(0, subjects.length - 1)}
-                helper="Assigned teaching areas"
-                color="violet"
-              />
-              <Stat
-                icon={AlertCircle}
-                label="Incomplete records"
-                value={missingDetails}
-                helper="Missing email, phone or subject"
-                color="amber"
-              />
-            </section>
+            <section className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-5">
+                <div>
+                  <h2 className="font-bold text-slate-950">Teacher records</h2>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Search, update details, or create teacher login access.
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
+                  {filteredTeachers.length} of {teachers.length}
+                </span>
+              </div>
 
-            <section className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="grid gap-3 border-b border-slate-100 p-4 md:grid-cols-[minmax(0,1fr)_200px_180px]">
+              <div className="grid gap-3 border-y border-slate-100 bg-slate-50/60 p-3 sm:p-4 md:grid-cols-[minmax(0,1fr)_200px_180px]">
                 <label className="relative">
                   <span className="sr-only">Search teachers</span>
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -483,7 +483,7 @@ export default function TeachersPage() {
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Search name, subject, phone or email"
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 caret-blue-600 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 [color-scheme:light]"
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-900 caret-blue-600 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 [color-scheme:light]"
                   />
                 </label>
                 <Select
@@ -498,15 +498,6 @@ export default function TeachersPage() {
                   label="Account"
                   options={["All", "Active", "Not created"]}
                 />
-              </div>
-
-              <div className="flex items-center justify-between px-5 py-4">
-                <div>
-                  <h2 className="font-bold text-slate-950">Teacher records</h2>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    Showing {filteredTeachers.length} of {teachers.length}
-                  </p>
-                </div>
               </div>
               {filteredTeachers.length === 0 ? (
                 <EmptyState
@@ -626,43 +617,6 @@ function Select({
       </select>
       <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
     </label>
-  );
-}
-
-function Stat({
-  icon: Icon,
-  label,
-  value,
-  helper,
-  color,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-  helper: string;
-  color: "blue" | "emerald" | "violet" | "amber";
-}) {
-  const colors = {
-    blue: "bg-blue-50 text-blue-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    violet: "bg-violet-50 text-violet-600",
-    amber: "bg-amber-50 text-amber-600",
-  };
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex justify-between">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-2 text-3xl font-bold text-slate-950">{value}</p>
-        </div>
-        <span
-          className={`flex h-10 w-10 items-center justify-center rounded-xl ${colors[color]}`}
-        >
-          <Icon className="h-5 w-5" />
-        </span>
-      </div>
-      <p className="mt-2 text-xs text-slate-400">{helper}</p>
-    </div>
   );
 }
 
