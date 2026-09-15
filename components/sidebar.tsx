@@ -266,12 +266,12 @@ export default function Sidebar() {
           aria-label="Go to SNAP dashboard"
         >
           <Image
-            src="/logo4.png"
+            src="/logo2.png"
             alt="SNAP"
-            width={44}
-            height={44}
+            width={40}
+            height={40}
             priority
-            className="h-11 w-11 scale-[5] object-contain"
+            className="h-10 w-10 object-contain"
           />
         </Link>
 
