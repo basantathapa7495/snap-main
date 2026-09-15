@@ -166,18 +166,42 @@ export async function POST(request: Request) {
   if (authError)
     return NextResponse.json({ error: authError.message }, { status: 400 });
 
-  const { error: profileCreateError } = await admin.from("profiles").insert({
+  const teacherProfile = {
     user_id: authUser.user.id,
     school_id: profile.school_id,
     role: "teacher",
     full_name: teacher.name,
     phone: teacher.phone || null,
-  });
+  };
+
+  let { error: profileCreateError } = await admin
+    .from("profiles")
+    .insert(teacherProfile);
+
+  // This project's server role may not have Data API table grants even though
+  // it can manage Auth users. The verified principal session is an authorized,
+  // school-scoped fallback for creating the matching portal profile.
+  if (profileCreateError) {
+    const fallback = await authenticated
+      .from("profiles")
+      .insert(teacherProfile);
+
+    profileCreateError = fallback.error;
+  }
 
   if (profileCreateError) {
+    console.error("Teacher portal profile creation failed", {
+      code: profileCreateError.code,
+      message: profileCreateError.message,
+      userId: authUser.user.id,
+      schoolId: profile.school_id,
+    });
     await admin.auth.admin.deleteUser(authUser.user.id);
     return NextResponse.json(
-      { error: "Teacher account was created but its portal profile could not be set up." },
+      {
+        error:
+          "The teacher login could not be connected to a portal profile. Please try again.",
+      },
       { status: 500 },
     );
   }
