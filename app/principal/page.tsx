@@ -195,6 +195,18 @@ function formatSchoolName(name?: string | null) {
 function money(value: number) {
   return `NPR ${Math.round(value).toLocaleString()}`;
 }
+function bikramSambatDate(date = new Date()) {
+  try {
+    return new Intl.DateTimeFormat("en-US-u-ca-bikram-sambat", {
+      timeZone: "Asia/Kathmandu",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(date);
+  } catch {
+    return "BS date unavailable";
+  }
+}
 function dateLabel(key: string, today: string) {
   if (key === today) return "Today";
   if (key === shiftDateKey(today, 1)) return "Tomorrow";
@@ -240,6 +252,7 @@ export default function PrincipalDashboardPage() {
         const today = nepalDateKey();
         const yesterday = shiftDateKey(today, -1);
         const weekStart = shiftDateKey(today, -6);
+        const thirtyDayStart = shiftDateKey(today, -29);
         const monthStart = `${today.slice(0, 7)}-01`;
         const rangeStart =
           range === "today" ? today : range === "week" ? weekStart : monthStart;
@@ -247,6 +260,7 @@ export default function PrincipalDashboardPage() {
           rangeStart,
           weekStart,
           monthStart,
+          thirtyDayStart,
           yesterday,
         ].sort()[0];
         const nextWeek = shiftDateKey(today, 7);
@@ -367,15 +381,16 @@ export default function PrincipalDashboardPage() {
         const exams = (examsResult.data || []) as ExamRecord[];
         const events = (eventsResult.data || []) as EventRecord[];
         const studentTotal = students.count || 0;
-        const trend = Array.from({ length: 7 }, (_, index) => {
-          const date = shiftDateKey(weekStart, index);
+        const trend = Array.from({ length: 30 }, (_, index) => {
+          const date = shiftDateKey(thirtyDayStart, index);
           return {
             ...attendanceSummary(
               attendanceRows.filter((row) => row.attendance_date === date),
             ),
             date,
             day: new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
-              weekday: "short",
+              day: "numeric",
+              month: "short",
             }),
           };
         });
@@ -669,26 +684,26 @@ export default function PrincipalDashboardPage() {
         <div className="hidden lg:block"><TopBar /></div>
         <main className="flex-1 px-3.5 pb-24 pt-5 sm:px-6 sm:pt-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="rounded-2xl bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 p-4 shadow-lg shadow-blue-200/50 sm:rounded-none sm:border-b sm:border-slate-200 sm:bg-none sm:p-0 sm:pb-5 sm:shadow-none">
+            <header className="border-b border-slate-200 pb-4 sm:pb-5">
               <div className="grid items-center gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-5">
                 <div>
-                  <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-blue-100 sm:gap-2 sm:text-xs sm:tracking-[0.08em] sm:text-slate-400">
+                  <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400 sm:gap-2 sm:text-xs sm:tracking-[0.08em]">
                     <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                     {fullDate}
                   </p>
-                  <h1 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl sm:text-slate-950">
+                  <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
                     {greeting},{" "}
-                    <span className="text-blue-100 sm:text-blue-600">{firstName}</span>
+                    <span className="text-blue-600">{firstName}</span>
                   </h1>
-                  <p className="mt-2 line-clamp-2 text-sm leading-5 text-blue-100 sm:mt-1.5 sm:text-slate-500">
+                  <p className="mt-2 line-clamp-2 text-sm leading-5 text-slate-500 sm:mt-1.5">
                     Manage today’s work for{" "}
-                    <span className="font-semibold text-white sm:text-slate-700">
+                    <span className="font-semibold text-slate-700">
                       {schoolName}
                     </span>{" "}
                     and review what needs your attention.
                   </p>
                 </div>
-                <div className="grid w-full grid-cols-2 gap-2 rounded-xl bg-white/95 p-1.5 shadow-sm ring-1 ring-white/40 sm:flex sm:w-auto sm:border sm:border-slate-200 sm:bg-white sm:ring-0">
+                <div className="hidden w-full grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm sm:flex sm:w-auto">
                   <QuickAction
                     href="/principal/attendance"
                     icon={ClipboardCheck}
@@ -713,7 +728,7 @@ export default function PrincipalDashboardPage() {
                 </div>
               </div>
             </header>
-            <div className="mt-3 flex flex-col gap-2.5 sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <div className="mt-5 hidden flex-col gap-3 sm:flex sm:flex-row sm:items-center sm:justify-between">
               <div className="inline-flex w-full rounded-xl border border-slate-200 bg-white p-1 shadow-sm sm:w-fit">
                 {(Object.keys(rangeLabels) as DateRange[]).map((option) => (
                   <button
@@ -754,6 +769,13 @@ export default function PrincipalDashboardPage() {
                 {warning}
               </div>
             )}
+            <MobilePrincipalDashboard
+              dashboard={dashboard}
+              difference={difference}
+              fullDate={fullDate}
+              today={today}
+            />
+            <div className="hidden sm:block">
             <section className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-5 sm:gap-4 xl:grid-cols-4">
               {stats.map((stat) => (
                 <Link
@@ -1098,10 +1120,365 @@ export default function PrincipalDashboardPage() {
                 )}
               </div>
             </section>
+            </div>
           </div>
         </main>
       </div>
     </div>
+  );
+}
+
+
+function MobilePrincipalDashboard({
+  dashboard,
+  difference,
+  fullDate,
+  today,
+}: {
+  dashboard: DashboardData;
+  difference: number | null;
+  fullDate: string;
+  today: string;
+}) {
+  const present = dashboard.todayAttendance.present + dashboard.todayAttendance.late;
+  const studentTotal = dashboard.students;
+  const monthlyProgress =
+    dashboard.expectedFees && dashboard.feesCollected
+      ? Math.min(100, Math.round((dashboard.feesCollected / dashboard.expectedFees) * 100))
+      : 0;
+  const attention = [
+    dashboard.todayAttendance.rate === null
+      ? {
+          title: "Today’s student attendance is not marked",
+          detail: "Complete the register before the school day ends.",
+          href: "/principal/attendance",
+          action: "Mark",
+          tone: "border-red-200 bg-red-50 text-red-700",
+        }
+      : null,
+    dashboard.pendingAdmissions
+      ? {
+          title: `${dashboard.pendingAdmissions} admission application${dashboard.pendingAdmissions === 1 ? "" : "s"} pending`,
+          detail: "Review the applications waiting for a principal decision.",
+          href: "/principal/admission",
+          action: "Review",
+          tone: "border-amber-200 bg-amber-50 text-amber-700",
+        }
+      : null,
+    dashboard.lowAttendance
+      ? {
+          title: `${dashboard.lowAttendance} student${dashboard.lowAttendance === 1 ? "" : "s"} below 75% attendance`,
+          detail: "Check students who may be at risk of NEB ineligibility.",
+          href: "/principal/attendance",
+          action: "View",
+          tone: "border-orange-200 bg-orange-50 text-orange-700",
+        }
+      : null,
+    dashboard.expectedFees === null
+      ? {
+          title: "Monthly fee target is not configured",
+          detail: "Add a Monthly or Tuition fee type to calculate collection progress.",
+          href: "/principal/fees",
+          action: "Set up",
+          tone: "border-blue-200 bg-blue-50 text-blue-700",
+        }
+      : null,
+  ].filter(Boolean) as Array<{
+    title: string;
+    detail: string;
+    href: string;
+    action: string;
+    tone: string;
+  }>;
+
+  return (
+    <div className="sm:hidden">
+      <div className="mt-4 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-blue-600">
+            Morning brief
+          </p>
+          <p className="mt-0.5 text-xs text-slate-500">
+            {bikramSambatDate()} BS · {fullDate} AD
+          </p>
+        </div>
+        <Link
+          href="/principal/reports"
+          className="rounded-lg bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white"
+        >
+          Full report
+        </Link>
+      </div>
+
+      <section className="mt-3 grid grid-cols-2 gap-2.5">
+        <MobileKpi
+          href="/principal/attendance"
+          label="Students present"
+          value={
+            dashboard.todayAttendance.rate === null
+              ? "Not marked"
+              : `${present} / ${studentTotal}`
+          }
+          meta={
+            dashboard.todayAttendance.rate === null
+              ? "Take attendance today"
+              : `${dashboard.todayAttendance.rate}% today`
+          }
+          trend={difference}
+          icon={Users}
+          tone="blue"
+        />
+        <MobileKpi
+          href="/principal/teachers"
+          label="Staff present"
+          value="Not available"
+          meta="Staff attendance setup needed"
+          icon={GraduationCap}
+          tone="violet"
+        />
+        <MobileKpi
+          href="/principal/fees"
+          label="Fees this month"
+          value={money(dashboard.feesCollected)}
+          meta={
+            dashboard.expectedFees === null
+              ? "Monthly target not set"
+              : `${monthlyProgress}% of ${money(dashboard.expectedFees)}`
+          }
+          progress={dashboard.expectedFees === null ? null : monthlyProgress}
+          icon={Wallet}
+          tone="emerald"
+        />
+        <MobileKpi
+          href="/principal/fees"
+          label="Overdue fees"
+          value="Not available"
+          meta="Student due schedules needed"
+          icon={AlertCircle}
+          tone="amber"
+        />
+      </section>
+
+      <section className="mt-5">
+        <div className="flex items-end justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-950">Needs your attention</h2>
+            <p className="text-xs text-slate-500">Items requiring a principal decision</p>
+          </div>
+          <span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-bold text-red-600">
+            {attention.length} open
+          </span>
+        </div>
+        <div className="mt-2.5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {attention.length ? (
+            <div className="divide-y divide-slate-100">
+              {attention.map((item) => (
+                <div key={item.title} className="flex items-center gap-3 p-3.5">
+                  <span className={`h-9 w-1 shrink-0 rounded-full border ${item.tone}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold leading-4 text-slate-900">{item.title}</p>
+                    <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-slate-500">
+                      {item.detail}
+                    </p>
+                  </div>
+                  <Link
+                    href={item.href}
+                    className="shrink-0 rounded-lg border border-slate-200 px-2.5 py-2 text-[10px] font-bold text-slate-700"
+                  >
+                    {item.action}
+                  </Link>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 p-4">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              <div>
+                <p className="text-xs font-semibold text-slate-900">You’re all caught up</p>
+                <p className="text-[10px] text-slate-500">No supported dashboard action is pending.</p>
+              </div>
+            </div>
+          )}
+          <Link
+            href="/principal/admission"
+            className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-4 py-3 text-[11px] font-semibold text-slate-600"
+          >
+            Open all approvals
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </section>
+
+      <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-950">Quick notice</h2>
+            <p className="text-xs text-slate-500">Publish an announcement to your school</p>
+          </div>
+          <FileText className="h-5 w-5 text-blue-600" />
+        </div>
+        <Link
+          href="/principal/communication"
+          className="mt-3 block min-h-20 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-400"
+        >
+          Write your notice here…
+        </Link>
+        <div className="mt-3 flex items-center justify-between">
+          <span className="rounded-full bg-blue-50 px-3 py-1.5 text-[10px] font-semibold text-blue-700">
+            Publish to: All
+          </span>
+          <Link
+            href="/principal/communication"
+            className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-bold text-white"
+          >
+            Compose & publish
+          </Link>
+        </div>
+      </section>
+
+      <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold text-slate-950">Attendance trend</h2>
+            <p className="text-xs text-slate-500">Student attendance · last 30 days</p>
+          </div>
+          <Link href="/principal/attendance" className="text-[10px] font-bold text-blue-600">
+            Details
+          </Link>
+        </div>
+        {dashboard.attendanceTrend.some((point) => point.rate !== null) ? (
+          <div className="mt-3 h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={dashboard.attendanceTrend} margin={{ top: 8, right: 4, left: -28, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="mobileAttendanceFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.22} />
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} minTickGap={28} tick={{ fontSize: 9 }} />
+                <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 9 }} />
+                <Tooltip formatter={(value) => [`${value}%`, "Students"]} />
+                <Area connectNulls={false} type="monotone" dataKey="rate" stroke="#2563eb" strokeWidth={2.5} fill="url(#mobileAttendanceFill)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="mt-3 rounded-xl bg-slate-50 px-4 py-7 text-center">
+            <p className="text-xs font-semibold text-slate-700">No attendance trend yet</p>
+            <p className="mt-1 text-[10px] text-slate-500">The chart appears after attendance is marked.</p>
+          </div>
+        )}
+      </section>
+
+      <section className="mt-5 grid grid-cols-2 gap-2.5">
+        <Link href="/principal/results" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <FileText className="h-5 w-5 text-violet-600" />
+          <h3 className="mt-3 text-xs font-bold text-slate-900">Class performance</h3>
+          <p className="mt-1 text-[10px] leading-4 text-slate-500">Open the latest exam results by class.</p>
+        </Link>
+        <Link href="/principal/fees" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <Wallet className="h-5 w-5 text-emerald-600" />
+          <h3 className="mt-3 text-xs font-bold text-slate-900">Fee analytics</h3>
+          <p className="mt-1 text-[10px] leading-4 text-slate-500">Review collection records and targets.</p>
+        </Link>
+      </section>
+
+      <section className="mt-5 rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 p-4">
+          <div>
+            <h2 className="text-base font-bold text-slate-950">Upcoming</h2>
+            <p className="text-xs text-slate-500">Exams and events ahead</p>
+          </div>
+          <CalendarDays className="h-5 w-5 text-blue-600" />
+        </div>
+        {dashboard.schedule.length ? (
+          <div className="divide-y divide-slate-100 px-4">
+            {dashboard.schedule.slice(0, 4).map((item) => (
+              <Link key={item.id} href={item.href} className="flex items-center gap-3 py-3">
+                <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[9px] font-bold uppercase text-slate-600">
+                  {dateLabel(item.date, today)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <span className="text-[9px] font-bold uppercase text-blue-600">{item.type}</span>
+                  <p className="truncate text-xs font-semibold text-slate-900">{item.title}</p>
+                </div>
+                <ArrowRight className="h-3.5 w-3.5 text-slate-300" />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="p-5 text-center">
+            <p className="text-xs font-semibold text-slate-700">Nothing scheduled</p>
+            <Link href="/principal/calendar" className="mt-2 inline-block text-[10px] font-bold text-blue-600">
+              Add an event
+            </Link>
+          </div>
+        )}
+        <div className="grid grid-cols-2 border-t border-slate-100">
+          <Link href="/principal/calendar" className="p-3 text-center text-[10px] font-bold text-slate-600">
+            Open calendar
+          </Link>
+          <Link href="/principal/communication" className="border-l border-slate-100 p-3 text-center text-[10px] font-bold text-slate-600">
+            Recent circulars
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function MobileKpi({
+  href,
+  label,
+  value,
+  meta,
+  icon: Icon,
+  tone,
+  trend,
+  progress,
+}: {
+  href: string;
+  label: string;
+  value: string;
+  meta: string;
+  icon: ElementType;
+  tone: "blue" | "violet" | "emerald" | "amber";
+  trend?: number | null;
+  progress?: number | null;
+}) {
+  const tones = {
+    blue: "bg-blue-50 text-blue-600",
+    violet: "bg-violet-50 text-violet-600",
+    emerald: "bg-emerald-50 text-emerald-600",
+    amber: "bg-amber-50 text-amber-600",
+  };
+  return (
+    <Link href={href} className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <p className="min-h-8 text-[10px] font-bold uppercase leading-4 tracking-[0.04em] text-slate-500">
+          {label}
+        </p>
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tones[tone]}`}>
+          <Icon className="h-4 w-4" />
+        </span>
+      </div>
+      <p className="mt-2 break-words text-lg font-extrabold leading-tight text-slate-950">{value}</p>
+      <div className="mt-1.5 flex min-h-8 items-start gap-1 text-[10px] leading-4 text-slate-500">
+        {trend != null && (
+          <span className={trend >= 0 ? "font-bold text-emerald-600" : "font-bold text-red-600"}>
+            {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}%
+          </span>
+        )}
+        <span>{meta}</span>
+      </div>
+      {progress != null && (
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
+        </div>
+      )}
+    </Link>
   );
 }
 
