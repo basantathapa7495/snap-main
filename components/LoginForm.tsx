@@ -273,7 +273,12 @@ export default function LoginForm() {
       if (databaseRole === 'admin') {
         router.replace('/principal');
       } else if (databaseRole === 'teacher') {
-        router.replace('/teacher');
+        const mustChangePassword =
+          authData.user.app_metadata?.must_change_password === true;
+
+        router.replace(
+          mustChangePassword ? '/auth/change-password' : '/teacher'
+        );
       } else if (databaseRole === 'student') {
         router.replace('/student');
       } else {
