@@ -51,9 +51,16 @@ export async function POST(request: Request) {
     .select("school_id, role")
     .eq("user_id", user.id)
     .single();
-  if (profileError || profile?.role !== "principal" || !profile.school_id) {
+  const role = profile?.role?.trim().toLowerCase();
+  const canManageTeacherLogins =
+    role === "principal" || role === "admin" || role === "school_admin";
+
+  if (profileError || !canManageTeacherLogins || !profile?.school_id) {
     return NextResponse.json(
-      { error: "Only a principal can create teacher logins." },
+      {
+        error:
+          "Your account does not have permission to create teacher logins.",
+      },
       { status: 403 },
     );
   }
