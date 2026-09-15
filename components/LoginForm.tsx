@@ -194,10 +194,30 @@ export default function LoginForm() {
         .from('profiles')
         .select('role, school_id')
         .eq('user_id', authData.user.id)
-        .single();
+        .maybeSingle();
 
       let resolvedProfile = profile;
+
+      // Teacher/student accounts created by a school administrator also carry
+      // server-controlled app metadata. Use it if a profile request is
+      // temporarily unavailable, then let the portal load the persisted row.
       if (profileError || !resolvedProfile) {
+        const metadataRole = authData.user.app_metadata?.role;
+        const metadataSchoolId = authData.user.app_metadata?.school_id;
+
+        if (
+          (metadataRole === 'teacher' || metadataRole === 'student') &&
+          typeof metadataSchoolId === 'string' &&
+          metadataSchoolId
+        ) {
+          resolvedProfile = {
+            role: metadataRole,
+            school_id: metadataSchoolId,
+          };
+        }
+      }
+
+      if (!resolvedProfile) {
         try {
           resolvedProfile = await finishPendingSchoolRegistration(authData.user);
         } catch (setupError) {
@@ -208,9 +228,13 @@ export default function LoginForm() {
 
       if (!resolvedProfile) {
         await supabase.auth.signOut();
-        setError('Your account profile could not be found. Contact your school administrator.');
+        setError(
+          'Your login exists, but it is not connected to a school profile. Ask the principal to recreate or repair this account.'
+        );
         return;
       }
+
+      await supabase.auth.refreshSession();
 
       // -------------------------------------------------------
       // 3. ROLE VALIDATION
