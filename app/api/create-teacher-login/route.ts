@@ -117,7 +117,7 @@ export async function POST(request: Request) {
 
   let { data: teacher, error: teacherError } = await admin
     .from("teachers")
-    .select("id, name, user_id")
+    .select("id, name, phone, user_id")
     .eq("id", teacherId)
     .eq("school_id", profile.school_id)
     .maybeSingle();
@@ -166,6 +166,22 @@ export async function POST(request: Request) {
   if (authError)
     return NextResponse.json({ error: authError.message }, { status: 400 });
 
+  const { error: profileCreateError } = await admin.from("profiles").insert({
+    user_id: authUser.user.id,
+    school_id: profile.school_id,
+    role: "teacher",
+    full_name: teacher.name,
+    phone: teacher.phone || null,
+  });
+
+  if (profileCreateError) {
+    await admin.auth.admin.deleteUser(authUser.user.id);
+    return NextResponse.json(
+      { error: "Teacher account was created but its portal profile could not be set up." },
+      { status: 500 },
+    );
+  }
+
   let { error: updateError } = await admin
     .from("teachers")
     .update({ user_id: authUser.user.id, email: normalizedEmail })
@@ -189,6 +205,7 @@ export async function POST(request: Request) {
   }
 
   if (updateError) {
+    await admin.from("profiles").delete().eq("user_id", authUser.user.id);
     await admin.auth.admin.deleteUser(authUser.user.id);
     return NextResponse.json(
       { error: "The login was created but could not be linked to the teacher record." },
