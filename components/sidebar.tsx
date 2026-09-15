@@ -268,10 +268,10 @@ export default function Sidebar() {
           <Image
             src="/logo2.png"
             alt="SNAP"
-            width={120}
-            height={120}
+            width={100}
+            height={100}
             priority
-            className="h-[120px] w-[120px] object-contain"
+            className="h-[100px] w-[100px] object-contain"
           />
         </Link>
 
