@@ -6,8 +6,11 @@ export async function POST(request: Request) {
     process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey =
     process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const publishableKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!supabaseUrl || !serviceRoleKey || !publishableKey) {
     return NextResponse.json(
       {
         error:
@@ -27,6 +30,12 @@ export async function POST(request: Request) {
     );
 
   const admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const authenticated = createClient(supabaseUrl, publishableKey, {
+    global: {
+      headers: { Authorization: `Bearer ${token}` },
+    },
     auth: { autoRefreshToken: false, persistSession: false },
   });
   const {
@@ -61,26 +70,14 @@ export async function POST(request: Request) {
   // Some projects restrict profile reads for server keys. Fall back to the
   // signed-in user's RLS-protected profile lookup before denying access.
   if (profileError || !profile) {
-    const publishableKey =
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const fallback = await authenticated
+      .from("profiles")
+      .select("school_id, role")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-    if (publishableKey) {
-      const authenticated = createClient(supabaseUrl, publishableKey, {
-        global: {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-        auth: { autoRefreshToken: false, persistSession: false },
-      });
-      const fallback = await authenticated
-        .from("profiles")
-        .select("school_id, role")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      profile = fallback.data;
-      profileError = fallback.error;
-    }
+    profile = fallback.data;
+    profileError = fallback.error;
   }
 
   const role = profile?.role?.trim().toLowerCase();
@@ -118,17 +115,39 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: teacher, error: teacherError } = await admin
+  let { data: teacher, error: teacherError } = await admin
     .from("teachers")
     .select("id, name, user_id")
     .eq("id", teacherId)
     .eq("school_id", profile.school_id)
-    .single();
-  if (teacherError || !teacher)
+    .maybeSingle();
+
+  if (teacherError || !teacher) {
+    const fallback = await authenticated
+      .from("teachers")
+      .select("id, name, user_id")
+      .eq("id", teacherId)
+      .eq("school_id", profile.school_id)
+      .maybeSingle();
+
+    teacher = fallback.data;
+    teacherError = fallback.error;
+  }
+
+  if (teacherError || !teacher) {
+    console.error("Teacher login lookup failed", {
+      code: teacherError?.code,
+      teacherId,
+      schoolId: profile.school_id,
+    });
     return NextResponse.json(
-      { error: "Teacher not found in your school." },
+      {
+        error:
+          "SNAP could not load this teacher record. Refresh the Teachers page and try again.",
+      },
       { status: 404 },
     );
+  }
   if (teacher.user_id)
     return NextResponse.json(
       { error: "This teacher already has a login." },
@@ -147,18 +166,32 @@ export async function POST(request: Request) {
   if (authError)
     return NextResponse.json({ error: authError.message }, { status: 400 });
 
-  const { error: updateError } = await admin
+  let { error: updateError } = await admin
     .from("teachers")
     .update({ user_id: authUser.user.id, email: normalizedEmail })
     .eq("id", teacher.id)
     .eq("school_id", profile.school_id)
     .is("user_id", null)
     .select("id")
-    .single();
+    .maybeSingle();
+
+  if (updateError) {
+    const fallback = await authenticated
+      .from("teachers")
+      .update({ user_id: authUser.user.id, email: normalizedEmail })
+      .eq("id", teacher.id)
+      .eq("school_id", profile.school_id)
+      .is("user_id", null)
+      .select("id")
+      .maybeSingle();
+
+    updateError = fallback.error;
+  }
+
   if (updateError) {
     await admin.auth.admin.deleteUser(authUser.user.id);
     return NextResponse.json(
-      { error: "Failed to link the teacher account." },
+      { error: "The login was created but could not be linked to the teacher record." },
       { status: 500 },
     );
   }
