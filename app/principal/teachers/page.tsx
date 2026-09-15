@@ -40,6 +40,13 @@ type Teacher = {
   user_id: string | null;
 };
 
+type TemporaryCredential = {
+  teacherId: string;
+  teacherName: string;
+  email: string;
+  password: string;
+};
+
 type TeacherForm = {
   name: string;
   subject: string;
@@ -115,6 +122,10 @@ export default function TeachersPage() {
   const [creatingLogin, setCreatingLogin] = useState(false);
   const [credentialsCreated, setCredentialsCreated] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [temporaryCredentials, setTemporaryCredentials] = useState<TemporaryCredential[]>([]);
+  const [showCredentialTray, setShowCredentialTray] = useState(true);
+  const [showSavedPasswords, setShowSavedPasswords] = useState(false);
+  const [allCredentialsCopied, setAllCredentialsCopied] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -315,22 +326,43 @@ export default function TeachersPage() {
       } = await supabase.auth.getSession();
       if (!session?.access_token)
         throw new Error("Your session has expired. Please sign in again.");
-      const response = await fetch("/api/create-teacher-login", {
+      const resetting = Boolean(loginTeacher.user_id);
+      const response = await fetch(
+        resetting
+          ? "/api/reset-teacher-password"
+          : "/api/create-teacher-login",
+        {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({
-          email: loginEmail.trim().toLowerCase(),
-          password,
-          teacherId: loginTeacher.id,
-        }),
-      });
+          body: JSON.stringify({
+            email: loginEmail.trim().toLowerCase(),
+            password,
+            teacherId: loginTeacher.id,
+          }),
+        },
+      );
       const result = await response.json();
       if (!response.ok || !result.success)
-        throw new Error(result.error || "The login could not be created.");
+        throw new Error(
+          result.error ||
+            (resetting
+              ? "Teacher access could not be reset."
+              : "The login could not be created."),
+        );
       setCredentialsCreated(true);
+      setTemporaryCredentials((current) => [
+        ...current.filter((item) => item.teacherId !== loginTeacher.id),
+        {
+          teacherId: loginTeacher.id,
+          teacherName: loginTeacher.name,
+          email: loginEmail.trim().toLowerCase(),
+          password,
+        },
+      ]);
+      setShowCredentialTray(true);
       setTeachers((current) =>
         current.map((teacher) =>
           teacher.id === loginTeacher.id
@@ -338,7 +370,11 @@ export default function TeachersPage() {
             : teacher,
         ),
       );
-      setNotice(`Login created for ${loginTeacher.name}.`);
+      setNotice(
+        resetting
+          ? `Temporary password reset for ${loginTeacher.name}.`
+          : `Login created for ${loginTeacher.name}.`,
+      );
     } catch (loginError) {
       console.error("Teacher login creation error", loginError);
       setError(
@@ -353,10 +389,24 @@ export default function TeachersPage() {
 
   async function copyCredentials() {
     await navigator.clipboard.writeText(
-      `SNAP teacher login\nEmail: ${loginEmail}\nPassword: ${password}\nLogin: /auth/login?role=teacher`,
+      `SNAP teacher login\nEmail: ${loginEmail}\nTemporary password: ${password}\nLogin: ${window.location.origin}/auth/login?role=teacher\n\nYou must create a private password after signing in.`,
     );
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function copyAllCredentials() {
+    const loginUrl = `${window.location.origin}/auth/login?role=teacher`;
+    await navigator.clipboard.writeText(
+      temporaryCredentials
+        .map(
+          (item) =>
+            `${item.teacherName}\nEmail: ${item.email}\nTemporary password: ${item.password}\nLogin: ${loginUrl}`,
+        )
+        .join("\n\n"),
+    );
+    setAllCredentialsCopied(true);
+    window.setTimeout(() => setAllCredentialsCopied(false), 2000);
   }
 
   if (loading) return <TeachersSkeleton />;
@@ -458,6 +508,59 @@ export default function TeachersPage() {
                   <X className="h-4 w-4" />
                 </button>
               </div>
+            )}
+
+            {temporaryCredentials.length > 0 && showCredentialTray && (
+              <section className="mt-5 rounded-2xl border border-blue-200 bg-blue-50/70 p-4 shadow-sm sm:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="flex items-center gap-2 font-bold text-slate-950">
+                      <KeyRound className="h-4 w-4 text-blue-600" />
+                      Temporary credentials
+                    </h2>
+                    <p className="mt-1 text-xs leading-5 text-slate-600">
+                      Kept only on this page until you refresh or close it. Copy them before leaving.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowSavedPasswords((value) => !value)}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-blue-200 bg-white px-3 text-xs font-semibold text-blue-700"
+                    >
+                      {showSavedPasswords ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      {showSavedPasswords ? "Hide" : "Show"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={copyAllCredentials}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-xs font-semibold text-white"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      {allCredentialsCopied ? "Copied all" : "Copy all"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCredentialTray(false)}
+                      className="rounded-lg p-2 text-slate-500 hover:bg-white"
+                      aria-label="Close credentials tray"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  {temporaryCredentials.map((item) => (
+                    <div key={item.teacherId} className="rounded-xl border border-blue-100 bg-white p-3">
+                      <p className="truncate text-sm font-bold text-slate-900">{item.teacherName}</p>
+                      <p className="mt-1 truncate text-xs text-slate-500">{item.email}</p>
+                      <p className="mt-2 break-all font-mono text-xs font-semibold text-slate-800">
+                        {showSavedPasswords ? item.password : "••••••••••••"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
             )}
 
             <section className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -674,16 +777,14 @@ function TeacherRow({
           >
             <Edit3 className="h-4 w-4" />
           </button>
-          {!teacher.user_id && (
-            <button
-              type="button"
-              onClick={() => onLogin(teacher)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
-            >
-              <KeyRound className="h-3.5 w-3.5" />
-              Create login
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => onLogin(teacher)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+          >
+            <KeyRound className="h-3.5 w-3.5" />
+            {teacher.user_id ? "Reset access" : "Create login"}
+          </button>
         </div>
       </td>
     </tr>
@@ -713,16 +814,14 @@ function TeacherCard({ teacher, onView, onLogin }: TeacherActions) {
           </p>
         </div>
       </button>
-      {!teacher.user_id && (
-        <button
-          type="button"
-          onClick={() => onLogin(teacher)}
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-50 py-2 text-xs font-semibold text-blue-700"
-        >
-          <KeyRound className="h-3.5 w-3.5" />
-          Create login
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => onLogin(teacher)}
+        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-50 py-2 text-xs font-semibold text-blue-700"
+      >
+        <KeyRound className="h-3.5 w-3.5" />
+        {teacher.user_id ? "Reset access" : "Create login"}
+      </button>
     </div>
   );
 }
@@ -796,19 +895,17 @@ function TeacherDetails({
             <Edit3 className="h-4 w-4" />
             Edit details
           </button>
-          {!teacher.user_id && (
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onLogin(teacher);
-              }}
-              className="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-4 py-2.5 text-sm font-semibold text-blue-700"
-            >
-              <KeyRound className="h-4 w-4" />
-              Create login
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              onLogin(teacher);
+            }}
+            className="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-4 py-2.5 text-sm font-semibold text-blue-700"
+          >
+            <KeyRound className="h-4 w-4" />
+            {teacher.user_id ? "Reset access" : "Create login"}
+          </button>
           <button
             type="button"
             onClick={() => onDelete(teacher)}
@@ -1009,7 +1106,13 @@ function LoginModal({
         <div className="flex items-center justify-between border-b border-slate-100 p-6">
           <div>
             <h2 className="text-xl font-bold text-slate-950">
-              {created ? "Login created" : "Create teacher login"}
+              {created
+                ? teacher.user_id
+                  ? "Access reset"
+                  : "Login created"
+                : teacher.user_id
+                  ? "Reset teacher access"
+                  : "Create teacher login"}
             </h2>
             <p className="mt-1 text-sm text-slate-500">{teacher.name}</p>
           </div>
@@ -1019,7 +1122,7 @@ function LoginModal({
           {created && (
             <div className="flex gap-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
               <Check className="h-4 w-4" />
-              Share these credentials securely with the teacher.
+              Share this temporary password securely. The teacher must replace it after signing in.
             </div>
           )}
           {error && (
@@ -1085,7 +1188,13 @@ function LoginModal({
                 disabled={creating || !email.trim() || password.length < 8}
                 className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {creating ? "Creating login…" : "Create teacher login"}
+                {creating
+                  ? teacher.user_id
+                    ? "Resetting access…"
+                    : "Creating login…"
+                  : teacher.user_id
+                    ? "Create new temporary password"
+                    : "Create teacher login"}
               </button>
               {!creating && (!email.trim() || password.length < 8) && (
                 <p className="mt-1.5 text-center text-[10px] text-slate-500">
