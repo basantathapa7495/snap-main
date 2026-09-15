@@ -379,9 +379,9 @@ export default function TeachersPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <Sidebar />
-      <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
+      <div className="flex min-h-screen flex-col lg:ml-64">
         <TopBar />
-        <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+        <main className="flex-1 px-4 pb-24 pt-20 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px]">
             <header className="flex flex-col gap-5 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
@@ -397,21 +397,24 @@ export default function TeachersPage() {
               </div>
 
               <div className="flex flex-col gap-3 lg:items-end">
-                <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:flex">
-                  {[
-                    { label: "Teachers", value: teachers.length, tone: "text-blue-700" },
-                    { label: "Login active", value: activeAccounts, tone: "text-emerald-700" },
-                    { label: "Subjects", value: Math.max(0, subjects.length - 1), tone: "text-violet-700" },
-                    { label: "Incomplete", value: missingDetails, tone: missingDetails ? "text-amber-700" : "text-slate-700" },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="flex min-w-[112px] items-center justify-between gap-3 border-b border-r border-slate-100 px-3 py-2.5 last:border-r-0 sm:border-b-0"
-                    >
-                      <span className="text-[11px] font-medium text-slate-500">{item.label}</span>
-                      <strong className={`text-sm ${item.tone}`}>{item.value}</strong>
+                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                    <GraduationCap className="h-[18px] w-[18px]" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-900">
+                      {teachers.length} teacher{teachers.length === 1 ? "" : "s"}
+                    </p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] font-medium text-slate-500">
+                      <span className="text-emerald-700">{activeAccounts} login active</span>
+                      <span aria-hidden="true">·</span>
+                      <span className={teachers.length - activeAccounts ? "text-amber-700" : "text-slate-500"}>
+                        {teachers.length - activeAccounts} need login
+                      </span>
+                      <span aria-hidden="true">·</span>
+                      <span>{Math.max(0, subjects.length - 1)} subjects</span>
                     </div>
-                  ))}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -581,10 +584,14 @@ export default function TeachersPage() {
           setShowPassword={setShowPassword}
           creating={creatingLogin}
           created={credentialsCreated}
+          error={error}
           copied={copied}
           onCopy={copyCredentials}
           onSubmit={createLogin}
-          onClose={() => setLoginTeacher(null)}
+          onClose={() => {
+            setLoginTeacher(null);
+            setError("");
+          }}
         />
       )}
     </div>
@@ -979,6 +986,7 @@ function LoginModal({
   setShowPassword,
   creating,
   created,
+  error,
   copied,
   onCopy,
   onSubmit,
@@ -993,6 +1001,7 @@ function LoginModal({
   setShowPassword: (value: boolean) => void;
   creating: boolean;
   created: boolean;
+  error: string;
   copied: boolean;
   onCopy: () => void;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
@@ -1015,6 +1024,12 @@ function LoginModal({
             <div className="flex gap-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
               <Check className="h-4 w-4" />
               Share these credentials securely with the teacher.
+            </div>
+          )}
+          {error && (
+            <div role="alert" className="flex gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs leading-5 text-red-700">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
           <Field
@@ -1069,12 +1084,19 @@ function LoginModal({
               {copied ? "Copied" : "Copy credentials"}
             </button>
           ) : (
-            <button
-              disabled={creating || !email || password.length < 8}
-              className="flex-1 rounded-xl bg-blue-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-            >
-              {creating ? "Creating…" : "Create login"}
-            </button>
+            <div className="flex-1">
+              <button
+                disabled={creating || !email.trim() || password.length < 8}
+                className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {creating ? "Creating login…" : "Create teacher login"}
+              </button>
+              {!creating && (!email.trim() || password.length < 8) && (
+                <p className="mt-1.5 text-center text-[10px] text-slate-500">
+                  {!email.trim() ? "Enter the teacher’s email." : "Password must contain at least 8 characters."}
+                </p>
+              )}
+            </div>
           )}
         </div>
       </form>
