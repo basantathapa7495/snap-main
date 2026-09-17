@@ -263,11 +263,11 @@ export default function Sidebar() {
         <Link
           href="/principal"
           className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
-          aria-label="Go to SNAP dashboard"
+          aria-label="Go to NEPSOM dashboard"
         >
           <Image
             src="/logo2.png"
-            alt="SNAP"
+            alt="NEPSOM"
             width={120}
             height={120}
             priority
@@ -299,7 +299,7 @@ export default function Sidebar() {
           <div className="flex items-center gap-2.5">
             <Image
               src="/logo1.png"
-              alt="SNAP Logo"
+              alt="NEPSOM Logo"
               width={48}
               height={48}
               className="h-12 w-12 object-contain"
@@ -307,7 +307,7 @@ export default function Sidebar() {
 
             <div className="flex flex-col justify-center">
               <span className="text-lg font-bold leading-tight text-gray-900">
-                SNAP
+                NEPSOM
               </span>
               <span className="text-[12px] font-medium leading-tight tracking-wide text-gray-400">
                 School Nepal Platform

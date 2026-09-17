@@ -92,7 +92,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "SNAP could not load your school-admin profile. Check that the deployed Supabase keys belong to the same project.",
+          "NEPSOM could not load your school-admin profile. Check that the deployed Supabase keys belong to the same project.",
       },
       { status: 403 },
     );
@@ -143,7 +143,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "SNAP could not load this teacher record. Refresh the Teachers page and try again.",
+          "NEPSOM could not load this teacher record. Refresh the Teachers page and try again.",
       },
       { status: 404 },
     );

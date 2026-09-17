@@ -18,7 +18,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
   ];
 
   const documents = [
-    { title: 'Getting Started Guide', description: 'Learn the basics of SNAP' },
+    { title: 'Getting Started Guide', description: 'Learn the basics of NEPSOM' },
     { title: 'Principal Dashboard Manual', description: 'Complete dashboard guide' },
     { title: 'Fee Management Guide', description: 'Manage fees and receipts' },
   ];
@@ -79,7 +79,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
           <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-5">
             <h3 className="text-sm font-bold text-gray-900 mb-2">Need Help?</h3>
             <p className="text-xs text-gray-600 mb-4">
-              Our SNAP support team is here to help school principals across Nepal.
+              Our NEPSOM support team is here to help school principals across Nepal.
             </p>
             <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors w-full sm:w-auto">
               <MessageSquare className="h-4 w-4" />

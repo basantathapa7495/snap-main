@@ -164,12 +164,12 @@ export default function SignupPage() {
           </div>
 
           <div className="relative z-10 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3" aria-label="SNAP home">
+            <Link href="/" className="flex items-center gap-3" aria-label="NEPSOM home">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-lg shadow-black/10">
                 <Image src="/logo1.png" alt="" width={34} height={34} className="object-contain" priority />
               </span>
               <span>
-                <span className="block text-lg font-extrabold leading-none">SNAP</span>
+                <span className="block text-lg font-extrabold leading-none">NEPSOM</span>
                 <span className="mt-1 block text-[10px] text-slate-400">School Nepal Administration Platform</span>
               </span>
             </Link>
@@ -188,12 +188,12 @@ export default function SignupPage() {
               <span className="block text-blue-300">into one place.</span>
             </h1>
             <p className="mt-4 max-w-md text-sm leading-6 text-slate-400">
-              Create your principal account, add your school information and get your SNAP workspace ready.
+              Create your principal account, add your school information and get your NEPSOM workspace ready.
             </p>
 
             <div className="mt-7 hidden space-y-4 lg:block">
               {[
-                'Full access to every SNAP feature',
+                'Full access to every NEPSOM feature',
                 'No credit card or setup fee',
                 'Works on phone and computer',
               ].map((benefit) => (
@@ -216,7 +216,7 @@ export default function SignupPage() {
           <div className="mx-auto max-w-3xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-blue-600">Create your SNAP workspace</p>
+                <p className="text-sm font-semibold text-blue-600">Create your NEPSOM workspace</p>
                 <h2 className="mt-2 text-3xl font-bold tracking-[-0.035em] text-slate-950 sm:text-4xl">
                   Register your school
                 </h2>
@@ -378,7 +378,7 @@ export default function SignupPage() {
 
             <p className="mt-7 text-center text-sm text-slate-500">
               Already registered?{' '}
-              <Link href="/auth/login" className="font-semibold text-blue-700 hover:text-blue-900">Sign in to SNAP</Link>
+              <Link href="/auth/login" className="font-semibold text-blue-700 hover:text-blue-900">Sign in to NEPSOM</Link>
             </p>
           </div>
         </section>

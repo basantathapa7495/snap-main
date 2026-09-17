@@ -65,15 +65,15 @@ export default function SchoolListPage() {
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
             <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700 ring-1 ring-inset ring-blue-100">
-              Schools on SNAP
+              Schools on NEPSOM
             </span>
 
             <h1 className="mt-6 text-4xl font-bold tracking-tight text-gray-950 sm:text-5xl">
-              Discover schools powered by SNAP
+              Discover schools powered by NEPSOM
             </h1>
 
             <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-gray-600">
-              Explore schools using SNAP to manage their administration and
+              Explore schools using NEPSOM to manage their administration and
               build a stronger digital presence.
             </p>
 
@@ -126,7 +126,7 @@ export default function SchoolListPage() {
 
           <div className="hidden px-4 text-center lg:block">
             <p className="text-2xl font-bold text-blue-600">Growing</p>
-            <p className="mt-1 text-sm text-gray-500">SNAP community</p>
+            <p className="mt-1 text-sm text-gray-500">NEPSOM community</p>
           </div>
         </div>
       </section>
@@ -277,7 +277,7 @@ export default function SchoolListPage() {
               </p>
 
               <h2 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
-                Bring your school online with SNAP
+                Bring your school online with NEPSOM
               </h2>
 
               <p className="mt-3 max-w-2xl text-blue-100">

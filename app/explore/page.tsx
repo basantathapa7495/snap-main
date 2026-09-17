@@ -52,7 +52,7 @@ export default async function ExplorePage() {
             href="/"
             className="text-2xl font-bold text-gray-900"
           >
-            snap
+            nepsom
           </Link>
 
           <div className="flex items-center gap-4">
@@ -159,7 +159,7 @@ export default async function ExplorePage() {
         <div className="mx-auto max-w-6xl text-center">
 
           <p className="font-semibold text-gray-900">
-            snap
+            nepsom
           </p>
 
           <p className="mt-2 text-sm text-gray-500">

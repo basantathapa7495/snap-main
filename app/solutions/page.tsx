@@ -157,7 +157,7 @@ export default function SolutionsPage() {
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600">
-              SNAP connects principals, teachers and students in one simple
+              NEPSOM connects principals, teachers and students in one simple
               platform built to make everyday school management easier.
             </p>
 
@@ -256,7 +256,7 @@ export default function SolutionsPage() {
             </h2>
 
             <p className="mt-4 text-lg text-gray-600">
-              SNAP brings important school operations together instead of
+              NEPSOM brings important school operations together instead of
               spreading them across registers, spreadsheets and separate apps.
             </p>
           </div>
@@ -314,7 +314,7 @@ export default function SolutionsPage() {
 
               <p className="mt-5 max-w-xl leading-7 text-gray-300">
                 From Nepal&apos;s location structure to NPR fee management and
-                mobile-first access, SNAP is being built specifically for
+                mobile-first access, NEPSOM is being built specifically for
                 schools in Nepal.
               </p>
             </div>

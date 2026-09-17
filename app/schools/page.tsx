@@ -36,7 +36,7 @@ export default async function SchoolsPage() {
             </h1>
 
             <p className="mt-1 text-gray-600">
-              Manage all registered schools in snap.
+              Manage all registered schools in NEPSOM.
             </p>
           </div>
 

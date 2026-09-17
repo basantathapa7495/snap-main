@@ -248,7 +248,7 @@ export default function ExamsResultsPage() {
               <aside className="space-y-6">
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                   <h2 className="font-bold text-slate-950">Result readiness</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-500">SNAP currently has exam scheduling data, but no connected result records in this repository. Fake pass rates and topper lists have been removed.</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">NEPSOM currently has exam scheduling data, but no connected result records in this repository. Fake pass rates and topper lists have been removed.</p>
                   <div className="mt-5 space-y-3">
                     <Readiness icon={Users} label="Students available" value={studentCount} ready={studentCount > 0} />
                     <Readiness icon={GraduationCap} label="Classes available" value={classCount} ready={classCount > 0} />

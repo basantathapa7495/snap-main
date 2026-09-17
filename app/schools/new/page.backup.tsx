@@ -81,7 +81,7 @@ export default function NewSchoolPage() {
             Add School
           </h1>
           <p className="mt-2 text-gray-600">
-            Add a new school to snap.
+            Add a new school to NEPSOM.
           </p>
         </div>
 

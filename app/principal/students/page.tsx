@@ -435,7 +435,7 @@ export default function StudentsPage() {
 
   async function copyCredentials() {
     await navigator.clipboard.writeText(
-      `SNAP student login\nEmail: ${loginEmail}\nPassword: ${password}\nLogin: /auth/login?role=student`,
+      `NEPSOM student login\nEmail: ${loginEmail}\nPassword: ${password}\nLogin: /auth/login?role=student`,
     );
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2000);

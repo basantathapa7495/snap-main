@@ -59,11 +59,11 @@ export default function HomePage() {
   ];
 
   const compareRows = [
-    { task: 'Make the monthly fee dues list', old: '3 days of manual work', snap: '10 seconds' },
-    { task: 'Tell parents a notice', old: 'Paper gets lost in bags', snap: 'Instant on website' },
-    { task: 'Prepare report cards', old: 'A week of calculation', snap: 'Print in minutes' },
-    { task: 'Track attendance', old: 'Register & pen', snap: 'One tap, saved forever' },
-    { task: "Know who hasn't paid", old: 'Ask every parent', snap: 'Dues report + phone no.' },
+    { task: 'Make the monthly fee dues list', old: '3 days of manual work', nepsom: '10 seconds' },
+    { task: 'Tell parents a notice', old: 'Paper gets lost in bags', nepsom: 'Instant on website' },
+    { task: 'Prepare report cards', old: 'A week of calculation', nepsom: 'Print in minutes' },
+    { task: 'Track attendance', old: 'Register & pen', nepsom: 'One tap, saved forever' },
+    { task: "Know who hasn't paid", old: 'Ask every parent', nepsom: 'Dues report + phone no.' },
   ];
 
   function NepalIcon({ className = "" }: { className?: string }) {
@@ -188,7 +188,7 @@ export default function HomePage() {
           <div className="relative">
   <img
     src="/hero-image.png"
-    alt="SNAP school management platform for schools in Nepal"
+    alt="NEPSOM school management platform for schools in Nepal"
     className="w-full rounded-3xl object-cover shadow-2xl"
     loading="eager"
   />
@@ -200,7 +200,7 @@ export default function HomePage() {
       {schools.length > 0 && (
   <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
     <p className="text-center text-xs font-semibold uppercase tracking-wider text-gray-400">
-      Schools already on SNAP
+      Schools already on NEPSOM
     </p>
 
     <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
@@ -260,7 +260,7 @@ export default function HomePage() {
 
       <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
         Registers, photocopies and repeated calculations slow everyone down.
-        SNAP turns everyday school tasks into simple digital workflows.
+        NEPSOM turns everyday school tasks into simple digital workflows.
       </p>
     </div>
 
@@ -272,7 +272,7 @@ export default function HomePage() {
         <div className="relative h-64 overflow-hidden bg-gray-100">
           <img
             src="/fees.png"
-            alt="Fee management with SNAP"
+            alt="Fee management with NEPSOM"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             loading="lazy"
           />
@@ -325,7 +325,7 @@ export default function HomePage() {
 
             <div>
               <p className="text-sm font-semibold text-gray-950">
-                With SNAP
+                With NEPSOM
               </p>
 
               <p className="mt-1 text-sm leading-6 text-gray-600">
@@ -343,7 +343,7 @@ export default function HomePage() {
         <div className="relative h-64 overflow-hidden bg-gray-100">
           <img
             src="/notice.png"
-            alt="School notices managed digitally with SNAP"
+            alt="School notices managed digitally with NEPSOM"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             loading="lazy"
           />
@@ -396,7 +396,7 @@ export default function HomePage() {
 
             <div>
               <p className="text-sm font-semibold text-gray-950">
-                With SNAP
+                With NEPSOM
               </p>
 
               <p className="mt-1 text-sm leading-6 text-gray-600">
@@ -414,7 +414,7 @@ export default function HomePage() {
         <div className="relative h-64 overflow-hidden bg-gray-100">
           <img
             src="/report.png"
-            alt="Report cards generated with SNAP"
+            alt="Report cards generated with NEPSOM"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             loading="lazy"
           />
@@ -467,11 +467,11 @@ export default function HomePage() {
 
             <div>
               <p className="text-sm font-semibold text-gray-950">
-                With SNAP
+                With NEPSOM
               </p>
 
               <p className="mt-1 text-sm leading-6 text-gray-600">
-                Enter marks once. SNAP calculates results and creates clean,
+                Enter marks once. NEPSOM calculates results and creates clean,
                 printable report cards.
               </p>
             </div>
@@ -537,7 +537,7 @@ export default function HomePage() {
       </div>
 
       <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-        See how SNAP works
+        See how NEPSOM works
         <span className="block text-blue-400">
           before you register
         </span>
@@ -545,7 +545,7 @@ export default function HomePage() {
 
       <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-400 sm:text-lg">
         Watch a quick walkthrough of how principals, teachers, and students use
-        SNAP for attendance, fees, exams, notices, and everyday school work.
+        NEPSOM for attendance, fees, exams, notices, and everyday school work.
       </p>
     </div>
 
@@ -586,7 +586,7 @@ export default function HomePage() {
                   />
                 </svg>
 
-                <span className="truncate">snap.com.np/demo</span>
+                <span className="truncate">nepsom.xyz/demo</span>
               </div>
             </div>
 
@@ -598,7 +598,7 @@ export default function HomePage() {
             <iframe
               className="aspect-video w-full"
               src="https://www.youtube.com/embed/nigWHG_TH2U?rel=0&modestbranding=1"
-              title="SNAP school management system demo"
+              title="NEPSOM school management system demo"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
               loading="lazy"
@@ -715,7 +715,7 @@ export default function HomePage() {
       </span>
 
       <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
-        Start using SNAP in
+        Start using NEPSOM in
         <span className="text-blue-600"> three simple steps</span>
       </h2>
 
@@ -759,7 +759,7 @@ export default function HomePage() {
 
               <p className="mt-3 text-sm leading-6 text-gray-600">
                 Create your school account and enter the basic school details.
-                SNAP prepares your school workspace and public school page.
+                NEPSOM prepares your school workspace and public school page.
               </p>
 
               <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
@@ -768,7 +768,7 @@ export default function HomePage() {
                 </p>
 
                 <p className="mt-1 truncate font-mono text-xs font-medium text-gray-800">
-                  snap.com.np/s/your-school
+                  nepsom.xyz/s/your-school
                 </p>
               </div>
             </div>
@@ -913,7 +913,7 @@ export default function HomePage() {
             </div>
 
             <span className="text-sm font-semibold text-gray-800">
-              Start using SNAP
+              Start using NEPSOM
             </span>
           </div>
 
@@ -949,7 +949,7 @@ export default function HomePage() {
         ⚖️ Honest Comparison
       </span>
       <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
-        SNAP vs <span className="text-red-500">Manual Registers</span>
+        NEPSOM vs <span className="text-red-500">Manual Registers</span>
       </h2>
       <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
         See exactly how much time and effort your school saves every single day.
@@ -974,7 +974,7 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-emerald-500/10"></div>
                 <span className="relative inline-flex items-center gap-1.5">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-xs">✓</span>
-                  SNAP
+                  NEPSOM
                 </span>
               </th>
             </tr>
@@ -997,7 +997,7 @@ export default function HomePage() {
                     <svg className="h-4 w-4 shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
-                    {r.snap}
+                    {r.nepsom}
                   </span>
                 </td>
               </tr>
@@ -1023,8 +1023,8 @@ export default function HomePage() {
               <p className="text-xs text-red-700 line-through">{r.old}</p>
             </div>
             <div className="rounded-lg bg-emerald-50 p-3">
-              <p className="text-xs font-semibold text-emerald-600 uppercase mb-1">SNAP</p>
-              <p className="text-xs font-semibold text-emerald-700">{r.snap}</p>
+              <p className="text-xs font-semibold text-emerald-600 uppercase mb-1">NEPSOM</p>
+              <p className="text-xs font-semibold text-emerald-700">{r.nepsom}</p>
             </div>
           </div>
         </div>
@@ -1049,7 +1049,7 @@ export default function HomePage() {
       <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-5 py-3 ring-2 ring-green-200/50">
         <span className="text-2xl">🚀</span>
         <div>
-          <p className="text-sm font-bold text-green-800">With SNAP</p>
+          <p className="text-sm font-bold text-green-800">With NEPSOM</p>
           <p className="text-xs text-green-600">Minutes, not hours. Less paperwork. Fewer mistakes. Better organized.</p>
         </div>
       </div>
@@ -1237,7 +1237,7 @@ export default function HomePage() {
 
       <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
         What school leaders say
-        <span className="text-blue-600"> about SNAP</span>
+        <span className="text-blue-600"> about NEPSOM</span>
       </h2>
 
       <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
@@ -1260,7 +1260,7 @@ export default function HomePage() {
         </div>
 
         <p className="mt-7 text-[15px] leading-7 text-gray-700">
-          “Before SNAP, we had to check several registers just to know who still
+          “Before NEPSOM, we had to check several registers just to know who still
           had fees due. Now I can see the list in one place and call parents
           directly. It saves a lot of unnecessary back-and-forth.”
         </p>
@@ -1462,12 +1462,12 @@ export default function HomePage() {
       </span>
 
       <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
-        One SNAP.
+        One NEPSOM.
         <span className="text-blue-600"> Pricing based on school size.</span>
       </h2>
 
       <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
-        Every school gets full access to SNAP for 30 days. After that, your
+        Every school gets full access to NEPSOM for 30 days. After that, your
         price depends only on how many students your school has.
       </p>
     </div>
@@ -1548,7 +1548,7 @@ export default function HomePage() {
       </div>
     </div>
 
-    {/* Pricing cards — every school receives the same complete SNAP product. */}
+    {/* Pricing cards — every school receives the same complete NEPSOM product. */}
     <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
       {plans.map((plan) => {
         const isFree = plan.monthly === 0;
@@ -1596,7 +1596,7 @@ export default function HomePage() {
             <div className="flex flex-1 items-start gap-2.5 text-sm leading-6 text-gray-700">
               <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" strokeWidth={2.2} />
               <p>
-                <strong className="font-semibold text-gray-950">Full SNAP access.</strong>{' '}
+                <strong className="font-semibold text-gray-950">Full NEPSOM access.</strong>{' '}
                 Every school receives the same tools; only the student count changes the price.
               </p>
             </div>
@@ -1625,7 +1625,7 @@ export default function HomePage() {
 
         <div>
           <h3 className="text-base font-bold text-gray-950">
-            Every school gets the full SNAP experience
+            Every school gets the full NEPSOM experience
           </h3>
 
           <p className="mt-2 text-sm leading-6 text-gray-600">
@@ -1687,11 +1687,11 @@ export default function HomePage() {
       {[
         [
           'Does it work on slow internet or mobile data?',
-          'Yes. Pages are light and built to load on 3G/4G mobile data. If you can open Facebook, you can open SNAP.',
+          'Yes. Pages are light and built to load on 3G/4G mobile data. If you can open Facebook, you can open NEPSOM.',
         ],
         [
           'Do teachers need a computer?',
-          'No. Everything works from a phone browser. Teachers who can use Facebook can use SNAP on day one.',
+          'No. Everything works from a phone browser. Teachers who can use Facebook can use NEPSOM on day one.',
         ],
         [
           "Is our school's data private?",
@@ -1730,7 +1730,7 @@ export default function HomePage() {
       <p className="mt-2 text-gray-600">We're here to help. Reach out anytime.</p>
       <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
         <a
-          href="https://wa.me/9779806532844?text=Hi%2C%20I%20have%20a%20question%20about%20SNAP"
+          href="https://wa.me/9779806532844?text=Hi%2C%20I%20have%20a%20question%20about%20NEPSOM"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-green-700"
@@ -1778,8 +1778,8 @@ export default function HomePage() {
           <div className="grid gap-10 md:grid-cols-4">
             <div>
               <div className="flex items-center gap-3">
-                <img src="/logo1.png" alt="SNAP logo" className="h-10 w-auto" />
-                <img src="/logo4.png" alt="SNAP – School Nepal Administration Platform" className="h-10 w-auto" />
+                <img src="/logo1.png" alt="NEPSOM logo" className="h-10 w-auto" />
+                <img src="/logo4.png" alt="NEPSOM school management platform" className="h-10 w-auto" />
               </div>
               <p className="mt-3 text-sm leading-relaxed">
                 The school management platform built for Nepal. Made with ❤️ in Nepal.
@@ -1811,7 +1811,7 @@ export default function HomePage() {
             </div>
           </div>
           <p className="mt-10 border-t border-gray-800 pt-6 text-center text-xs">
-            © 2026 SNAP Nepal. All rights reserved.
+            © 2026 NEPSOM Nepal. All rights reserved.
           </p>
         </div>
       </footer>

@@ -389,7 +389,7 @@ export default function TeachersPage() {
 
   async function copyCredentials() {
     await navigator.clipboard.writeText(
-      `SNAP teacher login\nEmail: ${loginEmail}\nTemporary password: ${password}\nLogin: ${window.location.origin}/auth/login?role=teacher\n\nYou must create a private password after signing in.`,
+      `NEPSOM teacher login\nEmail: ${loginEmail}\nTemporary password: ${password}\nLogin: ${window.location.origin}/auth/login?role=teacher\n\nYou must create a private password after signing in.`,
     );
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2000);

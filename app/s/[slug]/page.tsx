@@ -689,7 +689,7 @@ export default function PublicSchoolPage() {
               © 2024 {schoolData.name}. All rights reserved.
             </p>
             <p className="text-sm text-gray-500 flex items-center gap-1.5">
-              Powered by <Globe className="h-4 w-4" /> SNAP
+              Powered by <Globe className="h-4 w-4" /> NEPSOM
             </p>
           </div>
         </div>

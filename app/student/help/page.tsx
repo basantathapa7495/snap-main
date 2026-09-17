@@ -100,7 +100,7 @@ export default function StudentHelpPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Help & Support</h1>
-            <p className="mt-1.5 text-sm text-gray-500">Guides and resources for students using SNAP.</p>
+            <p className="mt-1.5 text-sm text-gray-500">Guides and resources for students using NEPSOM.</p>
           </div>
 
           {/* Quick Guides Grid */}

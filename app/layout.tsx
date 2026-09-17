@@ -4,11 +4,11 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'snap — School Management Software for Nepal',
-    template: '%s | snap',
+    default: 'NEPSOM — School Management Software for Nepal',
+    template: '%s | NEPSOM',
   },
   description:
-    'snap gives every school in Nepal its own website, plus attendance, fee tracking, exams and report cards. Free to start. Works on any phone, even on slow internet.',
+    'NEPSOM gives every school in Nepal its own website, plus attendance, fee tracking, exams and report cards. Free to start. Works on any phone, even on slow internet.',
   keywords: [
     'school management software Nepal',
     'school ERP Nepal',
@@ -17,12 +17,12 @@ export const metadata: Metadata = {
     'report card software Nepal',
     'school website Nepal',
   ],
-  authors: [{ name: 'snap Nepal' }],
+  authors: [{ name: 'NEPSOM Nepal' }],
   openGraph: {
-    title: 'snap — School Management Software for Nepal',
+    title: 'NEPSOM — School Management Software for Nepal',
     description:
       'Your school’s own website + attendance, fees, exams & report cards. Built for Nepal. Works on any phone.',
-    siteName: 'snap',
+    siteName: 'NEPSOM',
     locale: 'en_US',
     type: 'website',
     images: [
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'snap — School Management Software for Nepal',
+    title: 'NEPSOM — School Management Software for Nepal',
     description:
       'Your school’s own website + attendance, fees, exams & report cards. Built for Nepal.',
     images: [

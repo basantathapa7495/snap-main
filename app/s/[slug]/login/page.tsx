@@ -73,7 +73,7 @@ export default function SchoolLoginPage() {
             </Link>
           </div>
         </div>
-        <p className="mt-6 text-center text-xs text-gray-400">Powered by SNAP 🇳🇵</p>
+        <p className="mt-6 text-center text-xs text-gray-400">Powered by NEPSOM 🇳🇵</p>
       </div>
     </main>
   );

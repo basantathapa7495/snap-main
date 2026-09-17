@@ -3,7 +3,7 @@
 export default function WhatsAppButton() {
   const phoneNumber = '9779806532844'; // your number, no + or dashes
   const message = encodeURIComponent(
-    'Namaste! I want to know more about SNAP for my school.'
+    'Namaste! I want to know more about NEPSOM for my school.'
   );
 
   return (

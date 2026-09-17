@@ -88,7 +88,7 @@ useEffect(() => {
         {/* logo1 stays on the left with hamburger */}
 <Link href="/" className="flex items-center gap-2.5">
   
-  <img src="/logo2.png" alt="snap" className="hidden h-20 w-auto md:block" />
+  <img src="/logo2.png" alt="NEPSOM" className="hidden h-20 w-auto md:block" />
 </Link>
 
 {/* logo2 centered — mobile only */}
@@ -98,7 +98,7 @@ useEffect(() => {
 >
   <img
     src="/logo2.png"
-    alt="SNAP"
+    alt="NEPSOM"
     className="h-10 w-auto transition-transform duration-200 hover:scale-105"
   />
 </Link>

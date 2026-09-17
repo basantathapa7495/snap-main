@@ -159,7 +159,7 @@ export default async function LoginPage({
             </div>
 
             <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>© {new Date().getFullYear()} SNAP</span>
+              <span>© {new Date().getFullYear()} NEPSOM</span>
               <span className="inline-flex items-center gap-2">
                 <Smartphone className="h-3.5 w-3.5" />
                 Works on phone and computer
@@ -202,13 +202,13 @@ export default async function LoginPage({
 
 function Brand({ light = false }: { light?: boolean }) {
   return (
-    <Link href="/" className="flex w-fit items-center gap-3" aria-label="SNAP home">
+    <Link href="/" className="flex w-fit items-center gap-3" aria-label="NEPSOM home">
       <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-lg shadow-black/10 ring-1 ring-slate-200/60">
         <Image src="/logo1.png" alt="" width={34} height={34} className="object-contain" priority />
       </div>
       <div>
         <p className={`text-lg font-extrabold leading-none tracking-tight ${light ? 'text-white' : 'text-slate-950'}`}>
-          SNAP
+          NEPSOM
         </p>
         <p className={`mt-1 text-[10px] font-medium ${light ? 'text-slate-400' : 'text-slate-500'}`}>
           School Nepal Administration Platform

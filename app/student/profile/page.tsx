@@ -16,7 +16,7 @@ export default function StudentProfilePage() {
 
   // Mock Data (Based exactly on your reference HTML)
   const [profileData] = useState({
-    studentId: 'SNAP-10021',
+    studentId: 'NEPSOM-10021',
     name: 'Ram Thapa',
     grade: 'Grade 10A',
     dob: '12 Jestha 2065',
