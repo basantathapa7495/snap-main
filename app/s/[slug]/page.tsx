@@ -195,7 +195,113 @@ export default function PublicSchoolPage() {
     </header>
 
     <main>
-      <section className="relative isolate overflow-hidden bg-slate-900 text-white"><div className="absolute inset-0"><NextImage src={school.banner_url || '/hero-image.png'} alt={school.banner_url ? `${school.name} campus` : 'Classroom and school desks'} fill priority unoptimized={Boolean(school.banner_url)} sizes="100vw" className="object-cover object-center" /><div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-blue-950/65 to-slate-900/25" /><div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" /></div><div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8"><div className="max-w-3xl"><span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest ${theme.solid}`}>{school.school_type || 'Welcome'}</span><h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-6xl">{school.name}</h1>{school.motto && <p className="mt-5 text-xl font-medium text-white/85">“{school.motto}”</p>}<p className="mt-6 max-w-2xl text-base leading-7 text-gray-300 sm:text-lg">{school.short_description || 'Discover our school, programs and community.'}</p><div className="mt-8 flex flex-wrap gap-3"><Link href={`/s/${school.slug}/admission`} className={`inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white ${theme.solid} ${theme.hover}`}>Apply for admission <ArrowRight className="h-4 w-4" /></Link><a href="#contact" className="rounded-xl border border-white/25 bg-white/10 px-5 py-3 text-sm font-semibold hover:bg-white/15">Contact school</a></div></div></div></section>
+      <section className="relative isolate overflow-hidden bg-slate-900 text-white">
+        <div className="absolute inset-0">
+          <NextImage
+            src={school.banner_url || '/hero-image.png'}
+            alt={school.banner_url ? `${school.name} campus` : 'Classroom and school desks'}
+            fill
+            priority
+            unoptimized={Boolean(school.banner_url)}
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-blue-950/70 to-slate-900/25" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-slate-950/10" />
+        </div>
+
+        <div className="relative mx-auto grid min-h-[560px] max-w-[1600px] items-center gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.65fr)] lg:px-10 lg:py-20 xl:px-12 2xl:px-16">
+          <div className="max-w-4xl">
+            <span className={`inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-md ${theme.text.replace('text-', 'ring-')}`}>
+              <Building2 className="h-3.5 w-3.5" />
+              {school.school_type || 'Welcome to our school'}
+            </span>
+
+            <h1 className="mt-6 max-w-4xl text-4xl font-extrabold leading-[1.05] tracking-tight drop-shadow-sm sm:text-5xl lg:text-6xl xl:text-7xl">
+              {school.name}
+            </h1>
+
+            {school.motto && (
+              <p className="mt-5 max-w-3xl text-lg font-semibold leading-8 text-blue-100 sm:text-xl">
+                “{school.motto}”
+              </p>
+            )}
+
+            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg">
+              {school.short_description || 'Discover our school, academic programs and supportive learning community.'}
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href={`/s/${school.slug}/admission`}
+                className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3.5 text-sm font-bold text-white shadow-xl shadow-blue-950/30 transition duration-300 hover:-translate-y-0.5 hover:from-blue-500 hover:to-indigo-500"
+              >
+                Apply for admission
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <a
+                href="#contact"
+                className="rounded-xl border border-white/25 bg-white/10 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/15"
+              >
+                Contact school
+              </a>
+            </div>
+          </div>
+
+          <aside className="hidden rounded-[28px] border border-white/20 bg-white/10 p-6 shadow-2xl shadow-slate-950/30 backdrop-blur-xl lg:block xl:p-7">
+            <div className="flex items-center gap-4 border-b border-white/15 pb-5">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/30 bg-white/15 shadow-lg">
+                {school.logo_url ? (
+                  <NextImage
+                    src={school.logo_url}
+                    alt={`${school.name} logo`}
+                    width={64}
+                    height={64}
+                    unoptimized
+                    className="h-full w-full rounded-full object-cover"
+                  />
+                ) : (
+                  <GraduationCap className="h-7 w-7 text-white" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-200">School information</p>
+                <p className="mt-1 line-clamp-2 font-bold leading-6 text-white">{school.name}</p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {(school.school_level || school.school_type) && (
+                <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-3.5">
+                  <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-blue-200" />
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">School level</p>
+                    <p className="mt-1 text-sm font-semibold text-white">{school.school_level || school.school_type}</p>
+                  </div>
+                </div>
+              )}
+              {school.established_year && (
+                <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-3.5">
+                  <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-blue-200" />
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">Established</p>
+                    <p className="mt-1 text-sm font-semibold text-white">{school.established_year} B.S.</p>
+                  </div>
+                </div>
+              )}
+              {school.address && (
+                <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-3.5">
+                  <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-blue-200" />
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">Location</p>
+                    <p className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-white">{school.address}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      </section>
 
       <section id="about" className="scroll-mt-24 py-16 sm:py-24"><div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.3fr_.7fr] lg:px-8"><div><Eyebrow text="About our school" color={theme.text} /><h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">Learning, character and opportunity</h2><p className="mt-5 whitespace-pre-line text-base leading-8 text-gray-600">{school.about_text || school.short_description || 'School information will appear here.'}</p>{(school.mission || school.vision) && <div className="mt-8 grid gap-4 sm:grid-cols-2">{school.mission && <InfoCard title="Our mission" text={school.mission} icon={<BookOpen className="h-5 w-5" />} theme={theme} />}{school.vision && <InfoCard title="Our vision" text={school.vision} icon={<GraduationCap className="h-5 w-5" />} theme={theme} />}</div>}</div><div className={`rounded-3xl border p-7 ${theme.border} ${theme.soft}`}><Quote className={`h-8 w-8 ${theme.text}`} /><p className="mt-5 whitespace-pre-line text-base leading-7 text-gray-700">{school.principal_message || 'Welcome to our school community.'}</p><p className="mt-6 font-bold text-gray-950">{school.principal || 'School Principal'}</p><p className="text-sm text-gray-500">Principal</p></div></div></section>
 
