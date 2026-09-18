@@ -35,8 +35,6 @@ import {
 
 export default function HomePage() {
   const [schools, setSchools] = useState<any[]>([]);
-  const [yearly, setYearly] = useState(false);
-
   // Fetch REAL schools from the database — makes the page feel alive
   useEffect(() => {
     async function loadSchools() {
@@ -49,14 +47,6 @@ export default function HomePage() {
     }
     loadSchools();
   }, []);
-
-  const plans = [
-    { label: 'Up to 100 students', monthly: 0, yearly: 0, popular: false },
-    { label: '101–200 students', monthly: 300, yearly: 2340, popular: false },
-    { label: '201–500 students', monthly: 500, yearly: 3900, popular: true },
-    { label: '501–1,000 students', monthly: 800, yearly: 6240, popular: false },
-    { label: '1,000+ students', monthly: 1000, yearly: 7800, popular: false },
-  ];
 
   const compareRows = [
     { task: 'Make the monthly fee dues list', old: '3 days of manual work', nepsom: '10 seconds' },
@@ -1437,228 +1427,102 @@ export default function HomePage() {
   id="pricing"
   className="relative scroll-mt-24 overflow-hidden bg-gray-50/70 py-14 sm:py-20 lg:py-28"
 >
-  {/* Background decoration */}
   <div
     className="pointer-events-none absolute inset-0 opacity-[0.035]"
     style={{
-      backgroundImage:
-        'radial-gradient(circle, #2563eb 1px, transparent 1px)',
+      backgroundImage: 'radial-gradient(circle, #2563eb 1px, transparent 1px)',
       backgroundSize: '28px 28px',
     }}
     aria-hidden="true"
   />
-
   <div
     className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-blue-100 blur-[120px]"
     aria-hidden="true"
   />
 
-  <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    {/* Heading */}
+  <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
     <div className="mx-auto max-w-3xl text-center">
-      <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+      <span className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-green-700">
         <Sparkles className="h-4 w-4" strokeWidth={1.8} />
-        Simple pricing
+        100% free for now
       </span>
 
       <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
-        One NEPSOM.
-        <span className="text-blue-600"> Pricing based on school size.</span>
+        Use every NEPSOM feature.
+        <span className="text-blue-600"> Pay nothing.</span>
       </h2>
 
       <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
-        Every school gets full access to NEPSOM for 30 days. After that, your
-        price depends only on how many students your school has.
+        NEPSOM is completely free for schools during our early-access period.
+        Register your school and use the full platform with no subscription or setup fee.
       </p>
     </div>
 
-    {/* Free trial banner */}
-    <div className="mx-auto mt-10 max-w-4xl">
-      <div className="relative overflow-hidden rounded-2xl border border-blue-200 bg-blue-600 px-6 py-6 text-white shadow-lg shadow-blue-600/10 sm:px-8">
+    <div className="mx-auto mt-10 max-w-3xl">
+      <article className="relative overflow-hidden rounded-[28px] border-2 border-blue-600 bg-white p-6 shadow-xl shadow-blue-600/10 sm:p-9">
         <div
-          className="absolute right-0 top-0 h-32 w-32 rounded-full bg-white/10 blur-2xl"
+          className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-100 blur-3xl"
           aria-hidden="true"
         />
 
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
-              <CalendarDays className="h-5 w-5" strokeWidth={1.8} />
-            </div>
-
+        <div className="relative">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-lg font-bold">
-                Your first 30 days are completely free
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-600">
+                Early access
               </p>
-
-              <p className="mt-1 max-w-xl text-sm leading-6 text-blue-100">
-                Try attendance, fees, exams, report cards, notices, admissions,
-                teacher accounts and everything else before paying.
+              <h3 className="mt-2 text-2xl font-bold text-gray-950">
+                Full NEPSOM access
+              </h3>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-gray-600">
+                Available to every school, regardless of student count.
               </p>
             </div>
+
+            <div className="shrink-0 sm:text-right">
+              <div className="flex items-end gap-2 sm:justify-end">
+                <span className="text-5xl font-bold tracking-tight text-gray-950">NPR 0</span>
+              </div>
+              <p className="mt-1 text-sm font-semibold text-green-700">100% free for now</p>
+            </div>
+          </div>
+
+          <div className="my-7 h-px bg-gray-100" />
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              'Student and teacher management',
+              'Attendance and fee records',
+              'Exams, results and report cards',
+              'Notices and communication',
+              'Admissions and documents',
+              'School website and accounts',
+            ].map((feature) => (
+              <div key={feature} className="flex items-center gap-2.5 text-sm text-gray-700">
+                <Check className="h-4 w-4 shrink-0 text-green-600" strokeWidth={2.2} />
+                <span>{feature}</span>
+              </div>
+            ))}
           </div>
 
           <Link
             href="/auth/signup"
-            className="flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 sm:inline-flex sm:w-auto"
+            className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
           >
-            Start free
+            Register your school for free
             <ArrowRight className="h-4 w-4" strokeWidth={2} />
           </Link>
         </div>
-      </div>
+      </article>
     </div>
 
-    {/* Billing toggle */}
-    <div className="mt-10 flex justify-center">
-      <div className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 shadow-sm">
-        <button
-          type="button"
-          onClick={() => setYearly(false)}
-          className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all ${
-            !yearly
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-gray-600 hover:text-gray-950'
-          }`}
-        >
-          Monthly
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setYearly(true)}
-          className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all ${
-            yearly
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-gray-600 hover:text-gray-950'
-          }`}
-        >
-          Yearly
-
-          <span
-            className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
-              yearly
-                ? 'bg-green-400 text-green-950'
-                : 'bg-green-100 text-green-700'
-            }`}
-          >
-            Save 35%
-          </span>
-        </button>
-      </div>
-    </div>
-
-    {/* Pricing cards — every school receives the same complete NEPSOM product. */}
-    <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-      {plans.map((plan) => {
-        const isFree = plan.monthly === 0;
-        const displayPrice = yearly ? plan.yearly : plan.monthly;
-        const saving = plan.monthly * 12 - plan.yearly;
-
-        return (
-          <article
-            key={plan.label}
-            className={`relative flex min-h-[335px] flex-col rounded-[24px] bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
-              plan.popular
-                ? 'border-2 border-blue-600 shadow-xl shadow-blue-600/10'
-                : 'border border-gray-200 shadow-sm hover:border-blue-200'
-            }`}
-          >
-            {plan.popular && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-blue-600 px-4 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white shadow-sm">
-                Most popular
-              </div>
-            )}
-
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-600">
-              School size
-            </p>
-
-            <p className="mt-3 text-lg font-bold text-gray-950">{plan.label}</p>
-
-            <div className="mt-5 flex items-end gap-1">
-              <span className="text-4xl font-bold tracking-tight text-gray-950">
-                NPR {displayPrice.toLocaleString()}
-              </span>
-              <span className="pb-1 text-sm font-medium text-gray-500">
-                {isFree ? '/ forever' : yearly ? '/ year' : '/ month'}
-              </span>
-            </div>
-
-            {!isFree && yearly && (
-              <p className="mt-2 text-xs font-semibold text-green-700">
-                Save NPR {saving.toLocaleString()} per year
-              </p>
-            )}
-
-            <div className="my-6 h-px bg-gray-100" />
-
-            <div className="flex flex-1 items-start gap-2.5 text-sm leading-6 text-gray-700">
-              <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" strokeWidth={2.2} />
-              <p>
-                <strong className="font-semibold text-gray-950">Full NEPSOM access.</strong>{' '}
-                Every school receives the same tools; only the student count changes the price.
-              </p>
-            </div>
-
-            <Link
-              href="/auth/signup"
-              className={`mt-7 flex items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition ${
-                plan.popular
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'border border-blue-600 text-blue-600 hover:bg-blue-50'
-              }`}
-            >
-              Start 30-day trial
-            </Link>
-          </article>
-        );
-      })}
-    </div>
-
-    {/* All plans explanation */}
-    <div className="mx-auto mt-12 max-w-4xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-7">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-          <ShieldCheck className="h-5 w-5" strokeWidth={1.8} />
-        </div>
-
-        <div>
-          <h3 className="text-base font-bold text-gray-950">
-            Every school gets the full NEPSOM experience
-          </h3>
-
-          <p className="mt-2 text-sm leading-6 text-gray-600">
-            We don't lock important school features behind expensive plans.
-            Attendance, fees, exams, report cards, notices, admissions, teacher
-            accounts, student accounts and your school website are included.
-            The only difference is the number of students at your school.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    {/* Promise line */}
-    <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-gray-600">
-      <span className="inline-flex items-center gap-2">
-        <Check className="h-4 w-4 text-green-600" strokeWidth={2} />
-        30 days free
-      </span>
-
-      <span className="inline-flex items-center gap-2">
-        <Check className="h-4 w-4 text-green-600" strokeWidth={2} />
-        No setup fee
-      </span>
-
-      <span className="inline-flex items-center gap-2">
-        <Check className="h-4 w-4 text-green-600" strokeWidth={2} />
-        Cancel anytime
-      </span>
-
-      <span className="inline-flex items-center gap-2">
-        <Check className="h-4 w-4 text-green-600" strokeWidth={2} />
-        Your data stays yours
-      </span>
+    <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-gray-600">
+      {['No subscription fee', 'No setup fee', 'All features included', 'Your data stays yours'].map((promise) => (
+        <span key={promise} className="inline-flex items-center gap-2">
+          <Check className="h-4 w-4 text-green-600" strokeWidth={2} />
+          {promise}
+        </span>
+      ))}
     </div>
   </div>
 </section>
