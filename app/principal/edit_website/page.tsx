@@ -10,6 +10,9 @@ import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
 import { supabase } from '@/lib/supabase';
 
+const DEFAULT_SCHOOL_MOTTO = 'Learning today. Leading tomorrow.';
+const DEFAULT_SCHOOL_DESCRIPTION = 'A welcoming school community dedicated to quality education, strong values, and the confidence every student needs to succeed.';
+
 type SchoolForm = {
   name: string;
   slug: string;
@@ -39,7 +42,7 @@ type SchoolForm = {
 
 const emptyForm: SchoolForm = {
   name: '', slug: '', school_type: '', school_level: '', established_year: '',
-  principal: '', motto: '', short_description: '', about_text: '',
+  principal: '', motto: DEFAULT_SCHOOL_MOTTO, short_description: DEFAULT_SCHOOL_DESCRIPTION, about_text: '',
   principal_message: '', mission: '', vision: '', theme_color: 'blue',
   logo_url: '', banner_url: '', phone: '', email: '', address: '',
   office_hours: '', facebook: '', instagram: '', youtube: '', facilities: '', activities: '',
@@ -104,8 +107,8 @@ export default function WebsiteEditorPage() {
       setForm({
         name: school.name ?? '', slug: school.slug ?? '', school_type: school.school_type ?? '',
         school_level: school.school_level ?? '', established_year: school.established_year?.toString() ?? '',
-        principal: school.principal ?? '', motto: school.motto ?? '',
-        short_description: school.short_description ?? '', about_text: school.about_text ?? '',
+        principal: school.principal ?? '', motto: school.motto?.trim() || DEFAULT_SCHOOL_MOTTO,
+        short_description: school.short_description?.trim() || DEFAULT_SCHOOL_DESCRIPTION, about_text: school.about_text ?? '',
         principal_message: school.principal_message ?? '', mission: school.mission ?? '', vision: school.vision ?? '',
         theme_color: school.theme_color ?? 'blue', logo_url: school.logo_url ?? '', banner_url: school.banner_url ?? '',
         phone: school.phone ?? '', email: school.email ?? '', address: school.address ?? '',
