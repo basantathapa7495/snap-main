@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, Clock3, Globe, GraduationCap, Loader2, Mail, MapPin, Menu, Phone, Quote, X } from 'lucide-react';
+import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, Clock3, Globe, GraduationCap, Image as ImageIcon, Loader2, Mail, MapPin, Menu, Phone, Quote, X } from 'lucide-react';
 
 type School = Record<string, any>;
 type NewsItem = { id: string; title: string; content: string | null; event_date: string | null; category: string | null; location: string | null; is_event: boolean | null };
@@ -70,7 +70,13 @@ export default function PublicSchoolPage() {
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-gray-50"><Loader2 className="h-8 w-8 animate-spin text-blue-600" /><span className="ml-3 font-medium text-gray-600">Loading school website…</span></div>;
   if (error || !school) return <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4"><div className="max-w-lg rounded-3xl border border-red-200 bg-white p-8 text-center shadow-sm"><AlertCircle className="mx-auto h-10 w-10 text-red-500" /><h1 className="mt-4 text-xl font-bold text-gray-950">School website unavailable</h1><p className="mt-2 text-sm leading-6 text-gray-600">{error}</p><Link href="/schools" className="mt-6 inline-flex rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white">Browse schools</Link></div></div>;
 
-  const nav = [['About','#about'],['Programs','#programs'],['Updates','#updates'],['Gallery','#gallery'],['Contact','#contact']];
+  const nav = [
+    { label: 'About', href: '#about', icon: Building2 },
+    { label: 'Programs', href: '#programs', icon: BookOpen },
+    { label: 'Updates', href: '#updates', icon: CalendarDays },
+    { label: 'Gallery', href: '#gallery', icon: ImageIcon },
+    { label: 'Contact', href: '#contact', icon: Mail },
+  ];
   return <div className="min-h-screen bg-white text-gray-900">
     <header className="sticky top-0 z-40 overflow-hidden border-b border-blue-100/80 bg-white/90 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
       {/* Soft navbar background */}
@@ -112,12 +118,13 @@ export default function PublicSchoolPage() {
 
         {/* Section links */}
         <nav className="mx-auto hidden items-center gap-1 lg:flex" aria-label="School website sections">
-          {nav.map(([label, href]) => (
+          {nav.map(({ label, href, icon: Icon }) => (
             <a
               key={href}
               href={href}
-              className="group/link relative rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-600 transition duration-200 hover:bg-white/80 hover:text-blue-700 hover:shadow-sm"
+              className="group/link relative flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-600 transition duration-200 hover:bg-white/80 hover:text-blue-700 hover:shadow-sm"
             >
+              <Icon className="h-4 w-4 shrink-0 transition duration-200 group-hover/link:scale-110" strokeWidth={2} />
               {label}
               <span className="absolute inset-x-3 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-transform duration-300 group-hover/link:scale-x-100" />
             </a>
@@ -155,13 +162,14 @@ export default function PublicSchoolPage() {
       {menuOpen && (
         <div className="relative border-t border-blue-100/80 bg-white/95 px-4 pb-5 pt-3 shadow-xl backdrop-blur-xl lg:hidden">
           <nav className="mx-auto max-w-7xl" aria-label="Mobile school website sections">
-            {nav.map(([label, href]) => (
+            {nav.map(({ label, href, icon: Icon }) => (
               <a
                 key={href}
                 href={href}
                 onClick={() => setMenuOpen(false)}
-                className="block rounded-xl px-3 py-3 text-sm font-semibold text-gray-700 transition hover:bg-blue-50 hover:pl-4 hover:text-blue-700"
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-gray-700 transition hover:bg-blue-50 hover:pl-4 hover:text-blue-700"
               >
+                <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
                 {label}
               </a>
             ))}
