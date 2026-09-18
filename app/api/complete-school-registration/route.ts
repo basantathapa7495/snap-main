@@ -19,8 +19,9 @@ type PendingSchool = {
 export async function POST(request: Request) {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !serviceRoleKey) {
+  if (!supabaseUrl || !serviceRoleKey || !publishableKey) {
     return NextResponse.json(
       { error: 'School setup is incomplete. Add SUPABASE_SECRET_KEY in Vercel.' },
       { status: 500 },
@@ -33,20 +34,44 @@ export async function POST(request: Request) {
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
+  const authenticated = createClient(supabaseUrl, publishableKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 
   const { data: { user }, error: userError } = await admin.auth.getUser(token);
   if (userError || !user) {
     return NextResponse.json({ error: 'Invalid or expired session.' }, { status: 401 });
   }
 
-  const { data: existingProfile, error: existingError } = await admin
+  let { data: existingProfile, error: existingError } = await admin
     .from('profiles')
     .select('role, school_id')
     .eq('user_id', user.id)
     .maybeSingle();
 
+  // Some Supabase secret-key configurations do not bypass table RLS for reads.
+  // Retry as the verified signed-in user, who may read their own profile.
   if (existingError) {
-    return NextResponse.json({ error: 'Could not check your school profile.' }, { status: 500 });
+    const fallback = await authenticated
+      .from('profiles')
+      .select('role, school_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    existingProfile = fallback.data;
+    existingError = fallback.error;
+  }
+
+  if (existingError) {
+    console.error('School profile check failed', {
+      code: existingError.code,
+      message: existingError.message,
+      userId: user.id,
+    });
+    return NextResponse.json(
+      { error: 'Could not check your school profile. Please sign out, sign in and try again.' },
+      { status: 500 },
+    );
   }
   if (existingProfile?.school_id) {
     return NextResponse.json(existingProfile);
