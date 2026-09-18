@@ -217,7 +217,7 @@ export default function PublicSchoolPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-slate-950/10" />
         </div>
 
-        <div className="relative mx-auto grid min-h-[560px] max-w-[1600px] items-center gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.65fr)] lg:px-10 lg:py-20 xl:px-12 2xl:px-16">
+        <div className="relative mx-auto grid min-h-[640px] max-w-[1600px] items-center gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.65fr)] lg:px-10 lg:py-20 xl:px-12 2xl:px-16">
           <div className="max-w-4xl">
             <span className={`inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-md ${theme.text.replace('text-', 'ring-')}`}>
               <Building2 className="h-3.5 w-3.5" />
@@ -258,9 +258,19 @@ export default function PublicSchoolPage() {
             </div>
           </div>
 
-          <aside className="hidden rounded-[28px] border border-white/20 bg-white/10 p-6 shadow-2xl shadow-slate-950/30 backdrop-blur-xl lg:block xl:p-7">
-            <div className="flex items-center gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/30 bg-white/15 shadow-lg">
+          <aside className="relative hidden min-h-[430px] overflow-hidden rounded-[32px] border border-white/25 bg-slate-950/45 p-7 shadow-2xl shadow-slate-950/40 backdrop-blur-xl lg:flex lg:flex-col xl:p-8">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-blue-500/25 blur-3xl" aria-hidden="true" />
+            <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-indigo-500/20 blur-3xl" aria-hidden="true" />
+            <div className="relative flex items-center justify-between">
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-200/20 bg-blue-400/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-100">
+                <Quote className="h-3.5 w-3.5" />
+                From the principal
+              </span>
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.8)]" aria-hidden="true" />
+            </div>
+
+            <div className="relative mt-6 flex items-center gap-4">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/30 bg-gradient-to-br from-blue-500/35 to-indigo-500/25 shadow-lg ring-4 ring-white/5">
                 {school.principal_image_url ? (
                   <NextImage src={school.principal_image_url} alt={`${school.principal || 'School principal'} portrait`} width={80} height={80} unoptimized className="h-full w-full rounded-full object-cover" />
                 ) : (
@@ -268,14 +278,21 @@ export default function PublicSchoolPage() {
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-200">Principal’s message</p>
-                <p className="mt-1 truncate text-base font-bold text-white">{school.principal || 'School Principal'}</p>
-                <p className="text-sm text-slate-300">Principal</p>
+                <p className="truncate text-lg font-extrabold text-white">{school.principal || 'School Principal'}</p>
+                <p className="mt-1 text-sm font-medium text-blue-100">Principal · {school.name}</p>
               </div>
             </div>
-            <div className="my-5 h-px bg-white/15" />
-            <Quote className="h-7 w-7 text-blue-200" />
-            <p className="mt-3 line-clamp-6 whitespace-pre-line text-sm leading-6 text-slate-100">{school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE}</p>
+
+            <div className="relative mt-6 flex-1 border-l-2 border-blue-300/40 pl-5">
+              <p className="whitespace-pre-line text-[15px] leading-7 text-slate-100">{school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE}</p>
+            </div>
+
+            {(school.address || school.established_year) && (
+              <div className="relative mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/15 pt-5 text-xs font-semibold text-slate-300">
+                {school.address && <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-blue-200" /><span className="line-clamp-1">{school.address}</span></span>}
+                {school.established_year && <span className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-blue-200" />Since {school.established_year} B.S.</span>}
+              </div>
+            )}
           </aside>
         </div>
       </section>
