@@ -51,9 +51,9 @@ export default function PublicSchoolPage() {
     const load = async () => {
       setLoading(true); setError('');
       try {
-        const { data: schoolRow, error: schoolError } = await supabase.from('schools').select('*').eq('slug', slug).eq('is_approved', true).maybeSingle();
+        const { data: schoolRow, error: schoolError } = await supabase.from('schools').select('*').eq('slug', slug).maybeSingle();
         if (schoolError) throw schoolError;
-        if (!schoolRow) throw new Error('We could not find an approved school website with this address.');
+        if (!schoolRow) throw new Error('We could not find a school website with this address, or it is still awaiting approval.');
         const schoolId = schoolRow.id;
         const [newsResult, noticesResult, awardsResult, testimonialsResult, galleryResult] = await Promise.all([
           supabase.from('news_events').select('id,title,content,event_date,category,location,is_event').eq('school_id', schoolId).order('created_at', { ascending: false }).limit(6),
@@ -207,6 +207,11 @@ export default function PublicSchoolPage() {
     </header>
 
     <main>
+      {school.is_approved === false && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-900">
+          Preview mode — your website is visible to you while the school is awaiting approval.
+        </div>
+      )}
       <section className="relative isolate overflow-hidden bg-slate-900 text-white">
         <div className="absolute inset-0">
           <NextImage
