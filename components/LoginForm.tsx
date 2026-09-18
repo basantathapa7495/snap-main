@@ -48,7 +48,7 @@ async function finishPendingSchoolRegistration() {
     throw new Error(result.error || 'Your school workspace could not be created.');
   }
   return result as { role: string; school_id: string };
-
+}
 
 export default function LoginForm() {
   const router = useRouter();
