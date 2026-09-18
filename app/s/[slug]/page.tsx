@@ -14,6 +14,9 @@ type AwardItem = { id: string; title: string; year: string | null; description: 
 type Testimonial = { id: string; name: string; role: string | null; content: string | null };
 type GalleryImage = { id: string; image_url: string; label: string | null };
 
+const DEFAULT_SCHOOL_MOTTO = 'Learning today. Leading tomorrow.';
+const DEFAULT_SCHOOL_DESCRIPTION = 'A welcoming school community dedicated to quality education, strong values, and the confidence every student needs to succeed.';
+
 const themes: Record<string, { solid: string; hover: string; soft: string; text: string; border: string }> = {
   blue: { solid: 'bg-blue-600', hover: 'hover:bg-blue-700', soft: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
   emerald: { solid: 'bg-emerald-600', hover: 'hover:bg-emerald-700', soft: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
@@ -66,6 +69,9 @@ export default function PublicSchoolPage() {
   const theme = themes[school?.theme_color] ?? themes.blue;
   const programs = useMemo(() => Array.isArray(school?.programs) ? school.programs : [], [school]);
   const whyChooseUs = useMemo(() => Array.isArray(school?.why_choose_us) ? school.why_choose_us : [], [school]);
+  const heroMotto = school?.motto?.trim() || DEFAULT_SCHOOL_MOTTO;
+  const heroDescription = school?.short_description?.trim() || DEFAULT_SCHOOL_DESCRIPTION;
+  const { typedText, typingComplete } = useTypingText(heroMotto);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-gray-50"><Loader2 className="h-8 w-8 animate-spin text-blue-600" /><span className="ml-3 font-medium text-gray-600">Loading school website…</span></div>;
   if (error || !school) return <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4"><div className="max-w-lg rounded-3xl border border-red-200 bg-white p-8 text-center shadow-sm"><AlertCircle className="mx-auto h-10 w-10 text-red-500" /><h1 className="mt-4 text-xl font-bold text-gray-950">School website unavailable</h1><p className="mt-2 text-sm leading-6 text-gray-600">{error}</p><Link href="/schools" className="mt-6 inline-flex rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white">Browse schools</Link></div></div>;
@@ -221,14 +227,17 @@ export default function PublicSchoolPage() {
               {school.name}
             </h1>
 
-            {school.motto && (
-              <p className="mt-5 max-w-3xl text-lg font-semibold leading-8 text-blue-100 sm:text-xl">
-                “{school.motto}”
-              </p>
-            )}
+            <p className="mt-5 min-h-8 max-w-3xl text-lg font-semibold leading-8 text-blue-100 sm:text-xl" aria-label={heroMotto}>
+              <span aria-hidden="true">“{typedText}</span>
+              <span
+                aria-hidden="true"
+                className={`ml-0.5 inline-block h-6 w-0.5 translate-y-1 rounded-full bg-blue-200 ${typingComplete ? 'animate-pulse' : ''}`}
+              />
+              <span aria-hidden="true">”</span>
+            </p>
 
             <p className="mt-5 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg">
-              {school.short_description || 'Discover our school, academic programs and supportive learning community.'}
+              {heroDescription}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -324,3 +333,35 @@ function InfoCard({ title, text, icon, theme }: { title: string; text: string; i
 function Contact({ icon, text, href }: { icon: React.ReactNode; text: string; href?: string }) { const content = <><span className="mt-0.5 [&>svg]:h-4 [&>svg]:w-4">{icon}</span><span className="whitespace-pre-line">{text}</span></>; return href ? <a href={href} className="flex items-start gap-3 hover:text-white">{content}</a> : <div className="flex items-start gap-3">{content}</div>; }
 function Social({ href, label, children }: { href: string; label: string; children: React.ReactNode }) { return <a href={href} target="_blank" rel="noreferrer" aria-label={label} className="rounded-lg bg-white/10 p-2.5 text-gray-300 hover:bg-white/15 hover:text-white [&>svg]:h-4 [&>svg]:w-4">{children}</a>; }
 function formatDate(value: string | null) { if (!value) return 'Recent'; const date = new Date(`${value}T00:00:00`); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-NP', { day: 'numeric', month: 'short', year: 'numeric' }).format(date); }
+
+
+function useTypingText(text: string, speed = 42) {
+  const [typedText, setTypedText] = useState('');
+  const [typingComplete, setTypingComplete] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setTypedText(text);
+      setTypingComplete(true);
+      return;
+    }
+
+    let characterIndex = 0;
+    setTypedText('');
+    setTypingComplete(false);
+
+    const timer = window.setInterval(() => {
+      characterIndex += 1;
+      setTypedText(text.slice(0, characterIndex));
+
+      if (characterIndex >= text.length) {
+        window.clearInterval(timer);
+        setTypingComplete(true);
+      }
+    }, speed);
+
+    return () => window.clearInterval(timer);
+  }, [text, speed]);
+
+  return { typedText, typingComplete };
+}
