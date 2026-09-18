@@ -71,13 +71,98 @@ export default function PublicSchoolPage() {
 
   const nav = [['About','#about'],['Programs','#programs'],['Updates','#updates'],['Gallery','#gallery'],['Contact','#contact']];
   return <div className="min-h-screen bg-white text-gray-900">
-    <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="#" className="flex min-w-0 items-center gap-3">{school.logo_url ? <img src={school.logo_url} alt={`${school.name} logo`} className="h-10 w-10 rounded-xl object-cover" /> : <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-white ${theme.solid}`}><GraduationCap className="h-5 w-5" /></div>}<div className="min-w-0"><p className="truncate text-sm font-bold text-gray-950 sm:text-base">{school.name}</p><p className="truncate text-xs text-gray-500">{school.school_level || school.school_type || 'School website'}</p></div></Link>
-        <nav className="hidden items-center gap-6 md:flex">{nav.map(([label,href]) => <a key={href} href={href} className="text-sm font-semibold text-gray-600 hover:text-gray-950">{label}</a>)}<Link href={`/s/${school.slug}/login`} className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white ${theme.solid} ${theme.hover}`}>Portal login</Link></nav>
-        <button onClick={() => setMenuOpen(!menuOpen)} className="rounded-lg p-2 text-gray-700 md:hidden" aria-label="Toggle navigation">{menuOpen ? <X /> : <Menu />}</button>
+    <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/95 shadow-sm backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:h-[72px] sm:px-6 lg:px-8">
+        {/* Brand */}
+        <Link href="#" className="flex min-w-0 shrink-0 items-center gap-3">
+          {school.logo_url ? (
+            <img
+              src={school.logo_url}
+              alt={`${school.name} logo`}
+              className="h-10 w-10 rounded-xl border border-gray-200 object-cover sm:h-11 sm:w-11"
+            />
+          ) : (
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-white sm:h-11 sm:w-11 ${theme.solid}`}>
+              <GraduationCap className="h-5 w-5" />
+            </div>
+          )}
+          <p className="max-w-[190px] truncate text-sm font-bold leading-tight text-gray-950 sm:max-w-[260px] sm:text-base lg:max-w-[300px]">
+            {school.name}
+          </p>
+        </Link>
+
+        {/* Section links */}
+        <nav className="mx-auto hidden items-center gap-1 lg:flex" aria-label="School website sections">
+          {nav.map(([label, href]) => (
+            <a
+              key={href}
+              href={href}
+              className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 hover:text-gray-950"
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+
+        {/* Actions */}
+        <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex">
+          <Link
+            href={`/s/${school.slug}/admission`}
+            className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition ${theme.solid} ${theme.hover}`}
+          >
+            Apply now
+          </Link>
+          <Link
+            href={`/s/${school.slug}/login`}
+            className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-gray-400 hover:bg-gray-50 hover:text-gray-950"
+          >
+            Login
+          </Link>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="ml-auto rounded-xl border border-gray-200 p-2.5 text-gray-700 transition hover:bg-gray-50 lg:hidden"
+          aria-label="Toggle navigation"
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </div>
-      {menuOpen && <div className="border-t border-gray-100 bg-white p-4 md:hidden">{nav.map(([label,href]) => <a key={href} href={href} onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-gray-700">{label}</a>)}<Link href={`/s/${school.slug}/login`} className={`mt-2 block rounded-xl px-4 py-3 text-center text-sm font-semibold text-white ${theme.solid}`}>Portal login</Link></div>}
+
+      {menuOpen && (
+        <div className="border-t border-gray-100 bg-white px-4 pb-5 pt-3 shadow-lg lg:hidden">
+          <nav className="mx-auto max-w-7xl" aria-label="Mobile school website sections">
+            {nav.map(([label, href]) => (
+              <a
+                key={href}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className="block rounded-xl px-3 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+              >
+                {label}
+              </a>
+            ))}
+            <div className="mt-3 grid grid-cols-2 gap-2 border-t border-gray-100 pt-4">
+              <Link
+                href={`/s/${school.slug}/admission`}
+                onClick={() => setMenuOpen(false)}
+                className={`rounded-xl px-4 py-3 text-center text-sm font-semibold text-white ${theme.solid} ${theme.hover}`}
+              >
+                Apply now
+              </Link>
+              <Link
+                href={`/s/${school.slug}/login`}
+                onClick={() => setMenuOpen(false)}
+                className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-center text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                Login
+              </Link>
+            </div>
+          </nav>
+        </div>
+      )}
     </header>
 
     <main>
