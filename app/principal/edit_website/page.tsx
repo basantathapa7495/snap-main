@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertCircle, BookOpen, Check, Eye, Globe2, Loader2, Palette,
-  RefreshCw, Save, Settings, ShieldCheck,
+  Image as ImageIcon, RefreshCw, Save, Settings, ShieldCheck, Upload,
 } from 'lucide-react';
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
@@ -62,6 +62,7 @@ export default function WebsiteEditorPage() {
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
@@ -118,6 +119,51 @@ export default function WebsiteEditorPage() {
   };
 
   useEffect(() => { void loadSchool(); }, []);
+
+  const uploadLogo = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !schoolId) return;
+
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setError('Please choose a PNG, JPG or WebP logo.');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError('The logo must be smaller than 2 MB.');
+      return;
+    }
+
+    setUploadingLogo(true);
+    setSaved(false);
+    setError('');
+    try {
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const filePath = `${schoolId}/logo/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from('school-assets')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('school-assets')
+        .getPublicUrl(filePath);
+      const logoUrl = publicUrlData.publicUrl;
+
+      const { error: schoolError } = await supabase
+        .from('schools')
+        .update({ logo_url: logoUrl })
+        .eq('id', schoolId);
+      if (schoolError) throw schoolError;
+
+      setForm((current) => ({ ...current, logo_url: logoUrl }));
+      setSaved(true);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Could not upload the school logo.');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const saveChanges = async () => {
     if (!schoolId) return;
@@ -192,7 +238,26 @@ export default function WebsiteEditorPage() {
                 <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
                   {activeTab === 'basic' && <div className="space-y-6"><SectionTitle title="Basic information" description="The main identity and introduction shown on your website." /><div className="grid gap-5 sm:grid-cols-2"><Field label="School name" value={form.name} onChange={(v) => update('name', v)} required /><Field label="Website slug" value={form.slug} onChange={(v) => update('slug', v)} prefix="nepsom.xyz/s/" required /><Field label="School type" value={form.school_type} onChange={(v) => update('school_type', v)} /><Field label="School level" value={form.school_level} onChange={(v) => update('school_level', v)} /><Field label="Established year (B.S.)" value={form.established_year} onChange={(v) => update('established_year', v)} type="number" /><Field label="Principal name" value={form.principal} onChange={(v) => update('principal', v)} /><Field label="School motto" value={form.motto} onChange={(v) => update('motto', v)} wide /><TextArea label="Short description" value={form.short_description} onChange={(v) => update('short_description', v)} rows={3} wide /></div></div>}
                   {activeTab === 'about' && <div className="space-y-6"><SectionTitle title="About and mission" description="Tell families what your school stands for." /><div className="grid gap-5"><TextArea label="About the school" value={form.about_text} onChange={(v) => update('about_text', v)} rows={6} /><TextArea label="Principal’s message" value={form.principal_message} onChange={(v) => update('principal_message', v)} rows={5} /><div className="grid gap-5 sm:grid-cols-2"><TextArea label="Mission" value={form.mission} onChange={(v) => update('mission', v)} rows={5} /><TextArea label="Vision" value={form.vision} onChange={(v) => update('vision', v)} rows={5} /></div><TextArea label="Facilities" value={form.facilities} onChange={(v) => update('facilities', v)} rows={3} /><TextArea label="Activities" value={form.activities} onChange={(v) => update('activities', v)} rows={3} /></div></div>}
-                  {activeTab === 'branding' && <div className="space-y-6"><SectionTitle title="Branding and contact" description="Control the look of the site and how families contact you." /><div><label className={labelClass}>Theme colour</label><div className="mt-3 flex flex-wrap gap-3">{['blue','emerald','purple','red','amber','teal'].map((color) => <button key={color} type="button" onClick={() => update('theme_color', color)} aria-label={`Use ${color} theme`} className={`h-11 w-11 rounded-full border-4 shadow-sm transition ${form.theme_color === color ? 'scale-110 border-gray-900' : 'border-white ring-1 ring-gray-200'}`} style={{ backgroundColor: color === 'blue' ? '#2563eb' : color === 'emerald' ? '#059669' : color === 'purple' ? '#9333ea' : color === 'red' ? '#dc2626' : color === 'amber' ? '#d97706' : '#0d9488' }} />)}</div></div><div className="grid gap-5 sm:grid-cols-2"><Field label="Logo image URL" value={form.logo_url} onChange={(v) => update('logo_url', v)} type="url" /><Field label="Banner image URL" value={form.banner_url} onChange={(v) => update('banner_url', v)} type="url" /><Field label="Phone" value={form.phone} onChange={(v) => update('phone', v)} /><Field label="Email" value={form.email} onChange={(v) => update('email', v)} type="email" /><Field label="Address" value={form.address} onChange={(v) => update('address', v)} wide /><Field label="Office hours" value={form.office_hours} onChange={(v) => update('office_hours', v)} wide /><Field label="Facebook URL" value={form.facebook} onChange={(v) => update('facebook', v)} type="url" /><Field label="Instagram URL" value={form.instagram} onChange={(v) => update('instagram', v)} type="url" /><Field label="YouTube URL" value={form.youtube} onChange={(v) => update('youtube', v)} type="url" /></div></div>}
+                  {activeTab === 'branding' && <div className="space-y-6"><SectionTitle title="Branding and contact" description="Control the look of the site and how families contact you." /><div><label className={labelClass}>Theme colour</label><div className="mt-3 flex flex-wrap gap-3">{['blue','emerald','purple','red','amber','teal'].map((color) => <button key={color} type="button" onClick={() => update('theme_color', color)} aria-label={`Use ${color} theme`} className={`h-11 w-11 rounded-full border-4 shadow-sm transition ${form.theme_color === color ? 'scale-110 border-gray-900' : 'border-white ring-1 ring-gray-200'}`} style={{ backgroundColor: color === 'blue' ? '#2563eb' : color === 'emerald' ? '#059669' : color === 'purple' ? '#9333ea' : color === 'red' ? '#dc2626' : color === 'amber' ? '#d97706' : '#0d9488' }} />)}</div></div><div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-5 sm:p-6">
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                      <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-lg ring-1 ring-blue-100">
+                        {form.logo_url ? (
+                          <img src={form.logo_url} alt="School logo preview" className="h-full w-full rounded-full object-cover" />
+                        ) : (
+                          <ImageIcon className="h-9 w-9 text-blue-300" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-950">School logo</h3>
+                        <p className="mt-1 text-sm leading-6 text-gray-600">Upload a square logo for the best circular result. PNG, JPG or WebP, up to 2 MB.</p>
+                        <label className={`mt-4 inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition ${uploadingLogo ? 'cursor-wait bg-blue-400' : 'bg-blue-600 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-md'}`}>
+                          {uploadingLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                          {uploadingLogo ? 'Uploading…' : form.logo_url ? 'Replace logo' : 'Upload logo'}
+                          <input type="file" accept="image/png,image/jpeg,image/webp" onChange={uploadLogo} disabled={uploadingLogo || !schoolId} className="sr-only" />
+                        </label>
+                      </div>
+                    </div>
+                  </div><div className="grid gap-5 sm:grid-cols-2"><Field label="Logo image URL (optional)" value={form.logo_url} onChange={(v) => update('logo_url', v)} type="url" /><Field label="Banner image URL" value={form.banner_url} onChange={(v) => update('banner_url', v)} type="url" /><Field label="Phone" value={form.phone} onChange={(v) => update('phone', v)} /><Field label="Email" value={form.email} onChange={(v) => update('email', v)} type="email" /><Field label="Address" value={form.address} onChange={(v) => update('address', v)} wide /><Field label="Office hours" value={form.office_hours} onChange={(v) => update('office_hours', v)} wide /><Field label="Facebook URL" value={form.facebook} onChange={(v) => update('facebook', v)} type="url" /><Field label="Instagram URL" value={form.instagram} onChange={(v) => update('instagram', v)} type="url" /><Field label="YouTube URL" value={form.youtube} onChange={(v) => update('youtube', v)} type="url" /></div></div>}
                 </section>
               </div>
             )}
