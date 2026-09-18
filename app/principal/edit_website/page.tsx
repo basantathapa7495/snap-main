@@ -12,6 +12,8 @@ import { supabase } from '@/lib/supabase';
 
 const DEFAULT_SCHOOL_MOTTO = 'Learning today. Leading tomorrow.';
 const DEFAULT_SCHOOL_DESCRIPTION = 'A welcoming school community dedicated to quality education, strong values, and the confidence every student needs to succeed.';
+const DEFAULT_PRINCIPAL_MESSAGE = 'Welcome to our school. We are committed to creating a safe, inspiring and inclusive learning environment where every student can discover their strengths, build strong character and prepare confidently for the future.';
+const DEFAULT_PRINCIPAL_IMAGE = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=900&q=85';
 
 type SchoolForm = {
   name: string;
@@ -24,6 +26,7 @@ type SchoolForm = {
   short_description: string;
   about_text: string;
   principal_message: string;
+  principal_image_url: string;
   mission: string;
   vision: string;
   theme_color: string;
@@ -43,7 +46,7 @@ type SchoolForm = {
 const emptyForm: SchoolForm = {
   name: '', slug: '', school_type: '', school_level: '', established_year: '',
   principal: '', motto: DEFAULT_SCHOOL_MOTTO, short_description: DEFAULT_SCHOOL_DESCRIPTION, about_text: '',
-  principal_message: '', mission: '', vision: '', theme_color: 'blue',
+  principal_message: DEFAULT_PRINCIPAL_MESSAGE, principal_image_url: '', mission: '', vision: '', theme_color: 'blue',
   logo_url: '', banner_url: '', phone: '', email: '', address: '',
   office_hours: '', facebook: '', instagram: '', youtube: '', facilities: '', activities: '',
 };
@@ -67,6 +70,7 @@ export default function WebsiteEditorPage() {
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingPrincipalPhoto, setUploadingPrincipalPhoto] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
@@ -98,7 +102,7 @@ export default function WebsiteEditorPage() {
 
       const { data: school, error: schoolError } = await supabase
         .from('schools')
-        .select('name, slug, school_type, school_level, established_year, principal, motto, short_description, about_text, principal_message, mission, vision, theme_color, logo_url, banner_url, phone, email, address, office_hours, facebook, instagram, youtube, facilities, activities')
+        .select('name, slug, school_type, school_level, established_year, principal, motto, short_description, about_text, principal_message, principal_image_url, mission, vision, theme_color, logo_url, banner_url, phone, email, address, office_hours, facebook, instagram, youtube, facilities, activities')
         .eq('id', profile.school_id)
         .single();
 
@@ -109,7 +113,7 @@ export default function WebsiteEditorPage() {
         school_level: school.school_level ?? '', established_year: school.established_year?.toString() ?? '',
         principal: school.principal ?? '', motto: school.motto?.trim() || DEFAULT_SCHOOL_MOTTO,
         short_description: school.short_description?.trim() || DEFAULT_SCHOOL_DESCRIPTION, about_text: school.about_text ?? '',
-        principal_message: school.principal_message ?? '', mission: school.mission ?? '', vision: school.vision ?? '',
+        principal_message: school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE, principal_image_url: school.principal_image_url ?? '', mission: school.mission ?? '', vision: school.vision ?? '',
         theme_color: school.theme_color ?? 'blue', logo_url: school.logo_url ?? '', banner_url: school.banner_url ?? '',
         phone: school.phone ?? '', email: school.email ?? '', address: school.address ?? '',
         office_hours: school.office_hours ?? '', facebook: school.facebook ?? '', instagram: school.instagram ?? '',
@@ -166,6 +170,51 @@ export default function WebsiteEditorPage() {
       setError(reason instanceof Error ? reason.message : 'Could not upload the school logo.');
     } finally {
       setUploadingLogo(false);
+    }
+  };
+
+  const uploadPrincipalPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !schoolId) return;
+
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setError('Please choose a PNG, JPG or WebP principal photo.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('The principal photo must be smaller than 5 MB.');
+      return;
+    }
+
+    setUploadingPrincipalPhoto(true);
+    setSaved(false);
+    setError('');
+    try {
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const filePath = `${schoolId}/principal/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from('school-assets')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('school-assets')
+        .getPublicUrl(filePath);
+      const principalImageUrl = publicUrlData.publicUrl;
+
+      const { error: schoolError } = await supabase
+        .from('schools')
+        .update({ principal_image_url: principalImageUrl })
+        .eq('id', schoolId);
+      if (schoolError) throw schoolError;
+
+      setForm((current) => ({ ...current, principal_image_url: principalImageUrl }));
+      setSaved(true);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Could not upload the principal photo.');
+    } finally {
+      setUploadingPrincipalPhoto(false);
     }
   };
 
@@ -286,7 +335,7 @@ export default function WebsiteEditorPage() {
 
                 <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
                   {activeTab === 'basic' && <div className="space-y-6"><SectionTitle title="Basic information" description="The main identity and introduction shown on your website." /><div className="grid gap-5 sm:grid-cols-2"><Field label="School name" value={form.name} onChange={(v) => update('name', v)} required /><Field label="Website slug" value={form.slug} onChange={(v) => update('slug', v)} prefix="nepsom.xyz/s/" required /><Field label="School type" value={form.school_type} onChange={(v) => update('school_type', v)} /><Field label="School level" value={form.school_level} onChange={(v) => update('school_level', v)} /><Field label="Established year (B.S.)" value={form.established_year} onChange={(v) => update('established_year', v)} type="number" /><Field label="Principal name" value={form.principal} onChange={(v) => update('principal', v)} /><Field label="School motto" value={form.motto} onChange={(v) => update('motto', v)} wide /><TextArea label="Short description" value={form.short_description} onChange={(v) => update('short_description', v)} rows={3} wide /></div></div>}
-                  {activeTab === 'about' && <div className="space-y-6"><SectionTitle title="About and mission" description="Tell families what your school stands for." /><div className="grid gap-5"><TextArea label="About the school" value={form.about_text} onChange={(v) => update('about_text', v)} rows={6} /><TextArea label="Principal’s message" value={form.principal_message} onChange={(v) => update('principal_message', v)} rows={5} /><div className="grid gap-5 sm:grid-cols-2"><TextArea label="Mission" value={form.mission} onChange={(v) => update('mission', v)} rows={5} /><TextArea label="Vision" value={form.vision} onChange={(v) => update('vision', v)} rows={5} /></div><TextArea label="Facilities" value={form.facilities} onChange={(v) => update('facilities', v)} rows={3} /><TextArea label="Activities" value={form.activities} onChange={(v) => update('activities', v)} rows={3} /></div></div>}
+                  {activeTab === 'about' && <div className="space-y-6"><SectionTitle title="About and mission" description="Tell families what your school stands for." /><div className="grid gap-5"><TextArea label="About the school" value={form.about_text} onChange={(v) => update('about_text', v)} rows={6} /><div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-5 sm:p-6"><div className="flex flex-col gap-5 sm:flex-row sm:items-center"><div className="h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-blue-100"><img src={form.principal_image_url || DEFAULT_PRINCIPAL_IMAGE} alt="Principal preview" className="h-full w-full object-cover" /></div><div className="flex-1"><h3 className="font-bold text-gray-950">Principal photo</h3><p className="mt-1 text-sm leading-6 text-gray-600">Upload a clear portrait. JPG, PNG or WebP, up to 5 MB.</p><label className={`mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition ${uploadingPrincipalPhoto ? 'cursor-wait bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}>{uploadingPrincipalPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}{uploadingPrincipalPhoto ? 'Uploading…' : form.principal_image_url ? 'Replace photo' : 'Upload photo'}<input type="file" accept="image/png,image/jpeg,image/webp" onChange={uploadPrincipalPhoto} disabled={uploadingPrincipalPhoto || !schoolId} className="sr-only" /></label></div></div></div><TextArea label="Principal’s message" value={form.principal_message} onChange={(v) => update('principal_message', v)} rows={6} /><div className="grid gap-5 sm:grid-cols-2"><TextArea label="Mission" value={form.mission} onChange={(v) => update('mission', v)} rows={5} /><TextArea label="Vision" value={form.vision} onChange={(v) => update('vision', v)} rows={5} /></div><TextArea label="Facilities" value={form.facilities} onChange={(v) => update('facilities', v)} rows={3} /><TextArea label="Activities" value={form.activities} onChange={(v) => update('activities', v)} rows={3} /></div></div>}
                   {activeTab === 'branding' && <div className="space-y-6"><SectionTitle title="Branding and contact" description="Control the look of the site and how families contact you." /><div><label className={labelClass}>Theme colour</label><div className="mt-3 flex flex-wrap gap-3">{['blue','emerald','purple','red','amber','teal'].map((color) => <button key={color} type="button" onClick={() => update('theme_color', color)} aria-label={`Use ${color} theme`} className={`h-11 w-11 rounded-full border-4 shadow-sm transition ${form.theme_color === color ? 'scale-110 border-gray-900' : 'border-white ring-1 ring-gray-200'}`} style={{ backgroundColor: color === 'blue' ? '#2563eb' : color === 'emerald' ? '#059669' : color === 'purple' ? '#9333ea' : color === 'red' ? '#dc2626' : color === 'amber' ? '#d97706' : '#0d9488' }} />)}</div></div><div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-5 sm:p-6">
                     <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
                       <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-lg ring-1 ring-blue-100">
