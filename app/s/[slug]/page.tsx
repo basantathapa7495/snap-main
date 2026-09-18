@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import NextImage from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, Clock3, Globe, GraduationCap, Loader2, Mail, MapPin, Menu, Phone, Quote, X } from 'lucide-react';
 
@@ -71,24 +72,42 @@ export default function PublicSchoolPage() {
 
   const nav = [['About','#about'],['Programs','#programs'],['Updates','#updates'],['Gallery','#gallery'],['Contact','#contact']];
   return <div className="min-h-screen bg-white text-gray-900">
-    <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/95 shadow-sm backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:h-[72px] sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 overflow-hidden border-b border-blue-100/80 bg-white/90 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+      {/* Soft navbar background */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-blue-50/90 via-white/80 to-indigo-50/90" aria-hidden="true" />
+      <div className="pointer-events-none absolute -left-16 -top-20 h-40 w-40 rounded-full bg-blue-300/20 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -right-12 -top-20 h-40 w-40 rounded-full bg-indigo-300/20 blur-3xl" aria-hidden="true" />
+
+      <div className="relative mx-auto flex h-[72px] max-w-7xl items-center px-4 sm:h-20 sm:px-6 lg:px-8">
         {/* Brand */}
-        <Link href="#" className="flex min-w-0 shrink-0 items-center gap-3">
-          {school.logo_url ? (
-            <img
-              src={school.logo_url}
-              alt={`${school.name} logo`}
-              className="h-10 w-10 rounded-xl border border-gray-200 object-cover sm:h-11 sm:w-11"
-            />
-          ) : (
-            <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-white sm:h-11 sm:w-11 ${theme.solid}`}>
-              <GraduationCap className="h-5 w-5" />
-            </div>
-          )}
-          <p className="max-w-[190px] truncate text-sm font-bold leading-tight text-gray-950 sm:max-w-[260px] sm:text-base lg:max-w-[300px]">
-            {school.name}
-          </p>
+        <Link href="#" className="group flex min-w-0 shrink-0 items-center gap-3">
+          <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 p-[2px] shadow-lg shadow-blue-500/20 transition duration-300 group-hover:scale-105 group-hover:rotate-2 group-hover:shadow-blue-500/30 sm:h-14 sm:w-14">
+            <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white p-1">
+              {school.logo_url ? (
+                <NextImage
+                  src={school.logo_url}
+                  alt={`${school.name} logo`}
+                  width={56}
+                  height={56}
+                  unoptimized
+                  className="h-full w-full rounded-full object-cover"
+                />
+              ) : (
+                <span className={`flex h-full w-full items-center justify-center rounded-full text-white ${theme.solid}`}>
+                  <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6" />
+                </span>
+              )}
+            </span>
+          </span>
+
+          <span className="min-w-0">
+            <span className="block max-w-[175px] truncate text-sm font-extrabold leading-tight tracking-tight text-gray-950 transition group-hover:text-blue-700 sm:max-w-[250px] sm:text-base lg:max-w-[280px]">
+              {school.name}
+            </span>
+            <span className="mt-1 hidden text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500 sm:block">
+              {school.school_level || school.school_type || 'Official school website'}
+            </span>
+          </span>
         </Link>
 
         {/* Section links */}
@@ -97,24 +116,26 @@ export default function PublicSchoolPage() {
             <a
               key={href}
               href={href}
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 hover:text-gray-950"
+              className="group/link relative rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-600 transition duration-200 hover:bg-white/80 hover:text-blue-700 hover:shadow-sm"
             >
               {label}
+              <span className="absolute inset-x-3 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-transform duration-300 group-hover/link:scale-x-100" />
             </a>
           ))}
         </nav>
 
         {/* Actions */}
-        <div className="ml-auto hidden shrink-0 items-center gap-2 lg:flex">
+        <div className="ml-auto hidden shrink-0 items-center gap-2.5 lg:flex">
           <Link
             href={`/s/${school.slug}/admission`}
-            className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition ${theme.solid} ${theme.hover}`}
+            className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition duration-300 hover:-translate-y-0.5 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl hover:shadow-blue-600/25"
           >
             Apply now
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
           </Link>
           <Link
             href={`/s/${school.slug}/login`}
-            className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:border-gray-400 hover:bg-gray-50 hover:text-gray-950"
+            className="rounded-xl bg-gray-950 px-4 py-2.5 text-sm font-bold text-white shadow-md transition duration-300 hover:-translate-y-0.5 hover:bg-gray-800 hover:shadow-lg"
           >
             Login
           </Link>
@@ -123,7 +144,7 @@ export default function PublicSchoolPage() {
         <button
           type="button"
           onClick={() => setMenuOpen(!menuOpen)}
-          className="ml-auto rounded-xl border border-gray-200 p-2.5 text-gray-700 transition hover:bg-gray-50 lg:hidden"
+          className="ml-auto rounded-xl border border-blue-100 bg-white/90 p-2.5 text-gray-700 shadow-sm transition duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 lg:hidden"
           aria-label="Toggle navigation"
           aria-expanded={menuOpen}
         >
@@ -132,30 +153,30 @@ export default function PublicSchoolPage() {
       </div>
 
       {menuOpen && (
-        <div className="border-t border-gray-100 bg-white px-4 pb-5 pt-3 shadow-lg lg:hidden">
+        <div className="relative border-t border-blue-100/80 bg-white/95 px-4 pb-5 pt-3 shadow-xl backdrop-blur-xl lg:hidden">
           <nav className="mx-auto max-w-7xl" aria-label="Mobile school website sections">
             {nav.map(([label, href]) => (
               <a
                 key={href}
                 href={href}
                 onClick={() => setMenuOpen(false)}
-                className="block rounded-xl px-3 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                className="block rounded-xl px-3 py-3 text-sm font-semibold text-gray-700 transition hover:bg-blue-50 hover:pl-4 hover:text-blue-700"
               >
                 {label}
               </a>
             ))}
-            <div className="mt-3 grid grid-cols-2 gap-2 border-t border-gray-100 pt-4">
+            <div className="mt-3 grid grid-cols-2 gap-2.5 border-t border-gray-100 pt-4">
               <Link
                 href={`/s/${school.slug}/admission`}
                 onClick={() => setMenuOpen(false)}
-                className={`rounded-xl px-4 py-3 text-center text-sm font-semibold text-white ${theme.solid} ${theme.hover}`}
+                className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-center text-sm font-bold text-white shadow-md shadow-blue-600/20 transition hover:from-blue-700 hover:to-indigo-700"
               >
                 Apply now
               </Link>
               <Link
                 href={`/s/${school.slug}/login`}
                 onClick={() => setMenuOpen(false)}
-                className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-center text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                className="rounded-xl bg-gray-950 px-4 py-3 text-center text-sm font-bold text-white shadow-md transition hover:bg-gray-800"
               >
                 Login
               </Link>
