@@ -63,6 +63,7 @@ export default function WebsiteEditorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
 
@@ -165,6 +166,51 @@ export default function WebsiteEditorPage() {
     }
   };
 
+  const uploadBanner = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !schoolId) return;
+
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      setError('Please choose a PNG, JPG or WebP background image.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('The background image must be smaller than 5 MB.');
+      return;
+    }
+
+    setUploadingBanner(true);
+    setSaved(false);
+    setError('');
+    try {
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const filePath = `${schoolId}/banner/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from('school-assets')
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('school-assets')
+        .getPublicUrl(filePath);
+      const bannerUrl = publicUrlData.publicUrl;
+
+      const { error: schoolError } = await supabase
+        .from('schools')
+        .update({ banner_url: bannerUrl })
+        .eq('id', schoolId);
+      if (schoolError) throw schoolError;
+
+      setForm((current) => ({ ...current, banner_url: bannerUrl }));
+      setSaved(true);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Could not upload the hero background.');
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
+
   const saveChanges = async () => {
     if (!schoolId) return;
     if (!form.name.trim() || !form.slug.trim()) {
@@ -257,7 +303,30 @@ export default function WebsiteEditorPage() {
                         </label>
                       </div>
                     </div>
-                  </div><div className="grid gap-5 sm:grid-cols-2"><Field label="Logo image URL (optional)" value={form.logo_url} onChange={(v) => update('logo_url', v)} type="url" /><Field label="Banner image URL" value={form.banner_url} onChange={(v) => update('banner_url', v)} type="url" /><Field label="Phone" value={form.phone} onChange={(v) => update('phone', v)} /><Field label="Email" value={form.email} onChange={(v) => update('email', v)} type="email" /><Field label="Address" value={form.address} onChange={(v) => update('address', v)} wide /><Field label="Office hours" value={form.office_hours} onChange={(v) => update('office_hours', v)} wide /><Field label="Facebook URL" value={form.facebook} onChange={(v) => update('facebook', v)} type="url" /><Field label="Instagram URL" value={form.instagram} onChange={(v) => update('instagram', v)} type="url" /><Field label="YouTube URL" value={form.youtube} onChange={(v) => update('youtube', v)} type="url" /></div></div>}
+                  </div>
+                  <div className="overflow-hidden rounded-2xl border border-indigo-100 bg-white shadow-sm">
+                    <div className="relative h-48 bg-slate-900 sm:h-56">
+                      <img src={form.banner_url || '/hero-image.png'} alt="Hero background preview" className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/75 via-blue-950/45 to-transparent" />
+                      <div className="absolute bottom-4 left-4">
+                        <span className="rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
+                          {form.banner_url ? 'Your uploaded background' : 'Default school background'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <h3 className="font-bold text-gray-950">Hero background image</h3>
+                        <p className="mt-1 text-sm leading-6 text-gray-600">Upload a wide classroom, campus or school photo. JPG, PNG or WebP, up to 5 MB.</p>
+                      </div>
+                      <label className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition ${uploadingBanner ? 'cursor-wait bg-indigo-400' : 'bg-indigo-600 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md'}`}>
+                        {uploadingBanner ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                        {uploadingBanner ? 'Uploading…' : form.banner_url ? 'Replace background' : 'Upload background'}
+                        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={uploadBanner} disabled={uploadingBanner || !schoolId} className="sr-only" />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="grid gap-5 sm:grid-cols-2"><Field label="Logo image URL (optional)" value={form.logo_url} onChange={(v) => update('logo_url', v)} type="url" /><Field label="Background image URL (optional)" value={form.banner_url} onChange={(v) => update('banner_url', v)} type="url" /><Field label="Phone" value={form.phone} onChange={(v) => update('phone', v)} /><Field label="Email" value={form.email} onChange={(v) => update('email', v)} type="email" /><Field label="Address" value={form.address} onChange={(v) => update('address', v)} wide /><Field label="Office hours" value={form.office_hours} onChange={(v) => update('office_hours', v)} wide /><Field label="Facebook URL" value={form.facebook} onChange={(v) => update('facebook', v)} type="url" /><Field label="Instagram URL" value={form.instagram} onChange={(v) => update('instagram', v)} type="url" /><Field label="YouTube URL" value={form.youtube} onChange={(v) => update('youtube', v)} type="url" /></div></div>}
                 </section>
               </div>
             )}
