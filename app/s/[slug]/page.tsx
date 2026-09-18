@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, Clock3, Globe, GraduationCap, Image as ImageIcon, Loader2, Mail, MapPin, Menu, Phone, Quote, X } from 'lucide-react';
+import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, Clock3, Globe, GraduationCap, Image as ImageIcon, Loader2, Mail, MapPin, Menu, Phone, Quote, UserRound, X } from 'lucide-react';
 
 type School = Record<string, any>;
 type NewsItem = { id: string; title: string; content: string | null; event_date: string | null; category: string | null; location: string | null; is_event: boolean | null };
@@ -17,7 +17,6 @@ type GalleryImage = { id: string; image_url: string; label: string | null };
 const DEFAULT_SCHOOL_MOTTO = 'Learning today. Leading tomorrow.';
 const DEFAULT_SCHOOL_DESCRIPTION = 'A welcoming school community dedicated to quality education, strong values, and the confidence every student needs to succeed.';
 const DEFAULT_PRINCIPAL_MESSAGE = 'Welcome to our school. We are committed to creating a safe, inspiring and inclusive learning environment where every student can discover their strengths, build strong character and prepare confidently for the future.';
-const DEFAULT_PRINCIPAL_IMAGE = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=900&q=85';
 
 const themes: Record<string, { solid: string; hover: string; soft: string; text: string; border: string }> = {
   blue: { solid: 'bg-blue-600', hover: 'hover:bg-blue-700', soft: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
@@ -218,7 +217,7 @@ export default function PublicSchoolPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-slate-950/10" />
         </div>
 
-        <div className="relative mx-auto flex min-h-[560px] max-w-7xl items-center px-5 py-16 sm:px-8 sm:py-20 lg:px-10 lg:py-20 xl:px-12">
+        <div className="relative mx-auto grid min-h-[560px] max-w-[1600px] items-center gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.65fr)] lg:px-10 lg:py-20 xl:px-12 2xl:px-16">
           <div className="max-w-4xl">
             <span className={`inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-md ${theme.text.replace('text-', 'ring-')}`}>
               <Building2 className="h-3.5 w-3.5" />
@@ -259,37 +258,25 @@ export default function PublicSchoolPage() {
             </div>
           </div>
 
-        </div>
-      </section>
-
-      <section className="relative overflow-hidden bg-slate-50 py-16 sm:py-24">
-        <div className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-blue-100/70 blur-3xl" aria-hidden="true" />
-        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[minmax(280px,.72fr)_minmax(0,1.28fr)] lg:gap-16 lg:px-8">
-          <div className="relative mx-auto w-full max-w-sm">
-            <div className={`absolute -inset-3 -rotate-3 rounded-[2rem] ${theme.soft}`} aria-hidden="true" />
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-slate-200 shadow-xl shadow-slate-900/10">
-              <NextImage
-                src={school.principal_image_url || DEFAULT_PRINCIPAL_IMAGE}
-                alt={`${school.principal || 'School principal'} portrait`}
-                fill
-                unoptimized
-                sizes="(max-width: 1024px) 384px, 32vw"
-                className="object-cover"
-              />
+          <aside className="hidden rounded-[28px] border border-white/20 bg-white/10 p-6 shadow-2xl shadow-slate-950/30 backdrop-blur-xl lg:block xl:p-7">
+            <div className="flex items-center gap-4">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/30 bg-white/15 shadow-lg">
+                {school.principal_image_url ? (
+                  <NextImage src={school.principal_image_url} alt={`${school.principal || 'School principal'} portrait`} width={80} height={80} unoptimized className="h-full w-full rounded-full object-cover" />
+                ) : (
+                  <UserRound className="h-9 w-9 text-blue-100" strokeWidth={1.8} />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-200">Principal’s message</p>
+                <p className="mt-1 truncate text-base font-bold text-white">{school.principal || 'School Principal'}</p>
+                <p className="text-sm text-slate-300">Principal</p>
+              </div>
             </div>
-          </div>
-          <div>
-            <Eyebrow text="Principal’s message" color={theme.text} />
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl">A warm welcome from our principal</h2>
-            <Quote className={`mt-7 h-10 w-10 ${theme.text}`} />
-            <blockquote className="mt-4 whitespace-pre-line text-lg leading-8 text-gray-700 sm:text-xl sm:leading-9">
-              {school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE}
-            </blockquote>
-            <div className="mt-7 border-l-4 border-blue-600 pl-4">
-              <p className="font-bold text-gray-950">{school.principal || 'School Principal'}</p>
-              <p className="mt-0.5 text-sm font-medium text-gray-500">Principal, {school.name}</p>
-            </div>
-          </div>
+            <div className="my-5 h-px bg-white/15" />
+            <Quote className="h-7 w-7 text-blue-200" />
+            <p className="mt-3 line-clamp-6 whitespace-pre-line text-sm leading-6 text-slate-100">{school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE}</p>
+          </aside>
         </div>
       </section>
 
