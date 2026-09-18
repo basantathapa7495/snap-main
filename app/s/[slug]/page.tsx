@@ -16,6 +16,8 @@ type GalleryImage = { id: string; image_url: string; label: string | null };
 
 const DEFAULT_SCHOOL_MOTTO = 'Learning today. Leading tomorrow.';
 const DEFAULT_SCHOOL_DESCRIPTION = 'A welcoming school community dedicated to quality education, strong values, and the confidence every student needs to succeed.';
+const DEFAULT_PRINCIPAL_MESSAGE = 'Welcome to our school. We are committed to creating a safe, inspiring and inclusive learning environment where every student can discover their strengths, build strong character and prepare confidently for the future.';
+const DEFAULT_PRINCIPAL_IMAGE = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=900&q=85';
 
 const themes: Record<string, { solid: string; hover: string; soft: string; text: string; border: string }> = {
   blue: { solid: 'bg-blue-600', hover: 'hover:bg-blue-700', soft: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
@@ -216,7 +218,7 @@ export default function PublicSchoolPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-slate-950/10" />
         </div>
 
-        <div className="relative mx-auto grid min-h-[560px] max-w-[1600px] items-center gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.65fr)] lg:px-10 lg:py-20 xl:px-12 2xl:px-16">
+        <div className="relative mx-auto flex min-h-[560px] max-w-7xl items-center px-5 py-16 sm:px-8 sm:py-20 lg:px-10 lg:py-20 xl:px-12">
           <div className="max-w-4xl">
             <span className={`inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-md ${theme.text.replace('text-', 'ring-')}`}>
               <Building2 className="h-3.5 w-3.5" />
@@ -257,62 +259,41 @@ export default function PublicSchoolPage() {
             </div>
           </div>
 
-          <aside className="hidden rounded-[28px] border border-white/20 bg-white/10 p-6 shadow-2xl shadow-slate-950/30 backdrop-blur-xl lg:block xl:p-7">
-            <div className="flex items-center gap-4 border-b border-white/15 pb-5">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/30 bg-white/15 shadow-lg">
-                {school.logo_url ? (
-                  <NextImage
-                    src={school.logo_url}
-                    alt={`${school.name} logo`}
-                    width={64}
-                    height={64}
-                    unoptimized
-                    className="h-full w-full rounded-full object-cover"
-                  />
-                ) : (
-                  <GraduationCap className="h-7 w-7 text-white" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-200">School information</p>
-                <p className="mt-1 line-clamp-2 font-bold leading-6 text-white">{school.name}</p>
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              {(school.school_level || school.school_type) && (
-                <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-3.5">
-                  <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-blue-200" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">School level</p>
-                    <p className="mt-1 text-sm font-semibold text-white">{school.school_level || school.school_type}</p>
-                  </div>
-                </div>
-              )}
-              {school.established_year && (
-                <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-3.5">
-                  <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-blue-200" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">Established</p>
-                    <p className="mt-1 text-sm font-semibold text-white">{school.established_year} B.S.</p>
-                  </div>
-                </div>
-              )}
-              {school.address && (
-                <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-3.5">
-                  <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-blue-200" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">Location</p>
-                    <p className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-white">{school.address}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </aside>
         </div>
       </section>
 
-      <section id="about" className="scroll-mt-24 py-16 sm:py-24"><div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.3fr_.7fr] lg:px-8"><div><Eyebrow text="About our school" color={theme.text} /><h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">Learning, character and opportunity</h2><p className="mt-5 whitespace-pre-line text-base leading-8 text-gray-600">{school.about_text || school.short_description || 'School information will appear here.'}</p>{(school.mission || school.vision) && <div className="mt-8 grid gap-4 sm:grid-cols-2">{school.mission && <InfoCard title="Our mission" text={school.mission} icon={<BookOpen className="h-5 w-5" />} theme={theme} />}{school.vision && <InfoCard title="Our vision" text={school.vision} icon={<GraduationCap className="h-5 w-5" />} theme={theme} />}</div>}</div><div className={`rounded-3xl border p-7 ${theme.border} ${theme.soft}`}><Quote className={`h-8 w-8 ${theme.text}`} /><p className="mt-5 whitespace-pre-line text-base leading-7 text-gray-700">{school.principal_message || 'Welcome to our school community.'}</p><p className="mt-6 font-bold text-gray-950">{school.principal || 'School Principal'}</p><p className="text-sm text-gray-500">Principal</p></div></div></section>
+      <section className="relative overflow-hidden bg-slate-50 py-16 sm:py-24">
+        <div className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-blue-100/70 blur-3xl" aria-hidden="true" />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[minmax(280px,.72fr)_minmax(0,1.28fr)] lg:gap-16 lg:px-8">
+          <div className="relative mx-auto w-full max-w-sm">
+            <div className={`absolute -inset-3 -rotate-3 rounded-[2rem] ${theme.soft}`} aria-hidden="true" />
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-slate-200 shadow-xl shadow-slate-900/10">
+              <NextImage
+                src={school.principal_image_url || DEFAULT_PRINCIPAL_IMAGE}
+                alt={`${school.principal || 'School principal'} portrait`}
+                fill
+                unoptimized
+                sizes="(max-width: 1024px) 384px, 32vw"
+                className="object-cover"
+              />
+            </div>
+          </div>
+          <div>
+            <Eyebrow text="Principal’s message" color={theme.text} />
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl">A warm welcome from our principal</h2>
+            <Quote className={`mt-7 h-10 w-10 ${theme.text}`} />
+            <blockquote className="mt-4 whitespace-pre-line text-lg leading-8 text-gray-700 sm:text-xl sm:leading-9">
+              {school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE}
+            </blockquote>
+            <div className="mt-7 border-l-4 border-blue-600 pl-4">
+              <p className="font-bold text-gray-950">{school.principal || 'School Principal'}</p>
+              <p className="mt-0.5 text-sm font-medium text-gray-500">Principal, {school.name}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" className="scroll-mt-24 py-16 sm:py-24"><div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8"><Eyebrow text="About our school" color={theme.text} /><h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">Learning, character and opportunity</h2><p className="mt-5 whitespace-pre-line text-base leading-8 text-gray-600">{school.about_text || school.short_description || 'School information will appear here.'}</p>{(school.mission || school.vision) && <div className="mt-8 grid gap-4 sm:grid-cols-2">{school.mission && <InfoCard title="Our mission" text={school.mission} icon={<BookOpen className="h-5 w-5" />} theme={theme} />}{school.vision && <InfoCard title="Our vision" text={school.vision} icon={<GraduationCap className="h-5 w-5" />} theme={theme} />}</div>}</div></section>
 
       {(programs.length > 0 || whyChooseUs.length > 0 || school.facilities || school.activities) && <section id="programs" className="scroll-mt-24 bg-gray-50 py-16 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div className="max-w-2xl"><Eyebrow text="School experience" color={theme.text} /><h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">What students can expect</h2></div><div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{programs.map((item: any, index: number) => <InfoCard key={`${item.title}-${index}`} title={item.title || 'Academic program'} text={item.desc || item.description || ''} icon={<BookOpen className="h-5 w-5" />} theme={theme} />)}{whyChooseUs.map((item: any, index: number) => <InfoCard key={`${item.title}-${index}`} title={item.title || 'Why choose us'} text={item.desc || item.description || ''} icon={<CheckCircle2 className="h-5 w-5" />} theme={theme} />)}{school.facilities && <InfoCard title="Facilities" text={school.facilities} icon={<Building2 className="h-5 w-5" />} theme={theme} />}{school.activities && <InfoCard title="Activities" text={school.activities} icon={<GraduationCap className="h-5 w-5" />} theme={theme} />}</div></div></section>}
 
