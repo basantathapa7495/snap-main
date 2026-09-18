@@ -12,6 +12,11 @@ import { supabase } from '@/lib/supabase';
 
 const DEFAULT_SCHOOL_MOTTO = 'Learning today. Leading tomorrow.';
 const DEFAULT_SCHOOL_DESCRIPTION = 'A welcoming school community dedicated to quality education, strong values, and the confidence every student needs to succeed.';
+const DEFAULT_ABOUT_TEXT = 'Our school is a caring and inclusive learning community where every child is encouraged to grow academically, socially and personally. We work closely with families to provide meaningful learning experiences, strong values and opportunities that prepare students for a successful future.';
+const DEFAULT_MISSION = 'To provide a safe, supportive and engaging learning environment that develops knowledge, confidence, creativity and good character in every student.';
+const DEFAULT_VISION = 'To become a trusted centre of learning where students are inspired to achieve their potential and grow into responsible, capable and compassionate citizens.';
+const DEFAULT_FACILITIES = 'Bright classrooms, a well-stocked library, science and computer learning spaces, safe play areas and supportive resources designed for effective learning.';
+const DEFAULT_ACTIVITIES = 'Sports, arts, cultural programmes, clubs, educational visits and community activities that help students discover talents, build teamwork and develop leadership skills.';
 const DEFAULT_PRINCIPAL_MESSAGE = 'Welcome to our school. We are committed to creating a safe, inspiring and inclusive learning environment where every student can discover their strengths, build strong character and prepare confidently for the future.';
 
 type SchoolForm = {
@@ -44,10 +49,10 @@ type SchoolForm = {
 
 const emptyForm: SchoolForm = {
   name: '', slug: '', school_type: '', school_level: '', established_year: '',
-  principal: '', motto: DEFAULT_SCHOOL_MOTTO, short_description: DEFAULT_SCHOOL_DESCRIPTION, about_text: '',
-  principal_message: DEFAULT_PRINCIPAL_MESSAGE, principal_image_url: '', mission: '', vision: '', theme_color: 'blue',
+  principal: '', motto: DEFAULT_SCHOOL_MOTTO, short_description: DEFAULT_SCHOOL_DESCRIPTION, about_text: DEFAULT_ABOUT_TEXT,
+  principal_message: DEFAULT_PRINCIPAL_MESSAGE, principal_image_url: '', mission: DEFAULT_MISSION, vision: DEFAULT_VISION, theme_color: 'blue',
   logo_url: '', banner_url: '', phone: '', email: '', address: '',
-  office_hours: '', facebook: '', instagram: '', youtube: '', facilities: '', activities: '',
+  office_hours: '', facebook: '', instagram: '', youtube: '', facilities: DEFAULT_FACILITIES, activities: DEFAULT_ACTIVITIES,
 };
 
 const tabs = [
@@ -111,12 +116,12 @@ export default function WebsiteEditorPage() {
         name: school.name ?? '', slug: school.slug ?? '', school_type: school.school_type ?? '',
         school_level: school.school_level ?? '', established_year: school.established_year?.toString() ?? '',
         principal: school.principal ?? '', motto: school.motto?.trim() || DEFAULT_SCHOOL_MOTTO,
-        short_description: school.short_description?.trim() || DEFAULT_SCHOOL_DESCRIPTION, about_text: school.about_text ?? '',
-        principal_message: school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE, principal_image_url: school.principal_image_url ?? '', mission: school.mission ?? '', vision: school.vision ?? '',
+        short_description: school.short_description?.trim() || DEFAULT_SCHOOL_DESCRIPTION, about_text: school.about_text?.trim() || DEFAULT_ABOUT_TEXT,
+        principal_message: school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE, principal_image_url: school.principal_image_url ?? '', mission: school.mission?.trim() || DEFAULT_MISSION, vision: school.vision?.trim() || DEFAULT_VISION,
         theme_color: school.theme_color ?? 'blue', logo_url: school.logo_url ?? '', banner_url: school.banner_url ?? '',
         phone: school.phone ?? '', email: school.email ?? '', address: school.address ?? '',
         office_hours: school.office_hours ?? '', facebook: school.facebook ?? '', instagram: school.instagram ?? '',
-        youtube: school.youtube ?? '', facilities: school.facilities ?? '', activities: school.activities ?? '',
+        youtube: school.youtube ?? '', facilities: school.facilities?.trim() || DEFAULT_FACILITIES, activities: school.activities?.trim() || DEFAULT_ACTIVITIES,
       });
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not load your school website.');
