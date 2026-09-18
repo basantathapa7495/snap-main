@@ -101,37 +101,16 @@ export default function SignupPage() {
         return;
       }
 
-      // 2. Create School Record (Without registration number & motto)
-      const { data: schoolData, error: schoolError } = await supabase
-        .from('schools')
-        .insert({ ...pendingSchool, is_approved: false })
-        .select()
-        .single();
-      if (schoolError) { setError('Could not create school: ' + schoolError.message); setLoading(false); return; }
-
-      // 3. Create Profile Link
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({ user_id: userId, school_id: schoolData.id, role: 'admin', full_name: fullName });
-      if (profileError) { setError('Could not create profile: ' + profileError.message); setLoading(false); return; }
-
-      // 4. Auto-generate classes based on school level
-      let classNumbers: number[] = [];
-      if (schoolLevel === 'Primary') classNumbers = [1, 2, 3, 4, 5];
-      else if (schoolLevel === 'Basic') classNumbers = [1, 2, 3, 4, 5, 6, 7, 8];
-      else if (schoolLevel === 'Secondary') classNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-      else if (schoolLevel === 'Higher Secondary') classNumbers = [11, 12];
-
-      const classRows = classNumbers.map((n) => ({
-        school_id: schoolData.id,
-        class_number: n.toString(),
-        section_name: null,
-        class_name: `Class ${n}`,
-        name: `Class ${n}`,
-      }));
-
-      if (classRows.length > 0) {
-        await supabase.from('classes').insert(classRows);
+      // 2. Complete school setup through the protected server route.
+      const setupResponse = await fetch('/api/complete-school-registration', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authData.session.access_token}` },
+      });
+      const setupResult = await setupResponse.json();
+      if (!setupResponse.ok) {
+        setError('Could not create school: ' + (setupResult.error || 'Please try again.'));
+        setLoading(false);
+        return;
       }
 
       router.replace('/principal');
