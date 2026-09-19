@@ -18,6 +18,9 @@ export const metadata: Metadata = {
     'school website Nepal',
   ],
   authors: [{ name: 'NEPSOM Nepal' }],
+  appleWebApp: {
+    title: 'Nepsom',
+  },
   openGraph: {
     title: 'NEPSOM — School Management Software for Nepal',
     description:
