@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
 
 export default function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -134,26 +133,17 @@ useEffect(() => {
 
         {/* ===== Desktop actions (right) ===== */}
         <div className="hidden items-center gap-2 md:flex">
-          <Show when="signed-out">
-            <SignInButton>
-              <button type="button" className="rounded-full px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900">
-                Sign in
-              </button>
-            </SignInButton>
-            <SignUpButton>
-              <button type="button" className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-600/20 transition-all hover:bg-blue-700 hover:shadow-md active:scale-[0.98]">
-                Create account
-              </button>
-            </SignUpButton>
-          </Show>
-          <Show when="signed-in">
-            <UserButton />
-          </Show>
           <Link
             href="/auth/login"
             className="rounded-full px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
           >
-            School portal
+            Log in
+          </Link>
+          <Link
+            href="/auth/signup"
+            className="rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-600/20 transition-all hover:bg-blue-700 hover:shadow-md active:scale-[0.98]"
+          >
+            Register your school
           </Link>
         </div>
 
@@ -219,27 +209,19 @@ useEffect(() => {
             </a>
           ))}
           <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-4">
-            <Show when="signed-out">
-              <SignInButton>
-                <button type="button" className="px-4 py-2.5 text-center text-sm font-medium text-gray-600 transition-colors hover:text-gray-950">
-                  Sign in
-                </button>
-              </SignInButton>
-              <SignUpButton>
-                <button type="button" className="rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-[0.99]">
-                  Create account
-                </button>
-              </SignUpButton>
-            </Show>
-            <Show when="signed-in">
-              <div className="flex justify-center py-2"><UserButton /></div>
-            </Show>
             <Link
               href="/auth/login"
               onClick={() => setMobileOpen(false)}
               className="rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
             >
-              School portal
+              Log in
+            </Link>
+            <Link
+              href="/auth/signup"
+              onClick={() => setMobileOpen(false)}
+              className="rounded-xl bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-[0.99]"
+            >
+              Register your school
             </Link>
           </div>
         </div>

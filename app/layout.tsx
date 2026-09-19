@@ -1,5 +1,4 @@
 import AppNavWrapper from '@/components/AppNavWrapper';
-import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import './globals.css';
 
@@ -54,9 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ClerkProvider>
-          <AppNavWrapper>{children}</AppNavWrapper>
-        </ClerkProvider>
+        <AppNavWrapper>{children}</AppNavWrapper>
       </body>
     </html>
   );
