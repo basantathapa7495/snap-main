@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, Clock3, Globe, GraduationCap, Image as ImageIcon, Loader2, LogIn, Mail, MapPin, Menu, Phone, Quote, Sparkles, UserRound, X } from 'lucide-react';
+import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, Clock3, Globe, GraduationCap, Image as ImageIcon, Loader2, Mail, MapPin, Menu, Phone, Quote, UserRound, X } from 'lucide-react';
 
 type School = Record<string, any>;
 type NewsItem = { id: string; title: string; content: string | null; event_date: string | null; category: string | null; location: string | null; is_event: boolean | null };
@@ -92,23 +92,6 @@ export default function PublicSchoolPage() {
     return () => { cancelled = true; };
   }, [slug]);
 
-  useEffect(() => {
-    if (!menuOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenuOpen(false);
-    };
-
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', closeOnEscape);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', closeOnEscape);
-    };
-  }, [menuOpen]);
-
   const [themeName, templateName] = String(school?.theme_color || 'blue:modern').split(':');
   const theme = themes[themeName] ?? themes.blue;
   const template = templateName === 'classic' || templateName === 'bold' ? templateName : 'modern';
@@ -132,7 +115,7 @@ export default function PublicSchoolPage() {
     { label: 'Contact', href: '#contact', icon: Mail },
   ];
   return <div className={`min-h-screen text-gray-900 ${pageStyle}`}>
-    <header className="sticky top-0 z-40 border-b border-blue-100/80 bg-white/90 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+    <header className="sticky top-0 z-40 overflow-hidden border-b border-blue-100/80 bg-white/90 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
       {/* Soft navbar background */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-blue-50/90 via-white/80 to-indigo-50/90" aria-hidden="true" />
       <div className="pointer-events-none absolute -left-16 -top-20 h-40 w-40 rounded-full bg-blue-300/20 blur-3xl" aria-hidden="true" />
@@ -205,83 +188,47 @@ export default function PublicSchoolPage() {
         <button
           type="button"
           onClick={() => setMenuOpen(!menuOpen)}
-          className={`group relative ml-auto grid h-11 w-11 place-items-center overflow-hidden rounded-2xl border transition duration-300 lg:hidden ${menuOpen ? 'border-blue-400/60 bg-slate-950 text-white shadow-lg shadow-blue-500/25' : 'border-blue-100 bg-white/90 text-gray-700 shadow-sm hover:border-blue-300 hover:text-blue-700'}`}
-          aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+          className="ml-auto rounded-xl border border-blue-100 bg-white/90 p-2.5 text-gray-700 shadow-sm transition duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 lg:hidden"
+          aria-label="Toggle navigation"
           aria-expanded={menuOpen}
-          aria-controls="school-mobile-navigation"
         >
-          <span className={`absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 transition-opacity duration-300 ${menuOpen ? 'opacity-100' : 'opacity-0'}`} />
-          {menuOpen ? <X className="relative h-5 w-5 rotate-0 transition-transform duration-300" /> : <Menu className="relative h-5 w-5 transition-transform duration-300 group-hover:scale-110" />}
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      <div className={`fixed inset-x-0 bottom-0 top-[72px] z-40 bg-slate-950/55 backdrop-blur-sm transition-opacity duration-300 sm:top-20 lg:hidden ${menuOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`} onClick={() => setMenuOpen(false)} aria-hidden="true" />
-
-      <div
-        id="school-mobile-navigation"
-        className={`fixed bottom-0 right-0 top-[72px] z-50 w-full max-w-sm overflow-y-auto border-l border-white/10 bg-slate-950 text-white shadow-[-24px_0_80px_rgba(15,23,42,0.45)] transition-transform duration-500 ease-out sm:top-20 lg:hidden ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
-        aria-hidden={!menuOpen}
-        inert={!menuOpen}
-      >
-        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-          <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-blue-500/25 blur-3xl" />
-          <div className="absolute -bottom-24 -left-20 h-72 w-72 rounded-full bg-violet-600/20 blur-3xl" />
-          <div className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:28px_28px]" />
-        </div>
-
-        <nav className="relative flex min-h-full flex-col px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-6" aria-label="Mobile school website sections">
-          <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-5">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200">
-                <Sparkles className="h-3 w-3" /> Explore school
-              </span>
-              <p className="mt-3 max-w-[250px] text-lg font-extrabold leading-tight text-white">{school.name}</p>
-              <p className="mt-1 text-xs text-slate-400">Official school website</p>
-            </div>
-            <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,.9)]" />
-          </div>
-
-          <div className="mt-5 grid gap-2">
-            {nav.map(({ label, href, icon: Icon }, index) => (
+      {menuOpen && (
+        <div className="relative border-t border-blue-100/80 bg-white/95 px-4 pb-5 pt-3 shadow-xl backdrop-blur-xl lg:hidden">
+          <nav className="mx-auto max-w-7xl" aria-label="Mobile school website sections">
+            {nav.map(({ label, href, icon: Icon }) => (
               <a
                 key={href}
                 href={href}
                 onClick={() => setMenuOpen(false)}
-                className="group flex min-h-14 items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.05] px-3.5 py-3 transition duration-300 hover:translate-x-1 hover:border-blue-400/40 hover:bg-blue-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-gray-700 transition hover:bg-blue-50 hover:pl-4 hover:text-blue-700"
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-blue-300/15 bg-gradient-to-br from-blue-500/25 to-violet-500/20 text-cyan-200 shadow-inner shadow-white/5 transition group-hover:scale-105 group-hover:text-white">
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
-                </span>
-                <span className="flex-1 text-sm font-bold text-slate-100">{label}</span>
-                <span className="text-[10px] font-bold tabular-nums text-slate-600">0{index + 1}</span>
-                <ArrowRight className="h-4 w-4 text-slate-500 transition group-hover:translate-x-1 group-hover:text-cyan-200" />
+                <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
+                {label}
               </a>
             ))}
-          </div>
-
-          <div className="mt-auto pt-7">
-            <div className="grid gap-3">
+            <div className="mt-3 grid grid-cols-2 gap-2.5 border-t border-gray-100 pt-4">
               <Link
                 href={`/s/${school.slug}/admission`}
                 onClick={() => setMenuOpen(false)}
-                className="group relative flex min-h-14 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-600 px-5 py-3.5 text-sm font-extrabold text-white shadow-xl shadow-blue-950/50 transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-center text-sm font-bold text-white shadow-md shadow-blue-600/20 transition hover:from-blue-700 hover:to-indigo-700"
               >
-                <span className="absolute inset-y-0 -left-1/3 w-1/3 skew-x-[-18deg] bg-white/20 blur-sm transition-transform duration-700 group-hover:translate-x-[440%]" />
-                <span className="relative">Apply for admission</span>
-                <ArrowRight className="relative h-4 w-4 transition group-hover:translate-x-1" />
+                Apply now
               </Link>
               <Link
                 href={`/s/${school.slug}/login`}
                 onClick={() => setMenuOpen(false)}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.06] px-5 py-3 text-sm font-bold text-slate-200 transition hover:border-white/25 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
+                className="rounded-xl bg-gray-950 px-4 py-3 text-center text-sm font-bold text-white shadow-md transition hover:bg-gray-800"
               >
-                <LogIn className="h-4 w-4" /> Portal login
+                Login
               </Link>
             </div>
-            <p className="mt-5 text-center text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">Powered by NEPSOM</p>
-          </div>
-        </nav>
-      </div>
+          </nav>
+        </div>
+      )}
     </header>
 
     <main>
