@@ -64,7 +64,27 @@ export default function PublicSchoolPage() {
         ]);
         const firstError = [newsResult.error, noticesResult.error, awardsResult.error, testimonialsResult.error, galleryResult.error].find(Boolean);
         if (firstError) throw firstError;
-        if (!cancelled) { setSchool(schoolRow); setNews(newsResult.data ?? []); setNotices(noticesResult.data ?? []); setAwards(awardsResult.data ?? []); setTestimonials(testimonialsResult.data ?? []); setGallery(galleryResult.data ?? []); }
+        let websiteData = schoolRow;
+        const isDraftPreview = new URLSearchParams(window.location.search).get('preview') === '1';
+        if (isDraftPreview) {
+          const savedDraft = window.localStorage.getItem(`nepsom-website-draft:${schoolRow.slug}`);
+          if (savedDraft) {
+            try {
+              const parsed = JSON.parse(savedDraft) as { form?: Record<string, unknown> };
+              if (parsed.form) {
+                const draft = parsed.form;
+                websiteData = {
+                  ...schoolRow,
+                  ...draft,
+                  theme_color: `${String(draft.theme_color || 'blue')}:${String(draft.website_template || 'modern')}`,
+                };
+              }
+            } catch {
+              // Keep the published version if a browser draft is damaged.
+            }
+          }
+        }
+        if (!cancelled) { setSchool(websiteData); setNews(newsResult.data ?? []); setNotices(noticesResult.data ?? []); setAwards(awardsResult.data ?? []); setTestimonials(testimonialsResult.data ?? []); setGallery(galleryResult.data ?? []); }
       } catch (reason) { if (!cancelled) setError(reason instanceof Error ? reason.message : 'Could not load this school website.'); }
       finally { if (!cancelled) setLoading(false); }
     };
@@ -72,7 +92,12 @@ export default function PublicSchoolPage() {
     return () => { cancelled = true; };
   }, [slug]);
 
-  const theme = themes[school?.theme_color] ?? themes.blue;
+  const [themeName, templateName] = String(school?.theme_color || 'blue:modern').split(':');
+  const theme = themes[themeName] ?? themes.blue;
+  const template = templateName === 'classic' || templateName === 'bold' ? templateName : 'modern';
+  const isDraftPreview = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('preview') === '1';
+  const pageStyle = template === 'classic' ? 'font-serif' : template === 'bold' ? 'bg-slate-950' : 'bg-white';
+  const sectionRadius = template === 'classic' ? 'rounded-none' : template === 'bold' ? 'rounded-[2rem]' : 'rounded-[32px]';
   const programs = useMemo(() => Array.isArray(school?.programs) ? school.programs : [], [school]);
   const whyChooseUs = useMemo(() => Array.isArray(school?.why_choose_us) ? school.why_choose_us : [], [school]);
   const heroMotto = school?.motto?.trim() || DEFAULT_SCHOOL_MOTTO;
@@ -89,7 +114,7 @@ export default function PublicSchoolPage() {
     { label: 'Gallery', href: '#gallery', icon: ImageIcon },
     { label: 'Contact', href: '#contact', icon: Mail },
   ];
-  return <div className="min-h-screen bg-white text-gray-900">
+  return <div className={`min-h-screen text-gray-900 ${pageStyle}`}>
     <header className="sticky top-0 z-40 overflow-hidden border-b border-blue-100/80 bg-white/90 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
       {/* Soft navbar background */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-blue-50/90 via-white/80 to-indigo-50/90" aria-hidden="true" />
@@ -207,12 +232,17 @@ export default function PublicSchoolPage() {
     </header>
 
     <main>
-      {school.is_approved === false && (
+      {isDraftPreview && (
+        <div className="sticky top-[72px] z-30 border-b border-amber-300 bg-amber-100 px-4 py-3 text-center text-sm font-bold text-amber-950 sm:top-20">
+          Draft preview — only you can see these unpublished changes.
+        </div>
+      )}
+      {!isDraftPreview && school.is_approved === false && (
         <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-900">
           Preview mode — your website is visible to you while the school is awaiting approval.
         </div>
       )}
-      <section className="relative isolate overflow-hidden bg-slate-900 text-white">
+      <section className={`relative isolate overflow-hidden bg-slate-900 text-white ${template === 'classic' ? 'border-b-8 border-amber-500' : ''}`}>
         <div className="absolute inset-0">
           <NextImage
             src={school.banner_url || '/hero-image.png'}
@@ -227,14 +257,14 @@ export default function PublicSchoolPage() {
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-slate-950/10" />
         </div>
 
-        <div className="relative mx-auto grid min-h-[640px] max-w-[1600px] items-center gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.65fr)] lg:px-10 lg:py-20 xl:px-12 2xl:px-16">
+        <div className={`relative mx-auto grid max-w-[1600px] items-center gap-10 px-5 sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.65fr)] lg:px-10 xl:px-12 2xl:px-16 ${template === 'bold' ? 'min-h-[760px] py-24 sm:py-32' : 'min-h-[640px] py-16 sm:py-20'}`}>
           <div className="max-w-4xl">
             <span className={`inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-md ${theme.text.replace('text-', 'ring-')}`}>
               <Building2 className="h-3.5 w-3.5" />
               {school.school_type || 'Welcome to our school'}
             </span>
 
-            <h1 className="mt-6 max-w-4xl text-4xl font-extrabold leading-[1.05] tracking-tight drop-shadow-sm sm:text-5xl lg:text-6xl xl:text-7xl">
+            <h1 className={`mt-6 max-w-4xl leading-[1.05] drop-shadow-sm ${template === 'classic' ? 'text-4xl font-bold sm:text-5xl lg:text-6xl' : template === 'bold' ? 'text-5xl font-black uppercase tracking-tight sm:text-6xl lg:text-8xl' : 'text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl'}`}>
               {school.name}
             </h1>
 
@@ -268,7 +298,7 @@ export default function PublicSchoolPage() {
             </div>
           </div>
 
-          <aside className="relative hidden min-h-[430px] overflow-hidden rounded-[32px] border border-white/25 bg-slate-950/45 p-7 shadow-2xl shadow-slate-950/40 backdrop-blur-xl lg:flex lg:flex-col xl:p-8">
+          <aside className={`relative hidden min-h-[430px] overflow-hidden border border-white/25 bg-slate-950/45 p-7 shadow-2xl shadow-slate-950/40 backdrop-blur-xl lg:flex lg:flex-col xl:p-8 ${sectionRadius}`}>
             <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-blue-500/25 blur-3xl" aria-hidden="true" />
             <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-indigo-500/20 blur-3xl" aria-hidden="true" />
             <div className="relative flex items-center justify-between">
