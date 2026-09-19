@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://nepsom.xyz'),
   title: {
     default: 'NEPSOM — School Management Software for Nepal',
     template: '%s | NEPSOM',
@@ -17,7 +18,13 @@ export const metadata: Metadata = {
     'report card software Nepal',
     'school website Nepal',
   ],
-  authors: [{ name: 'NEPSOM Nepal' }],
+  authors: [{ name: 'NEPSOM Nepal', url: 'https://nepsom.xyz' }],
+  creator: 'NEPSOM Nepal',
+  publisher: 'NEPSOM Nepal',
+  category: 'Education Technology',
+  alternates: {
+    canonical: '/',
+  },
   applicationName: 'NEPSOM',
   manifest: '/manifest.json',
   icons: {
@@ -33,7 +40,19 @@ export const metadata: Metadata = {
     title: 'NEPSOM',
     statusBarStyle: 'default',
   },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   openGraph: {
+    url: '/',
     title: 'NEPSOM — School Management Software for Nepal',
     description:
       'Your school’s own website + attendance, fees, exams & report cards. Built for Nepal. Works on any phone.',
@@ -60,6 +79,36 @@ export const metadata: Metadata = {
   },
 };
 
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://nepsom.xyz/#organization',
+      name: 'NEPSOM',
+      url: 'https://nepsom.xyz',
+      logo: 'https://nepsom.xyz/web-app-manifest-512x512.png',
+      description: 'School management software and school website platform built for schools in Nepal.',
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: 'NEPSOM',
+      applicationCategory: 'EducationalApplication',
+      operatingSystem: 'Web',
+      url: 'https://nepsom.xyz',
+      description: 'Manage attendance, fees, exams, report cards, notices, students and teachers from one platform.',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'NPR',
+      },
+      provider: {
+        '@id': 'https://nepsom.xyz/#organization',
+      },
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -68,6 +117,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
         <AppNavWrapper>{children}</AppNavWrapper>
       </body>
     </html>
