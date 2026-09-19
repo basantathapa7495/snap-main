@@ -18,8 +18,20 @@ export const metadata: Metadata = {
     'school website Nepal',
   ],
   authors: [{ name: 'NEPSOM Nepal' }],
+  applicationName: 'NEPSOM',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icon0.svg', type: 'image/svg+xml' },
+      { url: '/icon1.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-icon.png',
+  },
   appleWebApp: {
-    title: 'Nepsom',
+    capable: true,
+    title: 'NEPSOM',
+    statusBarStyle: 'default',
   },
   openGraph: {
     title: 'NEPSOM — School Management Software for Nepal',
