@@ -154,10 +154,11 @@ export default function PublicSchoolPage() {
             <a
               key={href}
               href={href}
-              className="group/link flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 transition duration-200 hover:bg-white hover:text-blue-700 hover:shadow-sm"
+              className="group/link relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 transition duration-200 hover:bg-white hover:text-blue-700 hover:shadow-sm"
             >
               <Icon className="h-4 w-4 shrink-0 transition duration-200 group-hover/link:scale-110" strokeWidth={2} />
               {label}
+              <span className="absolute inset-x-3 -bottom-1 h-0.5 origin-center scale-x-0 rounded-full bg-blue-600 transition-transform duration-200 group-hover/link:scale-x-100" aria-hidden="true" />
             </a>
           ))}
         </nav>
@@ -208,7 +209,7 @@ export default function PublicSchoolPage() {
               <Link
                 href={`/s/${school.slug}/admission`}
                 onClick={() => setMenuOpen(false)}
-                className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-center text-sm font-bold text-white shadow-md shadow-blue-600/20 transition hover:from-blue-700 hover:to-indigo-700"
+                className={`rounded-xl px-4 py-3 text-center text-sm font-bold text-white shadow-sm transition ${theme.solid} ${theme.hover}`}
               >
                 Apply now
               </Link>
@@ -236,82 +237,80 @@ export default function PublicSchoolPage() {
           Preview mode — your website is visible to you while the school is awaiting approval.
         </div>
       )}
-      <section className={`school-honeycomb relative isolate overflow-hidden bg-slate-950 text-white ${template === 'classic' ? 'border-b-8 border-amber-500' : ''}`}>
+      <section className={`school-pattern-grid relative isolate overflow-hidden bg-white text-gray-950 ${template === 'classic' ? 'border-b-8 border-amber-500' : ''}`}>
 
         <div className={`relative z-10 mx-auto grid max-w-[1600px] items-center gap-10 px-5 sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.65fr)] lg:px-10 xl:px-12 2xl:px-16 ${template === 'bold' ? 'min-h-[760px] py-24 sm:py-32' : 'min-h-[640px] py-16 sm:py-20'}`}>
           <div className="max-w-4xl">
-            <span className={`inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-md ${theme.text.replace('text-', 'ring-')}`}>
+            <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest ${theme.border} ${theme.soft} ${theme.text}`}>
               <Building2 className="h-3.5 w-3.5" />
               {school.school_type || 'Welcome to our school'}
             </span>
 
-            <h1 className={`mt-6 max-w-4xl leading-[1.05] drop-shadow-sm ${template === 'classic' ? 'text-4xl font-bold sm:text-5xl lg:text-6xl' : template === 'bold' ? 'text-5xl font-black uppercase tracking-tight sm:text-6xl lg:text-8xl' : 'text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl'}`}>
+            <h1 className={`mt-6 max-w-4xl leading-[1.05] text-gray-950 ${template === 'classic' ? 'text-4xl font-bold sm:text-5xl lg:text-6xl' : template === 'bold' ? 'text-5xl font-black uppercase tracking-tight sm:text-6xl lg:text-8xl' : 'text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl'}`}>
               {school.name}
             </h1>
 
-            <p className="mt-5 min-h-8 max-w-3xl text-lg font-semibold leading-8 text-blue-100 sm:text-xl" aria-label={heroMotto}>
+            <p className={`mt-5 min-h-8 max-w-3xl text-lg font-semibold leading-8 sm:text-xl ${theme.text}`} aria-label={heroMotto}>
               <span aria-hidden="true">“{typedText}</span>
               <span
                 aria-hidden="true"
-                className={`ml-0.5 inline-block h-6 w-0.5 translate-y-1 rounded-full bg-blue-200 ${typingComplete ? 'animate-pulse' : ''}`}
+                className={`ml-0.5 inline-block h-6 w-0.5 translate-y-1 rounded-full bg-blue-600 ${typingComplete ? 'animate-pulse' : ''}`}
               />
               <span aria-hidden="true">”</span>
             </p>
 
-            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg">
+            <p className="mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
               {heroDescription}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href={`/s/${school.slug}/admission`}
-                className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3.5 text-sm font-bold text-white shadow-xl shadow-blue-950/30 transition duration-300 hover:-translate-y-0.5 hover:from-blue-500 hover:to-indigo-500"
+                className={`group inline-flex items-center gap-2 rounded-xl px-5 py-3.5 text-sm font-bold text-white shadow-lg transition duration-200 hover:-translate-y-0.5 ${theme.solid} ${theme.hover}`}
               >
                 Apply for admission
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <a
                 href="#contact"
-                className="rounded-xl border border-white/25 bg-white/10 px-5 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:-translate-y-0.5 hover:border-white/40 hover:bg-white/15"
+                className="rounded-xl border border-gray-300 bg-white px-5 py-3.5 text-sm font-bold text-gray-800 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
               >
                 Contact school
               </a>
             </div>
           </div>
 
-          <aside className={`relative hidden min-h-[430px] overflow-hidden border border-white/25 bg-slate-950/45 p-7 shadow-2xl shadow-slate-950/40 backdrop-blur-xl lg:flex lg:flex-col xl:p-8 ${sectionRadius}`}>
-            <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-blue-500/25 blur-3xl" aria-hidden="true" />
-            <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-indigo-500/20 blur-3xl" aria-hidden="true" />
+          <aside className={`relative hidden min-h-[430px] overflow-hidden border border-gray-200 bg-white/95 p-7 shadow-xl shadow-gray-200/70 lg:flex lg:flex-col xl:p-8 ${sectionRadius}`}>
             <div className="relative flex items-center justify-between">
-              <span className="inline-flex items-center gap-2 rounded-full border border-blue-200/20 bg-blue-400/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-100">
+              <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] ${theme.border} ${theme.soft} ${theme.text}`}>
                 <Quote className="h-3.5 w-3.5" />
                 From the principal
               </span>
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.8)]" aria-hidden="true" />
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
             </div>
 
             <div className="relative mt-6 flex items-center gap-4">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white/30 bg-gradient-to-br from-blue-500/35 to-indigo-500/25 shadow-lg ring-4 ring-white/5">
+              <div className={`flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white shadow-sm ${theme.border}`}>
                 {school.principal_image_url ? (
                   <NextImage src={school.principal_image_url} alt={`${school.principal || 'School principal'} portrait`} width={80} height={80} unoptimized className="h-full w-full rounded-full object-cover" />
                 ) : (
-                  <UserRound className="h-9 w-9 text-blue-100" strokeWidth={1.8} />
+                  <UserRound className={`h-9 w-9 ${theme.text}`} strokeWidth={1.8} />
                 )}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-lg font-extrabold text-white">{school.principal || 'School Principal'}</p>
-                <p className="mt-1 text-sm font-medium text-blue-100">Principal · {school.name}</p>
+                <p className="truncate text-lg font-extrabold text-gray-950">{school.principal || 'School Principal'}</p>
+                <p className="mt-1 text-sm font-medium text-gray-500">Principal · {school.name}</p>
               </div>
             </div>
 
-            <div className="relative mt-6 flex-1 border-l-2 border-blue-300/40 pl-5">
-              <p className="whitespace-pre-line text-[15px] leading-7 text-slate-100">{school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE}</p>
+            <div className={`relative mt-6 flex-1 border-l-2 pl-5 ${theme.border}`}>
+              <p className="whitespace-pre-line text-[15px] leading-7 text-gray-600">{school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE}</p>
             </div>
 
             {(school.address || school.established_year) && (
-              <div className="relative mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-white/15 pt-5 text-xs font-semibold text-slate-300">
-                {school.address && <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-blue-200" /><span className="line-clamp-1">{school.address}</span></span>}
-                {school.established_year && <span className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-blue-200" />Since {school.established_year} B.S.</span>}
+              <div className="relative mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-gray-200 pt-5 text-xs font-semibold text-gray-500">
+                {school.address && <span className="flex items-center gap-2"><MapPin className={`h-4 w-4 ${theme.text}`} /><span className="line-clamp-1">{school.address}</span></span>}
+                {school.established_year && <span className="flex items-center gap-2"><CalendarDays className={`h-4 w-4 ${theme.text}`} />Since {school.established_year} B.S.</span>}
               </div>
             )}
           </aside>
