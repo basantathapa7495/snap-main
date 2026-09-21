@@ -65,8 +65,8 @@ export default function PublicSchoolPage() {
         const firstError = [newsResult.error, noticesResult.error, awardsResult.error, testimonialsResult.error, galleryResult.error].find(Boolean);
         if (firstError) throw firstError;
         let websiteData = schoolRow;
-        const isDraftPreview = new URLSearchParams(window.location.search).get('preview') === '1';
-        if (isDraftPreview) {
+        const previewRequested = new URLSearchParams(window.location.search).get('preview') === '1';
+        if (previewRequested) {
           const savedDraft = window.localStorage.getItem(`nepsom-website-draft:${schoolRow.slug}`);
           if (savedDraft) {
             try {
@@ -95,7 +95,10 @@ export default function PublicSchoolPage() {
   const [themeName, templateName] = String(school?.theme_color || 'blue:modern').split(':');
   const theme = themes[themeName] ?? themes.blue;
   const template = templateName === 'classic' || templateName === 'bold' ? templateName : 'modern';
-  const isDraftPreview = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('preview') === '1';
+  const isDraftPreview = typeof window !== 'undefined'
+    && Boolean(school?.slug)
+    && new URLSearchParams(window.location.search).get('preview') === '1'
+    && Boolean(window.localStorage.getItem(`nepsom-website-draft:${school?.slug}`));
   const pageStyle = template === 'classic' ? 'font-serif' : template === 'bold' ? 'bg-slate-950' : 'bg-white';
   const sectionRadius = template === 'classic' ? 'rounded-none' : template === 'bold' ? 'rounded-[2rem]' : 'rounded-[32px]';
   const programs = useMemo(() => Array.isArray(school?.programs) ? school.programs : [], [school]);
