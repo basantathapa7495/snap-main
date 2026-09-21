@@ -146,7 +146,7 @@ export default function WebsiteEditorPage() {
         .select('id,image_url,label')
         .eq('school_id', profile.school_id)
         .order('created_at', { ascending: false })
-        .limit(5);
+        .limit(8);
       if (galleryError) throw galleryError;
       const storedTheme = school.theme_color ?? 'blue';
       const [themeColor, storedTemplate] = storedTheme.includes(':') ? storedTheme.split(':') : [storedTheme, 'modern'];
@@ -261,9 +261,9 @@ export default function WebsiteEditorPage() {
     event.target.value = '';
     if (!selectedFiles.length || !schoolId) return;
 
-    const remainingSlots = 5 - galleryImages.length;
+    const remainingSlots = 8 - galleryImages.length;
     if (remainingSlots <= 0) {
-      setError('You can add a maximum of 5 school photos. Remove one before uploading another.');
+      setError('You can add a maximum of 8 school photos. Remove one before uploading another.');
       return;
     }
     if (selectedFiles.length > remainingSlots) {
@@ -298,7 +298,7 @@ export default function WebsiteEditorPage() {
         if (insertError) throw insertError;
         newImages.push(galleryRow);
       }
-      setGalleryImages((current) => [...current, ...newImages].slice(0, 5));
+      setGalleryImages((current) => [...current, ...newImages].slice(0, 8));
       setSaved(false);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not upload the school photos.');
@@ -494,13 +494,13 @@ export default function WebsiteEditorPage() {
                   <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-5 sm:p-6">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <div className="flex items-center gap-2"><ImageIcon className="h-5 w-5 text-blue-600" /><h3 className="font-bold text-gray-950">Hero photo slider</h3></div>
-                        <p className="mt-1 text-sm leading-6 text-gray-600">Add 1–5 photos of your school, students, activities or campus. They will appear in the public website hero slider.</p>
+                        <div className="flex items-center gap-2"><ImageIcon className="h-5 w-5 text-blue-600" /><h3 className="font-bold text-gray-950">School photo gallery</h3></div>
+                        <p className="mt-1 text-sm leading-6 text-gray-600">Add up to 8 photos of your school, students, activities or campus. All photos appear in Gallery, and the first 5 also rotate in the hero.</p>
                       </div>
-                      <label className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition ${uploadingGallery || galleryImages.length >= 5 ? 'cursor-not-allowed bg-blue-300' : 'bg-blue-600 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-md'}`}>
+                      <label className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition ${uploadingGallery || galleryImages.length >= 8 ? 'cursor-not-allowed bg-blue-300' : 'bg-blue-600 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-md'}`}>
                         {uploadingGallery ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-                        {uploadingGallery ? 'Uploading…' : `Add photos (${galleryImages.length}/5)`}
-                        <input type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={uploadGalleryImages} disabled={uploadingGallery || galleryImages.length >= 5 || !schoolId} className="sr-only" />
+                        {uploadingGallery ? 'Uploading…' : `Add photos (${galleryImages.length}/8)`}
+                        <input type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={uploadGalleryImages} disabled={uploadingGallery || galleryImages.length >= 8 || !schoolId} className="sr-only" />
                       </label>
                     </div>
                     {galleryImages.length > 0 ? <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3">{galleryImages.map((image, index) => <figure key={image.id} className="group relative overflow-hidden rounded-2xl border-4 border-white bg-white shadow-sm ring-1 ring-blue-200"><NextImage src={image.image_url} alt={image.label || `School photo ${index + 1}`} width={640} height={480} unoptimized className="aspect-[4/3] h-full w-full object-cover" /><figcaption className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-gray-950/75 to-transparent px-3 pb-3 pt-8 text-xs font-semibold text-white">{image.label || `Photo ${index + 1}`}</figcaption><span className="absolute left-3 top-3 rounded-full bg-white/95 px-2 py-1 text-xs font-bold text-gray-700 shadow-sm">{index + 1}</span><button type="button" onClick={() => removeGalleryImage(image)} disabled={removingGalleryId === image.id} aria-label={`Remove ${image.label || `school photo ${index + 1}`}`} className="absolute right-3 top-3 rounded-lg bg-white/95 p-2 text-red-600 opacity-100 shadow-sm transition hover:bg-red-50 sm:opacity-0 sm:group-hover:opacity-100 disabled:cursor-wait"><Trash2 className="h-4 w-4" /></button></figure>)}</div> : <div className="mt-5 flex min-h-32 items-center justify-center rounded-xl border border-dashed border-blue-200 bg-white px-5 text-center text-sm text-gray-500">No hero photos yet. Add your first photo to create the school website slider.</div>}
