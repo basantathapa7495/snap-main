@@ -144,8 +144,8 @@ export default function HomePage() {
       <LandingNavbar />
 
       {/* ===== Hero ===== */}
-      <section className="relative overflow-hidden">
-        <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-12 sm:gap-12 sm:px-6 sm:py-16 md:grid-cols-2 md:py-24 lg:px-8">
+      <section className="nepsom-pattern-grid relative overflow-hidden">
+        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-8 px-4 py-12 sm:gap-12 sm:px-6 sm:py-16 md:grid-cols-2 md:py-24 lg:px-8">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
@@ -678,25 +678,8 @@ export default function HomePage() {
       {/* ===== How It Works ===== */}
 <section
   id="how"
-  className="relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
+  className="nepsom-pattern-dots relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
 >
-  {/* Background pattern */}
-  <div
-    className="pointer-events-none absolute inset-0 opacity-[0.035]"
-    style={{
-      backgroundImage:
-        'radial-gradient(circle, #2563eb 1px, transparent 1px)',
-      backgroundSize: '28px 28px',
-    }}
-    aria-hidden="true"
-  />
-
-  {/* Soft background glow */}
-  <div
-    className="pointer-events-none absolute left-1/2 top-20 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-blue-100/60 blur-[120px]"
-    aria-hidden="true"
-  />
-
   <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     {/* Heading */}
     <div className="mx-auto max-w-3xl text-center">
@@ -929,7 +912,7 @@ export default function HomePage() {
 </section>
 
      {/* ===== ⚖️ COMPARISON TABLE ===== */}
-<section className="relative py-14 sm:py-20 lg:py-24 overflow-hidden">
+<section className="nepsom-pattern-glow relative overflow-hidden py-14 sm:py-20 lg:py-24">
   {/* Subtle background gradient */}
   <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50 to-white pointer-events-none"></div>
   
@@ -1050,24 +1033,8 @@ export default function HomePage() {
       {/* ===== Features ===== */}
 <section
   id="features"
-  className="relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
+  className="nepsom-pattern-dots relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
 >
-  {/* Background decoration */}
-  <div
-    className="pointer-events-none absolute inset-0 opacity-[0.03]"
-    style={{
-      backgroundImage:
-        'radial-gradient(circle, #2563eb 1px, transparent 1px)',
-      backgroundSize: '28px 28px',
-    }}
-    aria-hidden="true"
-  />
-
-  <div
-    className="pointer-events-none absolute left-1/2 top-0 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-blue-100/70 blur-[120px]"
-    aria-hidden="true"
-  />
-
   <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     {/* Heading */}
     <div className="mx-auto max-w-3xl text-center">
@@ -1210,13 +1177,7 @@ export default function HomePage() {
       
 
       {/* ===== Testimonials ===== */}
-<section className="relative overflow-hidden bg-white py-14 sm:py-20 lg:py-28">
-  {/* Background glow */}
-  <div
-    className="pointer-events-none absolute left-1/2 top-0 h-[380px] w-[380px] -translate-x-1/2 rounded-full bg-blue-100/60 blur-[120px]"
-    aria-hidden="true"
-  />
-
+<section className="nepsom-pattern-glow relative overflow-hidden bg-white py-14 sm:py-20 lg:py-28">
   <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     {/* Heading */}
     <div className="mx-auto max-w-3xl text-center">
@@ -1425,21 +1386,8 @@ export default function HomePage() {
       {/* ===== Pricing ===== */}
 <section
   id="pricing"
-  className="relative scroll-mt-24 overflow-hidden bg-gray-50/70 py-14 sm:py-20 lg:py-28"
+  className="nepsom-pattern-dots relative scroll-mt-24 overflow-hidden bg-gray-50/70 py-14 sm:py-20 lg:py-28"
 >
-  <div
-    className="pointer-events-none absolute inset-0 opacity-[0.035]"
-    style={{
-      backgroundImage: 'radial-gradient(circle, #2563eb 1px, transparent 1px)',
-      backgroundSize: '28px 28px',
-    }}
-    aria-hidden="true"
-  />
-  <div
-    className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-blue-100 blur-[120px]"
-    aria-hidden="true"
-  />
-
   <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
     <div className="mx-auto max-w-3xl text-center">
       <span className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-green-700">
@@ -1528,10 +1476,7 @@ export default function HomePage() {
 </section>
 
 {/* ===== FAQ ===== */}
-<section id="faq" className="scroll-mt-24">
-  {/* Subtle background pattern */}
-  <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(#4f46e5 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
-  
+<section id="faq" className="nepsom-pattern-dots relative scroll-mt-24 overflow-hidden py-14 sm:py-20 lg:py-24">
   <div className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
     {/* Header */}
     <div className="text-center">
