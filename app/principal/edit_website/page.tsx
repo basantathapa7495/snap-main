@@ -84,14 +84,12 @@ export default function WebsiteEditorPage() {
   const [uploadingGallery, setUploadingGallery] = useState(false);
   const [removingGalleryId, setRemovingGalleryId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [lastAction, setLastAction] = useState<'draft' | 'published' | null>(null);
   const [error, setError] = useState('');
 
-  const previewHref = useMemo(() => publishedSlug ? `/s/${publishedSlug}?preview=1` : '', [publishedSlug]);
+  const previewHref = useMemo(() => publishedSlug ? `/s/${publishedSlug}` : '', [publishedSlug]);
 
   const update = (field: keyof SchoolForm, value: string) => {
     setSaved(false);
-    setLastAction(null);
     setForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -145,17 +143,7 @@ export default function WebsiteEditorPage() {
       setSchoolId(profile.school_id);
       setPublishedSlug(publishedForm.slug);
       setGalleryImages(galleryData ?? []);
-      const savedDraft = window.localStorage.getItem(`nepsom-website-draft:${publishedForm.slug}`);
-      if (savedDraft) {
-        try {
-          const parsed = JSON.parse(savedDraft) as { form?: SchoolForm };
-          setForm(parsed.form ? { ...publishedForm, ...parsed.form } : publishedForm);
-        } catch {
-          setForm(publishedForm);
-        }
-      } else {
-        setForm(publishedForm);
-      }
+      setForm(publishedForm);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not load your school website.');
     } finally {
@@ -345,17 +333,8 @@ export default function WebsiteEditorPage() {
     }
   };
 
-  const saveDraft = () => {
-    if (!publishedSlug) return;
-    window.localStorage.setItem(`nepsom-website-draft:${publishedSlug}`, JSON.stringify({ form, updatedAt: new Date().toISOString() }));
-    setSaved(true);
-    setLastAction('draft');
-    setError('');
-  };
-
-  const previewDraft = () => {
+  const previewWebsite = () => {
     if (!previewHref) return;
-    saveDraft();
     window.open(previewHref, '_blank', 'noopener,noreferrer');
   };
 
@@ -384,10 +363,8 @@ export default function WebsiteEditorPage() {
         .single();
       if (updateError) throw updateError;
       setForm((current) => ({ ...current, slug: data.slug }));
-      window.localStorage.removeItem(`nepsom-website-draft:${publishedSlug}`);
       setPublishedSlug(data.slug);
       setSaved(true);
-      setLastAction('published');
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not publish the website changes.');
     } finally {
@@ -410,24 +387,21 @@ export default function WebsiteEditorPage() {
               </div>
               <div className="flex flex-wrap gap-2.5">
                 {previewHref ? (
-                  <button type="button" onClick={previewDraft} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50">
+                  <button type="button" onClick={previewWebsite} className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50">
                     <Eye className="h-4 w-4" /> Preview website
                   </button>
                 ) : (
                   <button disabled className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm font-semibold text-gray-400"><Eye className="h-4 w-4" /> Preview website</button>
                 )}
-                <button type="button" onClick={saveDraft} disabled={loading || !schoolId} className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-60">
-                  {lastAction === 'draft' ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}{lastAction === 'draft' ? 'Draft saved' : 'Save draft'}
-                </button>
                 <button onClick={publishWebsite} disabled={loading || saving || !schoolId} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
-                  {saving ? 'Publishing…' : 'Publish website'}
+                  {saving ? 'Saving…' : 'Save website'}
                 </button>
               </div>
             </div>
 
             {error && <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><AlertCircle className="mt-0.5 h-5 w-5 shrink-0" /><div className="flex-1"><p className="font-semibold">Website editor needs attention</p><p className="mt-0.5">{error}</p></div><button onClick={loadSchool} className="inline-flex items-center gap-1 font-semibold"><RefreshCw className="h-4 w-4" /> Retry</button></div>}
-            {saved && !error && <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"><ShieldCheck className="h-5 w-5" /><span>{lastAction === 'published' ? 'Your website is now published and visible to families.' : 'Your draft is safe. Publish when you are ready for families to see it.'}</span></div>}
+            {saved && !error && <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-800"><ShieldCheck className="h-5 w-5" /><span>Your website is saved and visible to families.</span></div>}
 
             {loading ? (
               <div className="flex min-h-80 items-center justify-center rounded-3xl border border-gray-200 bg-white"><Loader2 className="h-7 w-7 animate-spin text-blue-600" /><span className="ml-3 text-sm font-medium text-gray-600">Loading your website…</span></div>
@@ -477,7 +451,7 @@ export default function WebsiteEditorPage() {
                         <input type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={uploadGalleryImages} disabled={uploadingGallery || galleryImages.length >= 5 || !schoolId} className="sr-only" />
                       </label>
                     </div>
-                    {galleryImages.length > 0 ? <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{galleryImages.map((image, index) => <figure key={image.id} className="group relative overflow-hidden rounded-xl border border-blue-100 bg-white"><img src={image.image_url} alt={image.label || `School photo ${index + 1}`} className="aspect-square h-full w-full object-cover" /><figcaption className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-gray-950/75 to-transparent px-2 pb-2 pt-6 text-xs font-semibold text-white">{image.label || `Photo ${index + 1}`}</figcaption><button type="button" onClick={() => removeGalleryImage(image)} disabled={removingGalleryId === image.id} aria-label={`Remove ${image.label || `school photo ${index + 1}`}`} className="absolute right-2 top-2 rounded-lg bg-white/95 p-1.5 text-red-600 opacity-100 shadow-sm transition hover:bg-red-50 sm:opacity-0 sm:group-hover:opacity-100 disabled:cursor-wait"><Trash2 className="h-4 w-4" /></button></figure>)}</div> : <div className="mt-5 flex min-h-32 items-center justify-center rounded-xl border border-dashed border-blue-200 bg-white px-5 text-center text-sm text-gray-500">No hero photos yet. Add your first photo to create the school website slider.</div>}
+                    {galleryImages.length > 0 ? <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3">{galleryImages.map((image, index) => <figure key={image.id} className="group relative overflow-hidden rounded-2xl border-4 border-white bg-white shadow-sm ring-1 ring-blue-200"><img src={image.image_url} alt={image.label || `School photo ${index + 1}`} className="aspect-[4/3] h-full w-full object-cover" /><figcaption className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-gray-950/75 to-transparent px-3 pb-3 pt-8 text-xs font-semibold text-white">{image.label || `Photo ${index + 1}`}</figcaption><span className="absolute left-3 top-3 rounded-full bg-white/95 px-2 py-1 text-xs font-bold text-gray-700 shadow-sm">{index + 1}</span><button type="button" onClick={() => removeGalleryImage(image)} disabled={removingGalleryId === image.id} aria-label={`Remove ${image.label || `school photo ${index + 1}`}`} className="absolute right-3 top-3 rounded-lg bg-white/95 p-2 text-red-600 opacity-100 shadow-sm transition hover:bg-red-50 sm:opacity-0 sm:group-hover:opacity-100 disabled:cursor-wait"><Trash2 className="h-4 w-4" /></button></figure>)}</div> : <div className="mt-5 flex min-h-32 items-center justify-center rounded-xl border border-dashed border-blue-200 bg-white px-5 text-center text-sm text-gray-500">No hero photos yet. Add your first photo to create the school website slider.</div>}
                   </div>
                   <div className="grid gap-5 sm:grid-cols-2"><Field label="Logo image URL (optional)" value={form.logo_url} onChange={(v) => update('logo_url', v)} type="url" /><Field label="Phone" value={form.phone} onChange={(v) => update('phone', v)} /><Field label="Email" value={form.email} onChange={(v) => update('email', v)} type="email" /><Field label="Address" value={form.address} onChange={(v) => update('address', v)} wide /><Field label="Office hours" value={form.office_hours} onChange={(v) => update('office_hours', v)} wide /><Field label="Facebook URL" value={form.facebook} onChange={(v) => update('facebook', v)} type="url" /><Field label="Instagram URL" value={form.instagram} onChange={(v) => update('instagram', v)} type="url" /><Field label="YouTube URL" value={form.youtube} onChange={(v) => update('youtube', v)} type="url" /></div></div>}
                 </section>
