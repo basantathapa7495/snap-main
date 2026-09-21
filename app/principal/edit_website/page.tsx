@@ -58,6 +58,7 @@ type SchoolForm = {
   phone: string;
   email: string;
   address: string;
+  map_location: string;
   office_hours: string;
   facebook: string;
   instagram: string;
@@ -73,7 +74,7 @@ const emptyForm: SchoolForm = {
   name: '', slug: '', school_type: '', school_level: '', established_year: '',
   principal: '', motto: DEFAULT_SCHOOL_MOTTO, short_description: DEFAULT_SCHOOL_DESCRIPTION, about_text: DEFAULT_ABOUT_TEXT,
   principal_message: DEFAULT_PRINCIPAL_MESSAGE, principal_image_url: '', mission: DEFAULT_MISSION, vision: DEFAULT_VISION, theme_color: 'blue',
-  logo_url: '', banner_url: '', phone: '', email: '', address: '',
+  logo_url: '', banner_url: '', phone: '', email: '', address: '', map_location: '',
   office_hours: '', facebook: '', instagram: '', youtube: '', facilities: DEFAULT_FACILITIES, activities: DEFAULT_ACTIVITIES,
   why_choose_us: DEFAULT_EXPERIENCE,
   achievement_stats: DEFAULT_ACHIEVEMENTS,
@@ -135,7 +136,7 @@ export default function WebsiteEditorPage() {
 
       const { data: school, error: schoolError } = await supabase
         .from('schools')
-        .select('name, slug, school_type, school_level, established_year, principal, motto, short_description, about_text, principal_message, principal_image_url, mission, vision, theme_color, logo_url, banner_url, phone, email, address, office_hours, facebook, instagram, youtube, facilities, activities, why_choose_us, achievement_stats')
+        .select('name, slug, school_type, school_level, established_year, principal, motto, short_description, about_text, principal_message, principal_image_url, mission, vision, theme_color, logo_url, banner_url, phone, email, address, map_location, office_hours, facebook, instagram, youtube, facilities, activities, why_choose_us, achievement_stats')
         .eq('id', profile.school_id)
         .single();
 
@@ -156,7 +157,7 @@ export default function WebsiteEditorPage() {
         short_description: school.short_description?.trim() || DEFAULT_SCHOOL_DESCRIPTION, about_text: school.about_text?.trim() || DEFAULT_ABOUT_TEXT,
         principal_message: school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE, principal_image_url: school.principal_image_url ?? '', mission: school.mission?.trim() || DEFAULT_MISSION, vision: school.vision?.trim() || DEFAULT_VISION,
         theme_color: themeColor || 'blue', logo_url: school.logo_url ?? '', banner_url: school.banner_url ?? '',
-        phone: school.phone ?? '', email: school.email ?? '', address: school.address ?? '',
+        phone: school.phone ?? '', email: school.email ?? '', address: school.address ?? '', map_location: school.map_location ?? '',
         office_hours: school.office_hours ?? '', facebook: school.facebook ?? '', instagram: school.instagram ?? '',
         youtube: school.youtube ?? '', facilities: school.facilities?.trim() || DEFAULT_FACILITIES, activities: school.activities?.trim() || DEFAULT_ACTIVITIES,
         why_choose_us: normalizeExperience(school.why_choose_us),
@@ -504,7 +505,20 @@ export default function WebsiteEditorPage() {
                     </div>
                     {galleryImages.length > 0 ? <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3">{galleryImages.map((image, index) => <figure key={image.id} className="group relative overflow-hidden rounded-2xl border-4 border-white bg-white shadow-sm ring-1 ring-blue-200"><NextImage src={image.image_url} alt={image.label || `School photo ${index + 1}`} width={640} height={480} unoptimized className="aspect-[4/3] h-full w-full object-cover" /><figcaption className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-gray-950/75 to-transparent px-3 pb-3 pt-8 text-xs font-semibold text-white">{image.label || `Photo ${index + 1}`}</figcaption><span className="absolute left-3 top-3 rounded-full bg-white/95 px-2 py-1 text-xs font-bold text-gray-700 shadow-sm">{index + 1}</span><button type="button" onClick={() => removeGalleryImage(image)} disabled={removingGalleryId === image.id} aria-label={`Remove ${image.label || `school photo ${index + 1}`}`} className="absolute right-3 top-3 rounded-lg bg-white/95 p-2 text-red-600 opacity-100 shadow-sm transition hover:bg-red-50 sm:opacity-0 sm:group-hover:opacity-100 disabled:cursor-wait"><Trash2 className="h-4 w-4" /></button></figure>)}</div> : <div className="mt-5 flex min-h-32 items-center justify-center rounded-xl border border-dashed border-blue-200 bg-white px-5 text-center text-sm text-gray-500">No hero photos yet. Add your first photo to create the school website slider.</div>}
                   </div>
-                  <div className="grid gap-5 sm:grid-cols-2"><Field label="Logo image URL (optional)" value={form.logo_url} onChange={(v) => update('logo_url', v)} type="url" /><Field label="Phone" value={form.phone} onChange={(v) => update('phone', v)} /><Field label="Email" value={form.email} onChange={(v) => update('email', v)} type="email" /><Field label="Address" value={form.address} onChange={(v) => update('address', v)} wide /><Field label="Office hours" value={form.office_hours} onChange={(v) => update('office_hours', v)} wide /><Field label="Facebook URL" value={form.facebook} onChange={(v) => update('facebook', v)} type="url" /><Field label="Instagram URL" value={form.instagram} onChange={(v) => update('instagram', v)} type="url" /><Field label="YouTube URL" value={form.youtube} onChange={(v) => update('youtube', v)} type="url" /></div></div>}
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <Field label="Logo image URL (optional)" value={form.logo_url} onChange={(v) => update('logo_url', v)} type="url" />
+                    <Field label="Phone" value={form.phone} onChange={(v) => update('phone', v)} />
+                    <Field label="Email" value={form.email} onChange={(v) => update('email', v)} type="email" />
+                    <Field label="Address" value={form.address} onChange={(v) => update('address', v)} wide />
+                    <div className="sm:col-span-2">
+                      <Field label="Google Maps location link" value={form.map_location} onChange={(v) => update('map_location', v)} type="url" />
+                      <p className="mt-2 text-xs leading-5 text-gray-500">Open your school in Google Maps, copy its link and paste it here. The public website will show a satellite map and directions button.</p>
+                    </div>
+                    <Field label="Office hours" value={form.office_hours} onChange={(v) => update('office_hours', v)} wide />
+                    <Field label="Facebook URL" value={form.facebook} onChange={(v) => update('facebook', v)} type="url" />
+                    <Field label="Instagram URL" value={form.instagram} onChange={(v) => update('instagram', v)} type="url" />
+                    <Field label="YouTube URL" value={form.youtube} onChange={(v) => update('youtube', v)} type="url" />
+                  </div></div>}
                 </section>
               </div>
             )}
