@@ -162,6 +162,12 @@ export default function LoginForm() {
         return;
       }
 
+      if (authData.user.app_metadata?.approval_status === 'pending') {
+        await supabase.auth.signOut();
+        setError('Your account request is still waiting for school approval. Please contact the school if you need help.');
+        return;
+      }
+
       // -------------------------------------------------------
       // 2. GET REAL ROLE FROM DATABASE
       // -------------------------------------------------------
