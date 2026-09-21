@@ -28,3 +28,125 @@ body {
 html { scroll-behavior: smooth; }
 .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
 .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* Subtle background patterns inspired by basantasaru.com. */
+.nepsom-pattern-grid,
+.nepsom-pattern-dots,
+.nepsom-pattern-glow {
+  isolation: isolate;
+}
+
+.nepsom-pattern-grid::before,
+.nepsom-pattern-grid::after,
+.nepsom-pattern-dots::before,
+.nepsom-pattern-dots::after,
+.nepsom-pattern-glow::before,
+.nepsom-pattern-glow::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.nepsom-pattern-grid::before {
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(37, 99, 235, 0.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.075) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(to bottom, black 5%, transparent 92%);
+  animation: nepsom-grid-drift 24s linear infinite;
+}
+
+.nepsom-pattern-grid::after {
+  top: -12rem;
+  right: -9rem;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.14), rgba(37, 99, 235, 0.04) 48%, transparent 72%);
+  filter: blur(16px);
+  animation: nepsom-glow-float 13s ease-in-out infinite alternate;
+}
+
+.nepsom-pattern-dots::before {
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(37, 99, 235, 0.2) 1px, transparent 1.25px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(to bottom, transparent, black 18%, black 78%, transparent);
+  opacity: 0.28;
+  animation: nepsom-dots-drift 28s linear infinite;
+}
+
+.nepsom-pattern-dots::after {
+  top: 1rem;
+  left: 50%;
+  width: 28rem;
+  height: 20rem;
+  border-radius: 9999px;
+  background: rgba(219, 234, 254, 0.72);
+  filter: blur(110px);
+  transform: translateX(-50%);
+}
+
+.nepsom-pattern-glow::before {
+  top: -10rem;
+  left: -8rem;
+  width: 30rem;
+  height: 30rem;
+  border-radius: 9999px;
+  background: rgba(191, 219, 254, 0.48);
+  filter: blur(100px);
+  animation: nepsom-glow-float 15s ease-in-out infinite alternate;
+}
+
+.nepsom-pattern-glow::after {
+  right: -9rem;
+  bottom: -12rem;
+  width: 32rem;
+  height: 32rem;
+  border-radius: 9999px;
+  background: rgba(204, 251, 241, 0.42);
+  filter: blur(110px);
+  animation: nepsom-glow-float 18s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes nepsom-grid-drift {
+  to { background-position: 34px 34px; }
+}
+
+@keyframes nepsom-dots-drift {
+  to { background-position: 28px 56px; }
+}
+
+@keyframes nepsom-glow-float {
+  to { transform: translate3d(2.5rem, 1.5rem, 0) scale(1.06); }
+}
+
+@media (max-width: 640px) {
+  .nepsom-pattern-grid::before {
+    background-size: 26px 26px;
+    opacity: 0.7;
+  }
+
+  .nepsom-pattern-dots::before {
+    background-size: 24px 24px;
+    opacity: 0.2;
+  }
+
+  .nepsom-pattern-grid::after,
+  .nepsom-pattern-glow::before,
+  .nepsom-pattern-glow::after {
+    opacity: 0.65;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nepsom-pattern-grid::before,
+  .nepsom-pattern-grid::after,
+  .nepsom-pattern-dots::before,
+  .nepsom-pattern-glow::before,
+  .nepsom-pattern-glow::after {
+    animation: none;
+  }
+}
