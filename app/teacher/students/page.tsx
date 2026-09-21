@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import Link from 'next/link';
 import { 
   Search, Eye, MessageSquare, Users, TrendingUp, BookOpen, 
   X, Phone, Mail, AlertCircle, CheckCircle, GraduationCap,
-  Filter, Download
+  Download
 } from 'lucide-react';
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
+import AccountRequestsPanel from '@/components/AccountRequestsPanel';
 
 // --- Mock Data ---
 const classes = ['All', 'Grade 10A', 'Grade 10B', 'Grade 9A', 'Grade 9B'];
@@ -78,6 +78,8 @@ export default function TeacherStudentsPage() {
               <Download className="h-4 w-4" /> Export List
             </button>
           </div>
+
+          <AccountRequestsPanel role="student" />
 
           {/* Stats Row */}
           <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
