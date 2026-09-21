@@ -44,8 +44,8 @@ html { scroll-behavior: smooth; }
 .nepsom-pattern-grid::before {
   inset: 0;
   background-image:
-    linear-gradient(rgba(37, 99, 235, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(37, 99, 235, 0.055) 1px, transparent 1px);
+    linear-gradient(rgba(37, 99, 235, 0.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.11) 1px, transparent 1px);
   background-size: 34px 34px;
   mask-image: linear-gradient(to bottom, black 5%, transparent 92%);
   animation: nepsom-grid-drift 24s linear infinite;
@@ -58,7 +58,7 @@ html { scroll-behavior: smooth; }
 @media (max-width: 640px) {
   .nepsom-pattern-grid::before {
     background-size: 26px 26px;
-    opacity: 0.62;
+    opacity: 0.82;
   }
 }
 
