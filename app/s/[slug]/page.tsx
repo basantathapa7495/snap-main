@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Globe, GraduationCap, Image as ImageIcon, Lightbulb, Loader2, Mail, MapPin, Menu, Phone, Quote, ShieldCheck, Sparkles, UserRound, UsersRound, X } from 'lucide-react';
+import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, ExternalLink, Globe, GraduationCap, Image as ImageIcon, Lightbulb, Loader2, Mail, MapPin, Menu, Navigation, Phone, Quote, Satellite, ShieldCheck, Sparkles, UserRound, UsersRound, X } from 'lucide-react';
 
 type School = {
   id: string;
@@ -27,6 +27,7 @@ type School = {
   phone: string | null;
   email: string | null;
   address: string | null;
+  map_location: string | null;
   office_hours: string | null;
   facebook: string | null;
   instagram: string | null;
@@ -128,6 +129,8 @@ export default function PublicSchoolPage() {
   const heroGallery = useMemo(() => gallery.slice(0, 5), [gallery]);
   const heroMotto = school?.motto?.trim() || DEFAULT_SCHOOL_MOTTO;
   const heroDescription = school?.short_description?.trim() || DEFAULT_SCHOOL_DESCRIPTION;
+  const mapEmbedUrl = buildMapEmbedUrl(school?.map_location, school?.address);
+  const directionsUrl = buildDirectionsUrl(school?.map_location, school?.address);
   const { typedText, typingComplete } = useTypingText(heroMotto);
 
   useEffect(() => {
@@ -412,7 +415,52 @@ export default function PublicSchoolPage() {
 
       {(awards.length > 0 || testimonials.length > 0) && <section className="py-16 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div className="grid gap-10 lg:grid-cols-2">{awards.length > 0 && <div><h2 className="flex items-center gap-3 text-2xl font-bold"><Award className={theme.text} /> Achievements</h2><div className="mt-6 space-y-3">{awards.map((item) => <div key={item.id} className="rounded-2xl border border-gray-200 p-5"><p className="font-bold text-gray-950">{item.title}</p><p className="mt-1 text-sm text-gray-500">{item.year}</p>{item.description && <p className="mt-2 text-sm text-gray-600">{item.description}</p>}</div>)}</div></div>}{testimonials.length > 0 && <div><h2 className="flex items-center gap-3 text-2xl font-bold"><Quote className={theme.text} /> Community voices</h2><div className="mt-6 space-y-3">{testimonials.map((item) => <blockquote key={item.id} className={`rounded-2xl border p-5 ${theme.border} ${theme.soft}`}><p className="text-sm leading-6 text-gray-700">“{item.content}”</p><footer className="mt-3 text-sm font-bold text-gray-950">{item.name}<span className="ml-2 font-normal text-gray-500">{item.role}</span></footer></blockquote>)}</div></div>}</div></div></section>}
 
-      <section id="contact" className="scroll-mt-24 bg-gray-950 py-16 text-white"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div className="grid gap-10 lg:grid-cols-[1fr_auto]"><div><p className="text-sm font-bold uppercase tracking-widest text-gray-400">Contact us</p><h2 className="mt-3 text-3xl font-bold">Visit or contact {school.name}</h2><div className="mt-7 grid gap-4 text-sm text-gray-300 sm:grid-cols-2">{school.address && <Contact icon={<MapPin />} text={school.address} />}{school.phone && <Contact icon={<Phone />} text={school.phone} href={`tel:${school.phone}`} />}{school.email && <Contact icon={<Mail />} text={school.email} href={`mailto:${school.email}`} />}{school.office_hours && <Contact icon={<Clock3 />} text={school.office_hours} />}</div><div className="mt-7 flex gap-3">{school.facebook && <Social href={school.facebook} label="Facebook"><Globe /></Social>}{school.instagram && <Social href={school.instagram} label="Instagram"><Globe /></Social>}{school.youtube && <Social href={school.youtube} label="YouTube"><Globe /></Social>}</div></div><Link href={`/s/${school.slug}/admission`} className={`inline-flex h-fit items-center justify-center gap-2 self-center rounded-xl px-6 py-3.5 text-sm font-semibold text-white ${theme.solid} ${theme.hover}`}>Apply for admission <ArrowRight className="h-4 w-4" /></Link></div></div></section>
+      <section id="contact" className="scroll-mt-24 overflow-hidden bg-gray-950 py-12 text-white sm:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <p className="text-sm font-bold uppercase tracking-widest text-blue-300">Contact and location</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Visit {school.name}</h2>
+            <p className="mt-3 text-base leading-7 text-gray-400">Contact the school office, find our location or open directions in Google Maps.</p>
+          </div>
+
+          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(300px,0.78fr)_minmax(0,1.22fr)]">
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                {school.address && <Contact label="School address" icon={<MapPin />} text={school.address} />}
+                {school.phone && <Contact label="Phone number" icon={<Phone />} text={school.phone} href={`tel:${school.phone}`} />}
+                {school.email && <Contact label="Email address" icon={<Mail />} text={school.email} href={`mailto:${school.email}`} />}
+                {school.office_hours && <Contact label="Office hours" icon={<Clock3 />} text={school.office_hours} />}
+              </div>
+
+              {(school.facebook || school.instagram || school.youtube) && <div className="mt-6 border-t border-white/10 pt-5"><p className="text-xs font-bold uppercase tracking-[0.15em] text-gray-500">Follow the school</p><div className="mt-3 flex flex-wrap gap-2">{school.facebook && <Social href={school.facebook} label="Facebook"><Globe /></Social>}{school.instagram && <Social href={school.instagram} label="Instagram"><Globe /></Social>}{school.youtube && <Social href={school.youtube} label="YouTube"><Globe /></Social>}</div></div>}
+
+              <div className="mt-6 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                {directionsUrl && <a href={directionsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-gray-950 transition hover:bg-blue-50"><Navigation className="h-4 w-4 text-blue-600" /> Get directions</a>}
+                <Link href={`/s/${school.slug}/admission`} className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white transition ${theme.solid} ${theme.hover}`}>Apply for admission <ArrowRight className="h-4 w-4" /></Link>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-3xl border border-white/10 bg-white p-2 shadow-2xl shadow-black/20">
+              <div className="flex items-center justify-between gap-4 px-3 py-2 text-gray-900">
+                <div className="flex items-center gap-2 text-sm font-bold"><Satellite className="h-4 w-4 text-blue-600" /> Satellite location</div>
+                {directionsUrl && <a href={directionsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900">Open map <ExternalLink className="h-3.5 w-3.5" /></a>}
+              </div>
+              {mapEmbedUrl ? (
+                <iframe
+                  title={`${school.name} satellite map`}
+                  src={mapEmbedUrl}
+                  className="aspect-[4/3] min-h-[300px] w-full rounded-2xl border-0 sm:aspect-[16/9] lg:h-full lg:min-h-[390px]"
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
+              ) : (
+                <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl bg-gray-100 px-6 text-center text-gray-600"><MapPin className="h-8 w-8 text-blue-500" /><p className="mt-3 font-bold text-gray-900">Location not added yet</p><p className="mt-1 max-w-sm text-sm leading-6">The school can add its Google Maps link from the website editor.</p></div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
     <footer className="border-t border-gray-800 bg-gray-950 py-6 text-center text-xs text-gray-500">© {new Date().getFullYear()} {school.name}. Powered by NEPSOM.</footer>
   </div>;
@@ -420,9 +468,59 @@ export default function PublicSchoolPage() {
 
 function Eyebrow({ text, color }: { text: string; color: string }) { return <p className={`text-sm font-bold uppercase tracking-widest ${color}`}>{text}</p>; }
 function InfoCard({ title, text, icon, theme, compact = false }: { title: string; text: string; icon: React.ReactNode; theme: (typeof themes)[string]; compact?: boolean }) { return <article className={`rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md ${compact ? 'p-5' : 'p-6'}`}><div className={`flex h-10 w-10 items-center justify-center rounded-xl ${theme.soft} ${theme.text}`}>{icon}</div><h3 className="mt-3 font-bold text-gray-950">{title}</h3><p className="mt-1.5 whitespace-pre-line text-sm leading-6 text-gray-600">{text}</p></article>; }
-function Contact({ icon, text, href }: { icon: React.ReactNode; text: string; href?: string }) { const content = <><span className="mt-0.5 [&>svg]:h-4 [&>svg]:w-4">{icon}</span><span className="whitespace-pre-line">{text}</span></>; return href ? <a href={href} className="flex items-start gap-3 hover:text-white">{content}</a> : <div className="flex items-start gap-3">{content}</div>; }
-function Social({ href, label, children }: { href: string; label: string; children: React.ReactNode }) { return <a href={href} target="_blank" rel="noreferrer" aria-label={label} className="rounded-lg bg-white/10 p-2.5 text-gray-300 hover:bg-white/15 hover:text-white [&>svg]:h-4 [&>svg]:w-4">{children}</a>; }
+function Contact({ label, icon, text, href }: { label: string; icon: React.ReactNode; text: string; href?: string }) { const content = <><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-blue-300 [&>svg]:h-4 [&>svg]:w-4">{icon}</span><span className="min-w-0"><span className="block text-xs font-bold uppercase tracking-[0.12em] text-gray-500">{label}</span><span className="mt-1 block break-words whitespace-pre-line text-sm leading-6 text-gray-200">{text}</span></span></>; return href ? <a href={href} className="flex items-start gap-3 rounded-xl p-2 transition hover:bg-white/5">{content}</a> : <div className="flex items-start gap-3 rounded-xl p-2">{content}</div>; }
+function Social({ href, label, children }: { href: string; label: string; children: React.ReactNode }) { const safeHref = normalizeHttpUrl(href); if (!safeHref) return null; return <a href={safeHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold text-gray-300 transition hover:bg-white/15 hover:text-white [&>svg]:h-4 [&>svg]:w-4">{children}{label}</a>; }
 function formatDate(value: string | null) { if (!value) return 'Recent'; const date = new Date(`${value}T00:00:00`); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-NP', { day: 'numeric', month: 'short', year: 'numeric' }).format(date); }
+
+function extractMapCoordinates(value: string | null | undefined) {
+  if (!value) return '';
+
+  const markerCoordinates = value.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+  if (markerCoordinates) return `${markerCoordinates[1]},${markerCoordinates[2]}`;
+
+  const viewportCoordinates = value.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+  return viewportCoordinates ? `${viewportCoordinates[1]},${viewportCoordinates[2]}` : '';
+}
+
+function buildMapEmbedUrl(mapLocation: string | null | undefined, address: string | null | undefined) {
+  const locationQuery = extractMapCoordinates(mapLocation) || address?.trim();
+  if (!locationQuery) return '';
+
+  const parameters = new URLSearchParams({ q: locationQuery, t: 'k', z: '18', output: 'embed' });
+  return `https://maps.google.com/maps?${parameters.toString()}`;
+}
+
+function buildDirectionsUrl(mapLocation: string | null | undefined, address: string | null | undefined) {
+  const googleMapsUrl = normalizeGoogleMapsUrl(mapLocation);
+  if (googleMapsUrl) return googleMapsUrl;
+
+  const destination = extractMapCoordinates(mapLocation) || address?.trim();
+  return destination ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}` : '';
+}
+
+function normalizeGoogleMapsUrl(value: string | null | undefined) {
+  if (!value) return '';
+
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+    const isGoogleMapsHost = hostname === 'google.com' || hostname.endsWith('.google.com') || hostname === 'maps.app.goo.gl';
+    return url.protocol === 'https:' && isGoogleMapsHost ? url.toString() : '';
+  } catch {
+    return '';
+  }
+}
+
+function normalizeHttpUrl(value: string | null | undefined) {
+  if (!value) return '';
+
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : '';
+  } catch {
+    return '';
+  }
+}
 
 function normalizeExperience(value: unknown): ExperienceItem[] {
   if (!Array.isArray(value)) return DEFAULT_EXPERIENCE;
