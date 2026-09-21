@@ -155,7 +155,8 @@ export default function PublicSchoolPage() {
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:h-[72px] sm:px-6 lg:grid lg:grid-cols-[minmax(220px,1fr)_auto_minmax(220px,1fr)] lg:gap-5 lg:px-8">
         {/* Brand */}
-        <Link href="#" className="group flex min-w-0 shrink-0 items-center gap-3">
+        <div className="group flex min-w-0 shrink-0 items-center gap-3">
+          <Link href="#" aria-label={`${school.name} home`}>
           <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl p-0.5 shadow-sm transition duration-200 group-hover:scale-[1.03] sm:h-12 sm:w-12 ${theme.solid}`}>
             <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-[10px] bg-white p-1">
               {school.logo_url ? (
@@ -174,16 +175,20 @@ export default function PublicSchoolPage() {
               )}
             </span>
           </span>
+          </Link>
 
           <span className="min-w-0">
-            <span className="block max-w-[190px] truncate text-sm font-extrabold leading-tight tracking-tight text-gray-950 transition group-hover:text-blue-700 sm:max-w-[260px] sm:text-base lg:max-w-[240px]">
+            <Link href="#" className="block max-w-[175px] truncate text-sm font-extrabold leading-tight tracking-tight text-gray-950 transition group-hover:text-blue-700 sm:max-w-[250px] sm:text-base lg:max-w-[240px]">
               {school.name}
-            </span>
-            <span className="mt-1 hidden text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500 sm:block">
-              {school.school_level || school.school_type || 'Official school website'}
+            </Link>
+            <span className="mt-1 flex items-center gap-1 text-[9px] font-semibold leading-none text-gray-500 sm:text-[10px]">
+              <span>Powered by</span>
+              <a href="https://nepsom.xyz" target="_blank" rel="noreferrer" className="font-extrabold text-blue-700 transition hover:text-blue-900 hover:underline">NEPSOM</a>
+              <span aria-hidden="true">·</span>
+              <a href="https://basantasaru.com" target="_blank" rel="noreferrer" className="truncate font-bold text-gray-700 transition hover:text-blue-700 hover:underline">Basanta Thapa</a>
             </span>
           </span>
-        </Link>
+        </div>
 
         {/* Section links */}
         <nav className="hidden items-center justify-self-center rounded-xl border border-gray-200 bg-gray-50/80 p-1 lg:flex" aria-label="School website sections">
@@ -257,6 +262,10 @@ export default function PublicSchoolPage() {
               >
                 Login
               </Link>
+            </div>
+            <div className="mt-4 border-t border-gray-100 pt-4 text-center text-xs leading-5 text-gray-500">
+              <p>Powered by <a href="https://nepsom.xyz" target="_blank" rel="noreferrer" className="font-bold text-blue-700 hover:underline">NEPSOM</a></p>
+              <p>Designed and built by <a href="https://basantasaru.com" target="_blank" rel="noreferrer" className="font-bold text-gray-800 hover:text-blue-700 hover:underline">Basanta Thapa · basantasaru.com</a></p>
             </div>
           </nav>
         </div>
