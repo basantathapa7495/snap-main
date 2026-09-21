@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
+import AccountRequestsPanel from "@/components/AccountRequestsPanel";
 import { supabase } from "@/lib/supabase";
 
 type Teacher = {
@@ -484,6 +485,8 @@ export default function TeachersPage() {
               </div>
               <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-bold text-violet-700"><UserPlus className="h-3.5 w-3.5" /> Planned workflow</span>
             </section>
+
+            <AccountRequestsPanel role="teacher" onApproved={() => setRefreshKey((value) => value + 1)} />
 
             {(error || notice) && (
               <div
