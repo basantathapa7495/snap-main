@@ -45,6 +45,7 @@ type Testimonial = { id: string; name: string; role: string | null; content: str
 type GalleryImage = { id: string; image_url: string; label: string | null };
 type ExperienceItem = { title: string; desc: string };
 type AchievementStat = { label: string; value: string };
+type DemoTeacher = { name: string; role: string; subject: string; qualification: string };
 
 const DEFAULT_SCHOOL_MOTTO = 'Learning today. Leading tomorrow.';
 const DEFAULT_SCHOOL_DESCRIPTION = 'A welcoming school community dedicated to quality education, strong values, and the confidence every student needs to succeed.';
@@ -68,6 +69,21 @@ const DEFAULT_ACHIEVEMENTS: AchievementStat[] = [
 ];
 const EXPERIENCE_ICONS = [BookOpen, Award, Lightbulb, ShieldCheck];
 const ACHIEVEMENT_ICONS = [GraduationCap, UsersRound, Award, CalendarDays];
+const DEMO_TEACHERS: DemoTeacher[] = [
+  { name: 'Sushila Sharma', role: 'Senior Teacher', subject: 'English', qualification: 'M.Ed.' },
+  { name: 'Ramesh Adhikari', role: 'Department Head', subject: 'Mathematics', qualification: 'M.Sc., B.Ed.' },
+  { name: 'Anita Gurung', role: 'Subject Teacher', subject: 'Science', qualification: 'M.Sc.' },
+  { name: 'Prakash Thapa', role: 'Subject Teacher', subject: 'Social Studies', qualification: 'M.A., B.Ed.' },
+  { name: 'Mina Karki', role: 'Primary Teacher', subject: 'Nepali', qualification: 'B.Ed.' },
+  { name: 'Bikash Poudel', role: 'Subject Teacher', subject: 'Computer Science', qualification: 'B.Sc. CSIT' },
+  { name: 'Sarita Rana', role: 'Primary Teacher', subject: 'General Studies', qualification: 'B.Ed.' },
+  { name: 'Deepak Bhandari', role: 'Sports Teacher', subject: 'Health & Physical Education', qualification: 'B.P.Ed.' },
+];
+const DEMO_NEWS_EVENTS: NewsItem[] = [
+  { id: 'demo-news-1', title: 'Students showcase ideas at the science exhibition', content: 'Young innovators presented practical science models and creative projects to teachers, families and fellow students.', event_date: '2026-09-18', category: 'School news', location: 'School campus', is_event: false },
+  { id: 'demo-news-2', title: 'Inter-house sports programme announced', content: 'Students will compete in team games, athletics and skill-based activities while building confidence and sportsmanship.', event_date: '2026-09-15', category: 'Upcoming event', location: 'School playground', is_event: true },
+  { id: 'demo-news-3', title: 'Parent–teacher meeting for student progress', content: 'Families are invited to meet teachers, review learning progress and discuss the next steps for each student.', event_date: '2026-09-12', category: 'Community', location: 'School campus', is_event: true },
+];
 
 const themes: Record<string, { solid: string; hover: string; soft: string; text: string; border: string }> = {
   blue: { solid: 'bg-blue-600', hover: 'hover:bg-blue-700', soft: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
@@ -131,6 +147,7 @@ export default function PublicSchoolPage() {
   const heroDescription = school?.short_description?.trim() || DEFAULT_SCHOOL_DESCRIPTION;
   const mapEmbedUrl = buildMapEmbedUrl(school?.map_location, school?.address);
   const directionsUrl = buildDirectionsUrl(school?.map_location, school?.address);
+  const latestNewsEvents = news.length > 0 ? news : DEMO_NEWS_EVENTS;
   const { typedText, typingComplete } = useTypingText(heroMotto);
 
   useEffect(() => {
@@ -147,8 +164,8 @@ export default function PublicSchoolPage() {
     { label: 'About', href: '#about', icon: Building2 },
     { label: 'Programs', href: '#programs', icon: BookOpen },
     { label: 'Teachers', href: '#teachers', icon: UsersRound },
-    { label: 'Updates', href: '#updates', icon: CalendarDays },
     { label: 'Gallery', href: '#gallery', icon: ImageIcon },
+    { label: 'Updates', href: '#updates', icon: CalendarDays },
     { label: 'Contact', href: '#contact', icon: Mail },
   ];
   return <div className={`min-h-screen text-gray-900 ${pageStyle}`}>
@@ -344,7 +361,7 @@ export default function PublicSchoolPage() {
               <div className="flex min-h-[260px] flex-col items-center justify-center p-8 text-center">
                 <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${theme.soft} ${theme.text}`}><ImageIcon className="h-6 w-6" /></span>
                 <h2 className="mt-4 text-lg font-bold text-gray-950">School photos</h2>
-                <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500">Add one to five photos in the school gallery to show your campus, students and activities here.</p>
+                <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500">Add school photos in the website editor to show your campus, students and activities here.</p>
               </div>
             )}
           </aside>
@@ -409,9 +426,39 @@ export default function PublicSchoolPage() {
         </div>
       </section>
 
-      {(news.length > 0 || notices.length > 0) && <section id="updates" className="scroll-mt-24 py-16 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><Eyebrow text="Latest updates" color={theme.text} /><h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">News, events and notices</h2><div className="mt-10 grid gap-8 lg:grid-cols-2"><div className="space-y-4">{news.map((item) => <article key={item.id} className="rounded-2xl border border-gray-200 p-5"><div className="flex items-center gap-2 text-xs font-semibold text-gray-500"><CalendarDays className="h-4 w-4" />{formatDate(item.event_date)}{item.category && <span>• {item.category}</span>}</div><h3 className="mt-2 font-bold text-gray-950">{item.title}</h3>{item.content && <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-600">{item.content}</p>}</article>)}</div><div className="space-y-4">{notices.map((item) => <article key={item.id} className={`rounded-2xl border p-5 ${theme.border} ${theme.soft}`}><p className={`text-xs font-bold uppercase ${theme.text}`}>{item.priority || 'Notice'} · {formatDate(item.publish_date)}</p><h3 className="mt-2 font-bold text-gray-950">{item.title}</h3>{item.content && <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-600">{item.content}</p>}</article>)}</div></div></div></section>}
+      <section id="teachers" className="scroll-mt-24 py-14 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <Eyebrow text="Meet our educators" color={theme.text} />
+            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">Teachers who help students thrive</h2>
+            <p className="mt-3 text-base leading-7 text-gray-600">A caring team of educators committed to strong learning, confidence and character.</p>
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {DEMO_TEACHERS.map((teacher, index) => <article key={teacher.name} className="group rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg sm:p-5"><div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${theme.soft} ${theme.text}`}><UserRound className="h-6 w-6" strokeWidth={1.8} /></div><h3 className="mt-4 font-bold text-gray-950">{teacher.name}</h3><p className={`mt-1 text-xs font-bold ${theme.text}`}>{teacher.subject}</p><p className="mt-2 text-xs leading-5 text-gray-500">{teacher.role} · {teacher.qualification}</p><span className="mt-4 block h-1 w-8 rounded-full bg-gray-200 transition-all group-hover:w-14 group-hover:bg-blue-500" aria-hidden="true" /><span className="sr-only">Teacher {index + 1} of {DEMO_TEACHERS.length}</span></article>)}
+          </div>
+        </div>
+      </section>
 
-      {gallery.length > 0 && <section id="gallery" className="scroll-mt-24 bg-gray-50 py-16 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><Eyebrow text="Gallery" color={theme.text} /><h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">Life at {school.name}</h2><div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">{gallery.map((image) => <figure key={image.id} className="overflow-hidden rounded-2xl bg-gray-200"><NextImage src={image.image_url} alt={image.label || 'School gallery'} width={600} height={600} unoptimized className="aspect-square h-full w-full object-cover transition hover:scale-105" /></figure>)}</div></div></section>}
+      <section id="gallery" className="scroll-mt-24 bg-gray-50 py-14 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Eyebrow text="School gallery" color={theme.text} />
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">Life at {school.name}</h2>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">A glimpse of learning, activities, achievements and everyday moments across our school community.</p>
+          {gallery.length > 0 ? <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">{gallery.slice(0, 8).map((image) => <figure key={image.id} className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 shadow-sm"><NextImage src={image.image_url} alt={image.label || 'School gallery'} width={600} height={600} unoptimized className="aspect-square h-full w-full object-cover transition duration-500 group-hover:scale-105" />{image.label && <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-3 pb-3 pt-10 text-xs font-semibold text-white">{image.label}</figcaption>}</figure>)}</div> : <div className="mt-8 flex min-h-44 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white px-6 text-center"><ImageIcon className="h-7 w-7 text-gray-400" /><p className="mt-3 font-bold text-gray-800">School moments will appear here</p><p className="mt-1 text-sm text-gray-500">The school can add up to 8 photos from the website editor.</p></div>}
+        </div>
+      </section>
+
+      <section id="updates" className="scroll-mt-24 py-14 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Eyebrow text="Latest updates" color={theme.text} />
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">Latest news and events</h2>
+          <p className="mt-3 max-w-2xl text-base leading-7 text-gray-600">Stay informed about learning, celebrations and upcoming activities from our school community.</p>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {latestNewsEvents.slice(0, 6).map((item) => <article key={item.id} className="group flex min-h-56 flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"><div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-gray-500"><span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 ${theme.soft} ${theme.text}`}><CalendarDays className="h-3.5 w-3.5" />{formatDate(item.event_date)}</span>{item.category && <span>{item.category}</span>}</div><h3 className="mt-4 text-lg font-bold leading-7 text-gray-950 transition group-hover:text-blue-700">{item.title}</h3>{item.content && <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-600">{item.content}</p>}<div className="mt-auto pt-4 text-xs font-bold text-gray-500">{item.is_event ? 'Upcoming event' : 'School news'}{item.location ? ` · ${item.location}` : ''}</div></article>)}
+          </div>
+          {notices.length > 0 && <div className="mt-8"><p className="text-xs font-bold uppercase tracking-[0.16em] text-gray-500">Notices</p><div className="mt-3 grid gap-3 md:grid-cols-2">{notices.map((item) => <article key={item.id} className={`rounded-2xl border p-5 ${theme.border} ${theme.soft}`}><p className={`text-xs font-bold uppercase ${theme.text}`}>{item.priority || 'Notice'} · {formatDate(item.publish_date)}</p><h3 className="mt-2 font-bold text-gray-950">{item.title}</h3>{item.content && <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-600">{item.content}</p>}</article>)}</div></div>}
+        </div>
+      </section>
 
       {(awards.length > 0 || testimonials.length > 0) && <section className="py-16 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div className="grid gap-10 lg:grid-cols-2">{awards.length > 0 && <div><h2 className="flex items-center gap-3 text-2xl font-bold"><Award className={theme.text} /> Achievements</h2><div className="mt-6 space-y-3">{awards.map((item) => <div key={item.id} className="rounded-2xl border border-gray-200 p-5"><p className="font-bold text-gray-950">{item.title}</p><p className="mt-1 text-sm text-gray-500">{item.year}</p>{item.description && <p className="mt-2 text-sm text-gray-600">{item.description}</p>}</div>)}</div></div>}{testimonials.length > 0 && <div><h2 className="flex items-center gap-3 text-2xl font-bold"><Quote className={theme.text} /> Community voices</h2><div className="mt-6 space-y-3">{testimonials.map((item) => <blockquote key={item.id} className={`rounded-2xl border p-5 ${theme.border} ${theme.soft}`}><p className="text-sm leading-6 text-gray-700">“{item.content}”</p><footer className="mt-3 text-sm font-bold text-gray-950">{item.name}<span className="ml-2 font-normal text-gray-500">{item.role}</span></footer></blockquote>)}</div></div>}</div></div></section>}
 
