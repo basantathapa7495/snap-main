@@ -17,9 +17,12 @@ import {
   Plus,
   RefreshCw,
   Search,
+  ShieldCheck,
   Trash2,
   UserCheck,
+  UserPlus,
   UserRound,
+  UsersRound,
   X,
 } from "lucide-react";
 import Sidebar from "@/components/sidebar";
@@ -423,51 +426,33 @@ export default function TeachersPage() {
     );
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="school-pattern-grid relative isolate min-h-screen overflow-hidden bg-slate-50">
       <Sidebar />
-      <div className="flex min-h-screen flex-col lg:ml-64">
+      <div className="relative z-10 flex min-h-screen flex-col lg:ml-64">
         <TopBar />
         <main className="flex-1 px-4 pb-24 pt-20 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px]">
-            <header className="flex flex-col gap-5 border-b border-slate-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-blue-600">
+            <header className="relative overflow-hidden rounded-3xl border border-blue-100 bg-white/90 p-5 shadow-xl shadow-blue-900/5 backdrop-blur-sm sm:p-7 lg:flex lg:items-center lg:justify-between lg:gap-8">
+              <div className="pointer-events-none absolute -right-12 -top-20 h-56 w-56 rounded-full bg-blue-100/70 blur-3xl" aria-hidden="true" />
+              <div className="relative max-w-2xl">
+                <p className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
+                  <UsersRound className="h-3.5 w-3.5" />
                   Staff management
                 </p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                  Manage teachers
+                <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
+                  Your teaching team
                 </h1>
-                <p className="mt-1.5 text-sm text-slate-500">
-                  Add staff, maintain their records, and control login access.
+                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
+                  Keep staff details organised, manage portal access and quickly find the right teacher.
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 lg:items-end">
-                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 shadow-sm">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                    <GraduationCap className="h-[18px] w-[18px]" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900">
-                      {teachers.length} teacher{teachers.length === 1 ? "" : "s"}
-                    </p>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[10px] font-medium text-slate-500">
-                      <span className="text-emerald-700">{activeAccounts} login active</span>
-                      <span aria-hidden="true">·</span>
-                      <span className={teachers.length - activeAccounts ? "text-amber-700" : "text-slate-500"}>
-                        {teachers.length - activeAccounts} need login
-                      </span>
-                      <span aria-hidden="true">·</span>
-                      <span>{Math.max(0, subjects.length - 1)} subjects</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
+              <div className="relative mt-6 flex flex-wrap gap-2 lg:mt-0 lg:justify-end">
                   <button
                     type="button"
                     onClick={() => setRefreshKey((value) => value + 1)}
                     disabled={refreshing}
-                    className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-600 shadow-sm disabled:opacity-60"
+                    className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-blue-200 hover:text-blue-700 disabled:opacity-60"
                   >
                     <RefreshCw
                       className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
@@ -477,14 +462,28 @@ export default function TeachersPage() {
                   <button
                     type="button"
                     onClick={openCreateForm}
-                    className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 sm:flex-none"
+                    className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:bg-blue-700 sm:flex-none"
                   >
                     <Plus className="h-4 w-4" />
                     Add teacher
                   </button>
-                </div>
               </div>
             </header>
+
+            <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Teacher overview">
+              <TeacherStat icon={UsersRound} label="Total teachers" value={teachers.length} tone="blue" />
+              <TeacherStat icon={UserCheck} label="Active accounts" value={activeAccounts} tone="emerald" />
+              <TeacherStat icon={KeyRound} label="Need access" value={teachers.length - activeAccounts} tone="amber" />
+              <TeacherStat icon={GraduationCap} label="Subjects" value={Math.max(0, subjects.length - 1)} tone="violet" />
+            </section>
+
+            <section className="mt-5 flex flex-col gap-4 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-blue-50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-600/20"><ShieldCheck className="h-5 w-5" /></span>
+                <div><h2 className="font-bold text-slate-950">Self-registration with school approval</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-slate-600 sm:text-sm">Teachers will request an account from the school website. You review their details before portal access is activated.</p></div>
+              </div>
+              <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-bold text-violet-700"><UserPlus className="h-3.5 w-3.5" /> Planned workflow</span>
+            </section>
 
             {(error || notice) && (
               <div
@@ -563,7 +562,7 @@ export default function TeachersPage() {
               </section>
             )}
 
-            <section className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-lg shadow-slate-900/5 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-5">
                 <div>
                   <h2 className="font-bold text-slate-950">Teacher records</h2>
@@ -607,46 +606,7 @@ export default function TeachersPage() {
                   )}
                   onAdd={openCreateForm}
                 />
-              ) : (
-                <>
-                  <div className="hidden overflow-x-auto md:block">
-                    <table className="w-full text-left">
-                      <thead className="border-y border-slate-100 bg-slate-50/70 text-xs uppercase tracking-wide text-slate-400">
-                        <tr>
-                          <th className="px-5 py-3 font-semibold">Teacher</th>
-                          <th className="px-5 py-3 font-semibold">Subject</th>
-                          <th className="px-5 py-3 font-semibold">Contact</th>
-                          <th className="px-5 py-3 font-semibold">Login</th>
-                          <th className="px-5 py-3 text-right font-semibold">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {filteredTeachers.map((teacher) => (
-                          <TeacherRow
-                            key={teacher.id}
-                            teacher={teacher}
-                            onView={setSelectedTeacher}
-                            onEdit={openEditForm}
-                            onLogin={openLogin}
-                          />
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="divide-y divide-slate-100 md:hidden">
-                    {filteredTeachers.map((teacher) => (
-                      <TeacherCard
-                        key={teacher.id}
-                        teacher={teacher}
-                        onView={setSelectedTeacher}
-                        onLogin={openLogin}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
+              ) : <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">{filteredTeachers.map((teacher, index) => <TeacherProfileCard key={teacher.id} teacher={teacher} index={index} onView={setSelectedTeacher} onEdit={openEditForm} onLogin={openLogin} />)}</div>}
             </section>
           </div>
         </main>
@@ -697,6 +657,30 @@ export default function TeachersPage() {
   );
 }
 
+const statTones = {
+  blue: "border-blue-200 bg-blue-50 text-blue-700",
+  emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  amber: "border-amber-200 bg-amber-50 text-amber-700",
+  violet: "border-violet-200 bg-violet-50 text-violet-700",
+};
+
+function TeacherStat({ icon: Icon, label, value, tone }: { icon: React.ElementType; label: string; value: number; tone: keyof typeof statTones }) {
+  return <article className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm"><div className={`flex h-10 w-10 items-center justify-center rounded-xl border ${statTones[tone]}`}><Icon className="h-5 w-5" /></div><p className="mt-3 text-2xl font-extrabold tracking-tight text-slate-950">{value}</p><p className="mt-0.5 text-xs font-semibold text-slate-500 sm:text-sm">{label}</p></article>;
+}
+
+const teacherTones = [
+  "from-blue-500 to-indigo-600",
+  "from-emerald-500 to-teal-600",
+  "from-violet-500 to-purple-600",
+  "from-orange-500 to-amber-600",
+  "from-pink-500 to-rose-600",
+  "from-cyan-500 to-blue-600",
+];
+
+function TeacherProfileCard({ teacher, index, onView, onEdit, onLogin }: TeacherActions & { index: number; onEdit: (teacher: Teacher) => void }) {
+  return <article className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/10"><div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${teacherTones[index % teacherTones.length]}`} aria-hidden="true" /><div className="flex items-start gap-3"><button type="button" onClick={() => onView(teacher)} className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-sm font-extrabold text-white shadow-md ${teacherTones[index % teacherTones.length]}`} aria-label={`View ${teacher.name}`}>{initials(teacher.name || "Teacher")}</button><div className="min-w-0 flex-1"><button type="button" onClick={() => onView(teacher)} className="block max-w-full truncate text-left font-bold text-slate-950 transition hover:text-blue-700">{teacher.name}</button><p className="mt-1 truncate text-xs font-semibold text-slate-500">{teacher.subject || "Subject not assigned"}</p></div><AccountBadge active={Boolean(teacher.user_id)} /></div><div className="mt-4 grid grid-cols-2 gap-2 text-xs"><div className="rounded-xl bg-slate-50 p-2.5"><p className="text-slate-400">Qualification</p><p className="mt-1 truncate font-semibold text-slate-700">{teacher.qualification || "Not added"}</p></div><div className="rounded-xl bg-slate-50 p-2.5"><p className="text-slate-400">Contact</p><p className="mt-1 truncate font-semibold text-slate-700">{teacher.phone || teacher.email || "Not added"}</p></div></div><div className="mt-4 flex gap-2 border-t border-slate-100 pt-3"><button type="button" onClick={() => onEdit(teacher)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"><Edit3 className="h-3.5 w-3.5" /> Edit</button><button type="button" onClick={() => onLogin(teacher)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-blue-700"><KeyRound className="h-3.5 w-3.5" />{teacher.user_id ? "Reset" : "Access"}</button></div></article>;
+}
+
 function Select({
   value,
   onChange,
@@ -730,101 +714,6 @@ type TeacherActions = {
   onView: (teacher: Teacher) => void;
   onLogin: (teacher: Teacher) => void;
 };
-function TeacherRow({
-  teacher,
-  onView,
-  onEdit,
-  onLogin,
-}: TeacherActions & { onEdit: (teacher: Teacher) => void }) {
-  return (
-    <tr className="hover:bg-slate-50/70">
-      <td className="px-5 py-4">
-        <button
-          type="button"
-          onClick={() => onView(teacher)}
-          className="flex items-center gap-3 text-left"
-        >
-          <Avatar name={teacher.name} />
-          <div>
-            <p className="font-semibold text-slate-900 hover:text-blue-700">
-              {teacher.name}
-            </p>
-            <p className="text-xs text-slate-400">
-              {teacher.qualification || "Qualification not added"}
-            </p>
-          </div>
-        </button>
-      </td>
-      <td className="px-5 py-4">
-        <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-          {teacher.subject || "Not assigned"}
-        </span>
-      </td>
-      <td className="px-5 py-4 text-xs text-slate-500">
-        <p>{teacher.phone || "No phone"}</p>
-        <p className="mt-1 max-w-48 truncate">{teacher.email || "No email"}</p>
-      </td>
-      <td className="px-5 py-4">
-        <AccountBadge active={Boolean(teacher.user_id)} />
-      </td>
-      <td className="px-5 py-4">
-        <div className="flex justify-end gap-1">
-          <button
-            type="button"
-            onClick={() => onEdit(teacher)}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-blue-600"
-            aria-label={`Edit ${teacher.name}`}
-          >
-            <Edit3 className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onLogin(teacher)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
-          >
-            <KeyRound className="h-3.5 w-3.5" />
-            {teacher.user_id ? "Reset access" : "Create login"}
-          </button>
-        </div>
-      </td>
-    </tr>
-  );
-}
-function TeacherCard({ teacher, onView, onLogin }: TeacherActions) {
-  return (
-    <div className="p-4">
-      <button
-        type="button"
-        onClick={() => onView(teacher)}
-        className="flex w-full items-start gap-3 text-left"
-      >
-        <Avatar name={teacher.name} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <p className="truncate font-semibold text-slate-900">
-              {teacher.name}
-            </p>
-            <AccountBadge active={Boolean(teacher.user_id)} />
-          </div>
-          <p className="mt-1 text-xs text-slate-500">
-            {teacher.subject || "Subject not assigned"}
-          </p>
-          <p className="mt-2 truncate text-xs text-slate-400">
-            {teacher.phone || teacher.email || "Contact details not added"}
-          </p>
-        </div>
-      </button>
-      <button
-        type="button"
-        onClick={() => onLogin(teacher)}
-        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-50 py-2 text-xs font-semibold text-blue-700"
-      >
-        <KeyRound className="h-3.5 w-3.5" />
-        {teacher.user_id ? "Reset access" : "Create login"}
-      </button>
-    </div>
-  );
-}
 function Avatar({ name }: { name: string }) {
   return (
     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">
