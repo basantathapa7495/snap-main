@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import NextImage from 'next/image';
 import {
   AlertCircle, BookOpen, Check, Eye, LayoutTemplate, Loader2, Palette,
-  Image as ImageIcon, ImagePlus, RefreshCw, Rocket, Save, Settings, ShieldCheck, Trash2, Upload, UserRound,
+  Image as ImageIcon, ImagePlus, RefreshCw, Rocket, Settings, ShieldCheck, Trash2, Upload, UserRound,
 } from 'lucide-react';
 
 type GalleryImage = { id: string; image_url: string; label: string | null };
@@ -19,6 +20,23 @@ const DEFAULT_VISION = 'To become a trusted centre of learning where students ar
 const DEFAULT_FACILITIES = 'Bright classrooms, a well-stocked library, science and computer learning spaces, safe play areas and supportive resources designed for effective learning.';
 const DEFAULT_ACTIVITIES = 'Sports, arts, cultural programmes, clubs, educational visits and community activities that help students discover talents, build teamwork and develop leadership skills.';
 const DEFAULT_PRINCIPAL_MESSAGE = 'Welcome to our school. We are committed to creating a safe, inspiring and inclusive learning environment where every student can discover their strengths, build strong character and prepare confidently for the future.';
+
+type ExperienceItem = { title: string; desc: string };
+type AchievementStat = { label: string; value: string };
+
+const DEFAULT_EXPERIENCE: ExperienceItem[] = [
+  { title: 'Quality education', desc: 'Dedicated teachers and thoughtful learning that help every student build strong foundations.' },
+  { title: 'Excellent results', desc: 'Focused academic support and regular progress tracking that encourage students to achieve their best.' },
+  { title: 'Modern learning', desc: 'Practical, creative and technology-supported lessons designed for today’s learners.' },
+  { title: 'Safe environment', desc: 'A caring, inclusive and disciplined community where every student feels respected and supported.' },
+];
+
+const DEFAULT_ACHIEVEMENTS: AchievementStat[] = [
+  { label: 'Students graduated', value: '500+' },
+  { label: 'Qualified teachers', value: '25+' },
+  { label: 'Awards won', value: '12+' },
+  { label: 'Years of excellence', value: '15+' },
+];
 
 type SchoolForm = {
   name: string;
@@ -46,6 +64,8 @@ type SchoolForm = {
   youtube: string;
   facilities: string;
   activities: string;
+  why_choose_us: ExperienceItem[];
+  achievement_stats: AchievementStat[];
   website_template: 'classic' | 'modern' | 'bold';
 };
 
@@ -55,6 +75,8 @@ const emptyForm: SchoolForm = {
   principal_message: DEFAULT_PRINCIPAL_MESSAGE, principal_image_url: '', mission: DEFAULT_MISSION, vision: DEFAULT_VISION, theme_color: 'blue',
   logo_url: '', banner_url: '', phone: '', email: '', address: '',
   office_hours: '', facebook: '', instagram: '', youtube: '', facilities: DEFAULT_FACILITIES, activities: DEFAULT_ACTIVITIES,
+  why_choose_us: DEFAULT_EXPERIENCE,
+  achievement_stats: DEFAULT_ACHIEVEMENTS,
   website_template: 'modern',
 };
 
@@ -78,7 +100,6 @@ export default function WebsiteEditorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [uploadingPrincipalPhoto, setUploadingPrincipalPhoto] = useState(false);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [uploadingGallery, setUploadingGallery] = useState(false);
@@ -88,7 +109,7 @@ export default function WebsiteEditorPage() {
 
   const previewHref = useMemo(() => publishedSlug ? `/s/${publishedSlug}` : '', [publishedSlug]);
 
-  const update = (field: keyof SchoolForm, value: string) => {
+  const update = <K extends keyof SchoolForm>(field: K, value: SchoolForm[K]) => {
     setSaved(false);
     setForm((current) => ({ ...current, [field]: value }));
   };
@@ -114,7 +135,7 @@ export default function WebsiteEditorPage() {
 
       const { data: school, error: schoolError } = await supabase
         .from('schools')
-        .select('name, slug, school_type, school_level, established_year, principal, motto, short_description, about_text, principal_message, principal_image_url, mission, vision, theme_color, logo_url, banner_url, phone, email, address, office_hours, facebook, instagram, youtube, facilities, activities')
+        .select('name, slug, school_type, school_level, established_year, principal, motto, short_description, about_text, principal_message, principal_image_url, mission, vision, theme_color, logo_url, banner_url, phone, email, address, office_hours, facebook, instagram, youtube, facilities, activities, why_choose_us, achievement_stats')
         .eq('id', profile.school_id)
         .single();
 
@@ -138,6 +159,8 @@ export default function WebsiteEditorPage() {
         phone: school.phone ?? '', email: school.email ?? '', address: school.address ?? '',
         office_hours: school.office_hours ?? '', facebook: school.facebook ?? '', instagram: school.instagram ?? '',
         youtube: school.youtube ?? '', facilities: school.facilities?.trim() || DEFAULT_FACILITIES, activities: school.activities?.trim() || DEFAULT_ACTIVITIES,
+        why_choose_us: normalizeExperience(school.why_choose_us),
+        achievement_stats: normalizeAchievements(school.achievement_stats),
         website_template: storedTemplate === 'classic' || storedTemplate === 'bold' ? storedTemplate : 'modern',
       };
       setSchoolId(profile.school_id);
@@ -151,7 +174,10 @@ export default function WebsiteEditorPage() {
     }
   };
 
-  useEffect(() => { void loadSchool(); }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void loadSchool(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const uploadLogo = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -226,44 +252,6 @@ export default function WebsiteEditorPage() {
       setError(reason instanceof Error ? reason.message : 'Could not upload the principal photo.');
     } finally {
       setUploadingPrincipalPhoto(false);
-    }
-  };
-
-  const uploadBanner = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file || !schoolId) return;
-
-    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
-      setError('Please choose a PNG, JPG or WebP background image.');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('The background image must be smaller than 5 MB.');
-      return;
-    }
-
-    setUploadingBanner(true);
-    setSaved(false);
-    setError('');
-    try {
-      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const filePath = `${schoolId}/banner/${Date.now()}-${crypto.randomUUID()}.${extension}`;
-      const { error: uploadError } = await supabase.storage
-        .from('school-assets')
-        .upload(filePath, file, { cacheControl: '3600', upsert: false });
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrlData } = supabase.storage
-        .from('school-assets')
-        .getPublicUrl(filePath);
-      const bannerUrl = publicUrlData.publicUrl;
-
-      setForm((current) => ({ ...current, banner_url: bannerUrl }));
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Could not upload the hero background.');
-    } finally {
-      setUploadingBanner(false);
     }
   };
 
@@ -413,7 +401,70 @@ export default function WebsiteEditorPage() {
 
                 <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
                   {activeTab === 'basic' && <div className="space-y-6"><SectionTitle title="Basic information" description="The main identity and introduction shown on your website." /><div className="grid gap-5 sm:grid-cols-2"><Field label="School name" value={form.name} onChange={(v) => update('name', v)} required /><Field label="Website slug" value={form.slug} onChange={(v) => update('slug', v)} prefix="nepsom.xyz/s/" required /><Field label="School type" value={form.school_type} onChange={(v) => update('school_type', v)} /><Field label="School level" value={form.school_level} onChange={(v) => update('school_level', v)} /><Field label="Established year (B.S.)" value={form.established_year} onChange={(v) => update('established_year', v)} type="number" /><Field label="Principal name" value={form.principal} onChange={(v) => update('principal', v)} /><Field label="School motto" value={form.motto} onChange={(v) => update('motto', v)} wide /><TextArea label="Short description" value={form.short_description} onChange={(v) => update('short_description', v)} rows={3} wide /></div></div>}
-                  {activeTab === 'about' && <div className="space-y-6"><SectionTitle title="About and mission" description="Tell families what your school stands for." /><div className="grid gap-5"><TextArea label="About the school" value={form.about_text} onChange={(v) => update('about_text', v)} rows={6} /><div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-5 sm:p-6"><div className="flex flex-col gap-5 sm:flex-row sm:items-center"><div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-blue-100">{form.principal_image_url ? <img src={form.principal_image_url} alt="Principal preview" className="h-full w-full rounded-full object-cover" /> : <UserRound className="h-12 w-12 text-blue-300" strokeWidth={1.7} />}</div><div className="flex-1"><h3 className="font-bold text-gray-950">Principal photo</h3><p className="mt-1 text-sm leading-6 text-gray-600">Upload a clear portrait. JPG, PNG or WebP, up to 5 MB.</p><label className={`mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition ${uploadingPrincipalPhoto ? 'cursor-wait bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}>{uploadingPrincipalPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}{uploadingPrincipalPhoto ? 'Uploading…' : form.principal_image_url ? 'Replace photo' : 'Upload photo'}<input type="file" accept="image/png,image/jpeg,image/webp" onChange={uploadPrincipalPhoto} disabled={uploadingPrincipalPhoto || !schoolId} className="sr-only" /></label></div></div></div><TextArea label="Principal’s message" value={form.principal_message} onChange={(v) => update('principal_message', v)} rows={6} /><div className="grid gap-5 sm:grid-cols-2"><TextArea label="Mission" value={form.mission} onChange={(v) => update('mission', v)} rows={5} /><TextArea label="Vision" value={form.vision} onChange={(v) => update('vision', v)} rows={5} /></div><TextArea label="Facilities" value={form.facilities} onChange={(v) => update('facilities', v)} rows={3} /><TextArea label="Activities" value={form.activities} onChange={(v) => update('activities', v)} rows={3} /></div></div>}
+                  {activeTab === 'about' && (
+                    <div className="space-y-7">
+                      <SectionTitle title="About and school experience" description="Edit the story, leadership message, achievements and experience families see on your About section." />
+
+                      <div className="grid gap-5">
+                        <TextArea label="About the school" value={form.about_text} onChange={(v) => update('about_text', v)} rows={5} />
+                        <p className="-mt-2 text-xs leading-5 text-gray-500">The public page automatically adds your school name and established year before this text.</p>
+
+                        <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 sm:p-6">
+                          <div className="grid gap-5 sm:grid-cols-[112px_1fr] sm:items-start">
+                            <div className="flex flex-col items-center gap-3">
+                              <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-white shadow-md ring-1 ring-blue-100">
+                                {form.principal_image_url ? <NextImage src={form.principal_image_url} alt="Principal preview" width={112} height={112} unoptimized className="h-full w-full object-cover" /> : <UserRound className="h-12 w-12 text-blue-300" strokeWidth={1.7} />}
+                              </div>
+                              <label className={`inline-flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-white shadow-sm transition ${uploadingPrincipalPhoto ? 'cursor-wait bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                                {uploadingPrincipalPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                                {uploadingPrincipalPhoto ? 'Uploading…' : form.principal_image_url ? 'Replace photo' : 'Upload photo'}
+                                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={uploadPrincipalPhoto} disabled={uploadingPrincipalPhoto || !schoolId} className="sr-only" />
+                              </label>
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-gray-950">Principal’s message card</h3>
+                              <p className="mt-1 text-sm leading-6 text-gray-600">The principal name comes from Basic information. Add a warm, personal welcome below.</p>
+                              <div className="mt-4"><TextArea label="Message" value={form.principal_message} onChange={(v) => update('principal_message', v)} rows={5} /></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-5 sm:grid-cols-2">
+                          <TextArea label="Our mission" value={form.mission} onChange={(v) => update('mission', v)} rows={5} />
+                          <TextArea label="Our vision" value={form.vision} onChange={(v) => update('vision', v)} rows={5} />
+                        </div>
+
+                        <EditorGroup title="Achievement numbers" description="Use short values such as 500+, 25+ or 15 years.">
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            {form.achievement_stats.map((stat, index) => (
+                              <div key={index} className="rounded-xl border border-gray-200 bg-gray-50/70 p-4">
+                                <div className="grid grid-cols-[110px_1fr] gap-3">
+                                  <Field label="Value" value={stat.value} onChange={(value) => update('achievement_stats', form.achievement_stats.map((item, itemIndex) => itemIndex === index ? { ...item, value } : item))} />
+                                  <Field label="Label" value={stat.label} onChange={(label) => update('achievement_stats', form.achievement_stats.map((item, itemIndex) => itemIndex === index ? { ...item, label } : item))} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </EditorGroup>
+
+                        <EditorGroup title="School experience cards" description="Edit the four main reasons families should choose your school.">
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            {form.why_choose_us.map((item, index) => (
+                              <div key={index} className="rounded-xl border border-gray-200 bg-gray-50/70 p-4">
+                                <Field label={`Card ${index + 1} title`} value={item.title} onChange={(title) => update('why_choose_us', form.why_choose_us.map((card, cardIndex) => cardIndex === index ? { ...card, title } : card))} />
+                                <div className="mt-3"><TextArea label="Description" value={item.desc} onChange={(desc) => update('why_choose_us', form.why_choose_us.map((card, cardIndex) => cardIndex === index ? { ...card, desc } : card))} rows={3} /></div>
+                              </div>
+                            ))}
+                          </div>
+                        </EditorGroup>
+
+                        <div className="grid gap-5 sm:grid-cols-2">
+                          <TextArea label="Facilities" value={form.facilities} onChange={(v) => update('facilities', v)} rows={4} />
+                          <TextArea label="Activities" value={form.activities} onChange={(v) => update('activities', v)} rows={4} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {activeTab === 'template' && <div className="space-y-6"><SectionTitle title="Choose a website template" description="Your content stays the same. Only the visual presentation changes." /><div className="grid gap-4 md:grid-cols-3">{([
                     { id: 'modern', name: 'Modern', description: 'Clean cards, soft corners and a balanced school-first layout.', accent: 'from-blue-600 to-indigo-600' },
                     { id: 'classic', name: 'Classic', description: 'Formal styling and a traditional academic presentation.', accent: 'from-slate-800 to-blue-900' },
@@ -423,7 +474,7 @@ export default function WebsiteEditorPage() {
                     <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
                       <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-lg ring-1 ring-blue-100">
                         {form.logo_url ? (
-                          <img src={form.logo_url} alt="School logo preview" className="h-full w-full rounded-full object-cover" />
+                          <NextImage src={form.logo_url} alt="School logo preview" width={96} height={96} unoptimized className="h-full w-full rounded-full object-cover" />
                         ) : (
                           <ImageIcon className="h-9 w-9 text-blue-300" />
                         )}
@@ -451,7 +502,7 @@ export default function WebsiteEditorPage() {
                         <input type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={uploadGalleryImages} disabled={uploadingGallery || galleryImages.length >= 5 || !schoolId} className="sr-only" />
                       </label>
                     </div>
-                    {galleryImages.length > 0 ? <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3">{galleryImages.map((image, index) => <figure key={image.id} className="group relative overflow-hidden rounded-2xl border-4 border-white bg-white shadow-sm ring-1 ring-blue-200"><img src={image.image_url} alt={image.label || `School photo ${index + 1}`} className="aspect-[4/3] h-full w-full object-cover" /><figcaption className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-gray-950/75 to-transparent px-3 pb-3 pt-8 text-xs font-semibold text-white">{image.label || `Photo ${index + 1}`}</figcaption><span className="absolute left-3 top-3 rounded-full bg-white/95 px-2 py-1 text-xs font-bold text-gray-700 shadow-sm">{index + 1}</span><button type="button" onClick={() => removeGalleryImage(image)} disabled={removingGalleryId === image.id} aria-label={`Remove ${image.label || `school photo ${index + 1}`}`} className="absolute right-3 top-3 rounded-lg bg-white/95 p-2 text-red-600 opacity-100 shadow-sm transition hover:bg-red-50 sm:opacity-0 sm:group-hover:opacity-100 disabled:cursor-wait"><Trash2 className="h-4 w-4" /></button></figure>)}</div> : <div className="mt-5 flex min-h-32 items-center justify-center rounded-xl border border-dashed border-blue-200 bg-white px-5 text-center text-sm text-gray-500">No hero photos yet. Add your first photo to create the school website slider.</div>}
+                    {galleryImages.length > 0 ? <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3">{galleryImages.map((image, index) => <figure key={image.id} className="group relative overflow-hidden rounded-2xl border-4 border-white bg-white shadow-sm ring-1 ring-blue-200"><NextImage src={image.image_url} alt={image.label || `School photo ${index + 1}`} width={640} height={480} unoptimized className="aspect-[4/3] h-full w-full object-cover" /><figcaption className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-gray-950/75 to-transparent px-3 pb-3 pt-8 text-xs font-semibold text-white">{image.label || `Photo ${index + 1}`}</figcaption><span className="absolute left-3 top-3 rounded-full bg-white/95 px-2 py-1 text-xs font-bold text-gray-700 shadow-sm">{index + 1}</span><button type="button" onClick={() => removeGalleryImage(image)} disabled={removingGalleryId === image.id} aria-label={`Remove ${image.label || `school photo ${index + 1}`}`} className="absolute right-3 top-3 rounded-lg bg-white/95 p-2 text-red-600 opacity-100 shadow-sm transition hover:bg-red-50 sm:opacity-0 sm:group-hover:opacity-100 disabled:cursor-wait"><Trash2 className="h-4 w-4" /></button></figure>)}</div> : <div className="mt-5 flex min-h-32 items-center justify-center rounded-xl border border-dashed border-blue-200 bg-white px-5 text-center text-sm text-gray-500">No hero photos yet. Add your first photo to create the school website slider.</div>}
                   </div>
                   <div className="grid gap-5 sm:grid-cols-2"><Field label="Logo image URL (optional)" value={form.logo_url} onChange={(v) => update('logo_url', v)} type="url" /><Field label="Phone" value={form.phone} onChange={(v) => update('phone', v)} /><Field label="Email" value={form.email} onChange={(v) => update('email', v)} type="email" /><Field label="Address" value={form.address} onChange={(v) => update('address', v)} wide /><Field label="Office hours" value={form.office_hours} onChange={(v) => update('office_hours', v)} wide /><Field label="Facebook URL" value={form.facebook} onChange={(v) => update('facebook', v)} type="url" /><Field label="Instagram URL" value={form.instagram} onChange={(v) => update('instagram', v)} type="url" /><Field label="YouTube URL" value={form.youtube} onChange={(v) => update('youtube', v)} type="url" /></div></div>}
                 </section>
@@ -465,5 +516,32 @@ export default function WebsiteEditorPage() {
 }
 
 function SectionTitle({ title, description }: { title: string; description: string }) { return <div className="border-b border-gray-100 pb-5"><h2 className="text-xl font-bold text-gray-950">{title}</h2><p className="mt-1 text-sm text-gray-500">{description}</p></div>; }
+function EditorGroup({ title, description, children }: { title: string; description: string; children: React.ReactNode }) { return <div className="rounded-2xl border border-gray-200 p-5"><div className="mb-4"><h3 className="font-bold text-gray-950">{title}</h3><p className="mt-1 text-sm text-gray-500">{description}</p></div>{children}</div>; }
 function Field({ label, value, onChange, type = 'text', wide = false, required = false, prefix }: { label: string; value: string; onChange: (value: string) => void; type?: string; wide?: boolean; required?: boolean; prefix?: string }) { return <label className={wide ? 'sm:col-span-2' : ''}><span className={labelClass}>{label}{required && <span className="text-red-500"> *</span>}</span>{prefix ? <div className="mt-1.5 flex overflow-hidden rounded-xl border border-gray-200 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10"><span className="flex items-center bg-gray-50 px-3 text-xs text-gray-500">{prefix}</span><input className="min-w-0 flex-1 px-3.5 py-2.5 text-sm outline-none" value={value} onChange={(e) => onChange(e.target.value)} required={required} /></div> : <input className={inputClass} type={type} value={value} onChange={(e) => onChange(e.target.value)} required={required} />}</label>; }
 function TextArea({ label, value, onChange, rows, wide = false }: { label: string; value: string; onChange: (value: string) => void; rows: number; wide?: boolean }) { return <label className={wide ? 'sm:col-span-2' : ''}><span className={labelClass}>{label}</span><textarea className={`${inputClass} resize-y`} rows={rows} value={value} onChange={(e) => onChange(e.target.value)} /></label>; }
+
+function normalizeExperience(value: unknown): ExperienceItem[] {
+  if (!Array.isArray(value)) return DEFAULT_EXPERIENCE.map((item) => ({ ...item }));
+  return DEFAULT_EXPERIENCE.map((fallback, index) => {
+    const item = value[index];
+    if (!item || typeof item !== 'object') return { ...fallback };
+    const record = item as Record<string, unknown>;
+    return {
+      title: typeof record.title === 'string' && record.title.trim() ? record.title : fallback.title,
+      desc: typeof record.desc === 'string' && record.desc.trim() ? record.desc : typeof record.description === 'string' && record.description.trim() ? record.description : fallback.desc,
+    };
+  });
+}
+
+function normalizeAchievements(value: unknown): AchievementStat[] {
+  if (!Array.isArray(value)) return DEFAULT_ACHIEVEMENTS.map((item) => ({ ...item }));
+  return DEFAULT_ACHIEVEMENTS.map((fallback, index) => {
+    const item = value[index];
+    if (!item || typeof item !== 'object') return { ...fallback };
+    const record = item as Record<string, unknown>;
+    return {
+      label: typeof record.label === 'string' && record.label.trim() ? record.label : fallback.label,
+      value: typeof record.value === 'string' && record.value.trim() ? record.value : fallback.value,
+    };
+  });
+}
