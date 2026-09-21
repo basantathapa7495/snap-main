@@ -115,17 +115,12 @@ export default function PublicSchoolPage() {
     { label: 'Contact', href: '#contact', icon: Mail },
   ];
   return <div className={`min-h-screen text-gray-900 ${pageStyle}`}>
-    <header className="sticky top-0 z-40 overflow-hidden border-b border-blue-100/80 bg-white/90 shadow-[0_8px_30px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-      {/* Soft navbar background */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-blue-50/90 via-white/80 to-indigo-50/90" aria-hidden="true" />
-      <div className="pointer-events-none absolute -left-16 -top-20 h-40 w-40 rounded-full bg-blue-300/20 blur-3xl" aria-hidden="true" />
-      <div className="pointer-events-none absolute -right-12 -top-20 h-40 w-40 rounded-full bg-indigo-300/20 blur-3xl" aria-hidden="true" />
-
-      <div className="relative mx-auto flex h-[72px] max-w-7xl items-center px-4 sm:h-20 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:h-[72px] sm:px-6 lg:grid lg:grid-cols-[minmax(220px,1fr)_auto_minmax(220px,1fr)] lg:gap-5 lg:px-8">
         {/* Brand */}
         <Link href="#" className="group flex min-w-0 shrink-0 items-center gap-3">
-          <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 p-[2px] shadow-lg shadow-blue-500/20 transition duration-300 group-hover:scale-105 group-hover:rotate-2 group-hover:shadow-blue-500/30 sm:h-14 sm:w-14">
-            <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white p-1">
+          <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl p-0.5 shadow-sm transition duration-200 group-hover:scale-[1.03] sm:h-12 sm:w-12 ${theme.solid}`}>
+            <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-[10px] bg-white p-1">
               {school.logo_url ? (
                 <NextImage
                   src={school.logo_url}
@@ -133,10 +128,10 @@ export default function PublicSchoolPage() {
                   width={56}
                   height={56}
                   unoptimized
-                  className="h-full w-full rounded-full object-cover"
+                  className="h-full w-full rounded-lg object-cover"
                 />
               ) : (
-                <span className={`flex h-full w-full items-center justify-center rounded-full text-white ${theme.solid}`}>
+                <span className={`flex h-full w-full items-center justify-center rounded-lg text-white ${theme.solid}`}>
                   <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6" />
                 </span>
               )}
@@ -144,7 +139,7 @@ export default function PublicSchoolPage() {
           </span>
 
           <span className="min-w-0">
-            <span className="block max-w-[175px] truncate text-sm font-extrabold leading-tight tracking-tight text-gray-950 transition group-hover:text-blue-700 sm:max-w-[250px] sm:text-base lg:max-w-[280px]">
+            <span className="block max-w-[190px] truncate text-sm font-extrabold leading-tight tracking-tight text-gray-950 transition group-hover:text-blue-700 sm:max-w-[260px] sm:text-base lg:max-w-[240px]">
               {school.name}
             </span>
             <span className="mt-1 hidden text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-500 sm:block">
@@ -154,32 +149,31 @@ export default function PublicSchoolPage() {
         </Link>
 
         {/* Section links */}
-        <nav className="mx-auto hidden items-center gap-1 lg:flex" aria-label="School website sections">
+        <nav className="hidden items-center justify-self-center rounded-xl border border-gray-200 bg-gray-50/80 p-1 lg:flex" aria-label="School website sections">
           {nav.map(({ label, href, icon: Icon }) => (
             <a
               key={href}
               href={href}
-              className="group/link relative flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-600 transition duration-200 hover:bg-white/80 hover:text-blue-700 hover:shadow-sm"
+              className="group/link flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 transition duration-200 hover:bg-white hover:text-blue-700 hover:shadow-sm"
             >
               <Icon className="h-4 w-4 shrink-0 transition duration-200 group-hover/link:scale-110" strokeWidth={2} />
               {label}
-              <span className="absolute inset-x-3 -bottom-0.5 h-0.5 origin-left scale-x-0 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-transform duration-300 group-hover/link:scale-x-100" />
             </a>
           ))}
         </nav>
 
         {/* Actions */}
-        <div className="ml-auto hidden shrink-0 items-center gap-2.5 lg:flex">
+        <div className="hidden shrink-0 items-center justify-self-end gap-2 lg:flex">
           <Link
             href={`/s/${school.slug}/admission`}
-            className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition duration-300 hover:-translate-y-0.5 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl hover:shadow-blue-600/25"
+            className={`group inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 ${theme.solid} ${theme.hover}`}
           >
             Apply now
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
           </Link>
           <Link
             href={`/s/${school.slug}/login`}
-            className="rounded-xl bg-gray-950 px-4 py-2.5 text-sm font-bold text-white shadow-md transition duration-300 hover:-translate-y-0.5 hover:bg-gray-800 hover:shadow-lg"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-bold text-gray-800 transition hover:border-gray-400 hover:bg-gray-50"
           >
             Login
           </Link>
@@ -188,7 +182,7 @@ export default function PublicSchoolPage() {
         <button
           type="button"
           onClick={() => setMenuOpen(!menuOpen)}
-          className="ml-auto rounded-xl border border-blue-100 bg-white/90 p-2.5 text-gray-700 shadow-sm transition duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 lg:hidden"
+          className="ml-auto rounded-lg border border-gray-200 bg-white p-2.5 text-gray-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 lg:hidden"
           aria-label="Toggle navigation"
           aria-expanded={menuOpen}
         >
@@ -242,22 +236,9 @@ export default function PublicSchoolPage() {
           Preview mode — your website is visible to you while the school is awaiting approval.
         </div>
       )}
-      <section className={`relative isolate overflow-hidden bg-slate-900 text-white ${template === 'classic' ? 'border-b-8 border-amber-500' : ''}`}>
-        <div className="absolute inset-0">
-          <NextImage
-            src={school.banner_url || '/hero-image.png'}
-            alt={school.banner_url ? `${school.name} campus` : 'Classroom and school desks'}
-            fill
-            priority
-            unoptimized={Boolean(school.banner_url)}
-            sizes="100vw"
-            className="object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-blue-950/70 to-slate-900/25" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-slate-950/10" />
-        </div>
+      <section className={`school-honeycomb relative isolate overflow-hidden bg-slate-950 text-white ${template === 'classic' ? 'border-b-8 border-amber-500' : ''}`}>
 
-        <div className={`relative mx-auto grid max-w-[1600px] items-center gap-10 px-5 sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.65fr)] lg:px-10 xl:px-12 2xl:px-16 ${template === 'bold' ? 'min-h-[760px] py-24 sm:py-32' : 'min-h-[640px] py-16 sm:py-20'}`}>
+        <div className={`relative z-10 mx-auto grid max-w-[1600px] items-center gap-10 px-5 sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.65fr)] lg:px-10 xl:px-12 2xl:px-16 ${template === 'bold' ? 'min-h-[760px] py-24 sm:py-32' : 'min-h-[640px] py-16 sm:py-20'}`}>
           <div className="max-w-4xl">
             <span className={`inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-md ${theme.text.replace('text-', 'ring-')}`}>
               <Building2 className="h-3.5 w-3.5" />
