@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, Clock3, Globe, GraduationCap, Image as ImageIcon, Loader2, Mail, MapPin, Menu, Phone, Quote, UserRound, UsersRound, X } from 'lucide-react';
+import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Globe, GraduationCap, Image as ImageIcon, Loader2, Mail, MapPin, Menu, Phone, Quote, UserRound, UsersRound, X } from 'lucide-react';
 
 type School = Record<string, any>;
 type NewsItem = { id: string; title: string; content: string | null; event_date: string | null; category: string | null; location: string | null; is_event: boolean | null };
@@ -44,6 +44,7 @@ export default function PublicSchoolPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [activeHeroSlide, setActiveHeroSlide] = useState(0);
 
   useEffect(() => {
     if (!slug) return;
@@ -103,9 +104,17 @@ export default function PublicSchoolPage() {
   const sectionRadius = template === 'classic' ? 'rounded-none' : template === 'bold' ? 'rounded-[2rem]' : 'rounded-[32px]';
   const programs = useMemo(() => Array.isArray(school?.programs) ? school.programs : [], [school]);
   const whyChooseUs = useMemo(() => Array.isArray(school?.why_choose_us) ? school.why_choose_us : [], [school]);
+  const heroGallery = useMemo(() => gallery.slice(0, 5), [gallery]);
   const heroMotto = school?.motto?.trim() || DEFAULT_SCHOOL_MOTTO;
   const heroDescription = school?.short_description?.trim() || DEFAULT_SCHOOL_DESCRIPTION;
   const { typedText, typingComplete } = useTypingText(heroMotto);
+
+  useEffect(() => {
+    setActiveHeroSlide(0);
+    if (heroGallery.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = window.setInterval(() => setActiveHeroSlide((current) => (current + 1) % heroGallery.length), 5000);
+    return () => window.clearInterval(timer);
+  }, [heroGallery.length]);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-gray-50"><Loader2 className="h-8 w-8 animate-spin text-blue-600" /><span className="ml-3 font-medium text-gray-600">Loading school website…</span></div>;
   if (error || !school) return <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4"><div className="max-w-lg rounded-3xl border border-red-200 bg-white p-8 text-center shadow-sm"><AlertCircle className="mx-auto h-10 w-10 text-red-500" /><h1 className="mt-4 text-xl font-bold text-gray-950">School website unavailable</h1><p className="mt-2 text-sm leading-6 text-gray-600">{error}</p><Link href="/schools" className="mt-6 inline-flex rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white">Browse schools</Link></div></div>;
@@ -243,7 +252,7 @@ export default function PublicSchoolPage() {
       )}
       <section className={`school-pattern-grid relative isolate overflow-hidden bg-white text-gray-950 ${template === 'classic' ? 'border-b-8 border-amber-500' : ''}`}>
 
-        <div className={`relative z-10 mx-auto grid max-w-[1600px] items-center gap-10 px-5 sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.65fr)] lg:px-10 xl:px-12 2xl:px-16 ${template === 'bold' ? 'min-h-[760px] py-24 sm:py-32' : 'min-h-[640px] py-16 sm:py-20'}`}>
+        <div className={`relative z-10 mx-auto grid max-w-[1400px] items-center gap-8 px-5 py-12 sm:px-8 sm:py-14 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.72fr)] lg:px-10 xl:px-12 ${template === 'bold' ? 'min-h-[620px] lg:py-16' : 'min-h-[520px] lg:py-14'}`}>
           <div className="max-w-4xl">
             <span className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest ${theme.border} ${theme.soft} ${theme.text}`}>
               <Building2 className="h-3.5 w-3.5" />
@@ -284,42 +293,41 @@ export default function PublicSchoolPage() {
             </div>
           </div>
 
-          <aside className={`relative hidden min-h-[430px] overflow-hidden border border-gray-200 bg-white/95 p-7 shadow-xl shadow-gray-200/70 lg:flex lg:flex-col xl:p-8 ${sectionRadius}`}>
-            <div className="relative flex items-center justify-between">
-              <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] ${theme.border} ${theme.soft} ${theme.text}`}>
-                <Quote className="h-3.5 w-3.5" />
-                From the principal
-              </span>
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />
-            </div>
-
-            <div className="relative mt-6 flex items-center gap-4">
-              <div className={`flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white shadow-sm ${theme.border}`}>
-                {school.principal_image_url ? (
-                  <NextImage src={school.principal_image_url} alt={`${school.principal || 'School principal'} portrait`} width={80} height={80} unoptimized className="h-full w-full rounded-full object-cover" />
-                ) : (
-                  <UserRound className={`h-9 w-9 ${theme.text}`} strokeWidth={1.8} />
-                )}
+          <aside className={`relative overflow-hidden border border-gray-200 bg-white shadow-xl shadow-gray-200/70 ${sectionRadius}`}>
+            {heroGallery.length > 0 ? (
+              <div className="relative aspect-[4/3] min-h-[260px]">
+                <NextImage
+                  key={heroGallery[activeHeroSlide].id}
+                  src={heroGallery[activeHeroSlide].image_url}
+                  alt={heroGallery[activeHeroSlide].label || `${school.name} school life`}
+                  fill
+                  priority
+                  unoptimized
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent px-5 pb-5 pt-14 text-white">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/75">Life at {school.name}</p>
+                  <p className="mt-1 text-sm font-semibold">{heroGallery[activeHeroSlide].label || 'Learning, growing and achieving together'}</p>
+                </div>
+                {heroGallery.length > 1 && <>
+                  <button type="button" onClick={() => setActiveHeroSlide((current) => (current - 1 + heroGallery.length) % heroGallery.length)} aria-label="Show previous school photo" className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-gray-800 shadow-sm transition hover:bg-white"><ChevronLeft className="h-5 w-5" /></button>
+                  <button type="button" onClick={() => setActiveHeroSlide((current) => (current + 1) % heroGallery.length)} aria-label="Show next school photo" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 text-gray-800 shadow-sm transition hover:bg-white"><ChevronRight className="h-5 w-5" /></button>
+                  <div className="absolute bottom-4 right-4 flex gap-1.5" aria-label={`Photo ${activeHeroSlide + 1} of ${heroGallery.length}`}>{heroGallery.map((image, index) => <button key={image.id} type="button" onClick={() => setActiveHeroSlide(index)} aria-label={`Show school photo ${index + 1}`} className={`h-2 rounded-full transition ${index === activeHeroSlide ? 'w-6 bg-white' : 'w-2 bg-white/60 hover:bg-white/90'}`} />)}</div>
+                </>}
               </div>
-              <div className="min-w-0">
-                <p className="truncate text-lg font-extrabold text-gray-950">{school.principal || 'School Principal'}</p>
-                <p className="mt-1 text-sm font-medium text-gray-500">Principal · {school.name}</p>
-              </div>
-            </div>
-
-            <div className={`relative mt-6 flex-1 border-l-2 pl-5 ${theme.border}`}>
-              <p className="whitespace-pre-line text-[15px] leading-7 text-gray-600">{school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE}</p>
-            </div>
-
-            {(school.address || school.established_year) && (
-              <div className="relative mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-gray-200 pt-5 text-xs font-semibold text-gray-500">
-                {school.address && <span className="flex items-center gap-2"><MapPin className={`h-4 w-4 ${theme.text}`} /><span className="line-clamp-1">{school.address}</span></span>}
-                {school.established_year && <span className="flex items-center gap-2"><CalendarDays className={`h-4 w-4 ${theme.text}`} />Since {school.established_year} B.S.</span>}
+            ) : (
+              <div className="flex min-h-[260px] flex-col items-center justify-center p-8 text-center">
+                <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${theme.soft} ${theme.text}`}><ImageIcon className="h-6 w-6" /></span>
+                <h2 className="mt-4 text-lg font-bold text-gray-950">School photos</h2>
+                <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500">Add one to five photos in the school gallery to show your campus, students and activities here.</p>
               </div>
             )}
           </aside>
         </div>
       </section>
+
+      <section className="border-b border-gray-100 bg-white py-10 sm:py-12"><div className="mx-auto grid max-w-6xl gap-6 px-4 sm:px-6 md:grid-cols-[auto_1fr] md:items-center lg:px-8"><div className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white shadow-sm ${theme.border}`}>{school.principal_image_url ? <NextImage src={school.principal_image_url} alt={`${school.principal || 'School principal'} portrait`} width={64} height={64} unoptimized className="h-full w-full object-cover" /> : <UserRound className={`h-7 w-7 ${theme.text}`} strokeWidth={1.8} />}</div><div><p className={`text-xs font-bold uppercase tracking-[0.16em] ${theme.text}`}>Message from the principal</p><p className="mt-2 text-base leading-7 text-gray-600">{school.principal_message?.trim() || DEFAULT_PRINCIPAL_MESSAGE}</p><p className="mt-3 text-sm font-bold text-gray-950">{school.principal || 'School Principal'} <span className="font-medium text-gray-500">· Principal, {school.name}</span></p></div></div></section>
 
       <section id="about" className="scroll-mt-24 py-16 sm:py-24"><div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8"><Eyebrow text="About our school" color={theme.text} /><h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">Learning, character and opportunity</h2><p className="mt-5 whitespace-pre-line text-base leading-8 text-gray-600">{school.about_text?.trim() || DEFAULT_ABOUT_TEXT}</p><div className="mt-8 grid gap-4 sm:grid-cols-2"><InfoCard title="Our mission" text={school.mission?.trim() || DEFAULT_MISSION} icon={<BookOpen className="h-5 w-5" />} theme={theme} /><InfoCard title="Our vision" text={school.vision?.trim() || DEFAULT_VISION} icon={<GraduationCap className="h-5 w-5" />} theme={theme} /></div></div></section>
 
