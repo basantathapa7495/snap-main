@@ -54,11 +54,12 @@ html { scroll-behavior: smooth; }
 }
 
 .nepsom-pattern-chip::before {
+  --nepsom-chip-size: 110px;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%232563eb' stroke-opacity='.28' stroke-width='1'%3E%3Cpath d='M0 20h22l10 10h20M120 20H98L88 30H70M0 82h28l12-12h18M120 88H94L82 76H68M20 0v22l10 10v20M96 0v20L84 32v20M22 120V98l12-12V68M98 120V96L86 84V68'/%3E%3Crect x='52' y='52' width='16' height='16' rx='3'/%3E%3C/g%3E%3Cg fill='%232563eb' fill-opacity='.36'%3E%3Ccircle cx='32' cy='30' r='2'/%3E%3Ccircle cx='88' cy='30' r='2'/%3E%3Ccircle cx='40' cy='70' r='2'/%3E%3Ccircle cx='82' cy='76' r='2'/%3E%3Ccircle cx='30' cy='32' r='2'/%3E%3Ccircle cx='84' cy='32' r='2'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 120px 120px;
-  mask-image: linear-gradient(to bottom, transparent, black 18%, black 78%, transparent);
-  opacity: 0.18;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%232563eb' stroke-opacity='.62' stroke-width='1.35'%3E%3Cpath d='M0 20h22l10 10h20M120 20H98L88 30H70M0 82h28l12-12h18M120 88H94L82 76H68M20 0v22l10 10v20M96 0v20L84 32v20M22 120V98l12-12V68M98 120V96L86 84V68'/%3E%3Crect x='52' y='52' width='16' height='16' rx='3'/%3E%3C/g%3E%3Cg fill='%232563eb' fill-opacity='.72'%3E%3Ccircle cx='32' cy='30' r='2.2'/%3E%3Ccircle cx='88' cy='30' r='2.2'/%3E%3Ccircle cx='40' cy='70' r='2.2'/%3E%3Ccircle cx='82' cy='76' r='2.2'/%3E%3Ccircle cx='30' cy='32' r='2.2'/%3E%3Ccircle cx='84' cy='32' r='2.2'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: var(--nepsom-chip-size) var(--nepsom-chip-size);
+  mask-image: linear-gradient(to bottom, transparent 1%, black 10%, black 90%, transparent 99%);
+  opacity: 0.42;
   animation: nepsom-chip-drift 42s linear infinite;
 }
 
@@ -67,7 +68,7 @@ html { scroll-behavior: smooth; }
 }
 
 @keyframes nepsom-chip-drift {
-  to { background-position: 120px 120px; }
+  to { background-position: var(--nepsom-chip-size) var(--nepsom-chip-size); }
 }
 
 @media (max-width: 640px) {
@@ -77,8 +78,8 @@ html { scroll-behavior: smooth; }
   }
 
   .nepsom-pattern-chip::before {
-    background-size: 96px 96px;
-    opacity: 0.13;
+    --nepsom-chip-size: 88px;
+    opacity: 0.32;
   }
 }
 
