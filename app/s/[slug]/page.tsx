@@ -462,15 +462,44 @@ export default function PublicSchoolPage() {
         </div>
       </section>
     </main>
-    <footer className="border-t border-gray-800 bg-gray-950 px-4 py-7 text-center text-xs text-gray-500">
-      <p>© {new Date().getFullYear()} {school.name}. All rights reserved.</p>
-      <p className="mt-2 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 leading-5">
-        <span>Powered by</span>
-        <a href="https://nepsom.xyz" target="_blank" rel="noreferrer" className="font-bold text-blue-300 transition hover:text-blue-200 hover:underline">NEPSOM</a>
-        <span aria-hidden="true">·</span>
-        <span>Designed and built by</span>
-        <a href="https://basantasaru.com" target="_blank" rel="noreferrer" className="font-bold text-gray-300 transition hover:text-white hover:underline">Basanta Thapa · basantasaru.com</a>
-      </p>
+    <footer className="relative overflow-hidden border-t border-white/10 bg-gray-950 text-gray-400">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-400/70 to-transparent" aria-hidden="true" />
+      <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-6 md:grid-cols-[1.15fr_1fr] lg:grid-cols-[1.15fr_1.5fr_0.9fr] lg:px-8">
+        <div>
+          <a href="#" className="group inline-flex items-center gap-3">
+            <span className={`flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white p-1 shadow-lg ${school.logo_url ? '' : theme.solid}`}>
+              {school.logo_url ? <NextImage src={school.logo_url} alt={`${school.name} logo`} width={44} height={44} unoptimized className="h-full w-full rounded-lg object-cover" /> : <GraduationCap className="h-5 w-5 text-white" />}
+            </span>
+            <span>
+              <span className="block max-w-64 truncate text-base font-bold text-white transition group-hover:text-blue-300">{school.name}</span>
+              <span className="mt-1 block text-xs">{school.school_level || school.school_type || 'Official school website'}</span>
+            </span>
+          </a>
+          <p className="mt-4 max-w-sm text-sm leading-6">{heroDescription}</p>
+        </div>
+
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-gray-500">Explore website</p>
+          <nav className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3" aria-label="Footer school website sections">
+            {nav.map(({ label, href, icon: Icon }) => <a key={href} href={href} className="group flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-gray-400 transition hover:bg-white/5 hover:text-white"><Icon className="h-4 w-4 text-gray-600 transition group-hover:text-blue-300" strokeWidth={2} />{label}</a>)}
+          </nav>
+        </div>
+
+        <div className="md:col-span-2 lg:col-span-1">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-gray-500">Website platform</p>
+          <a href="https://nepsom.xyz" target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-400/20 bg-blue-400/10 px-3.5 py-2.5 text-sm font-bold text-blue-200 transition hover:border-blue-300/40 hover:bg-blue-400/15 hover:text-white">
+            Powered by NEPSOM <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+          <p className="mt-4 text-xs leading-5">Designed and built by <a href="https://basantasaru.com" target="_blank" rel="noreferrer" className="font-bold text-gray-200 transition hover:text-white hover:underline">Basanta Thapa</a></p>
+        </div>
+      </div>
+
+      <div className="border-t border-white/10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-4 text-xs sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <p>© {new Date().getFullYear()} {school.name}. All rights reserved.</p>
+          <a href="#" className="font-semibold text-gray-400 transition hover:text-white">Back to top ↑</a>
+        </div>
+      </div>
     </footer>
   </div>;
 }
