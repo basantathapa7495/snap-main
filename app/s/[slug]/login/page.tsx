@@ -1,13 +1,16 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+
+type SchoolInfo = { name: string; logo_url: string | null };
 
 export default function SchoolLoginPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const [school, setSchool] = useState<any>(null);
+  const [school, setSchool] = useState<SchoolInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,7 +33,7 @@ export default function SchoolLoginPage() {
         
         <div className="rounded-2xl bg-white p-8 shadow-xl border border-gray-100 text-center">
           {school?.logo_url ? (
-            <img src={school.logo_url} alt="Logo" className="mx-auto h-20 w-20 rounded-full object-cover border-4 border-blue-100 shadow-md" />
+            <Image src={school.logo_url} alt={`${school.name} logo`} width={80} height={80} unoptimized className="mx-auto h-20 w-20 rounded-full border-4 border-blue-100 object-cover shadow-md" />
           ) : (
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-4xl shadow-md">🏫</div>
           )}
@@ -71,6 +74,14 @@ export default function SchoolLoginPage() {
             >
               🔐 Principal / Admin Login
             </Link>
+
+            <div className="border-t border-gray-100 pt-4">
+              <p className="text-xs font-semibold text-gray-500">New to this school portal?</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Link href={`/s/${slug}/register?role=teacher`} className="rounded-xl border border-blue-200 bg-white px-3 py-2.5 text-xs font-bold text-blue-700 transition hover:bg-blue-50">Request teacher account</Link>
+                <Link href={`/s/${slug}/register?role=student`} className="rounded-xl border border-green-200 bg-white px-3 py-2.5 text-xs font-bold text-green-700 transition hover:bg-green-50">Request student account</Link>
+              </div>
+            </div>
           </div>
         </div>
         <p className="mt-6 text-center text-xs text-gray-400">Powered by NEPSOM 🇳🇵</p>
