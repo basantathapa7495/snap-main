@@ -678,7 +678,7 @@ export default function HomePage() {
       {/* ===== How It Works ===== */}
 <section
   id="how"
-  className="nepsom-pattern-dots relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
+  className="nepsom-pattern-chip relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
 >
   <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     {/* Heading */}
@@ -912,10 +912,7 @@ export default function HomePage() {
 </section>
 
      {/* ===== ⚖️ COMPARISON TABLE ===== */}
-<section className="nepsom-pattern-glow relative overflow-hidden py-14 sm:py-20 lg:py-24">
-  {/* Subtle background gradient */}
-  <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50 to-white pointer-events-none"></div>
-  
+<section className="nepsom-pattern-chip relative overflow-hidden py-14 sm:py-20 lg:py-24">
   <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
     <div className="text-center">
       <span className="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-sm font-semibold text-red-600 mb-4 ring-1 ring-inset ring-red-100">
@@ -1033,7 +1030,7 @@ export default function HomePage() {
       {/* ===== Features ===== */}
 <section
   id="features"
-  className="nepsom-pattern-dots relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
+  className="nepsom-pattern-chip relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
 >
   <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     {/* Heading */}
@@ -1177,7 +1174,7 @@ export default function HomePage() {
       
 
       {/* ===== Testimonials ===== */}
-<section className="nepsom-pattern-glow relative overflow-hidden bg-white py-14 sm:py-20 lg:py-28">
+<section className="nepsom-pattern-chip relative overflow-hidden bg-white py-14 sm:py-20 lg:py-28">
   <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     {/* Heading */}
     <div className="mx-auto max-w-3xl text-center">
@@ -1386,7 +1383,7 @@ export default function HomePage() {
       {/* ===== Pricing ===== */}
 <section
   id="pricing"
-  className="nepsom-pattern-dots relative scroll-mt-24 overflow-hidden bg-gray-50/70 py-14 sm:py-20 lg:py-28"
+  className="nepsom-pattern-chip relative scroll-mt-24 overflow-hidden bg-gray-50/70 py-14 sm:py-20 lg:py-28"
 >
   <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
     <div className="mx-auto max-w-3xl text-center">
@@ -1476,7 +1473,7 @@ export default function HomePage() {
 </section>
 
 {/* ===== FAQ ===== */}
-<section id="faq" className="nepsom-pattern-dots relative scroll-mt-24 overflow-hidden py-14 sm:py-20 lg:py-24">
+<section id="faq" className="nepsom-pattern-chip relative scroll-mt-24 overflow-hidden py-14 sm:py-20 lg:py-24">
   <div className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
     {/* Header */}
     <div className="text-center">
