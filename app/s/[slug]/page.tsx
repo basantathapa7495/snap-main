@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, Clock3, Globe, GraduationCap, Image as ImageIcon, Loader2, Mail, MapPin, Menu, Phone, Quote, UserRound, X } from 'lucide-react';
+import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, Clock3, Globe, GraduationCap, Image as ImageIcon, Loader2, Mail, MapPin, Menu, Phone, Quote, UserRound, UsersRound, X } from 'lucide-react';
 
 type School = Record<string, any>;
 type NewsItem = { id: string; title: string; content: string | null; event_date: string | null; category: string | null; location: string | null; is_event: boolean | null };
@@ -113,6 +113,7 @@ export default function PublicSchoolPage() {
   const nav = [
     { label: 'About', href: '#about', icon: Building2 },
     { label: 'Programs', href: '#programs', icon: BookOpen },
+    { label: 'Teachers', href: '#teachers', icon: UsersRound },
     { label: 'Updates', href: '#updates', icon: CalendarDays },
     { label: 'Gallery', href: '#gallery', icon: ImageIcon },
     { label: 'Contact', href: '#contact', icon: Mail },
