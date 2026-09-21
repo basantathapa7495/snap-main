@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle, BookOpen, Check, Eye, LayoutTemplate, Loader2, Palette,
-  Image as ImageIcon, RefreshCw, Rocket, Save, Settings, ShieldCheck, Upload, UserRound,
+  Image as ImageIcon, ImagePlus, RefreshCw, Rocket, Save, Settings, ShieldCheck, Trash2, Upload, UserRound,
 } from 'lucide-react';
+
+type GalleryImage = { id: string; image_url: string; label: string | null };
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
 import { supabase } from '@/lib/supabase';
@@ -78,6 +80,9 @@ export default function WebsiteEditorPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [uploadingPrincipalPhoto, setUploadingPrincipalPhoto] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [removingGalleryId, setRemovingGalleryId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [lastAction, setLastAction] = useState<'draft' | 'published' | null>(null);
   const [error, setError] = useState('');
@@ -116,6 +121,13 @@ export default function WebsiteEditorPage() {
         .single();
 
       if (schoolError) throw schoolError;
+      const { data: galleryData, error: galleryError } = await supabase
+        .from('gallery_images')
+        .select('id,image_url,label')
+        .eq('school_id', profile.school_id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (galleryError) throw galleryError;
       const storedTheme = school.theme_color ?? 'blue';
       const [themeColor, storedTemplate] = storedTheme.includes(':') ? storedTheme.split(':') : [storedTheme, 'modern'];
       const publishedForm: SchoolForm = {
@@ -132,6 +144,7 @@ export default function WebsiteEditorPage() {
       };
       setSchoolId(profile.school_id);
       setPublishedSlug(publishedForm.slug);
+      setGalleryImages(galleryData ?? []);
       const savedDraft = window.localStorage.getItem(`nepsom-website-draft:${publishedForm.slug}`);
       if (savedDraft) {
         try {
@@ -266,6 +279,72 @@ export default function WebsiteEditorPage() {
     }
   };
 
+  const uploadGalleryImages = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(event.target.files ?? []);
+    event.target.value = '';
+    if (!selectedFiles.length || !schoolId) return;
+
+    const remainingSlots = 5 - galleryImages.length;
+    if (remainingSlots <= 0) {
+      setError('You can add a maximum of 5 school photos. Remove one before uploading another.');
+      return;
+    }
+    if (selectedFiles.length > remainingSlots) {
+      setError(`You can add ${remainingSlots} more photo${remainingSlots === 1 ? '' : 's'}.`);
+      return;
+    }
+    if (selectedFiles.some((file) => !['image/png', 'image/jpeg', 'image/webp'].includes(file.type))) {
+      setError('Please choose only PNG, JPG or WebP photos.');
+      return;
+    }
+    if (selectedFiles.some((file) => file.size > 5 * 1024 * 1024)) {
+      setError('Each school photo must be smaller than 5 MB.');
+      return;
+    }
+
+    setUploadingGallery(true);
+    setError('');
+    try {
+      const newImages: GalleryImage[] = [];
+      for (const file of selectedFiles) {
+        const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const filePath = `${schoolId}/gallery/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+        const { error: uploadError } = await supabase.storage.from('school-assets').upload(filePath, file, { cacheControl: '3600', upsert: false });
+        if (uploadError) throw uploadError;
+        const { data: publicUrlData } = supabase.storage.from('school-assets').getPublicUrl(filePath);
+        const label = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim() || 'School photo';
+        const { data: galleryRow, error: insertError } = await supabase
+          .from('gallery_images')
+          .insert({ school_id: schoolId, image_url: publicUrlData.publicUrl, label })
+          .select('id,image_url,label')
+          .single();
+        if (insertError) throw insertError;
+        newImages.push(galleryRow);
+      }
+      setGalleryImages((current) => [...current, ...newImages].slice(0, 5));
+      setSaved(false);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Could not upload the school photos.');
+    } finally {
+      setUploadingGallery(false);
+    }
+  };
+
+  const removeGalleryImage = async (image: GalleryImage) => {
+    if (!schoolId) return;
+    setRemovingGalleryId(image.id);
+    setError('');
+    try {
+      const { error: deleteError } = await supabase.from('gallery_images').delete().eq('id', image.id).eq('school_id', schoolId);
+      if (deleteError) throw deleteError;
+      setGalleryImages((current) => current.filter((item) => item.id !== image.id));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Could not remove this school photo.');
+    } finally {
+      setRemovingGalleryId(null);
+    }
+  };
+
   const saveDraft = () => {
     if (!publishedSlug) return;
     window.localStorage.setItem(`nepsom-website-draft:${publishedSlug}`, JSON.stringify({ form, updatedAt: new Date().toISOString() }));
@@ -386,29 +465,21 @@ export default function WebsiteEditorPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="overflow-hidden rounded-2xl border border-indigo-100 bg-white shadow-sm">
-                    <div className="relative h-48 bg-slate-900 sm:h-56">
-                      <img src={form.banner_url || '/hero-image.png'} alt="Hero background preview" className="h-full w-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/75 via-blue-950/45 to-transparent" />
-                      <div className="absolute bottom-4 left-4">
-                        <span className="rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
-                          {form.banner_url ? 'Your uploaded background' : 'Default school background'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-5 sm:p-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <h3 className="font-bold text-gray-950">Hero background image</h3>
-                        <p className="mt-1 text-sm leading-6 text-gray-600">Upload a wide classroom, campus or school photo. JPG, PNG or WebP, up to 5 MB.</p>
+                        <div className="flex items-center gap-2"><ImageIcon className="h-5 w-5 text-blue-600" /><h3 className="font-bold text-gray-950">Hero photo slider</h3></div>
+                        <p className="mt-1 text-sm leading-6 text-gray-600">Add 1–5 photos of your school, students, activities or campus. They will appear in the public website hero slider.</p>
                       </div>
-                      <label className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition ${uploadingBanner ? 'cursor-wait bg-indigo-400' : 'bg-indigo-600 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-md'}`}>
-                        {uploadingBanner ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                        {uploadingBanner ? 'Uploading…' : form.banner_url ? 'Replace background' : 'Upload background'}
-                        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={uploadBanner} disabled={uploadingBanner || !schoolId} className="sr-only" />
+                      <label className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition ${uploadingGallery || galleryImages.length >= 5 ? 'cursor-not-allowed bg-blue-300' : 'bg-blue-600 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-md'}`}>
+                        {uploadingGallery ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+                        {uploadingGallery ? 'Uploading…' : `Add photos (${galleryImages.length}/5)`}
+                        <input type="file" multiple accept="image/png,image/jpeg,image/webp" onChange={uploadGalleryImages} disabled={uploadingGallery || galleryImages.length >= 5 || !schoolId} className="sr-only" />
                       </label>
                     </div>
+                    {galleryImages.length > 0 ? <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{galleryImages.map((image, index) => <figure key={image.id} className="group relative overflow-hidden rounded-xl border border-blue-100 bg-white"><img src={image.image_url} alt={image.label || `School photo ${index + 1}`} className="aspect-square h-full w-full object-cover" /><figcaption className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-gray-950/75 to-transparent px-2 pb-2 pt-6 text-xs font-semibold text-white">{image.label || `Photo ${index + 1}`}</figcaption><button type="button" onClick={() => removeGalleryImage(image)} disabled={removingGalleryId === image.id} aria-label={`Remove ${image.label || `school photo ${index + 1}`}`} className="absolute right-2 top-2 rounded-lg bg-white/95 p-1.5 text-red-600 opacity-100 shadow-sm transition hover:bg-red-50 sm:opacity-0 sm:group-hover:opacity-100 disabled:cursor-wait"><Trash2 className="h-4 w-4" /></button></figure>)}</div> : <div className="mt-5 flex min-h-32 items-center justify-center rounded-xl border border-dashed border-blue-200 bg-white px-5 text-center text-sm text-gray-500">No hero photos yet. Add your first photo to create the school website slider.</div>}
                   </div>
-                  <div className="grid gap-5 sm:grid-cols-2"><Field label="Logo image URL (optional)" value={form.logo_url} onChange={(v) => update('logo_url', v)} type="url" /><Field label="Background image URL (optional)" value={form.banner_url} onChange={(v) => update('banner_url', v)} type="url" /><Field label="Phone" value={form.phone} onChange={(v) => update('phone', v)} /><Field label="Email" value={form.email} onChange={(v) => update('email', v)} type="email" /><Field label="Address" value={form.address} onChange={(v) => update('address', v)} wide /><Field label="Office hours" value={form.office_hours} onChange={(v) => update('office_hours', v)} wide /><Field label="Facebook URL" value={form.facebook} onChange={(v) => update('facebook', v)} type="url" /><Field label="Instagram URL" value={form.instagram} onChange={(v) => update('instagram', v)} type="url" /><Field label="YouTube URL" value={form.youtube} onChange={(v) => update('youtube', v)} type="url" /></div></div>}
+                  <div className="grid gap-5 sm:grid-cols-2"><Field label="Logo image URL (optional)" value={form.logo_url} onChange={(v) => update('logo_url', v)} type="url" /><Field label="Phone" value={form.phone} onChange={(v) => update('phone', v)} /><Field label="Email" value={form.email} onChange={(v) => update('email', v)} type="email" /><Field label="Address" value={form.address} onChange={(v) => update('address', v)} wide /><Field label="Office hours" value={form.office_hours} onChange={(v) => update('office_hours', v)} wide /><Field label="Facebook URL" value={form.facebook} onChange={(v) => update('facebook', v)} type="url" /><Field label="Instagram URL" value={form.instagram} onChange={(v) => update('instagram', v)} type="url" /><Field label="YouTube URL" value={form.youtube} onChange={(v) => update('youtube', v)} type="url" /></div></div>}
                 </section>
               </div>
             )}
