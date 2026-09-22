@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
+  CalendarDays,
   Check,
   ChevronDown,
   Copy,
@@ -27,7 +28,7 @@ import {
 } from "lucide-react";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
-import AccountRequestsPanel from "@/components/AccountRequestsPanel";
+import TeacherOperationsPanel from "@/components/TeacherOperationsPanel";
 import { supabase } from "@/lib/supabase";
 
 type Teacher = {
@@ -42,6 +43,10 @@ type Teacher = {
   salary: number | string | null;
   created_at: string | null;
   user_id: string | null;
+  department: string | null;
+  joining_date: string | null;
+  date_of_birth: string | null;
+  employment_status: string | null;
 };
 
 type TemporaryCredential = {
@@ -59,6 +64,10 @@ type TeacherForm = {
   qualification: string;
   address: string;
   salary: string;
+  department: string;
+  joining_date: string;
+  date_of_birth: string;
+  employment_status: string;
 };
 
 const emptyForm: TeacherForm = {
@@ -69,6 +78,10 @@ const emptyForm: TeacherForm = {
   qualification: "",
   address: "",
   salary: "",
+  department: "",
+  joining_date: "",
+  date_of_birth: "",
+  employment_status: "active",
 };
 
 function initials(name: string) {
@@ -156,7 +169,7 @@ export default function TeachersPage() {
         const { data, error: teachersError } = await supabase
           .from("teachers")
           .select(
-            "id, school_id, name, subject, phone, email, qualification, address, salary, created_at, user_id",
+            "id, school_id, name, subject, phone, email, qualification, address, salary, created_at, user_id, department, joining_date, date_of_birth, employment_status",
           )
           .eq("school_id", profile.school_id)
           .order("created_at", { ascending: false });
@@ -192,7 +205,7 @@ export default function TeachersPage() {
       ...Array.from(
         new Set(
           teachers
-            .map((teacher) => teacher.subject)
+            .map((teacher) => teacher.department || teacher.subject)
             .filter((value): value is string => Boolean(value)),
         ),
       ).sort(),
@@ -208,7 +221,7 @@ export default function TeachersPage() {
         [teacher.name, teacher.subject, teacher.phone, teacher.email].some(
           (value) => value?.toLowerCase().includes(query),
         );
-      const matchesSubject = subject === "All" || teacher.subject === subject;
+      const matchesSubject = subject === "All" || (teacher.department || teacher.subject) === subject;
       const matchesAccount =
         account === "All" ||
         (account === "Active" ? Boolean(teacher.user_id) : !teacher.user_id);
@@ -234,6 +247,10 @@ export default function TeachersPage() {
       qualification: teacher.qualification || "",
       address: teacher.address || "",
       salary: teacher.salary == null ? "" : String(teacher.salary),
+      department: teacher.department || "",
+      joining_date: teacher.joining_date || "",
+      date_of_birth: teacher.date_of_birth || "",
+      employment_status: teacher.employment_status || "active",
     });
     setSelectedTeacher(null);
     setError("");
@@ -254,6 +271,10 @@ export default function TeachersPage() {
       qualification: form.qualification.trim() || null,
       address: form.address.trim() || null,
       salary: form.salary ? Number(form.salary) : null,
+      department: form.department.trim() || null,
+      joining_date: form.joining_date || null,
+      date_of_birth: form.date_of_birth || null,
+      employment_status: form.employment_status,
     };
     try {
       const result = editingTeacher
@@ -305,6 +326,23 @@ export default function TeachersPage() {
     }
     setSelectedTeacher(null);
     setNotice("Teacher deleted.");
+    setRefreshKey((value) => value + 1);
+  }
+
+  async function toggleTeacherStatus(teacher: Teacher) {
+    if (!schoolId) return;
+    const nextStatus = teacher.employment_status === "inactive" ? "active" : "inactive";
+    const { error: statusError } = await supabase
+      .from("teachers")
+      .update({ employment_status: nextStatus })
+      .eq("id", teacher.id)
+      .eq("school_id", schoolId);
+    if (statusError) {
+      setError(statusError.message);
+      return;
+    }
+    setSelectedTeacher(null);
+    setNotice(nextStatus === "inactive" ? "Teacher deactivated." : "Teacher reactivated.");
     setRefreshKey((value) => value + 1);
   }
 
@@ -486,7 +524,7 @@ export default function TeachersPage() {
               <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-bold text-violet-700"><UserPlus className="h-3.5 w-3.5" /> Planned workflow</span>
             </section>
 
-            <AccountRequestsPanel role="teacher" onApproved={() => setRefreshKey((value) => value + 1)} />
+            {schoolId && <TeacherOperationsPanel schoolId={schoolId} teachers={teachers} onTeacherChanged={() => setRefreshKey((value) => value + 1)} />}
 
             {(error || notice) && (
               <div
@@ -592,7 +630,7 @@ export default function TeachersPage() {
                 <Select
                   value={subject}
                   onChange={setSubject}
-                  label="Subject"
+                  label="Department"
                   options={subjects}
                 />
                 <Select
@@ -621,6 +659,7 @@ export default function TeachersPage() {
           onClose={() => setSelectedTeacher(null)}
           onEdit={openEditForm}
           onDelete={deleteTeacher}
+          onToggleStatus={toggleTeacherStatus}
           onLogin={openLogin}
         />
       )}
@@ -744,12 +783,14 @@ function TeacherDetails({
   onClose,
   onEdit,
   onDelete,
+  onToggleStatus,
   onLogin,
 }: {
   teacher: Teacher;
   onClose: () => void;
   onEdit: (teacher: Teacher) => void;
   onDelete: (teacher: Teacher) => void;
+  onToggleStatus: (teacher: Teacher) => void;
   onLogin: (teacher: Teacher) => void;
 }) {
   return (
@@ -777,8 +818,17 @@ function TeacherDetails({
             value={teacher.qualification}
           />
           <Info icon={MapPin} label="Address" value={teacher.address} />
+          <Info icon={UsersRound} label="Department" value={teacher.department} />
+          <Info icon={CalendarDays} label="Joining date" value={teacher.joining_date} />
         </div>
         <div className="mt-6 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => onToggleStatus(teacher)}
+            className="inline-flex items-center gap-2 rounded-xl border border-amber-200 px-4 py-2.5 text-sm font-semibold text-amber-700 hover:bg-amber-50"
+          >
+            {teacher.employment_status === "inactive" ? "Reactivate" : "Deactivate"}
+          </button>
           <button
             type="button"
             onClick={() => onEdit(teacher)}
@@ -879,6 +929,11 @@ function TeacherFormModal({
             onChange={(value) => field("subject", value)}
           />
           <Field
+            label="Department"
+            value={form.department}
+            onChange={(value) => field("department", value)}
+          />
+          <Field
             label="Phone"
             value={form.phone}
             onChange={(value) => field("phone", value)}
@@ -900,6 +955,26 @@ function TeacherFormModal({
             value={form.salary}
             onChange={(value) => field("salary", value)}
           />
+          <Field
+            label="Joining date"
+            type="date"
+            value={form.joining_date}
+            onChange={(value) => field("joining_date", value)}
+          />
+          <Field
+            label="Date of birth"
+            type="date"
+            value={form.date_of_birth}
+            onChange={(value) => field("date_of_birth", value)}
+          />
+          <label className="text-sm font-semibold text-slate-700">
+            Employment status
+            <select value={form.employment_status} onChange={(event) => field("employment_status", event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="on_leave">On leave</option>
+            </select>
+          </label>
           <div className="sm:col-span-2">
             <Field
               label="Address"
