@@ -1,264 +1,31 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { 
-  Plus, Calendar, Clock, CheckCircle, XCircle, AlertCircle, 
-  FileText, X, Save, Briefcase, Thermometer, Siren
-} from 'lucide-react';
-import Sidebar from '@/components/sidebar';
-import TopBar from '@/components/TopBar';
+import { useEffect, useMemo, useState } from "react";
+import { AlertCircle, CalendarDays, CheckCircle2, Clock3, Plus, Send, X, XCircle } from "lucide-react";
+import Sidebar from "@/components/sidebar";
+import TopBar from "@/components/TopBar";
+import { supabase } from "@/lib/supabase";
 
-// --- Mock Data ---
-const leaveStats = {
-  balance: 8,
-  used: 4,
-  pending: 1,
-  totalAnnual: 12
-};
-
-const mockLeaveHistory = [
-  { id: 1, type: 'Casual', from: '10 Bhadra 2083', to: '10 Bhadra 2083', days: 1, reason: 'Personal work', status: 'Approved', appliedOn: '8 Bhadra' },
-  { id: 2, type: 'Sick', from: '2 Bhadra 2083', to: '3 Bhadra 2083', days: 2, reason: 'High fever and body ache', status: 'Approved', appliedOn: '1 Bhadra' },
-  { id: 3, type: 'Casual', from: '15 Shrawan 2083', to: '15 Shrawan 2083', days: 1, reason: 'Family event', status: 'Approved', appliedOn: '12 Shrawan' },
-  { id: 4, type: 'Emergency', from: '25 Bhadra 2083', to: '26 Bhadra 2083', days: 2, reason: 'Urgent family matter', status: 'Pending', appliedOn: '24 Bhadra' },
-  { id: 5, type: 'Sick', from: '5 Ashadh 2083', to: '5 Ashadh 2083', days: 1, reason: 'Migraine', status: 'Rejected', appliedOn: '4 Ashadh' },
-];
+type Leave = { id:string; leave_type:string; start_date:string; end_date:string; reason:string; status:string; principal_note:string|null; created_at:string };
 
 export default function TeacherLeavePage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [leaveType, setLeaveType] = useState('Casual');
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [reason, setReason] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [teacher,setTeacher]=useState<{id:string;school_id:string}|null>(null);
+  const [history,setHistory]=useState<Leave[]>([]);
+  const [open,setOpen]=useState(false); const [loading,setLoading]=useState(true); const [saving,setSaving]=useState(false); const [error,setError]=useState("");
+  const [type,setType]=useState("casual"); const [from,setFrom]=useState(""); const [to,setTo]=useState(""); const [reason,setReason]=useState("");
 
-  const calculateDays = () => {
-    // Simple mock calculation for UI demo
-    if (fromDate && toDate) return 2; 
-    return 1;
-  };
-
-  const handleSubmitLeave = () => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsModalOpen(false);
-      setFromDate('');
-      setToDate('');
-      setReason('');
-      alert('Leave application submitted successfully!');
-    }, 1000);
-  };
-
-  const getStatusBadge = (status: string) => {
-    if (status === 'Approved') return <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700 border border-green-200"><CheckCircle className="h-3 w-3" /> Approved</span>;
-    if (status === 'Pending') return <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 border border-amber-200"><Clock className="h-3 w-3" /> Pending</span>;
-    return <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 border border-red-200"><XCircle className="h-3 w-3" /> Rejected</span>;
-  };
-
-  const getLeaveTypeIcon = (type: string) => {
-    if (type === 'Sick') return <Thermometer className="h-4 w-4 text-red-500" />;
-    if (type === 'Emergency') return <Siren className="h-4 w-4 text-amber-500" />;
-    return <Briefcase className="h-4 w-4 text-blue-500" />;
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="lg:ml-64 pt-10 flex flex-col min-h-screen">
-        <TopBar />
-        <main className="flex-1 pt-24 p-4 sm:p-6 lg:p-8 pb-24">
-          
-          {/* Header */}
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Leave Management</h1>
-              <p className="mt-1.5 text-sm text-gray-500">Apply for leave and track your requests.</p>
-            </div>
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="h-4 w-4" /> Apply for Leave
-            </button>
-          </div>
-
-          {/* Stats Row */}
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><Calendar className="h-5 w-5" /></div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Leave Balance</p>
-                  <p className="text-2xl font-bold text-gray-900 tabular-nums">{leaveStats.balance} <span className="text-sm font-normal text-gray-400">/ {leaveStats.totalAnnual} days</span></p>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><CheckCircle className="h-5 w-5" /></div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Used This Year</p>
-                  <p className="text-2xl font-bold text-gray-900 tabular-nums">{leaveStats.used} days</p>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600"><Clock className="h-5 w-5" /></div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Pending Requests</p>
-                  <p className="text-2xl font-bold text-amber-700 tabular-nums">{leaveStats.pending}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Leave History Table */}
-          <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-            <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
-              <h3 className="text-base font-bold text-gray-900">Leave History</h3>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50/50 border-b border-gray-100">
-                  <tr>
-                    <th className="px-6 py-4 font-medium text-gray-500">Type</th>
-                    <th className="px-6 py-4 font-medium text-gray-500">From</th>
-                    <th className="px-6 py-4 font-medium text-gray-500">To</th>
-                    <th className="px-6 py-4 font-medium text-gray-500">Days</th>
-                    <th className="px-6 py-4 font-medium text-gray-500 hidden md:table-cell">Reason</th>
-                    <th className="px-6 py-4 font-medium text-gray-500">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {mockLeaveHistory.map((leave) => (
-                    <tr key={leave.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100">
-                            {getLeaveTypeIcon(leave.type)}
-                          </div>
-                          <span className="font-semibold text-gray-900">{leave.type}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-700">{leave.from}</td>
-                      <td className="px-6 py-4 text-gray-700">{leave.to}</td>
-                      <td className="px-6 py-4 font-bold text-gray-900 tabular-nums">{leave.days}</td>
-                      <td className="px-6 py-4 hidden md:table-cell text-gray-500 max-w-xs truncate">{leave.reason}</td>
-                      <td className="px-6 py-4">{getStatusBadge(leave.status)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </main>
-      </div>
-
-      {/* ✅ Apply for Leave Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}>
-          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            
-            {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold">Apply for Leave</h2>
-                <p className="text-blue-100 text-sm mt-1">Submit your leave request to the principal</p>
-              </div>
-              <button onClick={() => setIsModalOpen(false)} className="rounded-full bg-white/20 p-2 hover:bg-white/30 transition-colors">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Leave Type</label>
-                <select 
-                  value={leaveType}
-                  onChange={(e) => setLeaveType(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
-                >
-                  <option value="Casual">Casual Leave</option>
-                  <option value="Sick">Sick Leave</option>
-                  <option value="Emergency">Emergency Leave</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">From Date</label>
-                  <input 
-                    type="date" 
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" 
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">To Date</label>
-                  <input 
-                    type="date" 
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" 
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-blue-50 border border-blue-100 p-3 flex items-center justify-between">
-                <span className="text-sm font-medium text-blue-800">Total Days Requested:</span>
-                <span className="text-lg font-bold text-blue-900 tabular-nums">{calculateDays()} {calculateDays() === 1 ? 'Day' : 'Days'}</span>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Reason for Leave</label>
-                <textarea 
-                  rows={3} 
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder="Please provide a brief reason..."
-                  className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none" 
-                />
-              </div>
-
-              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-amber-800">Your leave balance is <strong>{leaveStats.balance} days</strong>. Applying for more days than your balance may require special approval.</p>
-              </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="border-t border-gray-100 p-4 bg-gray-50 flex justify-end gap-3">
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSubmitLeave}
-                disabled={isSubmitting || !reason}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" /> Submit Request
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  async function load(){setLoading(true);setError("");const {data:{user}}=await supabase.auth.getUser();if(!user){setError("Please sign in as a teacher.");setLoading(false);return;}const {data:t,error:teacherError}=await supabase.from("teachers").select("id,school_id").eq("user_id",user.id).single();if(teacherError||!t){setError("Your teacher profile could not be loaded.");setLoading(false);return;}setTeacher(t);const {data,error:leaveError}=await supabase.from("teacher_leave_requests").select("*").eq("teacher_id",t.id).order("created_at",{ascending:false});if(leaveError)setError(leaveError.message);setHistory((data||[]) as Leave[]);setLoading(false)}
+  // Data is loaded once for the authenticated teacher when the page mounts.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(()=>{load()},[]);
+  const days=useMemo(()=>from&&to?Math.max(0,Math.floor((new Date(to).getTime()-new Date(from).getTime())/86400000)+1):0,[from,to]);
+  const used=history.filter(l=>l.status==="approved"&&new Date(l.start_date).getFullYear()===new Date().getFullYear()).reduce((sum,l)=>sum+Math.floor((new Date(l.end_date).getTime()-new Date(l.start_date).getTime())/86400000)+1,0);
+  async function submit(e:React.FormEvent){e.preventDefault();if(!teacher||!from||!to||!reason.trim()||days<1)return;setSaving(true);setError("");const {error:saveError}=await supabase.from("teacher_leave_requests").insert({school_id:teacher.school_id,teacher_id:teacher.id,leave_type:type,start_date:from,end_date:to,reason:reason.trim(),status:"pending"});setSaving(false);if(saveError){setError(saveError.message);return;}setOpen(false);setFrom("");setTo("");setReason("");await load()}
+  return <div className="school-pattern-grid min-h-screen bg-slate-50"><Sidebar/><div className="flex min-h-screen flex-col lg:ml-64"><TopBar/><main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:p-8 lg:pt-28"><div className="mx-auto max-w-6xl"><header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-widest text-blue-600">My workspace</p><h1 className="mt-2 text-3xl font-black text-slate-950">Leave management</h1><p className="mt-2 text-sm text-slate-500">Submit a request and follow the principal’s decision.</p></div><button onClick={()=>setOpen(true)} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-blue-600/20"><Plus className="h-4 w-4"/>Request leave</button></header>
+  {error&&<div className="mt-5 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"><AlertCircle className="h-4 w-4"/>{error}</div>}
+  <section className="mt-6 grid gap-3 sm:grid-cols-3"><Stat label="Approved days this year" value={used} tone="emerald"/><Stat label="Pending requests" value={history.filter(l=>l.status==="pending").length} tone="amber"/><Stat label="Need clarification" value={history.filter(l=>l.status==="clarification").length} tone="violet"/></section>
+  <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-100 p-5"><h2 className="font-bold text-slate-950">Leave history</h2></div>{loading?<p className="p-8 text-center text-sm text-slate-500">Loading requests…</p>:history.length?<div className="divide-y divide-slate-100">{history.map(l=><article key={l.id} className="p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><div className="flex items-center gap-2"><span className="capitalize font-bold text-slate-950">{l.leave_type} leave</span><Badge status={l.status}/></div><p className="mt-1 text-xs text-slate-500">{l.start_date} to {l.end_date}</p><p className="mt-3 text-sm text-slate-700">{l.reason}</p>{l.principal_note&&<p className="mt-3 rounded-xl bg-slate-50 p-3 text-xs text-slate-600"><b>Principal:</b> {l.principal_note}</p>}</div></div></article>)}</div>:<p className="p-10 text-center text-sm text-slate-500">You have not submitted a leave request yet.</p>}</section></div></main></div>
+  {open&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4" onMouseDown={()=>setOpen(false)}><form onSubmit={submit} onMouseDown={e=>e.stopPropagation()} className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl"><div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h2 className="text-xl font-black text-slate-950">Request leave</h2><p className="mt-1 text-xs text-slate-500">The principal will review this request.</p></div><button type="button" onClick={()=>setOpen(false)} className="rounded-xl p-2 hover:bg-slate-100"><X className="h-5 w-5"/></button></div><div className="space-y-4 p-5"><label className="block text-sm font-bold text-slate-700">Leave type<select value={type} onChange={e=>setType(e.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3"><option value="casual">Casual</option><option value="sick">Sick</option><option value="emergency">Emergency</option><option value="annual">Annual</option></select></label><div className="grid grid-cols-2 gap-3"><label className="text-sm font-bold text-slate-700">From<input required type="date" value={from} onChange={e=>setFrom(e.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3"/></label><label className="text-sm font-bold text-slate-700">To<input required type="date" min={from} value={to} onChange={e=>setTo(e.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3"/></label></div><div className="flex items-center justify-between rounded-xl bg-blue-50 p-3 text-sm text-blue-800"><span>Requested duration</span><b>{days} day{days===1?"":"s"}</b></div><label className="block text-sm font-bold text-slate-700">Reason<textarea required rows={4} value={reason} onChange={e=>setReason(e.target.value)} className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 p-3" placeholder="Explain why you need leave…"/></label></div><div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 p-4"><button type="button" onClick={()=>setOpen(false)} className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600">Cancel</button><button disabled={saving||days<1||!reason.trim()} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"><Send className="h-4 w-4"/>{saving?"Submitting…":"Submit request"}</button></div></form></div>}</div>
 }
+function Stat({label,value,tone}:{label:string;value:number;tone:string}){const colors:Record<string,string>={emerald:"bg-emerald-50 text-emerald-700",amber:"bg-amber-50 text-amber-700",violet:"bg-violet-50 text-violet-700"};return <div className="rounded-2xl border border-slate-200 bg-white p-4"><span className={`inline-flex h-9 w-9 items-center justify-center rounded-xl ${colors[tone]}`}><CalendarDays className="h-4 w-4"/></span><p className="mt-3 text-2xl font-black text-slate-950">{value}</p><p className="text-xs font-semibold text-slate-500">{label}</p></div>}
+function Badge({status}:{status:string}){if(status==="approved")return <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700"><CheckCircle2 className="h-3 w-3"/>Approved</span>;if(status==="rejected")return <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700"><XCircle className="h-3 w-3"/>Rejected</span>;return <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[11px] font-bold capitalize text-amber-700"><Clock3 className="h-3 w-3"/>{status}</span>}
