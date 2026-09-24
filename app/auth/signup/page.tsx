@@ -202,7 +202,7 @@ export default function SignupPage() {
           <div className="relative z-10 mt-10 lg:my-auto">
             <span className="inline-flex items-center gap-2 rounded-full border border-blue-300/20 bg-blue-300/10 px-3 py-1.5 text-xs font-semibold text-blue-200">
               <ShieldCheck className="h-3.5 w-3.5" />
-              30 days free
+              Free to get started
             </span>
             <h1 className="mt-5 text-3xl font-bold leading-tight tracking-[-0.035em] sm:text-4xl">
               Bring your school
@@ -304,7 +304,7 @@ export default function SignupPage() {
               </form>
             )}
 
-            <form onSubmit={handleSubmit} className={`mt-6 space-y-6 ${challengeId || success ? 'hidden' : ''}`}>
+            <form key="registration-form" onSubmit={handleSubmit} className={`mt-6 space-y-6 ${challengeId || success ? 'hidden' : ''}`}>
               <fieldset disabled={loading} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <legend className="sr-only">Principal account</legend>
                 <SectionHeading icon={UserRound} number="1" title="Principal account" description="These details will be used to create your administrator login." />
