@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -29,6 +29,17 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [challengeId, setChallengeId] = useState('');
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [registration, setRegistration] = useState<{ email: string; password: string; fullName: string; school: Record<string, string> } | null>(null);
+  const [code, setCode] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (!cooldown) return;
+    const timer = window.setTimeout(() => setCooldown((seconds) => Math.max(0, seconds - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [cooldown]);
 
   const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState('');
@@ -63,64 +74,95 @@ export default function SignupPage() {
     const districtName = districts.find((d) => d.id === selectedDistrict)?.name || '';
     const localLevelName = localLevels.find((l) => l.id === selectedLocalLevel)?.name || '';
 
-    // Auto-generate the school website link (slug)
-    const slug = schoolName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-
-    const schoolLevel = formData.get('school_level') as string;
-    const pendingSchool = {
+    const school = {
       name: schoolName,
-      slug,
       province: provinceName,
       district: districtName,
       municipality: localLevelName,
       ward: selectedWard,
-      school_type: formData.get('school_type'),
-      school_level: schoolLevel,
-      phone: formData.get('phone'),
-      principal: fullName,
-      school_email: schoolEmail || null,
-      pan_number: panNumber || null,
+      school_type: String(formData.get('school_type') || ''),
+      school_level: String(formData.get('school_level') || ''),
+      phone: String(formData.get('phone') || ''),
+      school_email: schoolEmail || '',
+      pan_number: panNumber || '',
     };
-
     try {
-      // 1. Create Auth User
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: fullName, pending_school: pendingSchool } },
+      const response = await fetch('/api/school-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'send', email }),
       });
-      if (authError) { setError(authError.message); setLoading(false); return; }
-      const userId = authData.user?.id;
-      if (!userId) { setError('No user created'); setLoading(false); return; }
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not send your code.');
+      setRegistration({ email, password, fullName, school });
+      setVerificationEmail(email);
+      setChallengeId(result.challengeId);
+      setCode('');
+      setCooldown(result.cooldownSeconds || 60);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
-      // With email confirmation enabled Supabase does not create a browser session yet.
-      // Keep the school details in Auth metadata; LoginForm completes setup after confirmation.
-      if (!authData.session) {
-        setSuccess('Account created. Check your email, confirm your address, then sign in to finish creating your school workspace.');
-        setLoading(false);
+  async function handleVerify(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!registration) return;
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/api/school-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify', challengeId, code, ...registration }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not verify your code.');
+      setChallengeId('');
+      setRegistration(null);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: registration.email, password: registration.password,
+      });
+      if (signInError || !data.session) {
+        setSuccess('Your email is confirmed and your account is ready. Sign in to finish setting up your school.');
         return;
       }
-
-      // 2. Complete school setup through the protected server route.
       const setupResponse = await fetch('/api/complete-school-registration', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${authData.session.access_token}` },
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
       });
-      const setupResult = await setupResponse.json();
       if (!setupResponse.ok) {
-        setError('Could not create school: ' + (setupResult.error || 'Please try again.'));
-        setLoading(false);
+        setSuccess('Your email is confirmed and your account is ready. Sign in to finish setting up your school.');
         return;
       }
-
       router.replace('/principal');
     } catch (err: unknown) {
-      setError(
-        'Something went wrong: ' +
-          (err instanceof Error ? err.message : 'Please try again.')
-      );
+      setError(err instanceof Error ? err.message : 'Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  }
+
+  async function resendCode() {
+    if (!registration || cooldown) return;
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/api/school-email', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'send', email: registration.email }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not resend your code.');
+      setChallengeId(result.challengeId);
+      setCode('');
+      setCooldown(result.cooldownSeconds || 60);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   const inputClass =
@@ -200,7 +242,7 @@ export default function SignupPage() {
                   Register your school
                 </h2>
                 <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
-                  Complete the three sections below and open your school dashboard immediately.
+                  Complete the sections below, then confirm your email to open your school dashboard.
                 </p>
               </div>
               <Link href="/" className="hidden items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-500 transition hover:bg-white hover:text-slate-900 hover:shadow-sm lg:flex">
@@ -209,11 +251,12 @@ export default function SignupPage() {
               </Link>
             </div>
 
-            <div className="mt-7 grid grid-cols-3 gap-2">
+            <div className="mt-7 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {[
                 { number: '1', label: 'Your account' },
                 { number: '2', label: 'School details' },
                 { number: '3', label: 'Location' },
+                { number: '4', label: 'Verify email' },
               ].map((step) => (
                 <div key={step.number} className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2.5 shadow-sm sm:px-4">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white">{step.number}</span>
@@ -244,7 +287,24 @@ export default function SignupPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+            {challengeId && !success && (
+              <form onSubmit={handleVerify} className="mt-6 rounded-2xl border border-blue-100 bg-white p-6 shadow-sm sm:p-9">
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"><Mail className="h-7 w-7" /></span>
+                <h3 className="mt-5 text-2xl font-bold text-slate-950">Check your email</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">We sent a six-digit confirmation code to <strong className="text-slate-900">{verificationEmail}</strong>. It expires in 10 minutes.</p>
+                <label className="mt-7 block text-sm font-semibold text-slate-800" htmlFor="verification-code">Verification code</label>
+                <input id="verification-code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required value={code} onChange={(e) => setCode(e.target.value.replace(/\\D/g, ''))} className="mt-2 h-14 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-center font-mono text-2xl tracking-[0.4em] text-slate-950 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10" placeholder="000000" />
+                <button disabled={loading || code.length !== 6} type="submit" className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50">
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} Confirm email and create school
+                </button>
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
+                  <button type="button" disabled={loading || cooldown > 0} onClick={resendCode} className="font-semibold text-blue-700 disabled:text-slate-400">{cooldown ? `Resend code in ${cooldown}s` : 'Resend code'}</button>
+                  <button type="button" disabled={loading} onClick={() => { setChallengeId(''); setRegistration(null); setCode(''); setError(''); }} className="font-medium text-slate-600 hover:text-slate-900">Edit registration details</button>
+                </div>
+              </form>
+            )}
+
+            <form onSubmit={handleSubmit} className={`mt-6 space-y-6 ${challengeId || success ? 'hidden' : ''}`}>
               <fieldset disabled={loading} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <legend className="sr-only">Principal account</legend>
                 <SectionHeading icon={UserRound} number="1" title="Principal account" description="These details will be used to create your administrator login." />
@@ -259,7 +319,7 @@ export default function SignupPage() {
                     <input className={`${inputClass} pl-11`} type="email" name="email" inputMode="email" autoComplete="email" required placeholder="principal@example.com" />
                   </Field>
                   <Field label="Password" icon={LockKeyhole}>
-                    <input className={`${inputClass} pl-11 pr-12`} type={showPassword ? 'text' : 'password'} name="password" autoComplete="new-password" required minLength={6} placeholder="At least 6 characters" />
+                    <input className={`${inputClass} pl-11 pr-12`} type={showPassword ? 'text' : 'password'} name="password" autoComplete="new-password" required minLength={8} placeholder="At least 8 characters" />
                     <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute right-2.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword}>
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -342,14 +402,14 @@ export default function SignupPage() {
                   <Globe2 className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Your school workspace is included</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">Your dashboard opens immediately with full access to your 30-day free trial.</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">Confirm your email to activate your school workspace.</p>
                   </div>
                 </div>
                 <button type="submit" disabled={loading} className="group mt-4 flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 sm:mt-0 sm:w-auto">
                   {loading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Creating school…</>
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Sending code…</>
                   ) : (
-                    <>Register school <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>
+                    <>Send verification code <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></>
                   )}
                 </button>
               </div>
