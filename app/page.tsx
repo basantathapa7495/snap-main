@@ -96,7 +96,8 @@ export default function HomePage() {
 
     <span className="text-blue-300">•</span>
 
-    <span className="whitespace-nowrap">
+    <span className="flex items-center gap-1.5 whitespace-nowrap">
+      <NepalIcon className="h-4 w-4 text-blue-200" />
       Made for Nepal
     </span>
   </div>
