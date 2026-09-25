@@ -824,57 +824,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== Pricing ===== */}
-      <section id="pricing" className="hidden scroll-mt-24 bg-white py-16 sm:block">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <p className="text-sm font-bold uppercase text-blue-600">Pricing</p>
-            <h2 className="mt-2 text-2xl font-bold text-gray-950 sm:text-3xl">
-              Free for every school, for now
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-600 sm:text-base">
-              Use all NEPSOM features during early access. No subscription or setup fee.
-            </p>
-          </div>
-
-          <div className="mt-7 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm sm:mt-8">
-            <div className="grid md:grid-cols-[0.8fr_1.2fr]">
-              <div className="flex flex-col justify-center border-b border-slate-200 bg-white p-6 text-center md:border-b-0 md:border-r md:p-8 md:text-left">
-                <p className="text-sm font-semibold text-gray-500">Full access</p>
-                <p className="mt-2 text-4xl font-bold text-gray-950">
-                  NPR 0
-                </p>
-                <p className="mt-1 text-sm text-green-700">Free during early access</p>
-              </div>
-
-              <div className="p-6 md:p-8">
-                <p className="text-sm font-semibold text-gray-950">Everything included</p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {[
-                    'Students and teachers',
-                    'Attendance and fees',
-                    'Exams and report cards',
-                    'Notices and school website',
-                  ].map((feature) => (
-                    <div key={feature} className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check className="h-4 w-4 shrink-0 text-green-600" strokeWidth={2.2} />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <Link
-                  href="/auth/signup"
-                  className="mt-6 flex min-h-11 w-full items-center justify-center rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 sm:w-auto"
-                >
-                  Register your school
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
 {/* ===== FAQ ===== */}
 <section id="faq" className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden py-12 sm:py-20 lg:py-24">
   <div className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
@@ -997,7 +946,6 @@ export default function HomePage() {
               <h4 className="text-sm font-semibold uppercase tracking-wider text-white">Product</h4>
               <ul className="mt-4 space-y-2 text-sm">
                 <li><a href="#features" className="hover:text-white">Features</a></li>
-                <li><a href="#pricing" className="hover:text-white">Pricing</a></li>
                 <li><a href="#faq" className="hover:text-white">FAQ</a></li>
               </ul>
             </div>
