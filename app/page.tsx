@@ -53,13 +53,15 @@ export default function HomePage() {
   }, []);
 
   const compareRows = [
-    { task: 'Make the monthly fee dues list', old: '3 days of manual work', nepsom: '10 seconds' },
-    { task: 'Tell parents a notice', old: 'Paper gets lost in bags', nepsom: 'Instant on website' },
-    { task: 'Prepare report cards', old: 'A week of calculation', nepsom: 'Print in minutes' },
-    { task: 'Track attendance', old: 'Register & pen', nepsom: 'One tap, saved forever' },
-    { task: "Know who hasn't paid", old: 'Ask every parent', nepsom: 'Dues report + phone no.' },
+    { task: 'Find unpaid fees', old: 'Search registers for unpaid students', nepsom: 'View fee dues and contact details' },
+    { task: 'Collect fees', old: 'Write receipts and totals by hand', nepsom: 'Record payments and print receipts' },
+    { task: 'Mark attendance', old: 'Use a paper register each day', nepsom: 'Mark and review attendance by class' },
+    { task: 'Share notices', old: 'Send paper notices home', nepsom: 'Publish notices online' },
+    { task: 'Calculate exam results', old: 'Add marks and grades manually', nepsom: 'Enter marks and calculate results' },
+    { task: 'Prepare report cards', old: 'Make each card one at a time', nepsom: 'Create printable report cards' },
+    { task: 'Manage admissions', old: 'Sort through paper forms', nepsom: 'Review applications in one inbox' },
+    { task: 'Find student records', old: 'Search files for student details', nepsom: 'Find student profiles quickly' },
   ];
-
   function NepalIcon({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -542,7 +544,7 @@ export default function HomePage() {
         NEPSOM vs <span className="text-red-500">Manual Registers</span>
       </h2>
       <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
-        See exactly how much time and effort your school saves every single day.
+        See how eight everyday school tasks work with paper records and with NEPSOM.
       </p>
     </div>
 
@@ -609,21 +611,25 @@ export default function HomePage() {
         <thead className="bg-slate-900 text-white">
           <tr>
             <th scope="col" className="px-2.5 py-3 font-semibold">Task</th>
-            <th scope="col" className="px-2 py-3 font-semibold">Manual</th>
-            <th scope="col" className="bg-blue-700 px-2 py-3 font-semibold">NEPSOM</th>
+            <th scope="col" className="bg-red-700 px-2 py-3 font-semibold">Manual</th>
+            <th scope="col" className="bg-emerald-700 px-2 py-3 font-semibold">NEPSOM</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
           {[
-            { task: 'Fee dues', manual: 'Check registers', nepsom: 'See dues list' },
+            { task: 'Fee dues', manual: 'Search registers', nepsom: 'View dues list' },
+            { task: 'Fee payments', manual: 'Write receipts', nepsom: 'Print receipts' },
+            { task: 'Attendance', manual: 'Paper register', nepsom: 'Mark by class' },
             { task: 'Notices', manual: 'Send paper', nepsom: 'Publish online' },
-            { task: 'Report cards', manual: 'Calculate marks', nepsom: 'Print results' },
-            { task: 'Attendance', manual: 'Pen & register', nepsom: 'Mark in app' },
+            { task: 'Exam results', manual: 'Add marks by hand', nepsom: 'Calculate results' },
+            { task: 'Report cards', manual: 'Make each card', nepsom: 'Print report cards' },
+            { task: 'Admissions', manual: 'Sort forms', nepsom: 'Review in one inbox' },
+            { task: 'Student records', manual: 'Search files', nepsom: 'Find profiles' },
           ].map((row) => (
             <tr key={row.task}>
               <th scope="row" className="px-2.5 py-3 font-semibold text-slate-900">{row.task}</th>
-              <td className="px-2 py-3 text-slate-500">{row.manual}</td>
-              <td className="bg-blue-50 px-2 py-3 font-semibold text-blue-800">{row.nepsom}</td>
+              <td className="bg-red-50 px-2 py-3 text-red-800">{row.manual}</td>
+              <td className="bg-emerald-50 px-2 py-3 font-semibold text-emerald-800">{row.nepsom}</td>
             </tr>
           ))}
         </tbody>
