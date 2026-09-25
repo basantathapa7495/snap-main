@@ -924,44 +924,94 @@ export default function HomePage() {
       </section>
 
       {/* ===== Footer ===== */}
-      <footer className="bg-gray-900 py-10 text-gray-400 sm:py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-x-5 gap-y-9 sm:gap-10 md:grid-cols-4">
-            <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center gap-3">
-                <Image src="/logo4.png" alt="NEPSOM" width={895} height={223} sizes="180px" className="h-auto w-40 sm:w-44" />
-              </div>
-              <p className="mt-3 text-sm leading-relaxed">
-                The school management platform built for Nepal.
+      <footer className="border-t-4 border-blue-600 bg-slate-950 text-slate-400">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+          <div className="grid gap-8 md:grid-cols-[1.3fr_0.7fr_1fr_1.3fr] md:gap-6">
+            <div className="text-center md:text-left">
+              <Image
+                src="/logo4.png"
+                alt="NEPSOM"
+                width={895}
+                height={223}
+                sizes="176px"
+                className="mx-auto h-auto w-40 md:mx-0 md:w-44"
+              />
+              <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-slate-400 md:mx-0">
+                Simple school management, built for Nepal.
               </p>
             </div>
-            <div>
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-white">Product</h4>
-              <ul className="mt-4 space-y-2 text-sm">
-                <li><a href="#features" className="hover:text-white">Features</a></li>
-                <li><a href="#faq" className="hover:text-white">FAQ</a></li>
-              </ul>
+
+            <div className="grid grid-cols-2 gap-6 md:contents">
+              <nav aria-label="Product links">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white">Product</h3>
+                <ul className="mt-3 space-y-1 text-sm">
+                  <li>
+                    <a href="#features" className="inline-flex min-h-9 items-center hover:text-white">
+                      Features
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#faq" className="inline-flex min-h-9 items-center hover:text-white">
+                      Questions
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+
+              <nav aria-label="School links">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white">For schools</h3>
+                <ul className="mt-3 space-y-1 text-sm">
+                  <li>
+                    <Link href="/auth/signup" className="inline-flex min-h-9 items-center hover:text-white">
+                      Register
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/auth/login" className="inline-flex min-h-9 items-center hover:text-white">
+                      Principal login
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/s/ram-mandhir-deesecondary-school" className="inline-flex min-h-9 items-center hover:text-white">
+                      Demo school
+                    </Link>
+                  </li>
+                </ul>
+              </nav>
             </div>
-            <div>
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-white">For schools</h4>
-              <ul className="mt-4 space-y-2 text-sm">
-                <li><Link href="/auth/signup" className="hover:text-white">Register your school</Link></li>
-                <li><Link href="/auth/login" className="hover:text-white">Principal login</Link></li>
-                <li><Link href="/s/ram-mandhir-deesecondary-school" className="hover:text-white">Demo school page</Link></li>
-              </ul>
-            </div>
-            <div className="col-span-2 md:col-span-1">
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-white">Contact</h4>
-              <ul className="mt-4 space-y-2 text-sm">
-                <li><a href="mailto:basantadigitalprod@gmail.com" className="inline-flex min-h-11 max-w-full items-center gap-2 break-all hover:text-white"><Mail className="h-4 w-4 shrink-0" aria-hidden="true" />basantadigitalprod@gmail.com</a></li>
-                <li><a href="tel:+9779806532910" className="inline-flex min-h-11 items-center gap-2 hover:text-white"><Phone className="h-4 w-4 shrink-0" aria-hidden="true" />+977-9806532910</a></li>
-                <li className="inline-flex min-h-11 items-center gap-2"><MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />Syangja, Nepal</li>
+
+            <div className="border-t border-slate-800 pt-6 md:border-t-0 md:pt-0">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white">Contact</h3>
+              <ul className="mt-3 space-y-1 text-sm">
+                <li>
+                  <a
+                    href="mailto:basantadigitalprod@gmail.com"
+                    className="flex min-h-9 items-center gap-2.5 break-all hover:text-white"
+                  >
+                    <Mail className="h-4 w-4 shrink-0 text-blue-400" aria-hidden="true" />
+                    basantadigitalprod@gmail.com
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="tel:+9779806532910"
+                    className="flex min-h-9 items-center gap-2.5 hover:text-white"
+                  >
+                    <Phone className="h-4 w-4 shrink-0 text-blue-400" aria-hidden="true" />
+                    +977 9806532910
+                  </a>
+                </li>
+                <li className="flex min-h-9 items-center gap-2.5">
+                  <MapPin className="h-4 w-4 shrink-0 text-blue-400" aria-hidden="true" />
+                  Syangja, Nepal
+                </li>
               </ul>
             </div>
           </div>
-          <p className="mt-10 border-t border-gray-800 pt-6 text-center text-xs">
-            © 2026 NEPSOM Nepal. All rights reserved.
-          </p>
+
+          <div className="mt-8 border-t border-slate-800 pt-5 text-center text-xs text-slate-500 md:text-left">
+            © 2026 NEPSOM. All rights reserved.
+          </div>
         </div>
       </footer>
       <WhatsAppButton />
