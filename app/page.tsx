@@ -597,32 +597,41 @@ export default function HomePage() {
       </div>
     </div>
 
-    {/* Mobile Cards (visible only on small screens) */}
-    <div className="mt-8 space-y-3 sm:hidden">
-      {compareRows.map((r, i) => (
-        <div key={i} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-100 text-xs font-bold text-blue-600">
-              {i + 1}
-            </span>
-            <h3 className="font-bold text-gray-900">{r.task}</h3>
-          </div>
-          <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 sm:gap-3">
-            <div className="rounded-lg bg-red-50 p-3">
-              <p className="text-xs font-semibold text-red-500 uppercase mb-1">Old Way</p>
-              <p className="text-xs text-red-700 line-through">{r.old}</p>
-            </div>
-            <div className="rounded-lg bg-emerald-50 p-3">
-              <p className="text-xs font-semibold text-emerald-600 uppercase mb-1">NEPSOM</p>
-              <p className="text-xs font-semibold text-emerald-700">{r.nepsom}</p>
-            </div>
-          </div>
-        </div>
-      ))}
+    {/* Compact comparison table for phones */}
+    <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:hidden">
+      <table className="w-full table-fixed text-left text-xs leading-4">
+        <caption className="sr-only">School tasks compared with manual registers and NEPSOM</caption>
+        <colgroup>
+          <col className="w-[31%]" />
+          <col className="w-[32%]" />
+          <col className="w-[37%]" />
+        </colgroup>
+        <thead className="bg-slate-900 text-white">
+          <tr>
+            <th scope="col" className="px-2.5 py-3 font-semibold">Task</th>
+            <th scope="col" className="px-2 py-3 font-semibold">Manual</th>
+            <th scope="col" className="bg-blue-700 px-2 py-3 font-semibold">NEPSOM</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-100">
+          {[
+            { task: 'Fee dues', manual: 'Check registers', nepsom: 'See dues list' },
+            { task: 'Notices', manual: 'Send paper', nepsom: 'Publish online' },
+            { task: 'Report cards', manual: 'Calculate marks', nepsom: 'Print results' },
+            { task: 'Attendance', manual: 'Pen & register', nepsom: 'Mark in app' },
+          ].map((row) => (
+            <tr key={row.task}>
+              <th scope="row" className="px-2.5 py-3 font-semibold text-slate-900">{row.task}</th>
+              <td className="px-2 py-3 text-slate-500">{row.manual}</td>
+              <td className="bg-blue-50 px-2 py-3 font-semibold text-blue-800">{row.nepsom}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
 
     {/* Bottom Summary */}
-    <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+    <div className="mt-8 hidden flex-col items-center gap-4 sm:flex sm:flex-row sm:justify-center">
       <div className="flex items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-5 py-3">
         <span className="text-2xl">😩</span>
         <div>
