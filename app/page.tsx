@@ -541,7 +541,7 @@ export default function HomePage() {
         ⚖️ Honest Comparison
       </span>
       <h2 className="text-[clamp(1.75rem,7.2vw,2.25rem)] font-extrabold leading-tight tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
-        NEPSOM vs <span className="text-red-500">Manual Registers</span>
+        NEPSOM vs <span className="text-emerald-600">Manual Registers</span>
       </h2>
       <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
         See how eight everyday school tasks work with paper records and with NEPSOM.
