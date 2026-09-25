@@ -93,7 +93,7 @@ export default function LandingNavbar() {
         </ul>
 
         <div className="hidden items-center gap-2 xl:flex">
-          <Link href="/auth/login" className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
+          <Link href="/auth/login" className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 transition-colors hover:bg-green-100">
             Log in
           </Link>
           <Link href="/auth/signup" className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
@@ -114,7 +114,7 @@ export default function LandingNavbar() {
           </button>
           <Link
             href="/auth/login"
-            className="inline-flex h-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-3 text-[13px] font-semibold leading-none text-blue-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-green-200 bg-green-50 px-3 text-[13px] font-semibold leading-none text-green-700 shadow-sm transition-colors hover:border-green-300 hover:bg-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
           >
             Log in
           </Link>
