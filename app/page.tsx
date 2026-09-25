@@ -600,22 +600,44 @@ export default function HomePage() {
     </div>
 
     {/* Compact comparison table for phones */}
-    <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm sm:hidden">
-      <table className="w-full table-fixed text-left text-xs leading-4">
-        <caption className="sr-only">School tasks compared with manual registers and NEPSOM</caption>
+    <div className="mt-6 overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm sm:hidden">
+      <table className="w-full table-fixed border-collapse text-left text-xs leading-4">
+        <caption className="sr-only">Eight school tasks compared with manual registers and NEPSOM</caption>
         <colgroup>
           <col className="w-[31%]" />
           <col className="w-[32%]" />
           <col className="w-[37%]" />
         </colgroup>
-        <thead className="bg-slate-900 text-white">
+        <thead className="text-white">
           <tr>
-            <th scope="col" className="px-2.5 py-3 font-semibold">Task</th>
-            <th scope="col" className="bg-red-700 px-2 py-3 font-semibold">Manual</th>
-            <th scope="col" className="bg-emerald-700 px-2 py-3 font-semibold">NEPSOM</th>
+            <th scope="col" className="border-b border-r border-slate-500 bg-slate-800 px-2.5 py-3 font-semibold">
+              <span className="inline-flex items-center gap-1">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 6h12M8 12h12M8 18h12M3 6h.01M3 12h.01M3 18h.01" />
+                </svg>
+                Task
+              </span>
+            </th>
+            <th scope="col" className="border-b border-r border-white/25 bg-[#6b4248] px-2 py-3 font-semibold">
+              <span className="inline-flex items-center gap-1">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9M16 4l4 4-11 11-5 1 1-5L16 4z" />
+                </svg>
+                Manual
+              </span>
+            </th>
+            <th scope="col" className="border-b border-white/25 bg-[#315e53] px-2 py-3 font-semibold">
+              <span className="inline-flex items-center gap-1">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 shrink-0" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="13" rx="2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 21h8M12 17v4" />
+                </svg>
+                NEPSOM
+              </span>
+            </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody>
           {[
             { task: 'Fee dues', manual: 'Search registers', nepsom: 'View dues list' },
             { task: 'Fee payments', manual: 'Write receipts', nepsom: 'Print receipts' },
@@ -625,11 +647,16 @@ export default function HomePage() {
             { task: 'Report cards', manual: 'Make each card', nepsom: 'Print report cards' },
             { task: 'Admissions', manual: 'Sort forms', nepsom: 'Review in one inbox' },
             { task: 'Student records', manual: 'Search files', nepsom: 'Find profiles' },
-          ].map((row) => (
+          ].map((row, index) => (
             <tr key={row.task}>
-              <th scope="row" className="px-2.5 py-3 font-semibold text-slate-900">{row.task}</th>
-              <td className="bg-red-50 px-2 py-3 text-red-800">{row.manual}</td>
-              <td className="bg-emerald-50 px-2 py-3 font-semibold text-emerald-800">{row.nepsom}</td>
+              <th scope="row" className="border-b border-r border-slate-200 bg-white px-2.5 py-3 font-semibold text-slate-900">
+                <span className="inline-flex items-start gap-1.5">
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-slate-100 text-[10px] font-bold text-slate-600">{index + 1}</span>
+                  <span>{row.task}</span>
+                </span>
+              </th>
+              <td className="border-b border-r border-slate-200 bg-rose-50/70 px-2 py-3 text-rose-900">{row.manual}</td>
+              <td className="border-b border-slate-200 bg-emerald-50/70 px-2 py-3 font-semibold text-emerald-900">{row.nepsom}</td>
             </tr>
           ))}
         </tbody>
