@@ -957,11 +957,6 @@ export default function HomePage() {
                       Principal login
                     </Link>
                   </li>
-                  <li>
-                    <Link href="/s/ram-mandhir-deesecondary-school" className="inline-flex min-h-8 items-center hover:text-white">
-                      Demo school
-                    </Link>
-                  </li>
                 </ul>
               </nav>
             </div>
