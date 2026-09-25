@@ -826,96 +826,55 @@ export default function HomePage() {
       </section>
 
       {/* ===== Pricing ===== */}
-<section
-  id="pricing"
-  className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden bg-gray-50/70 py-12 sm:py-20 lg:py-28"
->
-  <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-    <div className="mx-auto max-w-3xl text-center">
-      <span className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-green-700">
-        <Sparkles className="h-4 w-4" strokeWidth={1.8} />
-        100% free for now
-      </span>
-
-      <h2 className="mt-5 text-[clamp(1.75rem,7.2vw,2.25rem)] leading-tight font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
-        Use every NEPSOM feature.
-        <span className="text-blue-600"> Pay nothing.</span>
-      </h2>
-
-      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
-        NEPSOM is completely free for schools during our early-access period.
-        Register your school and use the full platform with no subscription or setup fee.
-      </p>
-    </div>
-
-    <div className="mx-auto mt-10 max-w-3xl">
-      <article className="relative overflow-hidden rounded-2xl border-2 border-blue-600 bg-white p-5 shadow-xl shadow-blue-600/10 sm:rounded-[28px] sm:p-9">
-        <div
-          className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-100 blur-3xl"
-          aria-hidden="true"
-        />
-
-        <div className="relative">
-          <div className="flex flex-col gap-4 sm:gap-6 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-600">
-                Early access
-              </p>
-              <h3 className="mt-2 text-2xl font-bold text-gray-950">
-                Full NEPSOM access
-              </h3>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-gray-600">
-                Available to every school, regardless of student count.
-              </p>
-            </div>
-
-            <div className="shrink-0 sm:text-right">
-              <div className="flex items-end gap-2 sm:justify-end">
-                <span className="text-4xl font-bold tracking-tight text-gray-950 sm:text-5xl">NPR 0</span>
-              </div>
-              <p className="mt-1 text-sm font-semibold text-green-700">100% free for now</p>
-            </div>
+      <section id="pricing" className="scroll-mt-24 bg-white py-10 sm:py-16">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-sm font-bold uppercase text-blue-600">Pricing</p>
+            <h2 className="mt-2 text-2xl font-bold text-gray-950 sm:text-3xl">
+              Free for every school, for now
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-600 sm:text-base">
+              Use all NEPSOM features during early access. No subscription or setup fee.
+            </p>
           </div>
 
-          <div className="my-7 h-px bg-gray-100" />
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            {[
-              'Student and teacher management',
-              'Attendance and fee records',
-              'Exams, results and report cards',
-              'Notices and communication',
-              'Admissions and documents',
-              'School website and accounts',
-            ].map((feature) => (
-              <div key={feature} className="flex items-center gap-2.5 text-sm text-gray-700">
-                <Check className="h-4 w-4 shrink-0 text-green-600" strokeWidth={2.2} />
-                <span>{feature}</span>
+          <div className="mt-7 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm sm:mt-8">
+            <div className="grid md:grid-cols-[0.8fr_1.2fr]">
+              <div className="flex flex-col justify-center border-b border-slate-200 bg-white p-6 text-center md:border-b-0 md:border-r md:p-8 md:text-left">
+                <p className="text-sm font-semibold text-gray-500">Full access</p>
+                <p className="mt-2 text-4xl font-bold text-gray-950">
+                  NPR 0
+                </p>
+                <p className="mt-1 text-sm text-green-700">Free during early access</p>
               </div>
-            ))}
-          </div>
 
-          <Link
-            href="/auth/signup"
-            className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
-          >
-            Register your school for free
-            <ArrowRight className="h-4 w-4" strokeWidth={2} />
-          </Link>
+              <div className="p-6 md:p-8">
+                <p className="text-sm font-semibold text-gray-950">Everything included</p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {[
+                    'Students and teachers',
+                    'Attendance and fees',
+                    'Exams and report cards',
+                    'Notices and school website',
+                  ].map((feature) => (
+                    <div key={feature} className="flex items-center gap-2 text-sm text-gray-700">
+                      <Check className="h-4 w-4 shrink-0 text-green-600" strokeWidth={2.2} />
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <Link
+                  href="/auth/signup"
+                  className="mt-6 flex min-h-11 w-full items-center justify-center rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 sm:w-auto"
+                >
+                  Register your school
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
-      </article>
-    </div>
-
-    <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-gray-600">
-      {['No subscription fee', 'No setup fee', 'All features included', 'Your data stays yours'].map((promise) => (
-        <span key={promise} className="inline-flex items-center gap-2">
-          <Check className="h-4 w-4 text-green-600" strokeWidth={2} />
-          {promise}
-        </span>
-      ))}
-    </div>
-  </div>
-</section>
+      </section>
 
 {/* ===== FAQ ===== */}
 <section id="faq" className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden py-12 sm:py-20 lg:py-24">
