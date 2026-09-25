@@ -78,6 +78,22 @@ html { scroll-behavior: smooth; }
   }
 }
 
+/* Documents use the app's light card design even when the device prefers dark UI. */
+.documents-light-ui,
+.documents-light-ui :is(input, select, textarea, button) {
+  color-scheme: light;
+}
+
+.documents-light-ui :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  color: #1e293b;
+  -webkit-text-fill-color: #1e293b;
+}
+
+.documents-light-ui option {
+  background: #ffffff;
+  color: #0f172a;
+}
+
 /* Public school hero: a static version of the NEPSOM blue grid. */
 .school-pattern-grid::before {
   content: "";
