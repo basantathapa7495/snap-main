@@ -235,281 +235,72 @@ export default function HomePage() {
   </section>
 )}
 
-      {/* ===== Problem → Solution ===== */}
-<section className="relative overflow-hidden bg-white py-12 sm:py-20 lg:py-24">
-  {/* Background decoration */}
-  <div
-    className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_65%)]"
-    aria-hidden="true"
-  />
-
-  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    {/* Section heading */}
-    <div className="mx-auto max-w-3xl text-center">
-      <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
-        From manual to simple
-      </span>
-
-      <h2 className="mt-5 text-[clamp(1.75rem,7.2vw,2.25rem)] leading-tight font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
-        School work should not take
-        <span className="text-blue-600"> days of paperwork.</span>
-      </h2>
-
-      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
-        Registers, photocopies and repeated calculations slow everyone down.
-        NEPSOM turns everyday school tasks into simple digital workflows.
-      </p>
-    </div>
-
-    {/* Cards */}
-    <div className="mt-9 grid gap-6 lg:grid-cols-3">
-      {/* Card 1 */}
-      <article className="group relative overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-        {/* Image */}
-        <div className="relative h-44 overflow-hidden bg-gray-100 sm:h-64">
-          <Image
-            src="/fees.png"
-            alt="Fee management with NEPSOM"
-            fill
-            sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) 90vw, 33vw"
-            className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
-          />
-
-          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
-
-          <span className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-blue-600 shadow-md">
-            01
-          </span>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 sm:p-7">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-red-500" />
-
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-              The problem
+      {/* ===== From manual to simple ===== */}
+      <section className="bg-slate-50 py-10 sm:py-16 lg:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
+              From manual to simple
+            </span>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-gray-950 sm:mt-3 sm:text-4xl">
+              Less paperwork. More time for your school.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-gray-600 sm:text-base">
+              Fees, notices and report cards, all easier to manage.
             </p>
           </div>
 
-          <h3 className="mt-3 text-xl font-bold text-gray-950">
-            “Who hasn&apos;t paid fees?”
-          </h3>
-
-          <p className="mt-3 text-sm leading-6 text-gray-600">
-            Staff spend hours checking registers and making dues lists by hand
-            just to find unpaid students.
-          </p>
-
-          <div className="my-6 h-px bg-gray-100" />
-
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                className="h-5 w-5"
-                aria-hidden="true"
+          <div className="mt-6 grid gap-3 sm:mt-9 sm:gap-5 md:grid-cols-3">
+            {[
+              {
+                title: 'Fee dues',
+                image: '/fees.png',
+                alt: 'School fee management',
+                before: 'Check registers by hand.',
+                after: 'See unpaid fees in one place.',
+              },
+              {
+                title: 'School notices',
+                image: '/notice.png',
+                alt: 'School notices',
+                before: 'Send paper notices.',
+                after: 'Publish notices online.',
+              },
+              {
+                title: 'Report cards',
+                image: '/report.png',
+                alt: 'School report cards',
+                before: 'Calculate marks one by one.',
+                after: 'Create printable results faster.',
+              },
+            ].map((item) => (
+              <article
+                key={item.title}
+                className="flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:flex-col"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 12l4 4L19 6"
-                />
-              </svg>
-            </div>
-
-            <div>
-              <p className="text-base font-semibold text-gray-950">
-                With NEPSOM
-              </p>
-
-              <p className="mt-1 text-sm leading-6 text-gray-600">
-                Open the Fee Dues Report and see unpaid students with parent
-                contact details in seconds.
-              </p>
-            </div>
+                <div className="relative w-24 shrink-0 self-stretch bg-slate-100 sm:h-40 sm:w-full lg:h-44">
+                  <Image
+                    src={item.image}
+                    alt={item.alt}
+                    fill
+                    sizes="(max-width: 639px) 96px, (max-width: 1023px) 50vw, 33vw"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="min-w-0 flex-1 p-3.5 sm:p-5">
+                  <h3 className="text-base font-bold text-gray-950 sm:text-lg">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-5 text-gray-500">
+                    <span className="font-semibold text-gray-700">Before:</span> {item.before}
+                  </p>
+                  <p className="mt-1.5 text-sm leading-5 text-blue-700">
+                    <span className="font-semibold">With NEPSOM:</span> {item.after}
+                  </p>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
-      </article>
-
-      {/* Card 2 */}
-      <article className="group relative overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-        {/* Image */}
-        <div className="relative h-64 overflow-hidden bg-gray-100">
-          <Image
-            src="/notice.png"
-            alt="School notices managed digitally with NEPSOM"
-            fill
-            sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) 90vw, 33vw"
-            className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
-          />
-
-          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
-
-          <span className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-blue-600 shadow-md">
-            02
-          </span>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 sm:p-7">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-red-500" />
-
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-              The problem
-            </p>
-          </div>
-
-          <h3 className="mt-3 text-xl font-bold text-gray-950">
-            “We didn&apos;t know about the notice.”
-          </h3>
-
-          <p className="mt-3 text-sm leading-6 text-gray-600">
-            Paper notices get forgotten, damaged or lost before they ever reach
-            parents.
-          </p>
-
-          <div className="my-6 h-px bg-gray-100" />
-
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                className="h-5 w-5"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 12l4 4L19 6"
-                />
-              </svg>
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold text-gray-950">
-                With NEPSOM
-              </p>
-
-              <p className="mt-1 text-sm leading-6 text-gray-600">
-                Publish once and make important school notices available online
-                from the school website.
-              </p>
-            </div>
-          </div>
-        </div>
-      </article>
-
-      {/* Card 3 */}
-      <article className="group relative overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-        {/* Image */}
-        <div className="relative h-64 overflow-hidden bg-gray-100">
-          <Image
-            src="/report.png"
-            alt="Report cards generated with NEPSOM"
-            fill
-            sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) 90vw, 33vw"
-            className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
-          />
-
-          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
-
-          <span className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-blue-600 shadow-md">
-            03
-          </span>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 sm:p-7">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-red-500" />
-
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gray-500">
-              The problem
-            </p>
-          </div>
-
-          <h3 className="mt-3 text-xl font-bold text-gray-950">
-            “Report cards take a week.”
-          </h3>
-
-          <p className="mt-3 text-sm leading-6 text-gray-600">
-            Teachers repeat calculations, check marks and prepare report cards
-            one student at a time.
-          </p>
-
-          <div className="my-6 h-px bg-gray-100" />
-
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                className="h-5 w-5"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 12l4 4L19 6"
-                />
-              </svg>
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold text-gray-950">
-                With NEPSOM
-              </p>
-
-              <p className="mt-1 text-sm leading-6 text-gray-600">
-                Enter marks once. NEPSOM calculates results and creates clean,
-                printable report cards.
-              </p>
-            </div>
-          </div>
-        </div>
-      </article>
-    </div>
-
-    {/* Bottom message */}
-    <div className="mt-12 flex justify-center">
-      <div className="flex max-w-full items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 px-5 py-3 text-sm text-gray-700 sm:items-center">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          className="h-5 w-5 shrink-0 text-blue-600"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 3v18M3 12h18"
-          />
-        </svg>
-
-        <span className="min-w-0">
-          And that&apos;s only the beginning —
-          <strong className="font-semibold text-gray-950">
-            {' '}
-            attendance, admissions, exams, students and teachers
-          </strong>{' '}
-          are managed from the same place.
-        </span>
-      </div>
-    </div>
-  </div>
-</section>
+      </section>
 
       {/* ===== Video Demo ===== */}
 <section
