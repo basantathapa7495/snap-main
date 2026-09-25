@@ -926,21 +926,7 @@ export default function HomePage() {
       {/* ===== Footer ===== */}
       <footer className="border-t-4 border-blue-600 bg-slate-950 text-slate-400">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-          <div className="grid gap-6 md:grid-cols-[1.3fr_0.7fr_1fr_1.3fr] md:gap-5">
-            <div className="text-center md:text-left">
-              <Image
-                src="/logo4.png"
-                alt="NEPSOM"
-                width={895}
-                height={223}
-                sizes="176px"
-                className="mx-auto h-auto w-40 md:mx-0 md:w-44"
-              />
-              <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-slate-400 md:mx-0">
-                Simple school management, built for Nepal.
-              </p>
-            </div>
-
+          <div className="grid gap-6 md:grid-cols-[0.7fr_1fr_1.3fr] md:gap-8">
             <div className="grid grid-cols-2 gap-4 md:contents">
               <nav aria-label="Product links">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-white">Product</h3>
