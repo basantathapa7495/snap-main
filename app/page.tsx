@@ -761,43 +761,63 @@ export default function HomePage() {
           <div className="text-center">
             <p className="text-sm font-bold uppercase text-blue-600">School stories</p>
             <h2 className="mt-2 text-2xl font-bold text-gray-950 sm:text-3xl">
-              Trusted by school leaders
+              What school leaders say
             </h2>
           </div>
 
           <div className="mt-7 grid gap-4 md:grid-cols-3">
             {[
               {
-                review: 'Fee records are much easier to check now. We can quickly see who has paid and who still has dues.',
+                review: 'Before NEPSOM, checking unpaid fees meant going through several registers. Now the full dues list is ready in one place, which saves us a lot of time.',
+                initials: 'SG',
                 name: 'Sunita Gurung',
                 role: 'Principal',
-                school: 'Shree Himalaya Secondary, Kaski',
+                school: 'Shree Himalaya Secondary',
+                location: 'Kaski',
               },
               {
-                review: 'Our teachers learned the attendance system quickly. It saves time every morning.',
+                review: 'I was worried our teachers might find a new system difficult. They learned the attendance feature quickly and now use it every morning without help.',
+                initials: 'RT',
                 name: 'Ram Bahadur Thapa',
                 role: 'Vice Principal',
-                school: 'Janata Basic School, Udayapur',
+                school: 'Janata Basic School',
+                location: 'Udayapur',
               },
               {
-                review: 'Notices and school updates are now in one place, so parents can stay informed more easily.',
+                review: 'Sharing notices with parents used to take too much effort. Now we publish one update and parents can read it directly from the school page.',
+                initials: 'MT',
                 name: 'Maya Tamang',
                 role: 'Principal',
-                school: 'Everest Model Academy, Morang',
+                school: 'Everest Model Academy',
+                location: 'Morang',
               },
             ].map((story) => (
               <article
                 key={story.name}
-                className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+                className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
               >
-                <p className="text-sm leading-6 text-gray-700">
+                <div
+                  className="text-base tracking-[0.12em] text-amber-500"
+                  aria-label="5 out of 5 stars"
+                >
+                  ★★★★★
+                </div>
+
+                <blockquote className="mt-3 flex-1 text-sm leading-6 text-gray-700">
                   &ldquo;{story.review}&rdquo;
-                </p>
-                <div className="mt-4 border-t border-slate-100 pt-4">
-                  <p className="text-sm font-semibold text-gray-950">{story.name}</p>
-                  <p className="mt-0.5 text-xs text-gray-500">
-                    {story.role} · {story.school}
-                  </p>
+                </blockquote>
+
+                <div className="mt-5 flex items-center gap-3 border-t border-slate-100 pt-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+                    {story.initials}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-950">{story.name}</p>
+                    <p className="truncate text-xs text-gray-500">
+                      {story.role}, {story.school}
+                    </p>
+                    <p className="mt-0.5 text-xs text-gray-400">{story.location}, Nepal</p>
+                  </div>
                 </div>
               </article>
             ))}
