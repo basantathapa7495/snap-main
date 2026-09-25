@@ -748,25 +748,9 @@ export default function HomePage() {
 
     {/* Bottom message */}
     <div className="mt-10 flex justify-center sm:mt-12">
-      <div className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-emerald-50 p-1 shadow-sm">
-        <div className="grid gap-2 rounded-[1.35rem] bg-white/80 p-2 backdrop-blur sm:grid-cols-3 sm:gap-0 sm:p-3">
-          {[
-            { icon: UserRound, title: 'One login' },
-            { icon: LayoutDashboard, title: 'One dashboard' },
-            { icon: Link2, title: 'One school system' },
-          ].map(({ icon: Icon, title }) => (
-            <div
-              key={title}
-              className="flex items-center justify-center gap-2.5 rounded-2xl px-3 py-3 text-sm font-semibold text-gray-900 sm:py-4"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm">
-                <Icon className="h-4 w-4" strokeWidth={2} />
-              </span>
-              <span>{title}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <p className="text-center text-base font-semibold tracking-tight text-gray-700 sm:text-lg">
+        One login. One dashboard. One connected school system.
+      </p>
     </div>
   </div>
 </section>
