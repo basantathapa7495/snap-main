@@ -518,7 +518,7 @@ export default function HomePage() {
 >
   {/* Background decoration */}
   <div
-    className="pointer-events-none absolute inset-0"
+    className="pointer-events-none absolute inset-0 hidden sm:block"
     aria-hidden="true"
   >
     <div className="absolute left-1/2 top-0 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-blue-600/20 blur-[120px]" />

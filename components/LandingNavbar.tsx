@@ -70,12 +70,12 @@ export default function LandingNavbar() {
         scrolled ? 'border-gray-200 shadow-sm' : 'border-gray-100'
       }`}
     >
-      <nav className="relative mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-4 sm:h-16 sm:px-6 md:h-[72px] lg:px-8" aria-label="Main navigation">
+      <nav className="relative mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-4 sm:h-16 sm:px-6 xl:h-[72px] lg:px-8" aria-label="Main navigation">
         <Link href="/" className="flex shrink-0 items-center" aria-label="NEPSOM home">
-          <Image src="/logo2.png" alt="NEPSOM" width={150} height={64} priority className="h-10 w-auto max-w-[148px] object-contain sm:h-12 md:h-16 md:max-w-none" />
+          <Image src="/logo2.png" alt="NEPSOM" width={150} height={64} priority className="h-10 w-auto max-w-[148px] object-contain sm:h-12 xl:h-16 xl:max-w-none" />
         </Link>
 
-        <ul className="hidden items-center gap-1 md:flex">
+        <ul className="hidden items-center gap-1 xl:flex">
           {navLinks.map((link) => {
             const isActive = link.href.startsWith('#') && activeSection === link.href.slice(1);
             return (
@@ -93,7 +93,7 @@ export default function LandingNavbar() {
           })}
         </ul>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 xl:flex">
           <Link href="/auth/login" className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
             Log in
           </Link>
@@ -102,9 +102,9 @@ export default function LandingNavbar() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-2 xl:hidden">
           <Link href="/auth/login" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Log in</Link>
-        <button
+          <button
           type="button"
           onClick={() => setMobileOpen((open) => !open)}
           className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-95"
@@ -112,14 +112,14 @@ export default function LandingNavbar() {
           aria-expanded={mobileOpen}
           aria-controls="mobile-menu"
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
       </nav>
 
       <div
         id="mobile-menu"
-        className={`absolute inset-x-0 top-full max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain border-b border-gray-200 bg-white shadow-lg transition duration-200 sm:max-h-[calc(100dvh-4rem)] md:hidden ${
+        className={`absolute inset-x-0 top-full max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain border-b border-gray-200 bg-white shadow-lg transition duration-200 sm:max-h-[calc(100dvh-4rem)] xl:hidden ${
           mobileOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-2 opacity-0'
         }`}
         aria-hidden={!mobileOpen}
