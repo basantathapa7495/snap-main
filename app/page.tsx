@@ -307,7 +307,7 @@ export default function HomePage() {
       {/* ===== Video Demo ===== */}
 <section
   id="video"
-  className="relative scroll-mt-24 overflow-hidden bg-gray-950 py-12 sm:py-20 lg:py-28"
+  className="relative hidden scroll-mt-24 overflow-hidden bg-gray-950 py-12 sm:block sm:py-20 lg:py-28"
 >
   {/* Background decoration */}
   <div
