@@ -102,6 +102,7 @@ const teacherMenu: MenuSection[] = [
     { href: '/teacher/communication', label: 'Communication', icon: MessageSquare },
     { href: '/teacher/leave', label: 'Leave', icon: Clock },
     { href: '/teacher/reports', label: 'Reports', icon: BarChart3 },
+    { href: '/teacher/documents', label: 'Shared Documents', icon: Folder },
   ],
   [
     { href: '/teacher/profile', label: 'My Profile', icon: User },
@@ -127,6 +128,7 @@ const studentMenu: MenuSection[] = [
     { href: '/student/fees', label: 'Fees', icon: DollarSign },
     { href: '/student/notices', label: 'Notices', icon: MessageSquare },
     { href: '/student/calendar', label: 'Calendar', icon: Calendar },
+    { href: '/student/documents', label: 'Documents', icon: Folder },
   ],
   [
     { href: '/student/profile', label: 'My Profile', icon: User },
