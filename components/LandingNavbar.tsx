@@ -115,7 +115,7 @@ export default function LandingNavbar() {
           </button>
           <Link
             href="/auth/login"
-            className="inline-flex min-h-11 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-sm font-semibold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:px-4"
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 px-3 text-[13px] font-semibold leading-none text-blue-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Log in
           </Link>
