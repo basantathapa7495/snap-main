@@ -710,108 +710,40 @@ export default function HomePage() {
       </p>
     </div>
 
-    {/* Features grid */}
-    <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    {/* Minimal feature grid */}
+    <div className="mt-7 grid grid-cols-3 gap-2.5 sm:mt-10 sm:gap-4 lg:gap-5">
       {[
-        {
-          icon: Users,
-          title: 'Students',
-          desc: 'Manage student profiles, class, section, roll number, parent details, and more.',
-        },
-        {
-          icon: ClipboardCheck,
-          title: 'Attendance',
-          desc: 'Mark attendance quickly and view records by date, class, and section.',
-        },
-        {
-          icon: WalletCards,
-          title: 'Fees & Receipts',
-          desc: 'Record payments, track collections, view dues, and generate receipts.',
-        },
-        {
-          icon: FilePenLine,
-          title: 'Exams & Marks',
-          desc: 'Enter subject marks and automatically calculate percentage, grade, and GPA.',
-        },
-        {
-          icon: FileText,
-          title: 'Report Cards',
-          desc: 'Create clean, printable student report cards and save them as PDF.',
-        },
-        {
-          icon: Megaphone,
-          title: 'Notice Board',
-          desc: 'Publish school notices for students, teachers, parents, or everyone.',
-        },
-        {
-          icon: Inbox,
-          title: 'Online Admissions',
-          desc: 'Accept applications online and manage approvals from one admissions inbox.',
-        },
-        {
-          icon: Cake,
-          title: 'Birthday Alerts',
-          desc: 'See today’s and upcoming student birthdays directly from the dashboard.',
-        },
-        {
-          icon: GraduationCap,
-          title: 'Teacher Portal',
-          desc: 'Teachers can manage classes, attendance, students, marks, and daily school work.',
-        },
-        {
-          icon: UserRound,
-          title: 'Student Portal',
-          desc: 'Students can view attendance, fees, exams, receipts, notices, and profile details.',
-        },
-        {
-          icon: LayoutDashboard,
-          title: 'Smart Dashboard',
-          desc: 'See attendance, fee progress, alerts, admissions, and school activity at a glance.',
-        },
-        {
-          icon: Palette,
-          title: 'Custom Branding',
-          desc: 'Add your school logo, theme color, gallery, programs, and public school website.',
-        },
-      ].map((feature, i) => {
-        const Icon = feature.icon;
-
-        return (
-          <article
-            key={feature.title}
-            className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg"
-          >
-            {/* Hover accent */}
-            <div
-              className="absolute inset-x-0 top-0 h-1 scale-x-0 bg-blue-600 transition-transform duration-300 group-hover:scale-x-100"
-              aria-hidden="true"
-            />
-
-            <div className="flex items-start gap-4">
-              {/* Icon */}
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-blue-100 transition-all duration-300 group-hover:bg-blue-600 group-hover:text-white group-hover:ring-blue-600">
-                <Icon className="h-5 w-5" strokeWidth={1.8} />
-              </div>
-
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-gray-950">
-                    {feature.title}
-                  </h3>
-
-                  <span className="text-[10px] font-medium text-gray-300">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                </div>
-
-                <p className="mt-1.5 text-sm leading-6 text-gray-600">
-                  {feature.desc}
-                </p>
-              </div>
-            </div>
-          </article>
-        );
-      })}
+        { icon: Users, title: 'Students' },
+        { icon: ClipboardCheck, title: 'Attendance' },
+        { icon: WalletCards, title: 'Fees' },
+        { icon: FilePenLine, title: 'Exams' },
+        { icon: FileText, title: 'Report cards' },
+        { icon: Megaphone, title: 'Notices' },
+        { icon: Inbox, title: 'Admissions' },
+        { icon: Cake, title: 'Birthdays' },
+        { icon: GraduationCap, title: 'Teachers' },
+        { icon: UserRound, title: 'Student portal' },
+        { icon: LayoutDashboard, title: 'Dashboard' },
+        { icon: Palette, title: 'School website' },
+        { icon: CalendarDays, title: 'Calendar' },
+        { icon: Mail, title: 'Messages' },
+        { icon: Phone, title: 'Parent contacts' },
+        { icon: MapPin, title: 'Locations' },
+        { icon: School, title: 'Classes' },
+        { icon: Link2, title: 'Documents' },
+      ].map(({ icon: Icon, title }) => (
+        <article
+          key={title}
+          className="group flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-3 text-center shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/50 sm:min-h-[112px] sm:rounded-2xl sm:gap-3 sm:px-3 sm:py-5"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-blue-100 transition-colors group-hover:bg-blue-600 group-hover:text-white sm:h-11 sm:w-11">
+            <Icon className="h-5 w-5 sm:h-5 sm:w-5" strokeWidth={1.8} />
+          </span>
+          <h3 className="text-[11px] font-semibold leading-tight text-gray-900 sm:text-sm">
+            {title}
+          </h3>
+        </article>
+      ))}
     </div>
 
     {/* Bottom message */}
