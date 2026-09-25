@@ -131,7 +131,9 @@ export default function LandingNavbar() {
       >
         <nav className="mx-auto max-w-7xl px-4 py-3 sm:px-6" aria-label="Mobile navigation">
           <ul className="divide-y divide-gray-100">
-            {navLinks.filter((link) => link.href !== '#video').map((link) => (
+            {navLinks
+              .filter((link) => !['#video', '/solutions', '/schoolslist'].includes(link.href))
+              .map((link) => (
               <li key={link.href}>
                 <a
                   href={link.href}
