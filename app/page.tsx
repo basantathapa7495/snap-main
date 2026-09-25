@@ -27,8 +27,6 @@ import {
   LayoutDashboard,
   Palette,
   Sparkles,
-  Quote,
-  BadgeCheck,
   Check, 
   CalendarDays,
   PlayCircle,
