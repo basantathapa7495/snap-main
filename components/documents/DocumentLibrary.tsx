@@ -162,7 +162,7 @@ export default function DocumentLibrary({
   }
 
   return (
-    <section className={embedded ? '' : 'rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6'}>
+    <section className={`documents-light-ui text-slate-900 ${embedded ? '' : 'rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6'}`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Documents</p>
@@ -176,7 +176,7 @@ export default function DocumentLibrary({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search documents"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
           />
         </label>
       </div>
