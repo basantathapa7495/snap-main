@@ -22,6 +22,7 @@ import {
   Settings,
   HelpCircle,
   Menu,
+  Search,
   X,
   PenLine,
   Clock,
@@ -268,12 +269,22 @@ export default function Sidebar() {
           <Image
             src="/logo2.png"
             alt="NEPSOM"
-            width={120}
-            height={120}
+            width={148}
+            height={64}
             priority
-            className="h-[120px] w-[120px] object-contain"
+            className="h-12 w-[148px] object-contain"
           />
         </Link>
+
+        {isPrincipalPath && (
+          <Link
+            href="/principal/students"
+            className="ml-auto flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            aria-label="Search students"
+          >
+            <Search className="h-5 w-5" aria-hidden="true" />
+          </Link>
+        )}
       </div>
 
       {/* =====================================================
