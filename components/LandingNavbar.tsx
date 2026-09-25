@@ -42,8 +42,6 @@ export default function LandingNavbar() {
   useEffect(() => {
     if (!mobileOpen) return;
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     const handlePointerDown = (event: PointerEvent) => {
       if (navbarRef.current && !navbarRef.current.contains(event.target as Node)) {
         setMobileOpen(false);
@@ -56,7 +54,6 @@ export default function LandingNavbar() {
     document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('keydown', handleEscape);
     return () => {
-      document.body.style.overflow = previousOverflow;
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleEscape);
     };
@@ -123,13 +120,13 @@ export default function LandingNavbar() {
 
       <div
         id="mobile-menu"
-        className={`absolute inset-x-0 top-full max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain border-b border-gray-200 bg-white shadow-lg transition duration-200 sm:max-h-[calc(100dvh-4rem)] xl:hidden ${
+        className={`absolute left-4 top-[calc(100%+0.5rem)] w-56 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl transition duration-200 sm:left-6 xl:hidden ${
           mobileOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-2 opacity-0'
         }`}
         aria-hidden={!mobileOpen}
         inert={!mobileOpen}
       >
-        <nav className="mx-auto max-w-7xl px-4 py-3 sm:px-6" aria-label="Mobile navigation">
+        <nav className="px-3 py-2" aria-label="Mobile navigation">
           <ul className="divide-y divide-gray-100">
             {navLinks
               .filter((link) => !['#video', '/solutions', '/schoolslist'].includes(link.href))
@@ -138,7 +135,7 @@ export default function LandingNavbar() {
                 <a
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="flex min-h-12 items-center justify-between py-3 text-[15px] font-medium text-gray-700 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="flex min-h-11 items-center justify-between py-2.5 text-sm font-medium text-gray-700 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   {link.label}
                   <ChevronRight className="h-4 w-4 text-gray-400" />
@@ -146,16 +143,6 @@ export default function LandingNavbar() {
               </li>
             ))}
           </ul>
-
-          <div className="mt-3 border-t border-gray-200 pt-4">
-            <Link
-              href="/auth/signup"
-              onClick={() => setMobileOpen(false)}
-              className="flex min-h-12 w-full items-center justify-center rounded-lg bg-blue-600 px-3 py-2.5 text-center text-sm font-semibold text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-            >
-              Register school
-            </Link>
-          </div>
         </nav>
       </div>
     </header>
