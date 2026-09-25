@@ -759,7 +759,7 @@ export default function HomePage() {
       <section className="bg-slate-50 py-10 sm:py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <p className="text-sm font-bold uppercase text-blue-600">School stories</p>
+            <p className="text-sm font-bold uppercase text-blue-600">Reviews</p>
             <h2 className="mt-2 text-2xl font-bold text-gray-950 sm:text-3xl">
               What school leaders say
             </h2>
