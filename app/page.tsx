@@ -757,214 +757,55 @@ export default function HomePage() {
 
       
 
-      {/* ===== Testimonials ===== */}
-<section className="nepsom-pattern-grid relative overflow-hidden bg-white py-12 sm:py-20 lg:py-28">
-  <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    {/* Heading */}
-    <div className="mx-auto max-w-3xl text-center">
-      <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-        <Quote className="h-4 w-4" strokeWidth={1.8} />
-        School stories
-      </span>
-
-      <h2 className="mt-5 text-[clamp(1.75rem,7.2vw,2.25rem)] leading-tight font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
-        What school leaders say
-        <span className="text-blue-600"> about NEPSOM</span>
-      </h2>
-
-      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
-        Simple tools matter most when they make everyday school work less tiring.
-      </p>
-    </div>
-
-    {/* Cards */}
-    <div className="mt-9 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 pr-4 [scrollbar-width:none] sm:mt-14 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:pb-0 lg:pr-0">
-      {/* Testimonial 1 */}
-      <article className="group relative flex h-full min-w-[min(82vw,360px)] lg:min-w-0 snap-start flex-col overflow-hidden rounded-2xl border border-blue-200 bg-blue-50/40 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-7">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl sm:h-12 sm:w-12 bg-blue-600 text-white shadow-md shadow-blue-600/20">
-            <Quote className="h-5 w-5" strokeWidth={2} />
+      {/* ===== School stories ===== */}
+      <section className="bg-slate-50 py-10 sm:py-16">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-sm font-bold uppercase text-blue-600">School stories</p>
+            <h2 className="mt-2 text-2xl font-bold text-gray-950 sm:text-3xl">
+              Trusted by school leaders
+            </h2>
           </div>
 
-          <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-blue-700 ring-1 ring-blue-100">
-            Fees
-          </span>
-        </div>
-
-        <p className="mt-5 text-[15px] leading-7 text-gray-700 sm:mt-7">
-          “Before NEPSOM, we had to check several registers just to know who still
-          had fees due. Now I can see the list in one place and call parents
-          directly. It saves a lot of unnecessary back-and-forth.”
-        </p>
-
-        <div className="mt-auto pt-6 sm:pt-8">
-          <div className="border-t border-blue-100 pt-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
-                SG
-              </div>
-
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <p className="truncate text-sm font-semibold text-gray-950">
-                    Sunita Gurung
-                  </p>
-
-                  <BadgeCheck
-                    className="h-4 w-4 shrink-0 text-blue-600"
-                    strokeWidth={2}
-                  />
-                </div>
-
-                <p className="mt-0.5 text-xs text-gray-500">
-                  Principal
+          <div className="mt-7 grid gap-4 md:grid-cols-3">
+            {[
+              {
+                review: 'Fee records are much easier to check now. We can quickly see who has paid and who still has dues.',
+                name: 'Sunita Gurung',
+                role: 'Principal',
+                school: 'Shree Himalaya Secondary, Kaski',
+              },
+              {
+                review: 'Our teachers learned the attendance system quickly. It saves time every morning.',
+                name: 'Ram Bahadur Thapa',
+                role: 'Vice Principal',
+                school: 'Janata Basic School, Udayapur',
+              },
+              {
+                review: 'Notices and school updates are now in one place, so parents can stay informed more easily.',
+                name: 'Maya Tamang',
+                role: 'Principal',
+                school: 'Everest Model Academy, Morang',
+              },
+            ].map((story) => (
+              <article
+                key={story.name}
+                className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"
+              >
+                <p className="text-sm leading-6 text-gray-700">
+                  &ldquo;{story.review}&rdquo;
                 </p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">
-              <span className="inline-flex items-center gap-1.5">
-                <School className="h-3.5 w-3.5" strokeWidth={1.8} />
-                Shree Himalaya Secondary
-              </span>
-
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" strokeWidth={1.8} />
-                Kaski
-              </span>
-            </div>
-          </div>
-        </div>
-      </article>
-
-      {/* Testimonial 2 */}
-      <article className="group relative flex h-full min-w-[min(82vw,360px)] lg:min-w-0 snap-start flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-            <Quote className="h-5 w-5" strokeWidth={2} />
-          </div>
-
-          <span className="rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600 ring-1 ring-gray-200">
-            Attendance
-          </span>
-        </div>
-
-        <p className="mt-7 text-[15px] leading-7 text-gray-700">
-          “I thought some of our teachers would struggle with a new system, but
-          they understood it much faster than I expected. Attendance is probably
-          the part they use the most now.”
-        </p>
-
-        <div className="mt-auto pt-8">
-          <div className="border-t border-gray-100 pt-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-900 text-sm font-bold text-white">
-                RT
-              </div>
-
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <p className="truncate text-sm font-semibold text-gray-950">
-                    Ram Bahadur Thapa
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <p className="text-sm font-semibold text-gray-950">{story.name}</p>
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    {story.role} · {story.school}
                   </p>
-
-                  <BadgeCheck
-                    className="h-4 w-4 shrink-0 text-blue-600"
-                    strokeWidth={2}
-                  />
                 </div>
-
-                <p className="mt-0.5 text-xs text-gray-500">
-                  Vice Principal
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">
-              <span className="inline-flex items-center gap-1.5">
-                <School className="h-3.5 w-3.5" strokeWidth={1.8} />
-                Janata Basic School
-              </span>
-
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" strokeWidth={1.8} />
-                Udayapur
-              </span>
-            </div>
+              </article>
+            ))}
           </div>
         </div>
-      </article>
-
-      {/* Testimonial 3 */}
-      <article className="group relative flex h-full min-w-[min(82vw,360px)] lg:min-w-0 snap-start flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-            <Quote className="h-5 w-5" strokeWidth={2} />
-          </div>
-
-          <span className="rounded-full bg-gray-50 px-3 py-1 text-xs font-semibold text-gray-600 ring-1 ring-gray-200">
-            School website
-          </span>
-        </div>
-
-        <p className="mt-7 text-[15px] leading-7 text-gray-700">
-          “A lot of our parents are outside Nepal, so keeping them informed was
-          always difficult. Having one school page for notices and updates has
-          made communication much easier for us.”
-        </p>
-
-        <div className="mt-auto pt-8">
-          <div className="border-t border-gray-100 pt-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-900 text-sm font-bold text-white">
-                MT
-              </div>
-
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <p className="truncate text-sm font-semibold text-gray-950">
-                    Maya Tamang
-                  </p>
-
-                  <BadgeCheck
-                    className="h-4 w-4 shrink-0 text-blue-600"
-                    strokeWidth={2}
-                  />
-                </div>
-
-                <p className="mt-0.5 text-xs text-gray-500">
-                  Principal
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500">
-              <span className="inline-flex items-center gap-1.5">
-                <School className="h-3.5 w-3.5" strokeWidth={1.8} />
-                Everest Model Academy
-              </span>
-
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" strokeWidth={1.8} />
-                Morang
-              </span>
-            </div>
-          </div>
-        </div>
-      </article>
-    </div>
-
-    <p className="mt-2 text-center text-xs text-gray-500 lg:hidden">Swipe to read more school stories</p>
-
-    {/* Bottom trust line */}
-    <div className="mt-10 flex justify-center">
-      <p className="max-w-2xl text-center text-sm leading-6 text-gray-500">
-        The best school software should feel simple enough to use every day,
-        not like another system staff have to fight with.
-      </p>
-    </div>
-  </div>
-</section>
+      </section>
 
       {/* ===== Pricing ===== */}
 <section
