@@ -12,7 +12,6 @@ import {
   BadgeDollarSign,
   School,
   Link2,
-  ArrowRight,
   CheckCircle2,
   Users,
   ClipboardCheck,
