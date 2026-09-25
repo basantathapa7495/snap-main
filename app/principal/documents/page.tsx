@@ -51,6 +51,14 @@ const statusTone: Record<string, string> = {
   Archived: 'bg-slate-100 text-slate-600 ring-slate-200',
 };
 
+function messageFromError(reason: unknown, fallback: string) {
+  if (reason instanceof Error && reason.message) return reason.message;
+  if (reason && typeof reason === 'object' && 'message' in reason && typeof reason.message === 'string') {
+    return reason.message;
+  }
+  return fallback;
+}
+
 export default function DocumentsPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -143,8 +151,12 @@ export default function DocumentsPage() {
     if (file) { const problem = validateDocumentFile(file); if (problem) { setError(problem); return; } }
     if (form.teachers && form.teacherMode === 'specific' && !form.teacherIds.length) { setError('Choose at least one teacher, or select All Teachers.'); return; }
     if (form.students && form.studentMode === 'specific' && !form.classIds.length) { setError('Choose at least one class, or select All Students.'); return; }
-    const publishAt = form.publishNow ? new Date().toISOString() : new Date(form.publishAt).toISOString();
-    const expiresAt = form.expiresAt ? new Date(form.expiresAt).toISOString() : null;
+    const publishDate = form.publishNow ? new Date() : new Date(form.publishAt);
+    const expiryDate = form.expiresAt ? new Date(form.expiresAt) : null;
+    if (Number.isNaN(publishDate.getTime())) { setError('Choose a valid publish date and time.'); return; }
+    if (expiryDate && Number.isNaN(expiryDate.getTime())) { setError('Choose a valid expiry date and time.'); return; }
+    const publishAt = publishDate.toISOString();
+    const expiresAt = expiryDate?.toISOString() ?? null;
     if (expiresAt && new Date(expiresAt) <= new Date(publishAt)) { setError('Expiry must be after the publish date.'); return; }
     setSaving(true);
     let uploadedPath = ''; let savedId = editing?.id || '';
@@ -189,7 +201,7 @@ export default function DocumentsPage() {
     } catch (reason) {
       if (!editing && savedId) await supabase.from('documents').delete().eq('id', savedId);
       if (uploadedPath) await supabase.storage.from(DOCUMENT_BUCKET).remove([uploadedPath]);
-      setError(reason instanceof Error ? reason.message : 'Could not save the document.');
+      setError(messageFromError(reason, 'Could not save the document. Please try again.'));
     } finally { setSaving(false); }
   }
 
@@ -233,7 +245,7 @@ export default function DocumentsPage() {
     setOpeningId(null);
   }
 
-  return <div className="min-h-screen bg-slate-50">
+  return <div className="documents-light-ui min-h-screen bg-slate-50 text-slate-900">
     <Sidebar />
     <div className="flex min-h-screen flex-col pt-10 lg:ml-64"><TopBar />
       <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl">
