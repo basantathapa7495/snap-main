@@ -149,31 +149,31 @@ export default function HomePage() {
 
       {/* ===== Hero ===== */}
       <section className="nepsom-pattern-grid relative overflow-hidden">
-        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-7 px-4 py-9 sm:gap-12 sm:px-6 sm:py-16 md:grid-cols-2 md:py-24 lg:px-8">
+        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-4 px-4 py-6 sm:gap-12 sm:px-6 sm:py-16 md:grid-cols-2 md:py-24 lg:px-8">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
               Ready to take your school digital?
             </p>
-            <h1 className="mt-4 max-w-[15ch] text-[clamp(2.15rem,9vw,3rem)] font-extrabold leading-[1.08] tracking-tight text-gray-900 sm:mt-5 sm:max-w-none sm:text-4xl md:text-5xl">
+            <h1 className="mt-3 max-w-[15ch] text-[clamp(2.15rem,9vw,3rem)] font-extrabold leading-[1.08] tracking-tight text-gray-900 sm:mt-5 sm:max-w-none sm:text-4xl md:text-5xl">
               Run your whole school from one phone
             </h1>
-            <p className="mt-4 max-w-prose text-[15px] leading-7 text-gray-600 sm:mt-5 sm:text-lg">
+            <p className="mt-3 max-w-prose text-[15px] leading-7 text-gray-600 sm:mt-5 sm:text-lg">
               Attendance, fees, exams, reports, notices, students and teachers — manage from one place, without registers and endless photocopies.
             </p>
-            <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row">
+            <div className="mt-5 flex flex-col gap-3 sm:mt-8 sm:flex-row">
               <Link href="/auth/signup" className="flex min-h-12 w-full items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-center font-semibold text-white shadow-md shadow-blue-200 transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 sm:w-auto">
                 Register your school
               </Link>
               <a
                 href="/s/sunrise-valley-secondary"
                 target="_blank"
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-6 py-3 text-center font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20 sm:w-auto"
+                className="hidden min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-6 py-3 text-center font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20 sm:flex sm:w-auto"
               >
                 <PlayCircle className="h-5 w-5" aria-hidden="true" /> See live demo
               </a>
             </div>
-            <p className="mt-4 text-center text-xs leading-5 text-gray-500 sm:text-left sm:text-sm">
+            <p className="mt-4 hidden text-center text-xs leading-5 text-gray-500 sm:block sm:text-left sm:text-sm">
               No credit card required · Setup in 10 minutes
             </p>
           </div>
