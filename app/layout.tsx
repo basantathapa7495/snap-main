@@ -61,10 +61,10 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80',
-        width: 1200,
-        height: 800,
-        alt: 'Students raising hands in a classroom',
+        url: 'https://nepsom.xyz/hero-image.png?og=20260925',
+        width: 1536,
+        height: 1024,
+        alt: 'NEPSOM school management platform on mobile and desktop',
       },
     ],
   },
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
     description:
       'Your school’s own website + attendance, fees, exams & report cards. Built for Nepal.',
     images: [
-      'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80',
+      'https://nepsom.xyz/hero-image.png?og=20260925',
     ],
   },
 };
