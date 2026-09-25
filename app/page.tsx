@@ -29,7 +29,6 @@ import {
   Check, 
   CalendarDays,
   PlayCircle,
-  CircleHelp,
   Mail,
   Phone,
 } from "lucide-react";
@@ -863,7 +862,7 @@ export default function HomePage() {
                 'Is Nepali language available?',
                 'The main interface is currently in English. Nepali language support is being added as the platform develops.',
               ],
-            ].map(([question, answer], index) => (
+            ].map(([question, answer]) => (
               <details
                 key={question}
                 className="group border-b border-slate-200 last:border-b-0"
