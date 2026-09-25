@@ -12,7 +12,7 @@ export default function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with us on WhatsApp"
-      className="group fixed bottom-5 right-5 z-50 flex items-center gap-3"
+      className="group fixed bottom-5 right-5 z-50 hidden items-center gap-3 sm:flex"
     >
       {/* Tooltip on hover (desktop) */}
       <span className="hidden translate-x-2 rounded-full border border-gray-100 bg-white px-4 py-2 text-sm font-semibold text-gray-700 opacity-0 shadow-lg transition group-hover:translate-x-0 group-hover:opacity-100 sm:block">
