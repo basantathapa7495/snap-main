@@ -102,7 +102,7 @@ export default function LandingNavbar() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-2 xl:hidden">
+        <div className="flex w-full items-center justify-between xl:hidden">
           <Link href="/auth/login" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Log in</Link>
           <button
           type="button"
