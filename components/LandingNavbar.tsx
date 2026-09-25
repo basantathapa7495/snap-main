@@ -71,7 +71,7 @@ export default function LandingNavbar() {
       }`}
     >
       <nav className="relative mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-4 sm:h-16 sm:px-6 xl:h-[72px] lg:px-8" aria-label="Main navigation">
-        <Link href="/" className="flex shrink-0 items-center" aria-label="NEPSOM home">
+        <Link href="/" className="absolute left-1/2 flex -translate-x-1/2 shrink-0 items-center xl:static xl:translate-x-0" aria-label="NEPSOM home">
           <Image src="/logo2.png" alt="NEPSOM" width={150} height={64} priority className="h-10 w-auto max-w-[148px] object-contain sm:h-12 xl:h-16 xl:max-w-none" />
         </Link>
 
