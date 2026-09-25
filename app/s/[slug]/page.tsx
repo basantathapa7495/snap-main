@@ -5,7 +5,8 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import NextImage from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, ExternalLink, Globe, GraduationCap, Image as ImageIcon, Lightbulb, Loader2, Mail, MapPin, Menu, Navigation, Phone, Quote, Satellite, ShieldCheck, Sparkles, UserRound, UsersRound, X } from 'lucide-react';
+import DocumentLibrary from '@/components/documents/DocumentLibrary';
+import { AlertCircle, ArrowRight, Award, BookOpen, Building2, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, ExternalLink, FileText, Globe, GraduationCap, Image as ImageIcon, Lightbulb, Loader2, Mail, MapPin, Menu, Navigation, Phone, Quote, Satellite, ShieldCheck, Sparkles, UserRound, UsersRound, X } from 'lucide-react';
 
 type School = {
   id: string;
@@ -166,6 +167,7 @@ export default function PublicSchoolPage() {
     { label: 'Teachers', href: '#teachers', icon: UsersRound },
     { label: 'Gallery', href: '#gallery', icon: ImageIcon },
     { label: 'Updates', href: '#updates', icon: CalendarDays },
+    { label: 'Documents', href: '#documents', icon: FileText },
     { label: 'Contact', href: '#contact', icon: Mail },
   ];
   return <div className={`min-h-screen text-gray-900 ${pageStyle}`}>
@@ -461,6 +463,18 @@ export default function PublicSchoolPage() {
       </section>
 
       {(awards.length > 0 || testimonials.length > 0) && <section className="py-16 sm:py-24"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div className="grid gap-10 lg:grid-cols-2">{awards.length > 0 && <div><h2 className="flex items-center gap-3 text-2xl font-bold"><Award className={theme.text} /> Achievements</h2><div className="mt-6 space-y-3">{awards.map((item) => <div key={item.id} className="rounded-2xl border border-gray-200 p-5"><p className="font-bold text-gray-950">{item.title}</p><p className="mt-1 text-sm text-gray-500">{item.year}</p>{item.description && <p className="mt-2 text-sm text-gray-600">{item.description}</p>}</div>)}</div></div>}{testimonials.length > 0 && <div><h2 className="flex items-center gap-3 text-2xl font-bold"><Quote className={theme.text} /> Community voices</h2><div className="mt-6 space-y-3">{testimonials.map((item) => <blockquote key={item.id} className={`rounded-2xl border p-5 ${theme.border} ${theme.soft}`}><p className="text-sm leading-6 text-gray-700">“{item.content}”</p><footer className="mt-3 text-sm font-bold text-gray-950">{item.name}<span className="ml-2 font-normal text-gray-500">{item.role}</span></footer></blockquote>)}</div></div>}</div></div></section>}
+
+      <section id="documents" className="scroll-mt-24 border-y border-gray-100 bg-gray-50 py-14 sm:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <DocumentLibrary
+            audience="public"
+            schoolId={school.id}
+            title="Documents & downloads"
+            description="Official public files shared by the school."
+            embedded
+          />
+        </div>
+      </section>
 
       <section id="contact" className="scroll-mt-24 overflow-hidden bg-gray-950 py-12 text-white sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
