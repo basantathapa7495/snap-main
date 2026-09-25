@@ -768,7 +768,7 @@ export default function HomePage() {
             {[
               {
                 review: 'Before NEPSOM, checking unpaid fees meant going through several registers. Now the full dues list is ready in one place, which saves us a lot of time.',
-                initials: 'SG',
+                image: '/review1.jpg',
                 name: 'Sunita Gurung',
                 role: 'Principal',
                 school: 'Shree Himalaya Secondary',
@@ -776,7 +776,7 @@ export default function HomePage() {
               },
               {
                 review: 'I was worried our teachers might find a new system difficult. They learned the attendance feature quickly and now use it every morning without help.',
-                initials: 'RT',
+                image: '/review2.jpg',
                 name: 'Ram Bahadur Thapa',
                 role: 'Vice Principal',
                 school: 'Janata Basic School',
@@ -784,7 +784,7 @@ export default function HomePage() {
               },
               {
                 review: 'Sharing notices with parents used to take too much effort. Now we publish one update and parents can read it directly from the school page.',
-                initials: 'MT',
+                image: '/review3.jpg',
                 name: 'Maya Tamang',
                 role: 'Principal',
                 school: 'Everest Model Academy',
@@ -807,9 +807,14 @@ export default function HomePage() {
                 </blockquote>
 
                 <div className="mt-5 flex items-center gap-3 border-t border-slate-100 pt-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
-                    {story.initials}
-                  </div>
+                  <Image
+                    src={story.image}
+                    alt={`${story.name}, ${story.role}`}
+                    width={88}
+                    height={88}
+                    sizes="44px"
+                    className="h-11 w-11 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-slate-200"
+                  />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-gray-950">{story.name}</p>
                     <p className="truncate text-xs text-gray-500">
