@@ -10,7 +10,6 @@ const navLinks = [
   { href: '/solutions', label: 'Solutions' },
   { href: '#how', label: 'How It Works' },
   { href: '#video', label: 'Demo' },
-  { href: '#pricing', label: 'Pricing' },
   { href: '/schoolslist', label: 'View Schools' },
   { href: '#faq', label: 'FAQ' },
 ];
@@ -22,7 +21,7 @@ export default function LandingNavbar() {
   const navbarRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const sectionIds = ['features', 'how', 'video', 'pricing', 'faq'];
+    const sectionIds = ['features', 'how', 'video', 'faq'];
 
     const handleScroll = () => {
       setScrolled(window.scrollY > 8);
