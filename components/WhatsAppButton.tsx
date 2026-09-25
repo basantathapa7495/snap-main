@@ -1,7 +1,7 @@
 'use client';
 
 export default function WhatsAppButton() {
-  const phoneNumber = '9779806532844'; // your number, no + or dashes
+  const phoneNumber = '9779806532910'; // your number, no + or dashes
   const message = encodeURIComponent(
     'Namaste! I want to know more about NEPSOM for my school.'
   );

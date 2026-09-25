@@ -894,7 +894,7 @@ export default function HomePage() {
           <p className="mt-5 text-center text-sm text-gray-600">
             Have another question?{' '}
             <a
-              href="https://wa.me/9779806532844?text=Hi%2C%20I%20have%20a%20question%20about%20NEPSOM"
+              href="https://wa.me/9779806532910?text=Hi%2C%20I%20have%20a%20question%20about%20NEPSOM"
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-blue-600 hover:text-blue-700"
@@ -954,7 +954,7 @@ export default function HomePage() {
               <h4 className="text-sm font-semibold uppercase tracking-wider text-white">Contact</h4>
               <ul className="mt-4 space-y-2 text-sm">
                 <li><a href="mailto:basantadigitalprod@gmail.com" className="inline-flex min-h-11 max-w-full items-center gap-2 break-all hover:text-white"><Mail className="h-4 w-4 shrink-0" aria-hidden="true" />basantadigitalprod@gmail.com</a></li>
-                <li><a href="tel:+9779806532844" className="inline-flex min-h-11 items-center gap-2 hover:text-white"><Phone className="h-4 w-4 shrink-0" aria-hidden="true" />+977-9806532844</a></li>
+                <li><a href="tel:+9779806532910" className="inline-flex min-h-11 items-center gap-2 hover:text-white"><Phone className="h-4 w-4 shrink-0" aria-hidden="true" />+977-9806532910</a></li>
                 <li className="inline-flex min-h-11 items-center gap-2"><MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />Syangja, Nepal</li>
               </ul>
             </div>
