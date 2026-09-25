@@ -89,3 +89,25 @@ html { scroll-behavior: smooth; }
     mask-image: linear-gradient(to bottom, black 0%, black 82%, transparent 100%);
   }
 }
+
+/* Keep NEPSOM landing page controls easy to find with a keyboard. */
+.nepsom-home :is(a, button, summary):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .nepsom-home .nepsom-pattern-grid::before {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nepsom-home *,
+  .nepsom-home *::before,
+  .nepsom-home *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

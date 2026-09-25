@@ -3,6 +3,7 @@ import WhatsAppButton from '@/components/WhatsAppButton';
 import LandingNavbar from '@/components/LandingNavbar';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import {
   ShieldCheck,
@@ -30,7 +31,10 @@ import {
   BadgeCheck,
   Check, 
   CalendarDays,
-  
+  PlayCircle,
+  CircleHelp,
+  Mail,
+  Phone,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -77,7 +81,7 @@ export default function HomePage() {
 }
 
   return (
-    <main className="bg-white text-gray-800 antialiased">
+    <main className="nepsom-home overflow-x-clip bg-white text-gray-800 antialiased">
       {/* ===== Trust Badges Bar ===== */}
 <div className="border-b border-blue-600 bg-blue-700 px-4 py-2.5 text-center text-xs font-medium text-white sm:text-sm">
 
@@ -145,59 +149,62 @@ export default function HomePage() {
 
       {/* ===== Hero ===== */}
       <section className="nepsom-pattern-grid relative overflow-hidden">
-        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-8 px-4 py-12 sm:gap-12 sm:px-6 sm:py-16 md:grid-cols-2 md:py-24 lg:px-8">
+        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-7 px-4 py-9 sm:gap-12 sm:px-6 sm:py-16 md:grid-cols-2 md:py-24 lg:px-8">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
               Ready to take your school digital?
             </p>
-            <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-4xl md:text-5xl">
+            <h1 className="mt-4 max-w-[15ch] text-[clamp(2.15rem,9vw,3rem)] font-extrabold leading-[1.08] tracking-tight text-gray-900 sm:mt-5 sm:max-w-none sm:text-4xl md:text-5xl">
               Run your whole school from one phone
             </h1>
-            <p className="mt-5 max-w-prose text-base leading-relaxed text-gray-600 sm:text-lg">
+            <p className="mt-4 max-w-prose text-[15px] leading-7 text-gray-600 sm:mt-5 sm:text-lg">
               Attendance, fees, exams, reports, notices, students and teachers — manage from one place, without registers and endless photocopies.
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/auth/signup" className="w-full rounded-xl bg-blue-600 px-7 py-3.5 text-center font-semibold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 sm:w-auto">
+            <div className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row">
+              <Link href="/auth/signup" className="flex min-h-12 w-full items-center justify-center rounded-xl bg-blue-600 px-6 py-3 text-center font-semibold text-white shadow-md shadow-blue-200 transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 sm:w-auto">
                 Register your school
               </Link>
               <a
                 href="/s/sunrise-valley-secondary"
                 target="_blank"
-                className="w-full rounded-xl border-2 border-blue-600 bg-white px-6 py-3 text-center font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 sm:w-auto"
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-6 py-3 text-center font-semibold text-blue-700 shadow-sm transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20 sm:w-auto"
               >
-                👀 See Live Demo
+                <PlayCircle className="h-5 w-5" aria-hidden="true" /> See live demo
               </a>
             </div>
-            <p className="mt-4 text-sm text-gray-500">
+            <p className="mt-4 text-center text-xs leading-5 text-gray-500 sm:text-left sm:text-sm">
               No credit card required · Setup in 10 minutes
             </p>
           </div>
 
           {/* Hero photo with floating cards */}
-          <div className="relative">
-  <img
-    src="/hero-image.png"
-    alt="NEPSOM school management platform for schools in Nepal"
-    className="w-full rounded-3xl object-cover shadow-2xl"
-    loading="eager"
-  />
-</div>
+          <div className="relative min-w-0">
+            <Image
+              src="/hero-image.png"
+              alt="School administrator checking school information on a phone"
+              width={1536}
+              height={1024}
+              sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1279px) 50vw, 600px"
+              priority
+              className="h-auto w-full rounded-2xl border border-blue-100 object-contain shadow-lg shadow-blue-950/10 sm:rounded-3xl"
+            />
+          </div>
         </div>
       </section>
 
       {/* ===== Live schools ticker ===== */}
       {schools.length > 0 && (
-  <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+  <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
     <p className="text-center text-xs font-semibold uppercase tracking-wider text-gray-400">
       Schools already on NEPSOM
     </p>
 
-    <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+    <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
       {schools.slice(0, 6).map((s, i) => (
         <span
           key={i}
-          className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-sm text-gray-700 shadow-sm"
+          className="inline-flex max-w-full items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 shadow-sm sm:px-4 sm:text-sm"
         >
           {/* School icon */}
           <svg
@@ -229,7 +236,7 @@ export default function HomePage() {
 )}
 
       {/* ===== Problem → Solution ===== */}
-<section className="relative overflow-hidden bg-white py-14 sm:py-20 lg:py-24">
+<section className="relative overflow-hidden bg-white py-12 sm:py-20 lg:py-24">
   {/* Background decoration */}
   <div
     className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.08),transparent_65%)]"
@@ -243,7 +250,7 @@ export default function HomePage() {
         From manual to simple
       </span>
 
-      <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
+      <h2 className="mt-5 text-[clamp(1.75rem,7.2vw,2.25rem)] leading-tight font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
         School work should not take
         <span className="text-blue-600"> days of paperwork.</span>
       </h2>
@@ -255,16 +262,17 @@ export default function HomePage() {
     </div>
 
     {/* Cards */}
-    <div className="mt-14 grid gap-6 lg:grid-cols-3">
+    <div className="mt-9 grid gap-6 lg:grid-cols-3">
       {/* Card 1 */}
       <article className="group relative overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
         {/* Image */}
-        <div className="relative h-64 overflow-hidden bg-gray-100">
-          <img
+        <div className="relative h-44 overflow-hidden bg-gray-100 sm:h-64">
+          <Image
             src="/fees.png"
             alt="Fee management with NEPSOM"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            loading="lazy"
+            fill
+            sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) 90vw, 33vw"
+            className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
           />
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
@@ -314,7 +322,7 @@ export default function HomePage() {
             </div>
 
             <div>
-              <p className="text-sm font-semibold text-gray-950">
+              <p className="text-base font-semibold text-gray-950">
                 With NEPSOM
               </p>
 
@@ -331,11 +339,12 @@ export default function HomePage() {
       <article className="group relative overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
         {/* Image */}
         <div className="relative h-64 overflow-hidden bg-gray-100">
-          <img
+          <Image
             src="/notice.png"
             alt="School notices managed digitally with NEPSOM"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            loading="lazy"
+            fill
+            sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) 90vw, 33vw"
+            className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
           />
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
@@ -402,11 +411,12 @@ export default function HomePage() {
       <article className="group relative overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
         {/* Image */}
         <div className="relative h-64 overflow-hidden bg-gray-100">
-          <img
+          <Image
             src="/report.png"
             alt="Report cards generated with NEPSOM"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            loading="lazy"
+            fill
+            sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) 90vw, 33vw"
+            className="object-cover transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
           />
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
@@ -504,7 +514,7 @@ export default function HomePage() {
       {/* ===== Video Demo ===== */}
 <section
   id="video"
-  className="relative scroll-mt-24 overflow-hidden bg-gray-950 py-14 sm:py-20 lg:py-28"
+  className="relative scroll-mt-24 overflow-hidden bg-gray-950 py-12 sm:py-20 lg:py-28"
 >
   {/* Background decoration */}
   <div
@@ -526,7 +536,7 @@ export default function HomePage() {
         Product Demo
       </div>
 
-      <h2 className="mt-5 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+      <h2 className="mt-5 text-[clamp(1.75rem,7.2vw,2.25rem)] leading-tight font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
         See how NEPSOM works
         <span className="block text-blue-400">
           before you register
@@ -678,7 +688,7 @@ export default function HomePage() {
       {/* ===== How It Works ===== */}
 <section
   id="how"
-  className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
+  className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden bg-white py-12 sm:py-20 lg:py-28"
 >
   <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     {/* Heading */}
@@ -687,7 +697,7 @@ export default function HomePage() {
         Simple setup
       </span>
 
-      <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
+      <h2 className="mt-5 text-[clamp(1.75rem,7.2vw,2.25rem)] leading-tight font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
         Start using NEPSOM in
         <span className="text-blue-600"> three simple steps</span>
       </h2>
@@ -699,7 +709,7 @@ export default function HomePage() {
     </div>
 
     {/* Steps */}
-    <div className="relative mt-16">
+    <div className="relative mt-10 sm:mt-16">
       {/* Desktop connecting line */}
       <div
         className="absolute left-[16%] right-[16%] top-10 hidden h-px bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 lg:block"
@@ -844,7 +854,7 @@ export default function HomePage() {
     </div>
 
     {/* Bottom simplified flow */}
-    <div className="mx-auto mt-14 max-w-4xl">
+    <div className="mx-auto mt-14 hidden max-w-4xl sm:block">
       <div className="rounded-2xl border border-gray-200 bg-gray-50/70 px-5 py-5 sm:px-7">
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-5">
           {/* Register */}
@@ -912,16 +922,16 @@ export default function HomePage() {
 </section>
 
      {/* ===== ⚖️ COMPARISON TABLE ===== */}
-<section className="nepsom-pattern-grid relative overflow-hidden py-14 sm:py-20 lg:py-24">
+<section className="nepsom-pattern-grid relative overflow-hidden py-12 sm:py-20 lg:py-24">
   <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
     <div className="text-center">
       <span className="inline-flex items-center rounded-full bg-red-50 px-3 py-1 text-sm font-semibold text-red-600 mb-4 ring-1 ring-inset ring-red-100">
         ⚖️ Honest Comparison
       </span>
-      <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
+      <h2 className="text-[clamp(1.75rem,7.2vw,2.25rem)] font-extrabold leading-tight tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
         NEPSOM vs <span className="text-red-500">Manual Registers</span>
       </h2>
-      <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
+      <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
         See exactly how much time and effort your school saves every single day.
       </p>
     </div>
@@ -978,7 +988,7 @@ export default function HomePage() {
     </div>
 
     {/* Mobile Cards (visible only on small screens) */}
-    <div className="mt-10 space-y-4 sm:hidden">
+    <div className="mt-8 space-y-3 sm:hidden">
       {compareRows.map((r, i) => (
         <div key={i} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
@@ -987,7 +997,7 @@ export default function HomePage() {
             </span>
             <h3 className="font-bold text-gray-900">{r.task}</h3>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 sm:gap-3">
             <div className="rounded-lg bg-red-50 p-3">
               <p className="text-xs font-semibold text-red-500 uppercase mb-1">Old Way</p>
               <p className="text-xs text-red-700 line-through">{r.old}</p>
@@ -1030,7 +1040,7 @@ export default function HomePage() {
       {/* ===== Features ===== */}
 <section
   id="features"
-  className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden bg-white py-14 sm:py-20 lg:py-28"
+  className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden bg-white py-12 sm:py-20 lg:py-28"
 >
   <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     {/* Heading */}
@@ -1040,7 +1050,7 @@ export default function HomePage() {
         Complete solution
       </span>
 
-      <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
+      <h2 className="mt-5 text-[clamp(1.75rem,7.2vw,2.25rem)] leading-tight font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
         Everything your school needs,
         <span className="text-blue-600"> in one place</span>
       </h2>
@@ -1052,7 +1062,7 @@ export default function HomePage() {
     </div>
 
     {/* Features grid */}
-    <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {[
         {
           icon: Users,
@@ -1145,7 +1155,7 @@ export default function HomePage() {
                   </span>
                 </div>
 
-                <p className="mt-2 text-xs leading-5 text-gray-600">
+                <p className="mt-1.5 text-sm leading-6 text-gray-600">
                   {feature.desc}
                 </p>
               </div>
@@ -1174,7 +1184,7 @@ export default function HomePage() {
       
 
       {/* ===== Testimonials ===== */}
-<section className="nepsom-pattern-grid relative overflow-hidden bg-white py-14 sm:py-20 lg:py-28">
+<section className="nepsom-pattern-grid relative overflow-hidden bg-white py-12 sm:py-20 lg:py-28">
   <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     {/* Heading */}
     <div className="mx-auto max-w-3xl text-center">
@@ -1183,7 +1193,7 @@ export default function HomePage() {
         School stories
       </span>
 
-      <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
+      <h2 className="mt-5 text-[clamp(1.75rem,7.2vw,2.25rem)] leading-tight font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
         What school leaders say
         <span className="text-blue-600"> about NEPSOM</span>
       </h2>
@@ -1194,11 +1204,11 @@ export default function HomePage() {
     </div>
 
     {/* Cards */}
-    <div className="mt-14 grid gap-6 lg:grid-cols-3">
+    <div className="mt-9 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 pr-4 [scrollbar-width:none] sm:mt-14 lg:grid lg:grid-cols-3 lg:gap-6 lg:overflow-visible lg:pb-0 lg:pr-0">
       {/* Testimonial 1 */}
-      <article className="group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-blue-200 bg-blue-50/40 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-7">
+      <article className="group relative flex h-full min-w-[min(82vw,360px)] lg:min-w-0 snap-start flex-col overflow-hidden rounded-2xl border border-blue-200 bg-blue-50/40 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-7">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl sm:h-12 sm:w-12 bg-blue-600 text-white shadow-md shadow-blue-600/20">
             <Quote className="h-5 w-5" strokeWidth={2} />
           </div>
 
@@ -1207,13 +1217,13 @@ export default function HomePage() {
           </span>
         </div>
 
-        <p className="mt-7 text-[15px] leading-7 text-gray-700">
+        <p className="mt-5 text-[15px] leading-7 text-gray-700 sm:mt-7">
           “Before NEPSOM, we had to check several registers just to know who still
           had fees due. Now I can see the list in one place and call parents
           directly. It saves a lot of unnecessary back-and-forth.”
         </p>
 
-        <div className="mt-auto pt-8">
+        <div className="mt-auto pt-6 sm:pt-8">
           <div className="border-t border-blue-100 pt-5">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
@@ -1254,7 +1264,7 @@ export default function HomePage() {
       </article>
 
       {/* Testimonial 2 */}
-      <article className="group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
+      <article className="group relative flex h-full min-w-[min(82vw,360px)] lg:min-w-0 snap-start flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
         <div className="flex items-start justify-between gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
             <Quote className="h-5 w-5" strokeWidth={2} />
@@ -1312,7 +1322,7 @@ export default function HomePage() {
       </article>
 
       {/* Testimonial 3 */}
-      <article className="group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
+      <article className="group relative flex h-full min-w-[min(82vw,360px)] lg:min-w-0 snap-start flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
         <div className="flex items-start justify-between gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
             <Quote className="h-5 w-5" strokeWidth={2} />
@@ -1370,6 +1380,8 @@ export default function HomePage() {
       </article>
     </div>
 
+    <p className="mt-2 text-center text-xs text-gray-500 lg:hidden">Swipe to read more school stories</p>
+
     {/* Bottom trust line */}
     <div className="mt-10 flex justify-center">
       <p className="max-w-2xl text-center text-sm leading-6 text-gray-500">
@@ -1383,7 +1395,7 @@ export default function HomePage() {
       {/* ===== Pricing ===== */}
 <section
   id="pricing"
-  className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden bg-gray-50/70 py-14 sm:py-20 lg:py-28"
+  className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden bg-gray-50/70 py-12 sm:py-20 lg:py-28"
 >
   <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
     <div className="mx-auto max-w-3xl text-center">
@@ -1392,7 +1404,7 @@ export default function HomePage() {
         100% free for now
       </span>
 
-      <h2 className="mt-5 text-3xl font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
+      <h2 className="mt-5 text-[clamp(1.75rem,7.2vw,2.25rem)] leading-tight font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
         Use every NEPSOM feature.
         <span className="text-blue-600"> Pay nothing.</span>
       </h2>
@@ -1404,14 +1416,14 @@ export default function HomePage() {
     </div>
 
     <div className="mx-auto mt-10 max-w-3xl">
-      <article className="relative overflow-hidden rounded-[28px] border-2 border-blue-600 bg-white p-6 shadow-xl shadow-blue-600/10 sm:p-9">
+      <article className="relative overflow-hidden rounded-2xl border-2 border-blue-600 bg-white p-5 shadow-xl shadow-blue-600/10 sm:rounded-[28px] sm:p-9">
         <div
           className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-100 blur-3xl"
           aria-hidden="true"
         />
 
         <div className="relative">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-4 sm:gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-blue-600">
                 Early access
@@ -1426,7 +1438,7 @@ export default function HomePage() {
 
             <div className="shrink-0 sm:text-right">
               <div className="flex items-end gap-2 sm:justify-end">
-                <span className="text-5xl font-bold tracking-tight text-gray-950">NPR 0</span>
+                <span className="text-4xl font-bold tracking-tight text-gray-950 sm:text-5xl">NPR 0</span>
               </div>
               <p className="mt-1 text-sm font-semibold text-green-700">100% free for now</p>
             </div>
@@ -1473,14 +1485,14 @@ export default function HomePage() {
 </section>
 
 {/* ===== FAQ ===== */}
-<section id="faq" className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden py-14 sm:py-20 lg:py-24">
+<section id="faq" className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden py-12 sm:py-20 lg:py-24">
   <div className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
     {/* Header */}
     <div className="text-center">
-      <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700 mb-4">
-        💬 Common Questions
+      <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 sm:text-sm">
+        <CircleHelp className="h-4 w-4" aria-hidden="true" /> Common questions
       </span>
-      <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
+      <h2 className="text-[clamp(1.75rem,7.2vw,2.25rem)] font-bold leading-tight tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
         Questions principals ask us
       </h2>
       <p className="mt-4 text-lg text-gray-600">
@@ -1489,7 +1501,7 @@ export default function HomePage() {
     </div>
 
     {/* FAQ Items */}
-    <div className="mt-12 space-y-4">
+    <div className="mt-8 space-y-3 sm:mt-12 sm:space-y-4">
       {[
         [
           'Does it work on slow internet or mobile data?',
@@ -1513,7 +1525,7 @@ export default function HomePage() {
         ],
       ].map(([q, a], i) => (
         <details key={i} className="group rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md hover:border-blue-200">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-6 font-semibold text-gray-900">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 p-4 font-semibold text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:gap-4 sm:p-6">
             <span className="flex-1 text-base">{q}</span>
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-all group-open:bg-blue-600 group-open:text-white group-open:rotate-180">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1521,7 +1533,7 @@ export default function HomePage() {
               </svg>
             </div>
           </summary>
-          <div className="px-6 pb-6">
+          <div className="px-4 pb-5 sm:px-6 sm:pb-6">
             <div className="border-t border-gray-100 pt-4">
               <p className="text-sm leading-relaxed text-gray-600">{a}</p>
             </div>
@@ -1531,7 +1543,7 @@ export default function HomePage() {
     </div>
 
     {/* Still have questions CTA */}
-    <div className="mt-16 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 text-center">
+    <div className="mt-10 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-5 text-center sm:mt-16 sm:p-8">
       <h3 className="text-xl font-bold text-gray-900">Still have questions?</h3>
       <p className="mt-2 text-gray-600">We're here to help. Reach out anytime.</p>
       <div className="mt-6 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
@@ -1561,17 +1573,17 @@ export default function HomePage() {
 </section>
       
       {/* ===== Final CTA ===== */}
-      <section className="bg-blue-700 py-16">
+      <section className="bg-blue-700 py-12 sm:py-16">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-bold text-white sm:text-4xl">
             Put your school on the map this term.
           </h2>
           <p className="mt-4 text-lg text-blue-100">
-            Register in 2 minutes. Your school's website is live before the tea gets cold.
+            Register your school, confirm your email, and start setting up your workspace.
           </p>
           <Link
             href="/auth/signup"
-            className="mt-8 inline-block rounded-xl bg-white px-8 py-3.5 font-semibold text-blue-700 hover:bg-blue-50"
+            className="mt-7 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-white px-6 py-3 font-semibold text-blue-700 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/50 sm:w-auto"
           >
             Register your school — free
           </Link>
@@ -1579,16 +1591,15 @@ export default function HomePage() {
       </section>
 
       {/* ===== Footer ===== */}
-      <footer className="bg-gray-900 py-12 text-gray-400">
+      <footer className="bg-gray-900 py-10 text-gray-400 sm:py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-10 md:grid-cols-4">
-            <div>
+          <div className="grid grid-cols-2 gap-x-5 gap-y-9 sm:gap-10 md:grid-cols-4">
+            <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-3">
-                <img src="/logo1.png" alt="NEPSOM logo" className="h-10 w-auto" />
-                <img src="/logo4.png" alt="NEPSOM school management platform" className="h-10 w-auto" />
+                <Image src="/logo4.png" alt="NEPSOM" width={895} height={223} sizes="180px" className="h-auto w-40 sm:w-44" />
               </div>
               <p className="mt-3 text-sm leading-relaxed">
-                The school management platform built for Nepal. Made with ❤️ in Nepal.
+                The school management platform built for Nepal.
               </p>
             </div>
             <div>
@@ -1607,12 +1618,12 @@ export default function HomePage() {
                 <li><Link href="/s/ram-mandhir-deesecondary-school" className="hover:text-white">Demo school page</Link></li>
               </ul>
             </div>
-            <div>
+            <div className="col-span-2 md:col-span-1">
               <h4 className="text-sm font-semibold uppercase tracking-wider text-white">Contact</h4>
               <ul className="mt-4 space-y-2 text-sm">
-                <li>📧 basantadigitalprod@gmail.com</li>
-                <li>📞 +977-9806532844</li>
-                <li>📍 Syangja, Nepal</li>
+                <li><a href="mailto:basantadigitalprod@gmail.com" className="inline-flex min-h-11 max-w-full items-center gap-2 break-all hover:text-white"><Mail className="h-4 w-4 shrink-0" aria-hidden="true" />basantadigitalprod@gmail.com</a></li>
+                <li><a href="tel:+9779806532844" className="inline-flex min-h-11 items-center gap-2 hover:text-white"><Phone className="h-4 w-4 shrink-0" aria-hidden="true" />+977-9806532844</a></li>
+                <li className="inline-flex min-h-11 items-center gap-2"><MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />Syangja, Nepal</li>
               </ul>
             </div>
           </div>
