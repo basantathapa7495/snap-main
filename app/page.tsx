@@ -195,7 +195,7 @@ export default function HomePage() {
 
       {/* ===== Live schools ticker ===== */}
       {schools.length > 0 && (
-  <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+  <section className="mx-auto hidden max-w-7xl px-4 pt-8 sm:block sm:px-6 lg:px-8">
     <p className="text-center text-xs font-semibold uppercase tracking-wider text-gray-400">
       Schools already on NEPSOM
     </p>
