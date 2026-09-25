@@ -43,6 +43,8 @@ export default function LandingNavbar() {
   useEffect(() => {
     if (!mobileOpen) return;
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     const handlePointerDown = (event: PointerEvent) => {
       if (navbarRef.current && !navbarRef.current.contains(event.target as Node)) {
         setMobileOpen(false);
@@ -55,6 +57,7 @@ export default function LandingNavbar() {
     document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('keydown', handleEscape);
     return () => {
+      document.body.style.overflow = previousOverflow;
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleEscape);
     };
@@ -67,12 +70,12 @@ export default function LandingNavbar() {
         scrolled ? 'border-gray-200 shadow-sm' : 'border-gray-100'
       }`}
     >
-      <nav className="relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 md:h-[72px] lg:px-8" aria-label="Main navigation">
+      <nav className="relative mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-4 sm:h-16 sm:px-6 xl:h-[72px] lg:px-8" aria-label="Main navigation">
         <Link href="/" className="flex shrink-0 items-center" aria-label="NEPSOM home">
-          <Image src="/logo2.png" alt="NEPSOM" width={150} height={64} priority className="h-12 w-auto md:h-16" />
+          <Image src="/logo2.png" alt="NEPSOM" width={150} height={64} priority className="h-10 w-auto max-w-[148px] object-contain sm:h-12 xl:h-16 xl:max-w-none" />
         </Link>
 
-        <ul className="hidden items-center gap-1 md:flex">
+        <ul className="hidden items-center gap-1 xl:flex">
           {navLinks.map((link) => {
             const isActive = link.href.startsWith('#') && activeSection === link.href.slice(1);
             return (
@@ -90,7 +93,7 @@ export default function LandingNavbar() {
           })}
         </ul>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 xl:flex">
           <Link href="/auth/login" className="rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100">
             Log in
           </Link>
@@ -99,21 +102,24 @@ export default function LandingNavbar() {
           </Link>
         </div>
 
-        <button
+        <div className="flex items-center gap-2 xl:hidden">
+          <Link href="/auth/login" className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-semibold text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Log in</Link>
+          <button
           type="button"
           onClick={() => setMobileOpen((open) => !open)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 active:scale-95 md:hidden"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-95"
           aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={mobileOpen}
           aria-controls="mobile-menu"
         >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </nav>
 
       <div
         id="mobile-menu"
-        className={`absolute inset-x-0 top-full border-b border-gray-200 bg-white shadow-lg transition duration-200 md:hidden ${
+        className={`absolute inset-x-0 top-full max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain border-b border-gray-200 bg-white shadow-lg transition duration-200 sm:max-h-[calc(100dvh-4rem)] xl:hidden ${
           mobileOpen ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-2 opacity-0'
         }`}
         aria-hidden={!mobileOpen}
@@ -135,18 +141,11 @@ export default function LandingNavbar() {
             ))}
           </ul>
 
-          <div className="mt-3 grid grid-cols-2 gap-3 border-t border-gray-200 pt-4">
-            <Link
-              href="/auth/login"
-              onClick={() => setMobileOpen(false)}
-              className="flex min-h-11 items-center justify-center rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-            >
-              Log in
-            </Link>
+          <div className="mt-3 border-t border-gray-200 pt-4">
             <Link
               href="/auth/signup"
               onClick={() => setMobileOpen(false)}
-              className="flex min-h-11 items-center justify-center rounded-lg bg-blue-600 px-3 py-2.5 text-center text-sm font-semibold text-white hover:bg-blue-700"
+              className="flex min-h-12 w-full items-center justify-center rounded-lg bg-blue-600 px-3 py-2.5 text-center text-sm font-semibold text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               Register school
             </Link>
