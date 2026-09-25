@@ -748,7 +748,7 @@ export default function HomePage() {
 
     {/* Bottom message */}
     <div className="mt-10 flex justify-center sm:mt-12">
-      <p className="text-center text-base font-semibold tracking-tight text-gray-700 sm:text-lg">
+      <p className="whitespace-nowrap text-center text-xs font-semibold text-gray-700 sm:text-lg">
         One login. One dashboard. One connected school system.
       </p>
     </div>
