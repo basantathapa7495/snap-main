@@ -478,241 +478,58 @@ export default function HomePage() {
   </div>
 </section>
 
-      {/* ===== How It Works ===== */}
-<section
-  id="how"
-  className="nepsom-pattern-grid relative scroll-mt-24 overflow-hidden bg-white py-12 sm:py-20 lg:py-28"
->
-  <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    {/* Heading */}
-    <div className="mx-auto max-w-3xl text-center">
-      <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-        Simple setup
-      </span>
-
-      <h2 className="mt-5 text-[clamp(1.75rem,7.2vw,2.25rem)] leading-tight font-bold tracking-tight text-gray-950 sm:text-4xl lg:text-5xl">
-        Start using NEPSOM in
-        <span className="text-blue-600"> three simple steps</span>
-      </h2>
-
-      <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-gray-600 sm:text-lg">
-        No complicated installation. No technical team required. Set up your
-        school, add your people, and start managing everything from one place.
-      </p>
-    </div>
-
-    {/* Steps */}
-    <div className="relative mt-10 sm:mt-16">
-      {/* Desktop connecting line */}
-      <div
-        className="absolute left-[16%] right-[16%] top-10 hidden h-px bg-gradient-to-r from-blue-100 via-blue-300 to-blue-100 lg:block"
-        aria-hidden="true"
-      />
-
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Step 1 */}
-        <article className="group relative">
-          <div className="relative rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
-            {/* Number + Icon */}
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/20 transition-transform duration-300 group-hover:scale-105">
-                <School className="h-7 w-7" strokeWidth={1.8} />
-              </div>
-
-              <span className="text-5xl font-bold tracking-tight text-gray-100">
-                01
-              </span>
-            </div>
-
-            <div className="mt-7">
-              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-blue-600">
-                Step 1
-              </span>
-
-              <h3 className="mt-2 text-xl font-bold text-gray-950">
-                Register your school
-              </h3>
-
-              <p className="mt-3 text-sm leading-6 text-gray-600">
-                Create your school account and enter the basic school details.
-                NEPSOM prepares your school workspace and public school page.
-              </p>
-
-              <div className="mt-6 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
-                <p className="text-xs font-medium text-gray-500">
-                  Your school page
-                </p>
-
-                <p className="mt-1 truncate font-mono text-xs font-medium text-gray-800">
-                  nepsom.xyz/s/your-school
-                </p>
-              </div>
-            </div>
+      {/* ===== Simple setup ===== */}
+      <section id="how" className="scroll-mt-24 bg-white py-10 sm:py-16 lg:py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
+              Simple setup
+            </span>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-gray-950 sm:mt-4 sm:text-4xl">
+              Get started in 3 easy steps
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600 sm:mt-3 sm:text-base">
+              No installation or technical team needed.
+            </p>
           </div>
-        </article>
 
-        {/* Step 2 */}
-        <article className="group relative">
-          <div className="relative rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/20 transition-transform duration-300 group-hover:scale-105">
-                <Users className="h-7 w-7" strokeWidth={1.8} />
-              </div>
-
-              <span className="text-5xl font-bold tracking-tight text-gray-100">
-                02
-              </span>
-            </div>
-
-            <div className="mt-7">
-              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-blue-600">
-                Step 2
-              </span>
-
-              <h3 className="mt-2 text-xl font-bold text-gray-950">
-                Add teachers and students
-              </h3>
-
-              <p className="mt-3 text-sm leading-6 text-gray-600">
-                Add your classes, teachers, and students. Give each person the
-                right access so school work is shared instead of depending on
-                one person.
-              </p>
-
-              <div className="mt-6 grid grid-cols-2 gap-2">
-                <div className="rounded-xl bg-gray-50 px-3 py-3">
-                  <p className="text-xs font-semibold text-gray-900">
-                    Teachers
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Class access
-                  </p>
-                </div>
-
-                <div className="rounded-xl bg-gray-50 px-3 py-3">
-                  <p className="text-xs font-semibold text-gray-900">
-                    Students
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Personal portal
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        {/* Step 3 */}
-        <article className="group relative">
-          <div className="relative rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl sm:p-7">
-            <div className="relative z-10 flex items-center justify-between">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-600/20 transition-transform duration-300 group-hover:scale-105">
-                <Link2 className="h-7 w-7" strokeWidth={1.8} />
-              </div>
-
-              <span className="text-5xl font-bold tracking-tight text-gray-100">
-                03
-              </span>
-            </div>
-
-            <div className="mt-7">
-              <span className="text-xs font-semibold uppercase tracking-[0.15em] text-blue-600">
-                Step 3
-              </span>
-
-              <h3 className="mt-2 text-xl font-bold text-gray-950">
-                Start running your school
-              </h3>
-
-              <p className="mt-3 text-sm leading-6 text-gray-600">
-                Manage attendance, fees, exams, notices, students, and teachers
-                from your dashboard while your school community uses their own
-                secure access.
-              </p>
-
-              <div className="mt-6 flex items-center gap-2 rounded-xl border border-green-100 bg-green-50 px-4 py-3">
-                <CheckCircle2
-                  className="h-5 w-5 shrink-0 text-green-600"
-                  strokeWidth={2}
-                />
-
-                <span className="text-sm font-semibold text-green-800">
-                  Your school is ready to go
+          <ol className="mx-auto mt-6 grid max-w-4xl gap-3 sm:mt-9 sm:grid-cols-3 sm:gap-4">
+            {[
+              {
+                title: 'Register your school',
+                detail: 'Enter your school details.',
+                Icon: School,
+              },
+              {
+                title: 'Add your people',
+                detail: 'Add classes, teachers and students.',
+                Icon: Users,
+              },
+              {
+                title: 'Start managing',
+                detail: 'Track attendance, fees and more.',
+                Icon: CheckCircle2,
+              },
+            ].map(({ title, detail, Icon }, index) => (
+              <li
+                key={title}
+                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-col sm:items-start sm:p-5"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white sm:h-12 sm:w-12" aria-hidden="true">
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={1.8} />
                 </span>
-              </div>
-            </div>
-          </div>
-        </article>
-      </div>
-    </div>
-
-    {/* Bottom simplified flow */}
-    <div className="mx-auto mt-14 hidden max-w-4xl sm:block">
-      <div className="rounded-2xl border border-gray-200 bg-gray-50/70 px-5 py-5 sm:px-7">
-        <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-5">
-          {/* Register */}
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm ring-1 ring-gray-200">
-              <School className="h-4 w-4" strokeWidth={1.8} />
-            </div>
-
-            <span className="text-sm font-semibold text-gray-800">
-              Register
-            </span>
-          </div>
-
-          <ArrowRight
-            className="h-4 w-4 rotate-90 text-gray-300 sm:rotate-0"
-            aria-hidden="true"
-          />
-
-          {/* Add people */}
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm ring-1 ring-gray-200">
-              <Users className="h-4 w-4" strokeWidth={1.8} />
-            </div>
-
-            <span className="text-sm font-semibold text-gray-800">
-              Add people
-            </span>
-          </div>
-
-          <ArrowRight
-            className="h-4 w-4 rotate-90 text-gray-300 sm:rotate-0"
-            aria-hidden="true"
-          />
-
-          {/* Start */}
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm ring-1 ring-gray-200">
-              <Link2 className="h-4 w-4" strokeWidth={1.8} />
-            </div>
-
-            <span className="text-sm font-semibold text-gray-800">
-              Start using NEPSOM
-            </span>
-          </div>
-
-          <ArrowRight
-            className="h-4 w-4 rotate-90 text-gray-300 sm:rotate-0"
-            aria-hidden="true"
-          />
-
-          {/* Done */}
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-600 ring-1 ring-green-100">
-              <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
-            </div>
-
-            <span className="text-sm font-semibold text-green-700">
-              Ready
-            </span>
-          </div>
+                <div className="min-w-0">
+                  <span className="text-xs font-bold uppercase tracking-wide text-blue-600">
+                    Step {index + 1}
+                  </span>
+                  <h3 className="mt-0.5 text-base font-bold text-gray-950 sm:text-lg">{title}</h3>
+                  <p className="mt-0.5 text-sm leading-5 text-gray-600">{detail}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
+      </section>
 
      {/* ===== ⚖️ COMPARISON TABLE ===== */}
 <section className="nepsom-pattern-grid relative overflow-hidden py-12 sm:py-20 lg:py-24">
