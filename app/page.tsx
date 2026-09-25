@@ -731,9 +731,9 @@ export default function HomePage() {
       ].map(({ icon: Icon, title }) => (
         <article
           key={title}
-          className="group flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-3 text-center shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/50 sm:min-h-[112px] sm:rounded-2xl sm:gap-3 sm:px-3 sm:py-5"
+          className="group flex min-h-[84px] flex-col items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2 py-2.5 text-center shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/50 sm:min-h-[112px] sm:rounded-2xl sm:gap-3 sm:px-3 sm:py-5"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-blue-100 transition-colors group-hover:bg-blue-600 group-hover:text-white sm:h-11 sm:w-11">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-blue-100 transition-colors group-hover:bg-blue-600 group-hover:text-white sm:h-11 sm:w-11">
             <Icon className="h-5 w-5 sm:h-5 sm:w-5" strokeWidth={1.8} />
           </span>
           <h3 className="text-[11px] font-semibold leading-tight text-gray-900 sm:text-sm">
@@ -744,7 +744,7 @@ export default function HomePage() {
     </div>
 
     {/* Bottom message */}
-    <div className="mt-10 flex justify-center sm:mt-12">
+    <div className="mt-6 flex justify-center sm:mt-12">
       <p className="whitespace-nowrap text-center text-xs font-semibold text-gray-700 sm:text-lg">
         One login. One dashboard. One connected school system.
       </p>
