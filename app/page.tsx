@@ -825,7 +825,7 @@ export default function HomePage() {
       </section>
 
       {/* ===== Pricing ===== */}
-      <section id="pricing" className="scroll-mt-24 bg-white py-10 sm:py-16">
+      <section id="pricing" className="hidden scroll-mt-24 bg-white py-16 sm:block">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <p className="text-sm font-bold uppercase text-blue-600">Pricing</p>
