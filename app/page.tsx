@@ -239,14 +239,16 @@ export default function HomePage() {
       <section className="bg-slate-50 py-10 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
-            <span className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
-              From manual to simple
+            <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.13em] text-blue-700 shadow-sm sm:text-xs">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden="true" />
+              A simpler school day
             </span>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight text-gray-950 sm:mt-3 sm:text-4xl">
-              Less paperwork. More time for your school.
+            <h2 className="mt-4 text-[clamp(1.75rem,6vw,2.5rem)] font-extrabold leading-tight tracking-tight text-gray-950 sm:mt-5 sm:text-4xl">
+              Less paperwork.
+              <span className="block text-blue-600">More time for students.</span>
             </h2>
-            <p className="mt-3 text-sm leading-6 text-gray-600 sm:text-base">
-              Fees, notices and report cards, all easier to manage.
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-gray-600 sm:mt-4 sm:text-base">
+              Track fees, share notices and prepare report cards in one place.
             </p>
           </div>
 
