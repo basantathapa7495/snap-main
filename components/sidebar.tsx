@@ -308,7 +308,7 @@ export default function Sidebar() {
         }`}
       >
         {/* LOGO HEADER */}
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 pb-5 pt-6 dark:border-slate-700 lg:border-gray-100 lg:pb-4 lg:pt-5 lg:dark:border-gray-100">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 pb-4 pt-5 dark:border-slate-700 lg:border-gray-100 lg:pb-4 lg:pt-5 lg:dark:border-gray-100">
           <div className="flex items-center gap-2.5">
             <Image
               src="/logo1.png"
@@ -341,10 +341,10 @@ export default function Sidebar() {
         {/* ===================================================
             NAVIGATION MENU
         =================================================== */}
-        <nav className="flex-1 overflow-y-auto px-4 py-5 lg:px-3 lg:py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav className="flex-1 overflow-y-auto px-4 py-4 lg:px-3 lg:py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {activeMenu.map((section, sectionIndex) => (
-            <div key={sectionIndex} className="mb-3 lg:mb-2">
-              <ul className="space-y-1.5 lg:space-y-[2px]">
+            <div key={sectionIndex} className="mb-2 lg:mb-2">
+              <ul className="space-y-1 lg:space-y-[2px]">
                 {section.map((item) => {
                   const Icon = item.icon;
                   const isActive = isMenuItemActive(item.href);
@@ -359,7 +359,7 @@ export default function Sidebar() {
                       <Link
                         href={item.href}
                         onClick={() => setMobileOpen(false)}
-                        className={`flex min-h-12 items-center gap-3.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-200 lg:min-h-0 lg:gap-3 lg:rounded-lg lg:px-3 lg:py-2 lg:text-[0.85rem] ${
+                        className={`flex min-h-11 items-center gap-3.5 rounded-xl px-3.5 py-2 text-sm font-medium transition-all duration-200 lg:min-h-0 lg:gap-3 lg:rounded-lg lg:px-3 lg:py-2 lg:text-[0.85rem] ${
                           isActive
                             ? 'bg-teal-700 text-white shadow-sm shadow-teal-900/20 dark:bg-teal-500/20 dark:text-teal-100 lg:bg-blue-600 lg:text-white lg:shadow-md lg:shadow-blue-200 lg:dark:bg-blue-600 lg:dark:text-white'
                             : 'text-slate-700 hover:bg-white hover:text-teal-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-teal-200 lg:text-gray-700 lg:hover:bg-gray-100 lg:hover:text-gray-900 lg:dark:text-gray-700 lg:dark:hover:bg-gray-100 lg:dark:hover:text-gray-900'
@@ -383,7 +383,7 @@ export default function Sidebar() {
               </ul>
 
               {sectionIndex < activeMenu.length - 1 && (
-                <hr className="mx-3 my-4 border-t border-slate-200 dark:border-slate-700 lg:my-3 lg:border-gray-200 lg:dark:border-gray-200" />
+                <hr className="mx-3 my-3 border-t border-slate-200 dark:border-slate-700 lg:my-3 lg:border-gray-200 lg:dark:border-gray-200" />
               )}
             </div>
           ))}
@@ -393,12 +393,12 @@ export default function Sidebar() {
         {/* ===================================================
             BOTTOM ACTIONS
         =================================================== */}
-        <div className="border-t border-slate-200 p-4 dark:border-slate-700 lg:border-gray-100 lg:p-3 lg:dark:border-gray-100">
+        <div className="border-t border-slate-200 p-3 dark:border-slate-700 lg:border-gray-100 lg:p-3 lg:dark:border-gray-100">
           {isPrincipalPath && (
             <Link
               href="/principal/settings"
               onClick={() => setMobileOpen(false)}
-              className={`flex min-h-12 items-center gap-3.5 rounded-xl px-3.5 py-2.5 text-sm transition lg:min-h-0 lg:gap-3 lg:rounded-lg lg:px-3 lg:py-2 lg:text-[0.85rem] ${
+              className={`flex min-h-11 items-center gap-3.5 rounded-xl px-3.5 py-2 text-sm transition lg:min-h-0 lg:gap-3 lg:rounded-lg lg:px-3 lg:py-2 lg:text-[0.85rem] ${
                 principalSettingsActive
                   ? 'bg-teal-700 text-white dark:bg-teal-500/20 dark:text-teal-100 lg:bg-blue-600 lg:dark:bg-blue-600 lg:dark:text-white'
                   : 'text-slate-700 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800 lg:text-gray-700 lg:hover:bg-gray-100 lg:dark:text-gray-700 lg:dark:hover:bg-gray-100'
