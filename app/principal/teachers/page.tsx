@@ -143,6 +143,7 @@ export default function TeachersPage() {
   const [showCredentialTray, setShowCredentialTray] = useState(true);
   const [showSavedPasswords, setShowSavedPasswords] = useState(false);
   const [allCredentialsCopied, setAllCredentialsCopied] = useState(false);
+  const [pageTab, setPageTab] = useState<"teachers" | "attendance" | "leave" | "assignments" | "more">("teachers");
 
   useEffect(() => {
     let cancelled = false;
@@ -509,22 +510,42 @@ export default function TeachersPage() {
               </div>
             </header>
 
-            <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Teacher overview">
+            <nav aria-label="Teachers sections" className="mt-5 grid grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900 min-[380px]:grid-cols-5">
+              {([
+                ["teachers", "Teachers"],
+                ["attendance", "Attendance"],
+                ["leave", "Leave"],
+                ["assignments", "Assignments"],
+                ["more", "More"],
+              ] as const).map(([value, label]) => (
+                <button key={value} type="button" onClick={() => setPageTab(value)}
+                  aria-current={pageTab === value ? "page" : undefined}
+                  className={`min-h-10 min-w-0 rounded-lg px-0.5 text-xs font-bold transition sm:px-3 sm:text-sm ${
+                    pageTab === value
+                      ? "bg-teal-700 text-white dark:bg-teal-500/20 dark:text-teal-100"
+                      : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                  }`}>
+                  <span className="block truncate">{label}</span>
+                </button>
+              ))}
+            </nav>
+
+            {pageTab === "teachers" && <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Teacher overview">
               <TeacherStat icon={UsersRound} label="Total teachers" value={teachers.length} tone="blue" />
               <TeacherStat icon={UserCheck} label="Active accounts" value={activeAccounts} tone="emerald" />
               <TeacherStat icon={KeyRound} label="Need access" value={teachers.length - activeAccounts} tone="amber" />
               <TeacherStat icon={GraduationCap} label="Subjects" value={Math.max(0, subjects.length - 1)} tone="violet" />
-            </section>
+            </section>}
 
-            <section className="mt-5 flex flex-col gap-4 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-blue-50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            {pageTab === "teachers" && <section className="mt-5 flex flex-col gap-4 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-blue-50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="flex items-start gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-600/20"><ShieldCheck className="h-5 w-5" /></span>
                 <div><h2 className="font-bold text-slate-950">Self-registration with school approval</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-slate-600 sm:text-sm">Teachers will request an account from the school website. You review their details before portal access is activated.</p></div>
               </div>
               <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-bold text-violet-700"><UserPlus className="h-3.5 w-3.5" /> Approval enabled</span>
-            </section>
+            </section>}
 
-            {schoolId && <TeacherOperationsPanel schoolId={schoolId} teachers={teachers} onTeacherChanged={() => setRefreshKey((value) => value + 1)} />}
+            {schoolId && pageTab !== "teachers" && <TeacherOperationsPanel key={pageTab} schoolId={schoolId} teachers={teachers} onTeacherChanged={() => setRefreshKey((value) => value + 1)} initialTab={pageTab === "assignments" ? "assignments" : pageTab === "more" ? "overview" : pageTab} showTabs={pageTab === "more"} />}
 
             {(error || notice) && (
               <div
@@ -603,7 +624,7 @@ export default function TeachersPage() {
               </section>
             )}
 
-            <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-lg shadow-slate-900/5 backdrop-blur-sm">
+            {pageTab === "teachers" && <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-lg shadow-slate-900/5 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-5">
                 <div>
                   <h2 className="font-bold text-slate-950">Teacher records</h2>
@@ -648,7 +669,7 @@ export default function TeachersPage() {
                   onAdd={openCreateForm}
                 />
               ) : <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">{filteredTeachers.map((teacher, index) => <TeacherProfileCard key={teacher.id} teacher={teacher} index={index} onView={setSelectedTeacher} onEdit={openEditForm} onLogin={openLogin} />)}</div>}
-            </section>
+            </section>}
           </div>
         </main>
       </div>

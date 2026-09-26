@@ -4,11 +4,12 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Activity, AlertTriangle, Banknote, BookOpen,
-  CalendarDays, Check, Clock3, Download, FileText, Gift, LayoutDashboard,
+  CalendarDays, Check, Clock3, FileText, Gift, LayoutDashboard,
   Loader2, Plus, Search, ShieldCheck, Star, Upload, UserCheck, UserMinus,
   UsersRound, X,
 } from "lucide-react";
 import AccountRequestsPanel from "@/components/AccountRequestsPanel";
+import TeacherAttendancePanel from "@/components/TeacherAttendancePanel";
 import { supabase } from "@/lib/supabase";
 
 export type TeacherOperationsTeacher = {
@@ -45,24 +46,26 @@ const today = () => new Date().toISOString().slice(0, 10);
 const monthStart = () => `${today().slice(0, 7)}-01`;
 const teacherName = (teachers: TeacherOperationsTeacher[], id: string) => teachers.find((teacher) => teacher.id === id)?.name || "Unknown teacher";
 
-export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherChanged }: { schoolId: string; teachers: TeacherOperationsTeacher[]; onTeacherChanged: () => void }) {
-  const [tab, setTab] = useState<Tab>("overview");
+export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherChanged, initialTab = "overview", showTabs = true }: { schoolId: string; teachers: TeacherOperationsTeacher[]; onTeacherChanged: () => void; initialTab?: Tab; showTabs?: boolean }) {
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [rows, setRows] = useState<Record<string, Row[]>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialTab !== "attendance");
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
-  const [attendanceDate, setAttendanceDate] = useState(today());
   const [accountRequestCount, setAccountRequestCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true);
-      const tables = ["teacher_attendance", "teacher_leave_requests", "teacher_assignments", "teacher_timetable_entries", "teacher_performance", "teacher_payroll", "teacher_documents", "teacher_tasks", "activity_logs", "classes"];
+      const tables = tab === "attendance" ? []
+        : tab === "leave" ? ["teacher_leave_requests"]
+        : tab === "assignments" ? ["teacher_assignments", "classes"]
+        : ["teacher_attendance", "teacher_leave_requests", "teacher_assignments", "teacher_timetable_entries", "teacher_performance", "teacher_payroll", "teacher_documents", "teacher_tasks", "activity_logs", "classes"];
       const results = await Promise.all(tables.map((name) => supabase.from(name).select("*").eq("school_id", schoolId).order("created_at", { ascending: false }).limit(250)));
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = tab === "overview" ? await supabase.auth.getSession() : { data: { session: null } };
       if (session?.access_token) {
         const response = await fetch("/api/account-requests?role=teacher", { headers: { Authorization: `Bearer ${session.access_token}` } });
         if (response.ok) {
@@ -80,7 +83,7 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
     }
     load();
     return () => { cancelled = true; };
-  }, [schoolId, refresh]);
+  }, [schoolId, refresh, tab]);
 
   const attendance = rows.teacher_attendance || [];
   const leaves = rows.teacher_leave_requests || [];
@@ -124,15 +127,15 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
   ] as const;
 
   return (
-    <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-900/5">
-      <div className="border-b border-slate-200 px-4 pt-4 sm:px-5">
+    <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-900/5 dark:border-slate-700 dark:bg-[#111B2B]">
+      <div className="border-b border-slate-200 px-4 pt-4 dark:border-slate-700 sm:px-5">
         <div className="flex items-center justify-between gap-3 pb-4">
-          <div><h2 className="text-lg font-extrabold text-slate-950">Teacher operations</h2><p className="mt-1 text-xs text-slate-500">Attendance, workload, approvals and staff records in one place.</p></div>
+          <div><h2 className="text-lg font-extrabold text-slate-950 dark:text-white">{tab === "attendance" ? "Teacher attendance" : "Teacher operations"}</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Attendance, workload, approvals and staff records in one place.</p></div>
           {loading && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
         </div>
-        <div className="flex gap-1 overflow-x-auto pb-0 scrollbar-hide" role="tablist" aria-label="Teacher operations">
+        {showTabs && <div className="flex gap-1 overflow-x-auto pb-0 scrollbar-hide" role="tablist" aria-label="Teacher operations">
           {tabs.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setTab(id)} className={`inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-xs font-bold transition sm:text-sm ${tab === id ? "border-blue-600 text-blue-700" : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-900"}`}><Icon className="h-4 w-4" />{label}</button>)}
-        </div>
+        </div>}
       </div>
 
       {(error || message) && <div className={`m-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ? <AlertTriangle className="h-4 w-4" /> : <Check className="h-4 w-4" />}<span>{error || message}</span><button className="ml-auto" onClick={() => { setError(""); setMessage(""); }}><X className="h-4 w-4" /></button></div>}
@@ -146,7 +149,7 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
           </div>
           <AccountRequestsPanel role="teacher" onApproved={() => { onTeacherChanged(); setRefresh((value) => value + 1); }} />
         </div>}
-        {tab === "attendance" && <AttendancePanel teachers={teachers} rows={attendance} date={attendanceDate} setDate={setAttendanceDate} working={working} run={run} schoolId={schoolId} />}
+        {tab === "attendance" && <TeacherAttendancePanel schoolId={schoolId} teachers={teachers} onSaved={() => setRefresh((value) => value + 1)} />}
         {tab === "leave" && <LeavePanel teachers={teachers} rows={leaves} working={working} run={run} />}
         {tab === "assignments" && <AssignmentsPanel schoolId={schoolId} teachers={teachers} rows={assignments} classes={rows.classes || []} working={working} run={run} />}
         {tab === "timetable" && <TimetablePanel schoolId={schoolId} teachers={teachers} rows={timetable} working={working} run={run} />}
@@ -171,14 +174,6 @@ function BirthdayList({ teachers }: { teachers: TeacherOperationsTeacher[] }) {
   const list = teachers.filter((t) => t.date_of_birth).sort((a, b) => (a.date_of_birth || "").localeCompare(b.date_of_birth || "")).slice(0, 5);
   if (!list.length) return <Empty text="Add dates of birth to see upcoming birthdays." />;
   return <div className="space-y-2">{list.map((teacher) => <SummaryLine key={teacher.id} label={teacher.name} value={new Date(teacher.date_of_birth!).toLocaleDateString(undefined, { month: "short", day: "numeric" })} />)}</div>;
-}
-
-function AttendancePanel({ teachers, rows, date, setDate, working, run, schoolId }: any) {
-  const [teacherId, setTeacherId] = useState(teachers[0]?.id || ""); const [status, setStatus] = useState("present"); const [checkIn, setCheckIn] = useState("10:00"); const [checkOut, setCheckOut] = useState("16:00");
-  const dayRows = rows.filter((r: Row) => r.attendance_date === date);
-  async function save(e: React.FormEvent) { e.preventDefault(); await run(() => supabase.from("teacher_attendance").upsert({ school_id: schoolId, teacher_id: teacherId, attendance_date: date, status, check_in: status === "present" ? checkIn : null, check_out: status === "present" ? checkOut : null, updated_at: new Date().toISOString() }, { onConflict: "teacher_id,attendance_date" }), "Attendance saved."); }
-  function exportCsv() { const content = ["Teacher,Date,Status,Check in,Check out", ...rows.map((r: Row) => [teacherName(teachers, r.teacher_id), r.attendance_date, r.status, r.check_in || "", r.check_out || ""].map((v) => `"${String(v).replaceAll('"', '""')}"`).join(","))].join("\n"); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([content], { type: "text/csv" })); a.download = `teacher-attendance-${date}.csv`; a.click(); URL.revokeObjectURL(a.href); }
-  return <div className="space-y-4"><div className="flex flex-wrap items-end justify-between gap-3"><label className="text-xs font-bold text-slate-600">Attendance date<input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={`${input} mt-1 block`} /></label><button type="button" onClick={exportCsv} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 hover:bg-slate-50"><Download className="h-4 w-4" />Export report</button></div><form onSubmit={save} className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-5"><select required value={teacherId} onChange={(e) => setTeacherId(e.target.value)} className={input}>{teachers.map((t: TeacherOperationsTeacher) => <option key={t.id} value={t.id}>{t.name}</option>)}</select><select value={status} onChange={(e) => setStatus(e.target.value)} className={input}><option value="present">Present</option><option value="absent">Absent</option><option value="leave">On leave</option></select><input type="time" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} disabled={status !== "present"} className={input} /><input type="time" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} disabled={status !== "present"} className={input} /><button disabled={working || !teacherId} className={button}>Save</button></form><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{dayRows.map((row: Row) => <div key={row.id} className="rounded-2xl border border-slate-200 p-4"><div className="flex items-center justify-between"><p className="font-bold text-slate-900">{teacherName(teachers, row.teacher_id)}</p><Status value={row.status} /></div><p className="mt-2 text-xs text-slate-500">{row.check_in || "—"} to {row.check_out || "—"}{row.check_in > "10:15" ? " · Late arrival" : ""}{row.check_out && row.check_out < "16:00" ? " · Early departure" : ""}</p></div>)}{!dayRows.length && <Empty text="No attendance recorded for this date." />}</div></div>;
 }
 
 function LeavePanel({ teachers, rows, working, run }: any) {
