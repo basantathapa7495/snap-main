@@ -303,12 +303,12 @@ export default function Sidebar() {
           SIDEBAR
       ===================================================== */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-screen w-[260px] flex-col border-r border-gray-200 bg-white transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-50 flex h-screen w-[min(300px,86vw)] flex-col border-r border-slate-200 bg-[#F8FAFC] shadow-2xl transition-transform duration-300 dark:border-slate-700 dark:bg-[#111B2B] lg:w-[260px] lg:border-gray-200 lg:bg-white lg:shadow-none lg:dark:border-gray-200 lg:dark:bg-white lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* LOGO HEADER */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 pb-4 pt-5">
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 pb-5 pt-6 dark:border-slate-700 lg:border-gray-100 lg:pb-4 lg:pt-5 lg:dark:border-gray-100">
           <div className="flex items-center gap-2.5">
             <Image
               src="/logo1.png"
@@ -319,10 +319,10 @@ export default function Sidebar() {
             />
 
             <div className="flex flex-col justify-center">
-              <span className="text-lg font-bold leading-tight text-gray-900">
+              <span className="text-lg font-bold leading-tight text-slate-900 dark:text-white lg:dark:text-gray-900">
                 NEPSOM
               </span>
-              <span className="text-[12px] font-medium leading-tight tracking-wide text-gray-400">
+              <span className="text-[12px] font-medium leading-tight tracking-wide text-slate-500 dark:text-slate-400 lg:dark:text-gray-400">
                 School Nepal Platform
               </span>
             </div>
@@ -331,7 +331,7 @@ export default function Sidebar() {
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            className="rounded-lg p-1.5 text-gray-400 transition hover:bg-gray-100 lg:hidden"
+            className="rounded-xl bg-slate-100 p-2 text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 lg:hidden"
             aria-label="Close sidebar"
           >
             <X className="h-5 w-5" />
@@ -341,10 +341,10 @@ export default function Sidebar() {
         {/* ===================================================
             NAVIGATION MENU
         =================================================== */}
-        <nav className="flex-1 overflow-y-auto px-3 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav className="flex-1 overflow-y-auto px-4 py-5 lg:px-3 lg:py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {activeMenu.map((section, sectionIndex) => (
-            <div key={sectionIndex} className="mb-2">
-              <ul className="space-y-[2px]">
+            <div key={sectionIndex} className="mb-3 lg:mb-2">
+              <ul className="space-y-1.5 lg:space-y-[2px]">
                 {section.map((item) => {
                   const Icon = item.icon;
                   const isActive = isMenuItemActive(item.href);
@@ -359,22 +359,22 @@ export default function Sidebar() {
                       <Link
                         href={item.href}
                         onClick={() => setMobileOpen(false)}
-                        className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[0.85rem] transition-all duration-200 ${
+                        className={`flex min-h-12 items-center gap-3.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-200 lg:min-h-0 lg:gap-3 lg:rounded-lg lg:px-3 lg:py-2 lg:text-[0.85rem] ${
                           isActive
-                            ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                            ? 'bg-teal-700 text-white shadow-sm shadow-teal-900/20 dark:bg-teal-500/20 dark:text-teal-100 lg:bg-blue-600 lg:text-white lg:shadow-md lg:shadow-blue-200 lg:dark:bg-blue-600 lg:dark:text-white'
+                            : 'text-slate-700 hover:bg-white hover:text-teal-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-teal-200 lg:text-gray-700 lg:hover:bg-gray-100 lg:hover:text-gray-900 lg:dark:text-gray-700 lg:dark:hover:bg-gray-100 lg:dark:hover:text-gray-900'
                         }`}
                       >
                         <Icon
-                          className={`h-[16px] w-[16px] flex-shrink-0 ${
-                            isActive ? 'text-white' : 'text-gray-500'
+                          className={`h-5 w-5 flex-shrink-0 lg:h-[16px] lg:w-[16px] ${
+                            isActive ? 'text-white dark:text-teal-100 lg:dark:text-white' : 'text-slate-500 dark:text-slate-400 lg:text-gray-500 lg:dark:text-gray-500'
                           }`}
                         />
 
                         <span className="font-medium">{item.label}</span>
 
                         {isActive && (
-                          <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white" />
+                          <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white dark:bg-teal-200 lg:dark:bg-white" />
                         )}
                       </Link>
                     </li>
@@ -383,7 +383,7 @@ export default function Sidebar() {
               </ul>
 
               {sectionIndex < activeMenu.length - 1 && (
-                <hr className="mx-3 my-3 border-t border-gray-200" />
+                <hr className="mx-3 my-4 border-t border-slate-200 dark:border-slate-700 lg:my-3 lg:border-gray-200 lg:dark:border-gray-200" />
               )}
             </div>
           ))}
@@ -393,20 +393,20 @@ export default function Sidebar() {
         {/* ===================================================
             BOTTOM ACTIONS
         =================================================== */}
-        <div className="border-t border-gray-100 p-3">
+        <div className="border-t border-slate-200 p-4 dark:border-slate-700 lg:border-gray-100 lg:p-3 lg:dark:border-gray-100">
           {isPrincipalPath && (
             <Link
               href="/principal/settings"
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[0.85rem] transition ${
+              className={`flex min-h-12 items-center gap-3.5 rounded-xl px-3.5 py-2.5 text-sm transition lg:min-h-0 lg:gap-3 lg:rounded-lg lg:px-3 lg:py-2 lg:text-[0.85rem] ${
                 principalSettingsActive
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-teal-700 text-white dark:bg-teal-500/20 dark:text-teal-100 lg:bg-blue-600 lg:dark:bg-blue-600 lg:dark:text-white'
+                  : 'text-slate-700 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800 lg:text-gray-700 lg:hover:bg-gray-100 lg:dark:text-gray-700 lg:dark:hover:bg-gray-100'
               }`}
             >
               <Settings
-                className={`h-[16px] w-[16px] ${
-                  principalSettingsActive ? 'text-white' : 'text-gray-500'
+                className={`h-5 w-5 lg:h-[16px] lg:w-[16px] ${
+                  principalSettingsActive ? 'text-white dark:text-teal-100 lg:dark:text-white' : 'text-slate-500 dark:text-slate-400 lg:text-gray-500 lg:dark:text-gray-500'
                 }`}
               />
               <span className="font-medium">Settings</span>
