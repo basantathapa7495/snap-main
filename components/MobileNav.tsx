@@ -24,8 +24,8 @@ export default function MobileBottomNav() {
   const navItems = isPrincipal ? principalNavItems : defaultNavItems;
 
   return (
-    <nav aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white/95 shadow-[0_-8px_24px_rgba(15,23,42,0.06)] backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 md:hidden">
-      <div className="grid grid-cols-5 items-center px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+    <nav aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/80 bg-[#F8FAFC]/95 shadow-[0_-4px_18px_rgba(15,23,42,0.05)] backdrop-blur-md dark:border-slate-700/70 dark:bg-[#111B2B]/95 md:hidden">
+      <div className="grid grid-cols-5 items-center px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || (item.href !== '/principal' && pathname.startsWith(`${item.href}/`));
@@ -35,16 +35,16 @@ export default function MobileBottomNav() {
               key={item.href}
               href={item.href}
               aria-current={isActive ? 'page' : undefined}
-              className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
+              className={`flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-0.5 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 ${
                 isActive
-                  ? 'text-indigo-700 dark:text-indigo-300'
-                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'
+                  ? 'text-teal-800 dark:text-teal-200'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100'
               }`}
             >
-              <span className={`flex h-9 w-12 items-center justify-center rounded-2xl transition-colors ${
-                isActive ? 'bg-indigo-100 dark:bg-indigo-500/20' : 'bg-transparent'
+              <span className={`flex h-7 w-11 items-center justify-center rounded-xl transition-colors ${
+                isActive ? 'bg-teal-100 dark:bg-teal-400/15' : 'bg-transparent'
               }`}>
-                <Icon className="h-[22px] w-[22px]" strokeWidth={isActive ? 2.4 : 1.9} aria-hidden="true" />
+                <Icon className="h-5 w-5" strokeWidth={isActive ? 2.3 : 1.9} aria-hidden="true" />
               </span>
               <span className="w-full truncate text-[10px] font-semibold leading-tight max-[380px]:text-[9px]">{item.label}</span>
             </Link>
