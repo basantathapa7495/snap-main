@@ -348,9 +348,14 @@ export default function Sidebar() {
                 {section.map((item) => {
                   const Icon = item.icon;
                   const isActive = isMenuItemActive(item.href);
+                  const hideOnPrincipalMobile = isPrincipalPath && [
+                    '/principal/teachers',
+                    '/principal/students',
+                    '/principal/communication',
+                  ].includes(item.href);
 
                   return (
-                    <li key={item.href}>
+                    <li key={item.href} className={hideOnPrincipalMobile ? 'hidden lg:block' : undefined}>
                       <Link
                         href={item.href}
                         onClick={() => setMobileOpen(false)}
