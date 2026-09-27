@@ -74,7 +74,11 @@ export async function POST(request: Request) {
   const { data: school } = await schoolQuery.maybeSingle();
   if (!school) return NextResponse.json({ error: 'School Code or Join Code is incorrect, or joining is disabled.' }, { status: 403 });
 
-  const { data: existing } = await admin.from('account_requests').select('id').eq('school_id', school.id).eq('email', email).eq('requested_role', role).eq('status', 'pending').maybeSingle();
+  const { data: existing, error: lookupError } = await admin.from('account_requests').select('id').eq('school_id', school.id).eq('email', email).eq('requested_role', role).eq('status', 'pending').maybeSingle();
+  if (lookupError) {
+    console.error('School join request lookup failed', { code: lookupError.code, message: lookupError.message });
+    return NextResponse.json({ error: 'Joining is temporarily unavailable. Please try again later.' }, { status: 503 });
+  }
   if (existing) return NextResponse.json({ error: 'A pending request already exists for this email.' }, { status: 409 });
 
   const { data: authUser, error: authError } = await admin.auth.admin.createUser({
@@ -103,6 +107,7 @@ export async function POST(request: Request) {
   };
   const { error: insertError } = await admin.from('account_requests').insert(payload);
   if (insertError) {
+    console.error('School join request insert failed', { code: insertError.code, message: insertError.message });
     await admin.auth.admin.deleteUser(authUser.user.id);
     return NextResponse.json({ error: 'The request could not be saved. Please try again.' }, { status: 500 });
   }
