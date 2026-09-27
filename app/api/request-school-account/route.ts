@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   const email = clean(body.email, 180).toLowerCase();
   const password = typeof body.password === 'string' ? body.password : '';
   const phone = clean(body.phone, 30);
-  if (!schoolSlug || !['teacher', 'student'].includes(role) || !/^\d{6}$/.test(schoolCode) || !/^\d{6}$/.test(joinCode) || fullName.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8) {
+  if (!['teacher', 'student'].includes(role) || !/^\d{6}$/.test(schoolCode) || !/^\d{6}$/.test(joinCode) || fullName.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8) {
     return NextResponse.json({ error: 'School Code, role Join Code, full name, email and password are required.' }, { status: 400 });
   }
 
@@ -56,8 +56,8 @@ export async function POST(request: Request) {
   const address = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
   const fingerprint = (value: string) => createHmac('sha256', serviceRoleKey).update(value).digest('hex');
   const [addressLimit, schoolLimit] = await Promise.all([
-    admin.rpc('consume_school_join_attempt', { p_key_hash: fingerprint(`address:${address}:school:${schoolSlug}`), p_limit: 10 }),
-    admin.rpc('consume_school_join_attempt', { p_key_hash: fingerprint(`school:${schoolSlug}`), p_limit: 100 }),
+    admin.rpc('consume_school_join_attempt', { p_key_hash: fingerprint(`address:${address}:school:${schoolCode}`), p_limit: 10 }),
+    admin.rpc('consume_school_join_attempt', { p_key_hash: fingerprint(`school:${schoolCode}`), p_limit: 100 }),
   ]);
   if (addressLimit.error || schoolLimit.error) {
     console.error('Join attempt limit failed', addressLimit.error || schoolLimit.error);
@@ -69,7 +69,9 @@ export async function POST(request: Request) {
   try { matchedSchoolId = await validateSchoolJoiningCodes(admin, schoolCode, joinCode, role as JoinRole); }
   catch (error) { console.error('Join code validation failed', error); return NextResponse.json({ error: 'Joining is temporarily unavailable.' }, { status: 503 }); }
   if (!matchedSchoolId) return NextResponse.json({ error: 'School Code or Join Code is incorrect, or joining is disabled.' }, { status: 403 });
-  const { data: school } = await admin.from('schools').select('id,name').eq('id', matchedSchoolId).eq('slug', schoolSlug).eq('is_approved', true).maybeSingle();
+  let schoolQuery = admin.from('schools').select('id,name').eq('id', matchedSchoolId).eq('is_approved', true);
+  if (schoolSlug) schoolQuery = schoolQuery.eq('slug', schoolSlug);
+  const { data: school } = await schoolQuery.maybeSingle();
   if (!school) return NextResponse.json({ error: 'School Code or Join Code is incorrect, or joining is disabled.' }, { status: 403 });
 
   const { data: existing } = await admin.from('account_requests').select('id').eq('school_id', school.id).eq('email', email).eq('requested_role', role).eq('status', 'pending').maybeSingle();

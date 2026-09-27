@@ -30,6 +30,7 @@ import {
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
 import AccountRequestsPanel from "@/components/AccountRequestsPanel";
+import SchoolJoiningControls from "@/components/SchoolJoiningControls";
 import { supabase } from "@/lib/supabase";
 
 type Student = {
@@ -505,6 +506,7 @@ export default function StudentsPage() {
               </div>
             </header>
 
+            <SchoolJoiningControls role="student" />
             <AccountRequestsPanel role="student" onApproved={() => setRefreshKey((value) => value + 1)} />
 
             {(error || notice) && (

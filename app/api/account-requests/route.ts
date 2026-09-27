@@ -16,10 +16,28 @@ async function authorize(request: Request) {
   const available = clients();
   if (!available) return null;
   const { data: { user } } = await available.admin.auth.getUser(token);
-  if (!user) return null;
+  if (!user || ['pending', 'rejected'].includes(user.app_metadata?.approval_status)) return null;
   const { data: profile } = await available.admin.from('profiles').select('school_id,role').eq('user_id', user.id).maybeSingle();
   if (!profile?.school_id) return null;
   return { ...available, user, profile, role: String(profile.role || '').toLowerCase() };
+}
+
+// A teacher may review only students assigned to one of their classes.
+async function teacherClasses(context: NonNullable<Awaited<ReturnType<typeof authorize>>>) {
+  const { data: teacher } = await context.admin.from('teachers').select('id').eq('school_id', context.profile.school_id).eq('user_id', context.user.id).maybeSingle();
+  if (!teacher) return [];
+  const { data, error } = await context.admin.from('classes').select('class_name,class,name,class_number,section,section_name').eq('school_id', context.profile.school_id).eq('teacher_id', teacher.id);
+  if (error) throw error;
+  return data || [];
+}
+
+function managesStudent(classes: Awaited<ReturnType<typeof teacherClasses>>, item: { class?: string | null; section?: string | null }) {
+  const normalize = (value: unknown) => String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const name = normalize(item.class);
+  const section = normalize(item.section);
+  return Boolean(name) && classes.some((row) =>
+    [row.class_name, row.class, row.name, row.class_number].some((value) => normalize(value) === name)
+    && (!section || [row.section, row.section_name].some((value) => normalize(value) === section)));
 }
 
 export async function GET(request: Request) {
@@ -30,6 +48,10 @@ export async function GET(request: Request) {
   if (!isPrincipal && !(context.role === 'teacher' && requestedRole === 'student')) return NextResponse.json({ error: 'You cannot review these requests.' }, { status: 403 });
   const { data, error } = await context.admin.from('account_requests').select('id,requested_role,full_name,email,phone,subject,qualification,class,section,roll_no,parent_name,parent_phone,status,created_at').eq('school_id', context.profile.school_id).eq('requested_role', requestedRole).eq('status', 'pending').order('created_at', { ascending: true });
   if (error) return NextResponse.json({ error: 'Requests could not be loaded.' }, { status: 500 });
+  if (!isPrincipal) {
+    try { const classes = await teacherClasses(context); return NextResponse.json({ requests: (data || []).filter((item) => managesStudent(classes, item)) }); }
+    catch { return NextResponse.json({ error: 'Assignments could not be checked.' }, { status: 500 }); }
+  }
   return NextResponse.json({ requests: data || [] });
 }
 
@@ -45,12 +67,18 @@ export async function PATCH(request: Request) {
   const { data: accountRequest } = await context.admin.from('account_requests').select('*').eq('id', requestId).eq('school_id', context.profile.school_id).eq('status', 'pending').maybeSingle();
   if (!accountRequest) return NextResponse.json({ error: 'Pending request not found.' }, { status: 404 });
   const isPrincipal = ['admin', 'principal', 'school_admin'].includes(context.role);
-  if (!isPrincipal && !(context.role === 'teacher' && accountRequest.requested_role === 'student')) return NextResponse.json({ error: 'You cannot review this request.' }, { status: 403 });
+  if (!isPrincipal) {
+    if (context.role !== 'teacher' || accountRequest.requested_role !== 'student') return NextResponse.json({ error: 'You cannot review this request.' }, { status: 403 });
+    try { if (!managesStudent(await teacherClasses(context), accountRequest)) return NextResponse.json({ error: 'You cannot review this request.' }, { status: 403 }); }
+    catch { return NextResponse.json({ error: 'Assignments could not be checked.' }, { status: 500 }); }
+  }
 
   if (action === 'reject') {
     const { error } = await context.admin.from('account_requests').update({ status: 'rejected', reviewed_by: context.user.id, reviewed_at: new Date().toISOString() }).eq('id', accountRequest.id).eq('status', 'pending');
     if (error) return NextResponse.json({ error: 'The request could not be rejected.' }, { status: 500 });
-    await context.admin.auth.admin.deleteUser(accountRequest.auth_user_id);
+    const { data: authData } = await context.admin.auth.admin.getUserById(accountRequest.auth_user_id);
+    const { error: authError } = await context.admin.auth.admin.updateUserById(accountRequest.auth_user_id, { app_metadata: { ...(authData.user?.app_metadata || {}), role: 'pending', approval_status: 'rejected' } });
+    if (authError) { console.error('Rejected account metadata update failed', authError); return NextResponse.json({ error: 'The account status could not be updated.' }, { status: 500 }); }
     return NextResponse.json({ success: true });
   }
 

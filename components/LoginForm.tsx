@@ -162,9 +162,8 @@ export default function LoginForm() {
         return;
       }
 
-      if (authData.user.app_metadata?.approval_status === 'pending') {
-        await supabase.auth.signOut();
-        setError('Your account request is still waiting for school approval. Please contact the school if you need help.');
+      if (['pending', 'rejected'].includes(authData.user.app_metadata?.approval_status)) {
+        router.replace('/auth/pending');
         return;
       }
 
@@ -423,6 +422,7 @@ export default function LoginForm() {
           )}
         </button>
       </form>
+      {role !== 'principal' && <p className="mt-5 text-center text-sm text-slate-600 dark:text-slate-300">New to NEPSOM? <Link href={`/auth/join/${role}`} className="font-semibold text-blue-700 hover:underline dark:text-blue-300">Join your school</Link></p>}
 
       {role === 'principal' && (
         <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3.5 text-center">

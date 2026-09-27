@@ -9,6 +9,7 @@ import {
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
 import AccountRequestsPanel from '@/components/AccountRequestsPanel';
+import SchoolJoiningControls from '@/components/SchoolJoiningControls';
 
 // --- Mock Data ---
 const classes = ['All', 'Grade 10A', 'Grade 10B', 'Grade 9A', 'Grade 9B'];
@@ -79,6 +80,7 @@ export default function TeacherStudentsPage() {
             </button>
           </div>
 
+          <SchoolJoiningControls role="student" />
           <AccountRequestsPanel role="student" />
 
           {/* Stats Row */}

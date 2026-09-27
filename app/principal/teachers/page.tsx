@@ -29,6 +29,8 @@ import {
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
 import TeacherOperationsPanel from "@/components/TeacherOperationsPanel";
+import SchoolJoiningControls from "@/components/SchoolJoiningControls";
+import AccountRequestsPanel from "@/components/AccountRequestsPanel";
 import { supabase } from "@/lib/supabase";
 
 type Teacher = {
@@ -552,6 +554,7 @@ export default function TeachersPage() {
               <TeacherStat icon={GraduationCap} label="Subjects" value={Math.max(0, subjects.length - 1)} tone="violet" />
             </section>}
 
+            {pageTab === "teachers" && <><SchoolJoiningControls role="teacher" /><AccountRequestsPanel role="teacher" onApproved={() => setRefreshKey((value) => value + 1)} /></>}
             {pageTab === "teachers" && <section className="mt-5 flex flex-col gap-4 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-blue-50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="flex items-start gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-600/20"><ShieldCheck className="h-5 w-5" /></span>
