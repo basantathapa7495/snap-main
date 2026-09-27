@@ -718,15 +718,15 @@ export default function PrincipalDashboardPage() {
         <div className="hidden lg:block"><TopBar /></div>
         <main className="flex-1 px-3.5 pb-24 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="border-b border-slate-200 pb-3 sm:pb-5">
+            <header className="border-b border-slate-200 pb-4 dark:border-slate-800 sm:pb-5">
               <div className="grid items-center gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-5">
                 <div>
-                  <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400 sm:gap-2 sm:text-xs sm:tracking-[0.08em]">
-                    <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                  <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.04em] text-slate-600 dark:text-slate-400 sm:gap-2 sm:text-xs sm:tracking-[0.08em]">
+                    <CalendarDays className="h-4 w-4 shrink-0" />
                     {fullDate}
                   </p>
                   <div className="mt-1 flex items-center justify-between gap-2 sm:mt-2 sm:block">
-                    <h1 className="min-w-0 text-[22px] font-bold leading-tight tracking-tight text-slate-950 sm:text-3xl">
+                    <h1 className="min-w-0 text-[clamp(1.25rem,5.4vw,1.75rem)] font-bold leading-tight tracking-tight text-slate-950 dark:text-slate-50 sm:text-3xl">
                       {greeting},{" "}
                       <span className="text-blue-600">{firstName}</span>
                     </h1>
@@ -734,14 +734,14 @@ export default function PrincipalDashboardPage() {
                       href={dashboard.school?.slug ? `/s/${encodeURIComponent(dashboard.school.slug)}` : "/principal/edit_website"}
                       target={dashboard.school?.slug ? "_blank" : undefined}
                       rel={dashboard.school?.slug ? "noopener noreferrer" : undefined}
-                      className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-teal-200 bg-teal-50 px-2.5 text-[11px] font-bold text-teal-800 shadow-sm transition hover:bg-teal-100 sm:hidden"
+                      className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-emerald-700/50 bg-white px-3 text-[11px] font-bold text-emerald-900 shadow-sm transition hover:bg-emerald-50 dark:border-emerald-500/60 dark:bg-slate-900 dark:text-emerald-300 dark:hover:bg-slate-800 sm:hidden"
                       aria-label={dashboard.school?.slug ? "Open school website" : "Set up school website"}
                     >
                       <Globe2 className="h-4 w-4" aria-hidden="true" />
                       Website
                     </Link>
                   </div>
-                  <p className="mt-1 text-sm leading-5 text-slate-500 sm:hidden">
+                  <p className="mt-1 text-[13px] leading-5 text-slate-600 dark:text-slate-300 sm:hidden">
                     Here&apos;s what&apos;s happening in your school today.
                   </p>
                   <p className="mt-2 hidden text-sm leading-5 text-slate-500 sm:mt-1.5 sm:line-clamp-2">
@@ -820,7 +820,6 @@ export default function PrincipalDashboardPage() {
             )}
             <MobilePrincipalDashboard
               dashboard={dashboard}
-              difference={difference}
               today={today}
             />
             <div className="hidden sm:block">
@@ -1179,11 +1178,9 @@ export default function PrincipalDashboardPage() {
 
 function MobilePrincipalDashboard({
   dashboard,
-  difference,
   today,
 }: {
   dashboard: DashboardData;
-  difference: number | null;
   today: string;
 }) {
   const present = dashboard.todayAttendance.present + dashboard.todayAttendance.late;
@@ -1192,6 +1189,10 @@ function MobilePrincipalDashboard({
     dashboard.expectedFees && dashboard.monthlyFeesCollected
       ? Math.min(100, Math.round((dashboard.monthlyFeesCollected / dashboard.expectedFees) * 100))
       : 0;
+  const studentRate = dashboard.todayAttendance.rate;
+  const staffRate = dashboard.staffAttendanceMarked && dashboard.staffTotal
+    ? Math.round(((dashboard.staffPresent || 0) / dashboard.staffTotal) * 100)
+    : null;
   const attention = [
     dashboard.todayAttendance.rate === null
       ? {
@@ -1239,7 +1240,7 @@ function MobilePrincipalDashboard({
 
   return (
     <div className="sm:hidden">
-      <section aria-label="Today's school summary" className="mt-3 grid grid-cols-2 gap-2">
+      <section aria-label="Today's school summary" className="mt-4 grid grid-cols-2 gap-2.5">
         <MobileKpi
           href="/principal/attendance"
           label="Students present"
@@ -1248,15 +1249,12 @@ function MobilePrincipalDashboard({
               ? "Not marked"
               : `${present} / ${studentTotal}`
           }
-          meta={
-            dashboard.todayAttendance.rate === null
-              ? "Take attendance today"
-              : `${dashboard.todayAttendance.rate}% today`
-          }
-          trend={difference}
+          badge={studentRate === null ? null : `${studentRate}%`}
+          progress={studentRate}
+          meta={studentRate === null ? "Take attendance today" : `${Math.max(0, studentTotal - present)} not recorded present today`}
           icon={Users}
           tone="blue"
-          action="View attendance"
+          action="View Attendance"
         />
         <MobileKpi
           href="/principal/teachers?tab=attendance"
@@ -1268,19 +1266,22 @@ function MobilePrincipalDashboard({
               : dashboard.staffAttendanceMarked
                 ? `${dashboard.staffPresent} / ${dashboard.staffTotal}`
                 : "Not marked"}
-          meta={dashboard.staffTotal === 0 ? "No active teachers" : "Today’s teacher attendance"}
-          icon={GraduationCap}
+          badge={staffRate === null ? null : `${staffRate}%`}
+          progress={staffRate}
+          meta={dashboard.staffTotal === 0 ? "No active teachers" : dashboard.staffAttendanceMarked ? `${Math.max(0, (dashboard.staffTotal || 0) - (dashboard.staffPresent || 0))} not present today` : "Mark today's attendance"}
+          icon={ClipboardCheck}
           tone="violet"
-          action="Manage"
+          action="Manage Staff"
         />
         <MobileKpi
           href="/principal/fees"
           label="Fees this month"
           value={money(dashboard.monthlyFeesCollected)}
+          badge={dashboard.expectedFees === null ? null : `${monthlyProgress}%`}
           meta={
             dashboard.expectedFees === null
               ? "Monthly target not set"
-              : `${monthlyProgress}% of ${money(dashboard.expectedFees)}`
+              : `Target: ${money(dashboard.expectedFees)}`
           }
           progress={dashboard.expectedFees === null ? null : monthlyProgress}
           icon={Wallet}
@@ -1475,7 +1476,7 @@ function MobileKpi({
   meta,
   icon: Icon,
   tone,
-  trend,
+  badge,
   progress,
   action,
 }: {
@@ -1485,41 +1486,37 @@ function MobileKpi({
   meta: string;
   icon: ElementType;
   tone: "blue" | "violet" | "emerald" | "amber";
-  trend?: number | null;
+  badge?: string | null;
   progress?: number | null;
   action: string;
 }) {
   const tones = {
-    blue: "bg-blue-50 text-blue-700",
-    violet: "bg-violet-50 text-violet-700",
-    emerald: "bg-emerald-50 text-emerald-700",
-    amber: "bg-amber-50 text-amber-700",
+    blue: { icon: "bg-gradient-to-br from-sky-400 to-indigo-700 text-white", bar: "bg-blue-700", link: "text-blue-800 dark:text-blue-300" },
+    violet: { icon: "bg-gradient-to-br from-purple-400 to-indigo-700 text-white", bar: "bg-purple-600", link: "text-purple-700 dark:text-purple-300" },
+    emerald: { icon: "bg-gradient-to-br from-emerald-300 to-teal-600 text-white", bar: "bg-emerald-500", link: "text-emerald-700 dark:text-emerald-300" },
+    amber: { icon: "bg-gradient-to-br from-orange-300 to-rose-500 text-white", bar: "bg-orange-500", link: "text-orange-700 dark:text-orange-300" },
   };
   return (
-    <Link href={href} className="group flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-teal-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-teal-600">
+    <Link href={href} className="group flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_3px_12px_rgba(15,23,42,0.08)] transition hover:border-teal-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-teal-600 dark:border-slate-700 dark:bg-slate-900">
       <div className="flex items-start justify-between gap-2">
-        <p className="min-h-7 text-[10px] font-bold uppercase leading-4 tracking-[0.04em] text-slate-500">
+        <p className="min-h-7 text-[10px] font-bold uppercase leading-4 tracking-[0.02em] text-slate-900 dark:text-slate-100">
           {label}
         </p>
-        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${tones[tone]}`}>
+        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm ${tones[tone].icon}`}>
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
       </div>
-      <p className="mt-1 break-words text-lg font-extrabold leading-tight text-slate-950">{value}</p>
-      <div className="mt-1 flex min-h-7 items-start gap-1 text-[10px] leading-4 text-slate-500">
-        {trend != null && (
-          <span className={trend >= 0 ? "font-bold text-emerald-700" : "font-bold text-red-600"}>
-            {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}%
-          </span>
-        )}
-        <span>{meta}</span>
+      <div className="mt-1 flex min-h-7 flex-wrap items-center gap-1">
+        <span className="break-all text-[clamp(0.98rem,4vw,1.5rem)] font-extrabold leading-tight tracking-tight text-slate-950 dark:text-white">{value}</span>
+        {badge && <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">{badge}</span>}
       </div>
       {progress != null && (
-        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+          <div className={`h-full rounded-full ${tones[tone].bar}`} style={{ width: `${progress}%` }} />
         </div>
       )}
-      <span className="mt-auto flex items-center gap-1 pt-2 text-[11px] font-bold text-teal-700 group-hover:text-teal-800">
+      <p className="mt-1.5 min-h-7 text-[10px] leading-4 text-slate-600 dark:text-slate-300">{meta}</p>
+      <span className={`mt-auto flex min-h-8 items-center gap-1 pt-1 text-[11px] font-bold ${tones[tone].link}`}>
         {action}<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
       </span>
     </Link>
