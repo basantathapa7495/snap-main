@@ -41,7 +41,7 @@ export default function CalendarPage() {
         if (!user) throw new Error("Sign in to view your school calendar.");
         const { data: profile, error: profileError } = await supabase.from("profiles").select("school_id, role").eq("user_id", user.id).single();
         if (profileError || !profile?.school_id) throw new Error("Your school profile could not be loaded.");
-        if (profile.role !== "principal" && profile.role !== "admin") throw new Error("Only school principals can manage this calendar.");
+        if (!["principal", "admin", "school_admin"].includes(profile.role)) throw new Error("Only school principals can manage this calendar.");
         const [eventResult, examResult] = await Promise.all([
           supabase.from("news_events").select("id, title, event_date, event_time, location, content, category").eq("school_id", profile.school_id).eq("is_event", true).order("event_date", { ascending: true }).limit(1000),
           supabase.from("exams").select("id, name, start_date, exam_type").eq("school_id", profile.school_id).order("start_date", { ascending: true }).limit(1000),
