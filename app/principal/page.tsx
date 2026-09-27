@@ -631,12 +631,12 @@ export default function PrincipalDashboardPage() {
   const schoolName = formatSchoolName(dashboard.school?.name);
   const attention: AttentionItemData[] = [
     dashboard.students > 0 && dashboard.todayAttendance.total < dashboard.students && {
-      id: "student-attendance", priority: "urgent", icon: "attendance", title: "Student attendance incomplete",
-      description: `${dashboard.students - dashboard.todayAttendance.total} student${dashboard.students - dashboard.todayAttendance.total === 1 ? "" : "s"} still need an attendance record today.`, action: "Mark", href: "/principal/attendance",
+      id: "student-attendance", priority: "urgent", icon: "studentAttendance", title: "Student attendance incomplete",
+      description: `${dashboard.students - dashboard.todayAttendance.total} student${dashboard.students - dashboard.todayAttendance.total === 1 ? "" : "s"} still need an attendance record.`, action: "Mark", href: "/principal/attendance",
     },
     dashboard.staffTotal !== null && dashboard.staffTotal > dashboard.staffMarkedCount && {
-      id: "staff-attendance", priority: "urgent", icon: "attendance", title: "Staff attendance not recorded",
-      description: `${dashboard.staffTotal - dashboard.staffMarkedCount} teacher${dashboard.staffTotal - dashboard.staffMarkedCount === 1 ? " needs" : "s need"} an attendance record today.`, action: "Mark", href: "/principal/teachers?tab=attendance",
+      id: "staff-attendance", priority: "urgent", icon: "staffAttendance", title: "Staff attendance not recorded",
+      description: `${dashboard.staffTotal - dashboard.staffMarkedCount} teacher${dashboard.staffTotal - dashboard.staffMarkedCount === 1 ? " needs" : "s need"} an attendance record.`, action: "Mark", href: "/principal/teachers?tab=attendance",
     },
     dashboard.pendingTeacherLeaves > 0 && {
       id: "teacher-leave", priority: "action", icon: "leave", title: "Teacher leave requests",
