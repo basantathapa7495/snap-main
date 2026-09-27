@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import HelpModal from './HelpModal';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { 
@@ -47,6 +47,7 @@ function formatSchoolName(name?: string | null) {
 
 export default function TopBar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [school, setSchool] = useState<School | null>(null);
@@ -129,14 +130,9 @@ export default function TopBar() {
       </div>
 
       {/* Center: Search Bar */}
-      <div className="relative hidden flex-1 max-w-md mx-8 md:block">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search students, teachers..."
-          className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-        />
-      </div>
+      {pathname.startsWith('/principal') && <div className="hidden min-w-0 max-w-md flex-1 px-4 md:block">
+        <button type="button" onClick={() => window.dispatchEvent(new Event('principal-search:open'))} aria-label="Search school records" className="flex h-10 w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"><Search className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="truncate">Search students, teachers, fees...</span></button>
+      </div>}
 
       {/* Right: Badge, Actions & Profile */}
       <div className="flex items-center gap-4 shrink-0">

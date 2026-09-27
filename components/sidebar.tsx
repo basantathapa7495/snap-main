@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import PrincipalSearch from './PrincipalSearch';
 import {
   LayoutDashboard,
   Users,
@@ -139,6 +140,8 @@ const studentMenu: MenuSection[] = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
   const [school, setSchool] = useState<SchoolInfo | null>(null);
 
   // =========================================================
@@ -147,6 +150,12 @@ export default function Sidebar() {
 
   const isPrincipalPath =
     pathname === '/principal' || pathname.startsWith('/principal/');
+
+  useEffect(() => {
+    const open = () => setSearchOpen(true);
+    window.addEventListener('principal-search:open', open);
+    return () => window.removeEventListener('principal-search:open', open);
+  }, []);
 
   const isTeacherPath =
     pathname === '/teacher' || pathname.startsWith('/teacher/');
@@ -279,13 +288,14 @@ export default function Sidebar() {
         </Link>
 
         {isPrincipalPath && (
-          <Link
-            href="/principal/students"
+          <button
+            type="button"
+            onClick={() => setSearchOpen(true)}
             className="ml-auto flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-            aria-label="Search students"
+            aria-label="Search school records"
           >
             <Search className="h-5 w-5" aria-hidden="true" />
-          </Link>
+          </button>
         )}
       </div>
 
@@ -415,6 +425,7 @@ export default function Sidebar() {
 
         </div>
       </aside>
+      {isPrincipalPath && <PrincipalSearch open={searchOpen} onClose={closeSearch} />}
     </>
   );
 }

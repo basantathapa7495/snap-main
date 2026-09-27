@@ -174,6 +174,12 @@ export default function ClassesPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (loading || !window.location.hash.startsWith('#class-')) return;
+    const target = document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+    target?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [classes, loading]);
+
+  useEffect(() => {
     let cancelled = false;
 
     async function loadClasses() {
@@ -220,13 +226,15 @@ export default function ClassesPage() {
 
         if (!cancelled) {
           const teacherRows = (teachersResult.data || []) as Teacher[];
+          const classRows = (classesResult.data || []) as ClassRow[];
+          const schoolClasses = buildClasses(classRows, teacherRows, (studentsResult.data || []) as StudentRow[]);
+          const linkedId = new URLSearchParams(window.location.search).get('class');
+          const linkedRow = classRows.find((row) => row.id === linkedId);
+          const linkedClass = linkedRow && schoolClasses.find((item) => normalize(item.name) === normalize(classLabel(linkedRow)));
+          if (linkedClass) window.history.replaceState(window.history.state, '', `/principal/classes#class-${linkedClass.id}`);
           setSchoolId(profile.school_id);
           setTeachers(teacherRows);
-          setClasses(buildClasses(
-            (classesResult.data || []) as ClassRow[],
-            teacherRows,
-            (studentsResult.data || []) as StudentRow[],
-          ));
+          setClasses(schoolClasses);
         }
       } catch (loadError) {
         console.error("Classes page load error", loadError);
@@ -588,7 +596,7 @@ export default function ClassesPage() {
               ) : (
                 <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3 sm:p-5">
                   {filteredClasses.map((schoolClass) => (
-                    <ClassCard
+                    <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24 rounded-2xl target:ring-2 target:ring-blue-500"><ClassCard
                       key={schoolClass.id}
                       schoolClass={schoolClass}
                       onAddSection={openAddSection}
@@ -602,7 +610,7 @@ export default function ClassesPage() {
                       onEditSection={openEditSection}
                       onDeleteSection={deleteSection}
                       onDeleteClass={deleteClass}
-                    />
+                    /></div>
                   ))}
                 </div>
               )}
