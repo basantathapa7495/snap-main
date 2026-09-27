@@ -6,7 +6,6 @@ import {
   AlertCircle,
   ArrowRight,
   CalendarDays,
-  CheckCircle2,
   ClipboardCheck,
   FileText,
   Globe2,
@@ -30,6 +29,7 @@ import {
 } from "recharts";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
+import AttentionCenter, { type AttentionItemData } from "@/components/AttentionCenter";
 import { supabase } from "@/lib/supabase";
 
 type DateRange = "today" | "week" | "month";
@@ -77,15 +77,6 @@ type ScheduleItem = {
   type: "Exam" | "Event";
   href: string;
 };
-type AttentionData = {
-  icon: ElementType;
-  title: string;
-  description: string;
-  href: string;
-  action: string;
-  tone: "amber" | "red" | "orange" | "blue";
-  priority: number;
-};
 type DashboardData = {
   profile: Profile | null;
   school: SchoolRecord | null;
@@ -96,6 +87,7 @@ type DashboardData = {
   staffPresent: number | null;
   staffTotal: number | null;
   staffAttendanceMarked: boolean;
+  staffMarkedCount: number;
   classes: number;
   attendance: AttendanceSummary;
   todayAttendance: AttendanceSummary;
@@ -105,6 +97,10 @@ type DashboardData = {
   paidStudents: number;
   expectedFees: number | null;
   pendingAdmissions: number;
+  pendingTeacherLeaves: number;
+  unassignedTeachers: number;
+  missingGuardianPhones: number;
+  expiringDocuments: number;
   lowAttendance: number;
   upcomingExams: number;
   attendanceTrend: AttendancePoint[];
@@ -130,6 +126,7 @@ const initialData: DashboardData = {
   staffPresent: null,
   staffTotal: null,
   staffAttendanceMarked: false,
+  staffMarkedCount: 0,
   classes: 0,
   attendance: emptyAttendance,
   todayAttendance: emptyAttendance,
@@ -139,6 +136,10 @@ const initialData: DashboardData = {
   paidStudents: 0,
   expectedFees: null,
   pendingAdmissions: 0,
+  pendingTeacherLeaves: 0,
+  unassignedTeachers: 0,
+  missingGuardianPhones: 0,
+  expiringDocuments: 0,
   lowAttendance: 0,
   upcomingExams: 0,
   attendanceTrend: [],
@@ -359,6 +360,13 @@ export default function PrincipalDashboardPage() {
           examsResult,
           eventsResult,
         ] = results;
+        const expiresBefore = new Date(Date.now() + 7 * 86400000).toISOString();
+        const [leavesResult, assignmentsResult, missingPhonesResult, documentsResult] = await Promise.all([
+          supabase.from("teacher_leave_requests").select("id", { count: "exact", head: true }).eq("school_id", schoolId).eq("status", "pending"),
+          supabase.from("teacher_assignments").select("teacher_id").eq("school_id", schoolId).eq("active", true),
+          supabase.from("students").select("id", { count: "exact", head: true }).eq("school_id", schoolId).is("parent_phone", null),
+          supabase.from("documents").select("id", { count: "exact", head: true }).eq("school_id", schoolId).eq("is_archived", false).eq("principal_only", false).lte("publish_at", new Date().toISOString()).gt("expires_at", new Date().toISOString()).lte("expires_at", expiresBefore),
+        ]);
         const failures = [
           ["school", school.error],
           ["students", students.error || activeStudents.error],
@@ -400,6 +408,7 @@ export default function PrincipalDashboardPage() {
         const staffRows = (staffAttendance.data || []).filter((row) =>
           activeStaffIds.has(row.teacher_id),
         );
+        const assignedTeacherIds = new Set((assignmentsResult.data || []).map((row) => row.teacher_id));
         const trend = Array.from({ length: 30 }, (_, index) => {
           const date = shiftDateKey(thirtyDayStart, index);
           return {
@@ -479,6 +488,7 @@ export default function PrincipalDashboardPage() {
               ? null
               : staffRows.filter((row) => row.status === "present").length,
             staffAttendanceMarked: !activeStaff.error && !staffAttendance.error && staffRows.length > 0,
+            staffMarkedCount: activeStaff.error || staffAttendance.error ? 0 : new Set(staffRows.map((row) => row.teacher_id)).size,
             classes: classes.error ? old.classes : classes.count || 0,
             attendance: attendance.error
               ? old.attendance
@@ -522,6 +532,11 @@ export default function PrincipalDashboardPage() {
             pendingAdmissions: admissions.error
               ? old.pendingAdmissions
               : admissions.count || 0,
+            pendingTeacherLeaves: leavesResult.error ? 0 : leavesResult.count || 0,
+            unassignedTeachers: activeStaff.error || assignmentsResult.error ? 0 :
+              [...activeStaffIds].filter((id) => !assignedTeacherIds.has(id)).length,
+            missingGuardianPhones: missingPhonesResult.error ? 0 : missingPhonesResult.count || 0,
+            expiringDocuments: documentsResult.error ? 0 : documentsResult.count || 0,
             upcomingExams: examsResult.error
               ? old.upcomingExams
               : exams.filter(
@@ -614,62 +629,44 @@ export default function PrincipalDashboardPage() {
   }).format(new Date());
   const firstName = dashboard.profile?.full_name?.split(" ")[0] || "Principal";
   const schoolName = formatSchoolName(dashboard.school?.name);
-  const actions: AttentionData[] = [];
-  if (dashboard.students && dashboard.todayAttendance.rate === null)
-    actions.push({
-      icon: ClipboardCheck,
-      title: "Today’s attendance is not marked",
-      description:
-        "Complete today’s register so the school record stays current.",
-      href: "/principal/attendance",
-      action: "Take attendance",
-      tone: "red",
-      priority: 1,
-    });
-  if (dashboard.pendingAdmissions)
-    actions.push({
-      icon: UserPlus,
-      title: `${dashboard.pendingAdmissions} admission${dashboard.pendingAdmissions === 1 ? "" : "s"} awaiting review`,
-      description: "Review new applications and update their status.",
-      href: "/principal/admission",
-      action: "Review",
-      tone: "amber",
-      priority: 2,
-    });
-  if (dashboard.lowAttendance)
-    actions.push({
-      icon: TrendingDown,
-      title: `${dashboard.lowAttendance} low-attendance student${dashboard.lowAttendance === 1 ? "" : "s"}`,
-      description: "Monthly attendance is below 75%.",
-      href: "/principal/attendance",
-      action: "Check",
-      tone: "orange",
-      priority: 3,
-    });
-  if (dashboard.expectedFees === null)
-    actions.push({
-      icon: Wallet,
-      title: "Monthly fee goal is not configured",
-      description:
-        "Add a Monthly or Tuition fee type to track expected collection.",
-      href: "/principal/fees",
-      action: "Set up",
-      tone: "blue",
-      priority: 4,
-    });
-  if (dashboard.upcomingExams)
-    actions.push({
-      icon: FileText,
-      title: `${dashboard.upcomingExams} exam${dashboard.upcomingExams === 1 ? "" : "s"} within seven days`,
-      description: "Check that the schedule and subjects are ready.",
-      href: "/principal/results",
-      action: "Review",
-      tone: "blue",
-      priority: 5,
-    });
-  const attentionItems = actions
-    .sort((a, b) => a.priority - b.priority)
-    .slice(0, 3);
+  const attention: AttentionItemData[] = [
+    dashboard.students > 0 && dashboard.todayAttendance.total < dashboard.students && {
+      id: "student-attendance", priority: "urgent", icon: "attendance", title: "Student attendance incomplete",
+      description: `${dashboard.students - dashboard.todayAttendance.total} student${dashboard.students - dashboard.todayAttendance.total === 1 ? "" : "s"} still need an attendance record today.`, action: "Mark", href: "/principal/attendance",
+    },
+    dashboard.staffTotal !== null && dashboard.staffTotal > dashboard.staffMarkedCount && {
+      id: "staff-attendance", priority: "urgent", icon: "attendance", title: "Staff attendance not recorded",
+      description: `${dashboard.staffTotal - dashboard.staffMarkedCount} teacher${dashboard.staffTotal - dashboard.staffMarkedCount === 1 ? " needs" : "s need"} an attendance record today.`, action: "Mark", href: "/principal/teachers?tab=attendance",
+    },
+    dashboard.pendingTeacherLeaves > 0 && {
+      id: "teacher-leave", priority: "action", icon: "leave", title: "Teacher leave requests",
+      description: `${dashboard.pendingTeacherLeaves} request${dashboard.pendingTeacherLeaves === 1 ? " is" : "s are"} waiting for approval.`, action: "Review", href: "/principal/teachers?tab=leave",
+    },
+    dashboard.pendingAdmissions > 0 && {
+      id: "admissions", priority: "action", icon: "admission", title: "Admission applications",
+      description: `${dashboard.pendingAdmissions} application${dashboard.pendingAdmissions === 1 ? " is" : "s are"} waiting for review.`, action: "Review", href: "/principal/admission",
+    },
+    dashboard.unassignedTeachers > 0 && {
+      id: "assignments", priority: "action", icon: "teacher", title: "Teachers without assignments",
+      description: `${dashboard.unassignedTeachers} active teacher${dashboard.unassignedTeachers === 1 ? " has" : "s have"} no active class assignment.`, action: "Assign", href: "/principal/teachers?tab=assignments",
+    },
+    dashboard.missingGuardianPhones > 0 && {
+      id: "guardian-phone", priority: "action", icon: "student", title: "Missing guardian phone numbers",
+      description: `${dashboard.missingGuardianPhones} student profile${dashboard.missingGuardianPhones === 1 ? " needs" : "s need"} a guardian phone number.`, action: "Fix", href: "/principal/students",
+    },
+    dashboard.expiringDocuments > 0 && {
+      id: "documents", priority: "watch", icon: "document", title: "Documents expiring soon",
+      description: `${dashboard.expiringDocuments} published document${dashboard.expiringDocuments === 1 ? " expires" : "s expire"} within 7 days.`, action: "Review", href: "/principal/documents",
+    },
+    dashboard.lowAttendance > 0 && {
+      id: "low-attendance", priority: "watch", icon: "attendance", title: "Low student attendance",
+      description: `${dashboard.lowAttendance} student${dashboard.lowAttendance === 1 ? " is" : "s are"} below 75% this month.`, action: "View", href: "/principal/attendance",
+    },
+    dashboard.students > 0 && dashboard.expectedFees === null && {
+      id: "fee-setup", priority: "watch", icon: "fees", title: "Monthly fee structure incomplete",
+      description: "Add a Monthly or Tuition fee type to track the collection target.", action: "Set up", href: "/principal/fees",
+    },
+  ].filter((item): item is AttentionItemData => Boolean(item));
   const stats = [
     {
       label: "Students",
@@ -821,6 +818,7 @@ export default function PrincipalDashboardPage() {
             <MobilePrincipalDashboard
               dashboard={dashboard}
               today={today}
+              attention={attention}
             />
             <div className="hidden sm:block">
             <section className="mt-4 grid grid-cols-2 gap-2.5 sm:mt-5 sm:gap-4 xl:grid-cols-4">
@@ -859,42 +857,7 @@ export default function PrincipalDashboardPage() {
                 </Link>
               ))}
             </section>
-            <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:mt-6 sm:p-5">
-              <div className="flex justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-bold text-slate-950">
-                    Needs your attention
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    The three most urgent items, ordered by priority.
-                  </p>
-                </div>
-                {attentionItems.length > 0 && (
-                  <span className="h-fit rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-600">
-                    {attentionItems.length} active
-                  </span>
-                )}
-              </div>
-              {attentionItems.length ? (
-                <div className="mt-5 grid gap-3 lg:grid-cols-3">
-                  {attentionItems.map((item) => (
-                    <AttentionItem key={item.title} {...item} />
-                  ))}
-                </div>
-              ) : (
-                <div className="mt-5 flex items-center gap-3 rounded-xl bg-emerald-50 p-4">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                  <div>
-                    <p className="text-sm font-semibold text-emerald-900">
-                      Everything looks good
-                    </p>
-                    <p className="text-xs text-emerald-700">
-                      There are no urgent items.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </section>
+            <AttentionCenter items={attention} />
             <section className="mt-5 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.85fr)]">
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                 <div className="flex justify-between">
@@ -1179,9 +1142,11 @@ export default function PrincipalDashboardPage() {
 function MobilePrincipalDashboard({
   dashboard,
   today,
+  attention,
 }: {
   dashboard: DashboardData;
   today: string;
+  attention: AttentionItemData[];
 }) {
   const present = dashboard.todayAttendance.present + dashboard.todayAttendance.late;
   const studentTotal = dashboard.students;
@@ -1193,51 +1158,6 @@ function MobilePrincipalDashboard({
   const staffRate = dashboard.staffAttendanceMarked && dashboard.staffTotal
     ? Math.round(((dashboard.staffPresent || 0) / dashboard.staffTotal) * 100)
     : null;
-  const attention = [
-    dashboard.todayAttendance.rate === null
-      ? {
-          title: "Today’s student attendance is not marked",
-          detail: "Complete the register before the school day ends.",
-          href: "/principal/attendance",
-          action: "Mark",
-          tone: "border-red-200 bg-red-50 text-red-700",
-        }
-      : null,
-    dashboard.pendingAdmissions
-      ? {
-          title: `${dashboard.pendingAdmissions} admission application${dashboard.pendingAdmissions === 1 ? "" : "s"} pending`,
-          detail: "Review the applications waiting for a principal decision.",
-          href: "/principal/admission",
-          action: "Review",
-          tone: "border-amber-200 bg-amber-50 text-amber-700",
-        }
-      : null,
-    dashboard.lowAttendance
-      ? {
-          title: `${dashboard.lowAttendance} student${dashboard.lowAttendance === 1 ? "" : "s"} below 75% attendance`,
-          detail: "Check students who may be at risk of NEB ineligibility.",
-          href: "/principal/attendance",
-          action: "View",
-          tone: "border-orange-200 bg-orange-50 text-orange-700",
-        }
-      : null,
-    dashboard.expectedFees === null
-      ? {
-          title: "Monthly fee target is not configured",
-          detail: "Add a Monthly or Tuition fee type to calculate collection progress.",
-          href: "/principal/fees",
-          action: "Set up",
-          tone: "border-blue-200 bg-blue-50 text-blue-700",
-        }
-      : null,
-  ].filter(Boolean) as Array<{
-    title: string;
-    detail: string;
-    href: string;
-    action: string;
-    tone: string;
-  }>;
-
   return (
     <div className="sm:hidden">
       <section aria-label="Today's school summary" className="mt-2.5 grid grid-cols-2 gap-2">
@@ -1299,55 +1219,7 @@ function MobilePrincipalDashboard({
         />
       </section>
 
-      <section className="mt-5">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="text-base font-bold text-slate-950">Needs your attention</h2>
-            <p className="text-xs text-slate-500">Items requiring a principal decision</p>
-          </div>
-          <span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-bold text-red-600">
-            {attention.length} open
-          </span>
-        </div>
-        <div className="mt-2.5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          {attention.length ? (
-            <div className="divide-y divide-slate-100">
-              {attention.map((item) => (
-                <div key={item.title} className="flex items-center gap-3 p-3.5">
-                  <span className={`h-9 w-1 shrink-0 rounded-full border ${item.tone}`} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold leading-4 text-slate-900">{item.title}</p>
-                    <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-slate-500">
-                      {item.detail}
-                    </p>
-                  </div>
-                  <Link
-                    href={item.href}
-                    className="shrink-0 rounded-lg border border-slate-200 px-2.5 py-2 text-[10px] font-bold text-slate-700"
-                  >
-                    {item.action}
-                  </Link>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center gap-3 p-4">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              <div>
-                <p className="text-xs font-semibold text-slate-900">You’re all caught up</p>
-                <p className="text-[10px] text-slate-500">No supported dashboard action is pending.</p>
-              </div>
-            </div>
-          )}
-          <Link
-            href="/principal/admission"
-            className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-4 py-3 text-[11px] font-semibold text-slate-600"
-          >
-            Open all approvals
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-      </section>
+      <AttentionCenter items={attention} compact />
 
       <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
@@ -1542,40 +1414,6 @@ function QuickAction({
       <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
       {label}
     </Link>
-  );
-}
-const tones = {
-  amber: "border-amber-100 bg-amber-50/70 text-amber-700",
-  red: "border-red-100 bg-red-50/70 text-red-700",
-  orange: "border-orange-100 bg-orange-50/70 text-orange-700",
-  blue: "border-blue-100 bg-blue-50/70 text-blue-700",
-};
-function AttentionItem({
-  icon: Icon,
-  title,
-  description,
-  href,
-  action,
-  tone,
-}: AttentionData) {
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-xl border p-3.5 ${tones[tone]}`}
-    >
-      <Icon className="h-5 w-5 shrink-0" />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-slate-900">{title}</p>
-        <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">
-          {description}
-        </p>
-      </div>
-      <Link
-        href={href}
-        className="shrink-0 rounded-lg bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm"
-      >
-        {action}
-      </Link>
-    </div>
   );
 }
 function Count({
