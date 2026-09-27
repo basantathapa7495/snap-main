@@ -18,19 +18,12 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
 import AttentionCenter, { type AttentionItemData } from "@/components/AttentionCenter";
 import UpcomingPanel from "@/components/UpcomingPanel";
+import AttendanceTrend from "@/components/AttendanceTrend";
+import { attendanceTrendData, type TrendPoint, type TrendSummary, type StudentEnrollment, type StaffMark, type ApprovedLeave } from "@/lib/attendance-trend";
 import { mergeUpcoming, type SchoolEvent, type UpcomingExam, type UpcomingItem } from "@/lib/upcoming";
 import { supabase } from "@/lib/supabase";
 
@@ -63,7 +56,8 @@ type AttendanceSummary = {
   late: number;
   total: number;
 };
-type AttendancePoint = AttendanceSummary & { day: string; date: string };
+type AttendancePoint = TrendPoint;
+const emptyTrendSummary: TrendSummary = { percentage: null, present: 0, expected: 0, recorded: 0, total: 0, inProgress: false };
 type DashboardData = {
   profile: Profile | null;
   school: SchoolRecord | null;
@@ -91,6 +85,9 @@ type DashboardData = {
   lowAttendance: number;
   upcomingExams: number;
   attendanceTrend: AttendancePoint[];
+  studentTrendSummary: TrendSummary;
+  staffTrendSummary: TrendSummary;
+  schoolHolidayToday: boolean;
   recentStudents: StudentRecord[];
   schedule: UpcomingItem[];
   updatedAt: string | null;
@@ -130,6 +127,9 @@ const initialData: DashboardData = {
   lowAttendance: 0,
   upcomingExams: 0,
   attendanceTrend: [],
+  studentTrendSummary: emptyTrendSummary,
+  staffTrendSummary: emptyTrendSummary,
+  schoolHolidayToday: false,
   recentStudents: [],
   schedule: [],
   updatedAt: null,
@@ -171,6 +171,33 @@ function attendanceSummary(records: AttendanceRecord[]): AttendanceSummary {
     total,
   };
 }
+async function loadAttendanceRows(table: "attendance" | "teacher_attendance", schoolId: string, start: string, end: string) {
+  const rows: Record<string, unknown>[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const result = await supabase.from(table)
+      .select(table === "attendance" ? "student_id,attendance_date,status" : "teacher_id,attendance_date,status")
+      .eq("school_id", schoolId).gte("attendance_date", start).lte("attendance_date", end)
+      .order("attendance_date").order(table === "attendance" ? "student_id" : "teacher_id")
+      .range(offset, offset + 999);
+    if (result.error) return { data: null, error: result.error };
+    rows.push(...(result.data || []));
+    if ((result.data || []).length < 1000) break;
+  }
+  return { data: rows, error: null };
+}
+
+async function loadEnrolledStudents(schoolId: string) {
+  const rows: StudentEnrollment[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const result = await supabase.from("students").select("id,class")
+      .eq("school_id", schoolId).order("id").range(offset, offset + 999);
+    if (result.error) return { data: null, error: result.error };
+    rows.push(...(result.data || []));
+    if ((result.data || []).length < 1000) break;
+  }
+  return { data: rows, error: null };
+}
+
 function initials(name: string) {
   return name
     .split(" ")
@@ -228,7 +255,7 @@ export default function PrincipalDashboardPage() {
         const today = nepalDateKey();
         const yesterday = shiftDateKey(today, -1);
         const weekStart = shiftDateKey(today, -6);
-        const thirtyDayStart = shiftDateKey(today, -29);
+        const trendStart = shiftDateKey(today, -119);
         const monthStart = `${today.slice(0, 7)}-01`;
         const rangeStart =
           range === "today" ? today : range === "week" ? weekStart : monthStart;
@@ -236,7 +263,7 @@ export default function PrincipalDashboardPage() {
           rangeStart,
           weekStart,
           monthStart,
-          thirtyDayStart,
+          trendStart,
           yesterday,
         ].sort()[0];
         const nextWeek = shiftDateKey(today, 7);
@@ -278,12 +305,7 @@ export default function PrincipalDashboardPage() {
             .from("classes")
             .select("id", { count: "exact", head: true })
             .eq("school_id", schoolId),
-          supabase
-            .from("attendance")
-            .select("student_id, attendance_date, status")
-            .eq("school_id", schoolId)
-            .gte("attendance_date", attendanceStart)
-            .lte("attendance_date", today),
+          loadAttendanceRows("attendance", schoolId, attendanceStart, today),
           supabase
             .from("fee_records")
             .select("student_id, amount, payment_date")
@@ -320,6 +342,14 @@ export default function PrincipalDashboardPage() {
             .gte("event_date", today)
             .order("event_date")
             .limit(50),
+          loadEnrolledStudents(schoolId),
+          loadAttendanceRows("teacher_attendance", schoolId, trendStart, today),
+          supabase.from("teacher_leave_requests").select("teacher_id,start_date,end_date")
+            .eq("school_id", schoolId).eq("status", "approved")
+            .lte("start_date", today).gte("end_date", trendStart),
+          supabase.from("news_events").select("event_date").eq("school_id", schoolId)
+            .eq("is_event", true).eq("category", "holiday")
+            .gte("event_date", trendStart).lte("event_date", today),
         ]);
         const [
           school,
@@ -337,6 +367,10 @@ export default function PrincipalDashboardPage() {
           admissions,
           examsResult,
           eventsResult,
+          enrolledResult,
+          staffHistoryResult,
+          approvedLeavesResult,
+          holidayResult,
         ] = results;
         const expiresBefore = new Date(Date.now() + 7 * 86400000).toISOString();
         const [leavesResult, assignmentsResult, missingPhonesResult, documentsResult] = await Promise.all([
@@ -352,6 +386,7 @@ export default function PrincipalDashboardPage() {
           ["staff attendance", activeStaff.error || staffAttendance.error],
           ["classes", classes.error],
           ["attendance", attendance.error],
+          ["attendance trend", enrolledResult.error || staffHistoryResult.error || approvedLeavesResult.error || holidayResult.error],
           ["fees", fees.error || feeTypes.error],
           ["recent students", recent.error],
           ["admissions", admissions.error],
@@ -387,18 +422,14 @@ export default function PrincipalDashboardPage() {
           activeStaffIds.has(row.teacher_id),
         );
         const assignedTeacherIds = new Set((assignmentsResult.data || []).map((row) => row.teacher_id));
-        const trend = Array.from({ length: 30 }, (_, index) => {
-          const date = shiftDateKey(thirtyDayStart, index);
-          return {
-            ...attendanceSummary(
-              attendanceRows.filter((row) => row.attendance_date === date),
-            ),
-            date,
-            day: new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
-              day: "numeric",
-              month: "short",
-            }),
-          };
+        const trend = attendanceTrendData({
+          today,
+          students: (enrolledResult.data || []) as StudentEnrollment[],
+          studentMarks: attendanceRows,
+          teacherIds: [...activeStaffIds],
+          staffMarks: (staffHistoryResult.data || []) as StaffMark[],
+          approvedLeaves: (approvedLeavesResult.data || []) as ApprovedLeave[],
+          holidays: (holidayResult.data || []).map((event) => event.event_date).filter((date): date is string => Boolean(date)),
         });
         const byStudent = new Map<string, { present: number; total: number }>();
         monthRows.forEach((row) => {
@@ -456,7 +487,10 @@ export default function PrincipalDashboardPage() {
                     (row) => row.attendance_date === yesterday,
                   ),
                 ),
-            attendanceTrend: attendance.error ? old.attendanceTrend : trend,
+            attendanceTrend: attendance.error || enrolledResult.error || staffHistoryResult.error || approvedLeavesResult.error || holidayResult.error ? old.attendanceTrend : trend.points,
+            studentTrendSummary: attendance.error || enrolledResult.error ? old.studentTrendSummary : trend.todayStudent,
+            staffTrendSummary: staffHistoryResult.error || approvedLeavesResult.error ? old.staffTrendSummary : trend.todayStaff,
+            schoolHolidayToday: holidayResult.error ? old.schoolHolidayToday : (holidayResult.data || []).some((event) => event.event_date === today),
             lowAttendance: attendance.error ? old.lowAttendance : lowAttendance,
             feesCollected: fees.error
               ? old.feesCollected
@@ -581,13 +615,15 @@ export default function PrincipalDashboardPage() {
   const firstName = dashboard.profile?.full_name?.split(" ")[0] || "Principal";
   const schoolName = formatSchoolName(dashboard.school?.name);
   const attention: AttentionItemData[] = [
-    dashboard.students > 0 && dashboard.todayAttendance.total < dashboard.students && {
+    !dashboard.schoolHolidayToday && dashboard.studentTrendSummary.total > 0 && dashboard.studentTrendSummary.percentage === null && {
       id: "student-attendance", priority: "urgent", icon: "studentAttendance", title: "Student attendance incomplete",
-      description: `${dashboard.students - dashboard.todayAttendance.total} student${dashboard.students - dashboard.todayAttendance.total === 1 ? "" : "s"} still need an attendance record.`, action: "Mark", href: "/principal/attendance",
+      description: dashboard.studentTrendSummary.total > dashboard.studentTrendSummary.recorded
+        ? `${dashboard.studentTrendSummary.total - dashboard.studentTrendSummary.recorded} class${dashboard.studentTrendSummary.total - dashboard.studentTrendSummary.recorded === 1 ? " still needs" : "es still need"} to record attendance.`
+        : `${Math.max(0, dashboard.students - dashboard.todayAttendance.total)} students still need an attendance record.`, action: "Mark", href: "/principal/attendance",
     },
-    dashboard.staffTotal !== null && dashboard.staffTotal > dashboard.staffMarkedCount && {
+    !dashboard.schoolHolidayToday && dashboard.staffTrendSummary.expected > 0 && dashboard.staffTrendSummary.percentage === null && {
       id: "staff-attendance", priority: "urgent", icon: "staffAttendance", title: "Staff attendance not recorded",
-      description: `${dashboard.staffTotal - dashboard.staffMarkedCount} teacher${dashboard.staffTotal - dashboard.staffMarkedCount === 1 ? " needs" : "s need"} an attendance record.`, action: "Mark", href: "/principal/teachers?tab=attendance",
+      description: `${Math.max(0, dashboard.staffTrendSummary.expected - dashboard.staffTrendSummary.recorded)} teacher${dashboard.staffTrendSummary.expected - dashboard.staffTrendSummary.recorded === 1 ? " needs" : "s need"} an attendance record.`, action: "Mark", href: "/principal/teachers?tab=attendance",
     },
     dashboard.pendingTeacherLeaves > 0 && {
       id: "teacher-leave", priority: "action", icon: "leave", title: "Teacher leave requests",
@@ -810,115 +846,8 @@ export default function PrincipalDashboardPage() {
             </section>
             <AttentionCenter items={attention} />
             <UpcomingPanel items={dashboard.schedule} today={today} />
-            <section className="mt-5 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.85fr)]">
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                <div className="flex justify-between">
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-950">
-                      Attendance overview
-                    </h2>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Seven-day trend; totals follow the selected date range.
-                    </p>
-                  </div>
-                  <Link
-                    href="/principal/attendance"
-                    className="text-xs font-semibold text-blue-600"
-                  >
-                    View details
-                  </Link>
-                </div>
-                {dashboard.attendanceTrend.some(
-                  (point) => point.rate !== null,
-                ) ? (
-                  <>
-                    <div className="mt-4 h-52 sm:mt-5 sm:h-60">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart
-                          data={dashboard.attendanceTrend}
-                          margin={{ top: 8, right: 4, left: -24 }}
-                        >
-                          <defs>
-                            <linearGradient
-                              id="attendanceFill"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="5%"
-                                stopColor="#2563eb"
-                                stopOpacity={0.2}
-                              />
-                              <stop
-                                offset="95%"
-                                stopColor="#2563eb"
-                                stopOpacity={0}
-                              />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid
-                            stroke="#e2e8f0"
-                            strokeDasharray="4 4"
-                            vertical={false}
-                          />
-                          <XAxis
-                            dataKey="day"
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            domain={[0, 100]}
-                            axisLine={false}
-                            tickLine={false}
-                          />
-                          <Tooltip
-                            formatter={(value) =>
-                              value == null
-                                ? ["Not marked", "Attendance"]
-                                : [`${value}%`, "Attendance"]
-                            }
-                          />
-                          <Area
-                            connectNulls={false}
-                            type="monotone"
-                            dataKey="rate"
-                            stroke="#2563eb"
-                            strokeWidth={2.5}
-                            fill="url(#attendanceFill)"
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="mt-4 grid grid-cols-3 gap-3">
-                      <Count
-                        label="Present"
-                        value={dashboard.attendance.present}
-                        color="emerald"
-                      />
-                      <Count
-                        label="Absent"
-                        value={dashboard.attendance.absent}
-                        color="red"
-                      />
-                      <Count
-                        label="Late"
-                        value={dashboard.attendance.late}
-                        color="amber"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <Empty
-                    icon={ClipboardCheck}
-                    title="Attendance has not been marked"
-                    text="The chart will appear after attendance is added."
-                    href="/principal/attendance"
-                    action="Take attendance"
-                  />
-                )}
-              </div>
+            <AttendanceTrend points={dashboard.attendanceTrend} student={dashboard.studentTrendSummary} staff={dashboard.staffTrendSummary} />
+            <section className="mt-5 sm:mt-6">
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                 <div className="flex justify-between">
                   <div>
@@ -1060,10 +989,8 @@ function MobilePrincipalDashboard({
     dashboard.expectedFees && dashboard.monthlyFeesCollected
       ? Math.min(100, Math.round((dashboard.monthlyFeesCollected / dashboard.expectedFees) * 100))
       : 0;
-  const studentRate = dashboard.todayAttendance.rate;
-  const staffRate = dashboard.staffAttendanceMarked && dashboard.staffTotal
-    ? Math.round(((dashboard.staffPresent || 0) / dashboard.staffTotal) * 100)
-    : null;
+  const studentRate = dashboard.studentTrendSummary.percentage;
+  const staffRate = dashboard.staffTrendSummary.percentage;
   return (
     <div className="sm:hidden">
       <section aria-label="Today's school summary" className="mt-2.5 grid grid-cols-2 gap-2">
@@ -1071,13 +998,12 @@ function MobilePrincipalDashboard({
           href="/principal/attendance"
           label="Students present"
           value={
-            dashboard.todayAttendance.rate === null
-              ? "Not marked"
-              : `${present} / ${studentTotal}`
+            dashboard.studentTrendSummary.inProgress ? "In progress"
+              : studentRate === null ? "Not marked" : `${present} / ${studentTotal}`
           }
           badge={studentRate === null ? null : `${studentRate}%`}
           progress={studentRate}
-          meta={studentRate === null ? "Take attendance today" : `${Math.max(0, studentTotal - present)} not recorded present today`}
+          meta={dashboard.studentTrendSummary.inProgress ? `${dashboard.studentTrendSummary.recorded} of ${dashboard.studentTrendSummary.total} classes recorded` : studentRate === null ? "Take attendance today" : `${Math.max(0, studentTotal - present)} not recorded present today`}
           icon={Users}
           tone="blue"
           action="View Attendance"
@@ -1089,12 +1015,11 @@ function MobilePrincipalDashboard({
             ? "Unavailable"
             : dashboard.staffTotal === 0
               ? "0 / 0"
-              : dashboard.staffAttendanceMarked
-                ? `${dashboard.staffPresent} / ${dashboard.staffTotal}`
-                : "Not marked"}
+              : dashboard.staffTrendSummary.inProgress ? "In progress"
+                : staffRate !== null ? `${dashboard.staffTrendSummary.present} / ${dashboard.staffTrendSummary.expected}` : "Not marked"}
           badge={staffRate === null ? null : `${staffRate}%`}
           progress={staffRate}
-          meta={dashboard.staffTotal === 0 ? "No active teachers" : dashboard.staffAttendanceMarked ? `${Math.max(0, (dashboard.staffTotal || 0) - (dashboard.staffPresent || 0))} not present today` : "Mark today's attendance"}
+          meta={dashboard.staffTotal === 0 ? "No active teachers" : staffRate !== null ? `${dashboard.staffTrendSummary.expected} expected staff today` : "Mark today's attendance"}
           icon={ClipboardCheck}
           tone="violet"
           action="Manage Staff"
@@ -1127,6 +1052,7 @@ function MobilePrincipalDashboard({
 
       <AttentionCenter items={attention} compact />
       <UpcomingPanel items={dashboard.schedule} today={today} />
+      <AttendanceTrend points={dashboard.attendanceTrend} student={dashboard.studentTrendSummary} staff={dashboard.staffTrendSummary} />
 
       <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
@@ -1153,42 +1079,6 @@ function MobilePrincipalDashboard({
             Compose & publish
           </Link>
         </div>
-      </section>
-
-      <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-bold text-slate-950">Attendance trend</h2>
-            <p className="text-xs text-slate-500">Student attendance · last 30 days</p>
-          </div>
-          <Link href="/principal/attendance" className="text-[10px] font-bold text-blue-600">
-            Details
-          </Link>
-        </div>
-        {dashboard.attendanceTrend.some((point) => point.rate !== null) ? (
-          <div className="mt-3 h-44">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={dashboard.attendanceTrend} margin={{ top: 8, right: 4, left: -28, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="mobileAttendanceFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.22} />
-                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
-                <XAxis dataKey="day" axisLine={false} tickLine={false} minTickGap={28} tick={{ fontSize: 9 }} />
-                <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 9 }} />
-                <Tooltip formatter={(value) => [`${value}%`, "Students"]} />
-                <Area connectNulls={false} type="monotone" dataKey="rate" stroke="#2563eb" strokeWidth={2.5} fill="url(#mobileAttendanceFill)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="mt-3 rounded-xl bg-slate-50 px-4 py-7 text-center">
-            <p className="text-xs font-semibold text-slate-700">No attendance trend yet</p>
-            <p className="mt-1 text-[10px] text-slate-500">The chart appears after attendance is marked.</p>
-          </div>
-        )}
       </section>
 
       <section className="mt-5 grid grid-cols-2 gap-2.5">
@@ -1281,27 +1171,6 @@ function QuickAction({
       <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
       {label}
     </Link>
-  );
-}
-function Count({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: number;
-  color: "emerald" | "red" | "amber";
-}) {
-  const colors = {
-    emerald: "bg-emerald-50 text-emerald-700",
-    red: "bg-red-50 text-red-700",
-    amber: "bg-amber-50 text-amber-700",
-  };
-  return (
-    <div className={`rounded-xl p-3 ${colors[color]}`}>
-      <p className="text-xs">{label}</p>
-      <p className="mt-1 text-xl font-bold">{value}</p>
-    </div>
   );
 }
 function Metric({
