@@ -49,6 +49,7 @@ export default function ExamsResultsPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [linkedExamId, setLinkedExamId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,6 +108,19 @@ export default function ExamsResultsPage() {
     return (filter === 'all' || examState(exam) === filter) &&
       (!query || exam.name.toLowerCase().includes(query));
   }), [exams, filter, search]);
+
+  useEffect(() => {
+    if (loading) return;
+    const examId = new URLSearchParams(window.location.search).get('exam');
+    if (!examId || !exams.some((exam) => exam.id === examId)) return;
+    const frame = window.requestAnimationFrame(() => {
+      setLinkedExamId(examId);
+      setFilter('all');
+      setSearch('');
+      window.requestAnimationFrame(() => document.getElementById(`exam-${examId}`)?.scrollIntoView({ block: 'center' }));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, exams]);
 
   function openCreate() {
     setEditing(null);
@@ -228,7 +242,7 @@ export default function ExamsResultsPage() {
                 {!filtered.length ? <Empty filtered={Boolean(search || filter !== 'all')} onCreate={openCreate} /> : <div className="divide-y divide-slate-100">
                   {filtered.map((exam) => {
                     const state = examState(exam);
-                    return <article key={exam.id} className="p-5 transition hover:bg-slate-50/60">
+                    return <article key={exam.id} id={`exam-${exam.id}`} className={`scroll-mt-24 p-5 transition hover:bg-slate-50/60 ${linkedExamId === exam.id ? 'bg-blue-50 ring-2 ring-inset ring-blue-300' : ''}`}>
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><GraduationCap className="h-5 w-5" /></span>
                         <div className="min-w-0 flex-1">

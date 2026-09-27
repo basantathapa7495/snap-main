@@ -30,6 +30,8 @@ import {
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
 import AttentionCenter, { type AttentionItemData } from "@/components/AttentionCenter";
+import UpcomingPanel from "@/components/UpcomingPanel";
+import { mergeUpcoming, type SchoolEvent, type UpcomingExam, type UpcomingItem } from "@/lib/upcoming";
 import { supabase } from "@/lib/supabase";
 
 type DateRange = "today" | "week" | "month";
@@ -54,13 +56,6 @@ type FeeRecord = {
   payment_date: string;
 };
 type FeeType = { name: string; amount: number | string | null };
-type ExamRecord = { id: string; name: string; start_date: string | null };
-type EventRecord = {
-  id: string;
-  title: string;
-  event_date: string | null;
-  event_time: string | null;
-};
 type AttendanceSummary = {
   rate: number | null;
   present: number;
@@ -69,14 +64,6 @@ type AttendanceSummary = {
   total: number;
 };
 type AttendancePoint = AttendanceSummary & { day: string; date: string };
-type ScheduleItem = {
-  id: string;
-  title: string;
-  date: string;
-  time: string | null;
-  type: "Exam" | "Event";
-  href: string;
-};
 type DashboardData = {
   profile: Profile | null;
   school: SchoolRecord | null;
@@ -105,7 +92,7 @@ type DashboardData = {
   upcomingExams: number;
   attendanceTrend: AttendancePoint[];
   recentStudents: StudentRecord[];
-  schedule: ScheduleItem[];
+  schedule: UpcomingItem[];
   updatedAt: string | null;
 };
 
@@ -205,15 +192,6 @@ function formatSchoolName(name?: string | null) {
 function money(value: number) {
   return `NPR ${Math.round(value).toLocaleString()}`;
 }
-function dateLabel(key: string, today: string) {
-  if (key === today) return "Today";
-  if (key === shiftDateKey(today, 1)) return "Tomorrow";
-  return new Date(`${key}T12:00:00Z`).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-  });
-}
-
 export default function PrincipalDashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardData>(initialData);
   const [range, setRange] = useState<DateRange>("week");
@@ -329,19 +307,19 @@ export default function PrincipalDashboardPage() {
             .eq("status", "pending"),
           supabase
             .from("exams")
-            .select("id, name, start_date")
+            .select("id, name, start_date, exam_type")
             .eq("school_id", schoolId)
             .gte("start_date", today)
             .order("start_date")
-            .limit(8),
+            .limit(50),
           supabase
             .from("news_events")
-            .select("id, title, event_date, event_time")
+            .select("id, title, event_date, event_time, location, content, category")
             .eq("school_id", schoolId)
             .eq("is_event", true)
             .gte("event_date", today)
             .order("event_date")
-            .limit(8),
+            .limit(50),
         ]);
         const [
           school,
@@ -399,8 +377,8 @@ export default function PrincipalDashboardPage() {
           (row) => row.payment_date >= rangeStart,
         );
         const feeTypeRows = (feeTypes.data || []) as FeeType[];
-        const exams = (examsResult.data || []) as ExamRecord[];
-        const events = (eventsResult.data || []) as EventRecord[];
+        const exams = (examsResult.data || []) as UpcomingExam[];
+        const events = (eventsResult.data || []) as SchoolEvent[];
         const studentTotal = students.count || 0;
         const activeStaffIds = new Set(
           (activeStaff.data || []).map((teacher) => teacher.id),
@@ -441,34 +419,7 @@ export default function PrincipalDashboardPage() {
         const monthlyFee = feeTypeRows
           .filter((fee) => /monthly|tuition/i.test(fee.name))
           .reduce((sum, fee) => sum + Number(fee.amount || 0), 0);
-        const schedule: ScheduleItem[] = [
-          ...exams
-            .filter((exam): exam is ExamRecord & { start_date: string } =>
-              Boolean(exam.start_date),
-            )
-            .map((exam) => ({
-              id: `exam-${exam.id}`,
-              title: exam.name,
-              date: exam.start_date,
-              time: null,
-              type: "Exam" as const,
-              href: "/principal/results",
-            })),
-          ...events
-            .filter((event): event is EventRecord & { event_date: string } =>
-              Boolean(event.event_date),
-            )
-            .map((event) => ({
-              id: `event-${event.id}`,
-              title: event.title,
-              date: event.event_date,
-              time: event.event_time,
-              type: "Event" as const,
-              href: "/principal/calendar",
-            })),
-        ]
-          .sort((a, b) => a.date.localeCompare(b.date))
-          .slice(0, 5);
+        const schedule = mergeUpcoming(events, exams, today);
 
         if (!cancelled) {
           setDashboard((old) => ({
@@ -1083,52 +1034,7 @@ export default function PrincipalDashboardPage() {
                   />
                 )}
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <Heading
-                  title="Coming up"
-                  text="Upcoming exams and events."
-                  href="/principal/calendar"
-                />
-                {dashboard.schedule.length ? (
-                  <div className="divide-y divide-slate-100 px-5">
-                    {dashboard.schedule.map((item) => (
-                      <Link
-                        key={item.id}
-                        href={item.href}
-                        className="group flex items-center gap-3 py-4"
-                      >
-                        <span className="flex h-12 w-16 items-center justify-center rounded-xl bg-slate-100 text-[10px] font-bold uppercase text-slate-600">
-                          {dateLabel(item.date, today)}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <span
-                            className={`text-[10px] font-bold uppercase ${item.type === "Exam" ? "text-amber-600" : "text-blue-600"}`}
-                          >
-                            {item.type}
-                          </span>
-                          <p className="truncate text-sm font-semibold group-hover:text-blue-700">
-                            {item.title}
-                          </p>
-                          {item.time && (
-                            <p className="text-xs text-slate-400">
-                              {item.time}
-                            </p>
-                          )}
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-slate-300" />
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <Empty
-                    icon={CalendarDays}
-                    title="Nothing scheduled"
-                    text="Events and exams will appear here."
-                    href="/principal/calendar"
-                    action="Open calendar"
-                  />
-                )}
-              </div>
+              <UpcomingPanel items={dashboard.schedule} today={today} className="" />
             </section>
             </div>
           </div>
@@ -1297,46 +1203,7 @@ function MobilePrincipalDashboard({
         </Link>
       </section>
 
-      <section className="mt-5 rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-100 p-4">
-          <div>
-            <h2 className="text-base font-bold text-slate-950">Upcoming</h2>
-            <p className="text-xs text-slate-500">Exams and events ahead</p>
-          </div>
-          <CalendarDays className="h-5 w-5 text-blue-600" />
-        </div>
-        {dashboard.schedule.length ? (
-          <div className="divide-y divide-slate-100 px-4">
-            {dashboard.schedule.slice(0, 4).map((item) => (
-              <Link key={item.id} href={item.href} className="flex items-center gap-3 py-3">
-                <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[9px] font-bold uppercase text-slate-600">
-                  {dateLabel(item.date, today)}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <span className="text-[9px] font-bold uppercase text-blue-600">{item.type}</span>
-                  <p className="truncate text-xs font-semibold text-slate-900">{item.title}</p>
-                </div>
-                <ArrowRight className="h-3.5 w-3.5 text-slate-300" />
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="p-5 text-center">
-            <p className="text-xs font-semibold text-slate-700">Nothing scheduled</p>
-            <Link href="/principal/calendar" className="mt-2 inline-block text-[10px] font-bold text-blue-600">
-              Add an event
-            </Link>
-          </div>
-        )}
-        <div className="grid grid-cols-2 border-t border-slate-100">
-          <Link href="/principal/calendar" className="p-3 text-center text-[10px] font-bold text-slate-600">
-            Open calendar
-          </Link>
-          <Link href="/principal/communication" className="border-l border-slate-100 p-3 text-center text-[10px] font-bold text-slate-600">
-            Recent circulars
-          </Link>
-        </div>
-      </section>
+      <UpcomingPanel items={dashboard.schedule} today={today} />
     </div>
   );
 }
