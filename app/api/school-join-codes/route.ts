@@ -23,8 +23,6 @@ async function principal(request: Request) {
   if (role === 'teacher') {
     const { data: teacher } = await admin.from('teachers').select('id').eq('school_id', profile.school_id).eq('user_id', user.id).maybeSingle();
     if (!teacher) return null;
-    const { count } = await admin.from('classes').select('id', { count: 'exact', head: true }).eq('school_id', profile.school_id).eq('teacher_id', teacher.id);
-    if (!count) return null;
   }
   return { admin, schoolId: profile.school_id, role };
 }
