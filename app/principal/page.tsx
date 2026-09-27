@@ -21,6 +21,8 @@ import AttentionCenter, { type AttentionItemData } from "@/components/AttentionC
 import UpcomingPanel from "@/components/UpcomingPanel";
 import AttendanceTrend from "@/components/AttendanceTrend";
 import PrincipalQuickActions from "@/components/PrincipalQuickActions";
+import RecentActivity from "@/components/RecentActivity";
+import { fetchSchoolActivity, type SchoolActivity } from "@/lib/recent-activity";
 import { attendanceTrendData, type TrendPoint, type TrendSummary, type StudentEnrollment, type StaffMark, type ApprovedLeave } from "@/lib/attendance-trend";
 import { mergeUpcoming, type SchoolEvent, type UpcomingExam, type UpcomingItem } from "@/lib/upcoming";
 import { supabase } from "@/lib/supabase";
@@ -87,6 +89,7 @@ type DashboardData = {
   staffTrendSummary: TrendSummary;
   schoolHolidayToday: boolean;
   recentStudents: StudentRecord[];
+  recentActivity: SchoolActivity[];
   schedule: UpcomingItem[];
   updatedAt: string | null;
 };
@@ -129,6 +132,7 @@ const initialData: DashboardData = {
   staffTrendSummary: emptyTrendSummary,
   schoolHolidayToday: false,
   recentStudents: [],
+  recentActivity: [],
   schedule: [],
   updatedAt: null,
 };
@@ -250,6 +254,9 @@ export default function PrincipalDashboardPage() {
           throw new Error("Your school profile could not be loaded.");
         const profile = profileData as Profile;
         const schoolId = profile.school_id;
+        const activityPromise = fetchSchoolActivity(schoolId, 8)
+          .then((items) => ({ items, error: null as unknown }))
+          .catch((error: unknown) => ({ items: [] as SchoolActivity[], error }));
         const today = nepalDateKey();
         const yesterday = shiftDateKey(today, -1);
         const weekStart = shiftDateKey(today, -6);
@@ -377,6 +384,7 @@ export default function PrincipalDashboardPage() {
           supabase.from("students").select("id", { count: "exact", head: true }).eq("school_id", schoolId).is("parent_phone", null),
           supabase.from("documents").select("id", { count: "exact", head: true }).eq("school_id", schoolId).eq("is_archived", false).eq("principal_only", false).lte("publish_at", new Date().toISOString()).gt("expires_at", new Date().toISOString()).lte("expires_at", expiresBefore),
         ]);
+        const activityResult = await activityPromise;
         const failures = [
           ["school", school.error],
           ["students", students.error || activeStudents.error],
@@ -389,6 +397,7 @@ export default function PrincipalDashboardPage() {
           ["recent students", recent.error],
           ["admissions", admissions.error],
           ["schedule", examsResult.error || eventsResult.error],
+          ["recent activity", activityResult.error],
         ]
           .filter((entry) => entry[1])
           .map((entry) => entry[0] as string);
@@ -528,6 +537,7 @@ export default function PrincipalDashboardPage() {
             recentStudents: recent.error
               ? old.recentStudents
               : ((recent.data || []) as StudentRecord[]),
+            recentActivity: activityResult.error ? old.recentActivity : activityResult.items,
             schedule:
               examsResult.error && eventsResult.error ? old.schedule : schedule,
             updatedAt: new Date().toISOString(),
@@ -942,6 +952,7 @@ export default function PrincipalDashboardPage() {
                 )}
               </div>
             </section>
+            <RecentActivity items={dashboard.recentActivity} />
             </div>
           </div>
         </main>
@@ -1031,8 +1042,7 @@ function MobilePrincipalDashboard({
       <UpcomingPanel items={dashboard.schedule} today={today} />
       <AttendanceTrend points={dashboard.attendanceTrend} student={dashboard.studentTrendSummary} staff={dashboard.staffTrendSummary} />
       <PrincipalQuickActions />
-
-
+      <RecentActivity items={dashboard.recentActivity} />
     </div>
   );
 }

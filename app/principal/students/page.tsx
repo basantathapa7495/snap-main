@@ -174,6 +174,12 @@ export default function StudentsPage() {
         if (!cancelled) {
           setSchoolId(profile.school_id);
           setStudents((data || []) as Student[]);
+          const selectedId = new URLSearchParams(window.location.search).get('student');
+          const match = (data || []).find((item) => item.id === selectedId);
+          if (match) {
+            setSelectedStudent(match as Student);
+            window.history.replaceState(window.history.state, '', window.location.pathname);
+          }
         }
       } catch (loadError) {
         console.error("Students page load error", loadError);

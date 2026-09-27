@@ -23,9 +23,12 @@ type Student = {
 };
 type FeeType = { name: string; amount: number | string | null };
 type Payment = {
+  id: string;
   student_id: string;
   amount: number | string | null;
   payment_date: string;
+  receipt_number: string | null;
+  created_at: string | null;
 };
 type StudentBalance = Student & { paid: number; due: number; status: 'Paid' | 'Partial' | 'Unpaid' };
 
@@ -70,6 +73,7 @@ export default function FeesPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [feeModal, setFeeModal] = useState(false);
   const [paymentStudent, setPaymentStudent] = useState<StudentBalance | null>(null);
+  const [paymentDetail, setPaymentDetail] = useState<Payment | null>(null);
   const [paymentPickerOpen, setPaymentPickerOpen] = useState(false);
   const [paymentSearch, setPaymentSearch] = useState('');
   const [saving, setSaving] = useState(false);
@@ -110,19 +114,27 @@ export default function FeesPage() {
             .eq('school_id', profile.school_id)
             .order('name'),
           supabase.from('fee_records')
-            .select('student_id, amount, payment_date')
+            .select('id, student_id, amount, payment_date, receipt_number, created_at')
             .eq('school_id', profile.school_id)
             .order('payment_date', { ascending: false }),
         ]);
         if (studentResult.error) throw studentResult.error;
         if (typeResult.error) throw typeResult.error;
         if (paymentResult.error) throw paymentResult.error;
+        const paymentId = new URLSearchParams(window.location.search).get('payment');
+        const detailResult = paymentId ? await supabase.from('fee_records').select('id, student_id, amount, payment_date, receipt_number, created_at')
+          .eq('school_id', profile.school_id).eq('id', paymentId).maybeSingle() : null;
+        if (detailResult?.error) throw detailResult.error;
 
         if (!cancelled) {
           setSchoolId(profile.school_id);
           setStudents((studentResult.data || []) as Student[]);
           setFeeTypes((typeResult.data || []) as FeeType[]);
           setPayments((paymentResult.data || []) as Payment[]);
+          if (paymentId) {
+            setPaymentDetail((detailResult?.data || null) as Payment | null);
+            window.history.replaceState(window.history.state, '', window.location.pathname);
+          }
           if (new URLSearchParams(window.location.search).get('action') === 'record') {
             setPaymentSearch('');
             setPaymentPickerOpen(true);
@@ -345,6 +357,7 @@ export default function FeesPage() {
         </main>
       </div>
 
+      {paymentDetail && <Modal title="Payment details" description={students.find((student) => student.id === paymentDetail.student_id)?.name || 'Student payment'} onClose={() => setPaymentDetail(null)}><dl className="grid gap-3 p-6 text-sm text-slate-800"><div><dt className="text-xs text-slate-500">Amount received</dt><dd className="font-bold text-emerald-700">{money(Number(paymentDetail.amount || 0))}</dd></div><div><dt className="text-xs text-slate-500">Payment date</dt><dd>{paymentDetail.payment_date}</dd></div>{paymentDetail.receipt_number && <div><dt className="text-xs text-slate-500">Receipt number</dt><dd>{paymentDetail.receipt_number}</dd></div>}</dl></Modal>}
       {paymentPickerOpen && <Modal title="Record a student payment" description="Choose the student who made the payment." onClose={() => setPaymentPickerOpen(false)}>
         <div className="p-5"><label className="block text-sm font-semibold text-slate-700">Find student<input autoFocus value={paymentSearch} onChange={(event) => setPaymentSearch(event.target.value)} placeholder="Search name, class or phone" className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500" /></label>
           <div className="mt-3 max-h-[min(50dvh,360px)] overflow-y-auto rounded-xl border border-slate-200">

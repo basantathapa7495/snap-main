@@ -104,7 +104,16 @@ export default function DocumentsPage() {
     else {
       setDocuments((docs.data ?? []) as SchoolDocument[]); setCategories((cats.data ?? []) as DocumentCategory[]);
       setClasses((classRows.data ?? []) as ClassOption[]); setTeachers((teacherRows.data ?? []) as TeacherOption[]);
-      if (new URLSearchParams(window.location.search).get('action') === 'upload') {
+      const params = new URLSearchParams(window.location.search);
+      const selectedDoc = (docs.data ?? []).find((document) => document.id === params.get('document')) as SchoolDocument | undefined;
+      if (selectedDoc) {
+        if (canInlinePreview(selectedDoc)) {
+          const signed = await supabase.storage.from(DOCUMENT_BUCKET).createSignedUrl(selectedDoc.storage_path, 600);
+          if (signed.error) setError(signed.error.message);
+          else setPreview({ document: selectedDoc, url: signed.data.signedUrl });
+        } else setPreview({ document: selectedDoc, url: '' });
+        window.history.replaceState(window.history.state, '', window.location.pathname);
+      } else if (params.get('action') === 'upload') {
         setEditing(null); setForm(blankForm()); setFile(null); setModalOpen(true);
         window.history.replaceState(window.history.state, '', window.location.pathname);
       }

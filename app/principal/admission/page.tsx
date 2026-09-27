@@ -84,6 +84,12 @@ export default function AdmissionsPage() {
         if (!cancelled) {
           setSchoolId(profile.school_id);
           setApplications((data || []) as Application[]);
+          const selectedId = new URLSearchParams(window.location.search).get('application');
+          const match = (data || []).find((item) => item.id === selectedId);
+          if (match) {
+            setSelected(match as Application);
+            window.history.replaceState(window.history.state, '', window.location.pathname);
+          }
         }
       } catch (loadError) {
         console.error('Admissions load error', loadError);
@@ -163,6 +169,18 @@ export default function AdmissionsPage() {
         await supabase.from('students').delete().eq('id', student.id).eq('school_id', schoolId);
         throw new Error('Application could not be approved: ' + updateError.message);
       }
+
+      // The application has no approval timestamp; record only completed approvals
+      // in the existing school activity log so the feed has an accurate time and link.
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: actor } = user ? await supabase.from('profiles').select('full_name').eq('user_id', user.id).single() : { data: null };
+      const { error: logError } = await supabase.from('activity_logs').insert({
+        school_id: schoolId,
+        action_type: `admission_approved:${application.id}`,
+        description: `${application.student_name} · Grade ${application.class}`,
+        actor_name: actor?.full_name || 'Principal',
+      });
+      if (logError) console.error('Could not record admission activity', logError);
 
       setApplications((current) => current.map((item) => item.id === application.id ? { ...item, status: 'approved' } : item));
       setSelected(null);

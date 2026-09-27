@@ -187,6 +187,12 @@ export default function TeachersPage() {
         if (!cancelled) {
           setSchoolId(profile.school_id);
           setTeachers((data || []) as Teacher[]);
+          const selectedId = new URLSearchParams(window.location.search).get('teacher');
+          const match = (data || []).find((item) => item.id === selectedId);
+          if (match) {
+            setSelectedTeacher(match as Teacher);
+            window.history.replaceState(window.history.state, '', window.location.pathname);
+          }
         }
       } catch (loadError) {
         console.error("Teachers page load error", loadError);
