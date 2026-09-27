@@ -70,6 +70,8 @@ export default function FeesPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [feeModal, setFeeModal] = useState(false);
   const [paymentStudent, setPaymentStudent] = useState<StudentBalance | null>(null);
+  const [paymentPickerOpen, setPaymentPickerOpen] = useState(false);
+  const [paymentSearch, setPaymentSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [feeName, setFeeName] = useState('');
   const [feeAmount, setFeeAmount] = useState('');
@@ -121,6 +123,11 @@ export default function FeesPage() {
           setStudents((studentResult.data || []) as Student[]);
           setFeeTypes((typeResult.data || []) as FeeType[]);
           setPayments((paymentResult.data || []) as Payment[]);
+          if (new URLSearchParams(window.location.search).get('action') === 'record') {
+            setPaymentSearch('');
+            setPaymentPickerOpen(true);
+            window.history.replaceState(window.history.state, '', window.location.pathname);
+          }
         }
       } catch (loadError) {
         console.error('Fees load error', loadError);
@@ -159,6 +166,7 @@ export default function FeesPage() {
       (student.parent_phone || '').includes(query);
     return matchesSearch && (status === 'All' || student.status === status);
   }), [balances, search, status]);
+  const paymentOptions = balances.filter((student) => `${student.name} ${student.class || ''} ${student.parent_phone || ''}`.toLowerCase().includes(paymentSearch.trim().toLowerCase()));
 
   const collected = monthPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
   const expected = expectedPerStudent * students.length;
@@ -189,6 +197,7 @@ export default function FeesPage() {
   }
 
   function openPayment(student: StudentBalance) {
+    setPaymentPickerOpen(false);
     setPaymentStudent(student);
     setPaymentAmount(student.due > 0 ? String(student.due) : '');
     setPaymentDate(todayNepal());
@@ -336,6 +345,14 @@ export default function FeesPage() {
         </main>
       </div>
 
+      {paymentPickerOpen && <Modal title="Record a student payment" description="Choose the student who made the payment." onClose={() => setPaymentPickerOpen(false)}>
+        <div className="p-5"><label className="block text-sm font-semibold text-slate-700">Find student<input autoFocus value={paymentSearch} onChange={(event) => setPaymentSearch(event.target.value)} placeholder="Search name, class or phone" className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500" /></label>
+          <div className="mt-3 max-h-[min(50dvh,360px)] overflow-y-auto rounded-xl border border-slate-200">
+            {paymentOptions.map((student) => <button key={student.id} type="button" onClick={() => openPayment(student)} className="flex min-h-12 w-full items-center justify-between gap-3 border-b border-slate-100 px-3 py-2 text-left text-sm text-slate-800 last:border-b-0 hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-emerald-600"><span className="min-w-0 truncate font-semibold">{student.name}<span className="ml-2 text-xs font-normal text-slate-500">{className(student)}</span></span><span className="shrink-0 font-semibold text-emerald-700">Select →</span></button>)}
+            {!paymentOptions.length && <p className="p-4 text-center text-sm text-slate-500">No students found. Add a student before recording a payment.</p>}
+          </div>
+        </div>
+      </Modal>}
       {feeModal && <Modal title="Add fee structure" description="This amount is included in each student's monthly expected fees." onClose={() => setFeeModal(false)}>
         <form onSubmit={createFee}><div className="space-y-4 p-6"><Field label="Fee name" value={feeName} onChange={setFeeName} placeholder="Monthly tuition fee" required /><Field label="Amount (NPR)" type="number" min="1" value={feeAmount} onChange={setFeeAmount} placeholder="1500" required /></div><ModalFooter saving={saving} label="Add fee" onCancel={() => setFeeModal(false)} /></form>
       </Modal>}

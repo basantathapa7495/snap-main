@@ -74,6 +74,12 @@ export default function CommunicationPage() {
         if (!cancelled) {
           setSchoolId(profile.school_id);
           setNotices((data || []) as Notice[]);
+          if (new URLSearchParams(window.location.search).get('action') === 'create') {
+            setEditing(null);
+            setForm({ title: '', description: '', publishDate: todayNepal() });
+            setFormOpen(true);
+            window.history.replaceState(window.history.state, '', window.location.pathname);
+          }
         }
       } catch (loadError) {
         console.error('Communication load error', loadError);

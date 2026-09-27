@@ -104,6 +104,10 @@ export default function DocumentsPage() {
     else {
       setDocuments((docs.data ?? []) as SchoolDocument[]); setCategories((cats.data ?? []) as DocumentCategory[]);
       setClasses((classRows.data ?? []) as ClassOption[]); setTeachers((teacherRows.data ?? []) as TeacherOption[]);
+      if (new URLSearchParams(window.location.search).get('action') === 'upload') {
+        setEditing(null); setForm(blankForm()); setFile(null); setModalOpen(true);
+        window.history.replaceState(window.history.state, '', window.location.pathname);
+      }
     }
     setLoading(false);
   }, []);

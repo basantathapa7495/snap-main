@@ -59,6 +59,11 @@ export default function CalendarPage() {
         if (match) {
           setSelected(match);
           if (match.event_date) setMonth(match.event_date.slice(0, 7));
+        } else if (params.get("action") === "create") {
+          setEditing(null);
+          setForm({ ...blankForm, date: nepalDay() });
+          setFormOpen(true);
+          window.history.replaceState(window.history.state, "", window.location.pathname);
         }
         setError("");
       } catch (cause) {

@@ -7,14 +7,11 @@ import {
   ArrowRight,
   CalendarDays,
   ClipboardCheck,
-  FileText,
   Globe2,
   GraduationCap,
-  ReceiptText,
   RefreshCw,
   TrendingDown,
   TrendingUp,
-  UserPlus,
   Users,
   Wallet,
 } from "lucide-react";
@@ -23,6 +20,7 @@ import TopBar from "@/components/TopBar";
 import AttentionCenter, { type AttentionItemData } from "@/components/AttentionCenter";
 import UpcomingPanel from "@/components/UpcomingPanel";
 import AttendanceTrend from "@/components/AttendanceTrend";
+import PrincipalQuickActions from "@/components/PrincipalQuickActions";
 import { attendanceTrendData, type TrendPoint, type TrendSummary, type StudentEnrollment, type StaffMark, type ApprovedLeave } from "@/lib/attendance-trend";
 import { mergeUpcoming, type SchoolEvent, type UpcomingExam, type UpcomingItem } from "@/lib/upcoming";
 import { supabase } from "@/lib/supabase";
@@ -736,29 +734,7 @@ export default function PrincipalDashboardPage() {
                     and review what needs your attention.
                   </p>
                 </div>
-                <div className="hidden w-full grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm sm:flex sm:w-auto">
-                  <QuickAction
-                    href="/principal/attendance"
-                    icon={ClipboardCheck}
-                    label="Take attendance"
-                    primary
-                  />
-                  <QuickAction
-                    href="/principal/students"
-                    icon={UserPlus}
-                    label="Add student"
-                  />
-                  <QuickAction
-                    href="/principal/fees"
-                    icon={ReceiptText}
-                    label="Record fee"
-                  />
-                  <QuickAction
-                    href="/principal/results"
-                    icon={FileText}
-                    label="Create exam"
-                  />
-                </div>
+
               </div>
             </header>
             <div className="mt-5 hidden flex-col gap-3 sm:flex sm:flex-row sm:items-center sm:justify-between">
@@ -847,6 +823,7 @@ export default function PrincipalDashboardPage() {
             <AttentionCenter items={attention} />
             <UpcomingPanel items={dashboard.schedule} today={today} />
             <AttendanceTrend points={dashboard.attendanceTrend} student={dashboard.studentTrendSummary} staff={dashboard.staffTrendSummary} />
+            <PrincipalQuickActions />
             <section className="mt-5 sm:mt-6">
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                 <div className="flex justify-between">
@@ -1053,46 +1030,8 @@ function MobilePrincipalDashboard({
       <AttentionCenter items={attention} compact />
       <UpcomingPanel items={dashboard.schedule} today={today} />
       <AttendanceTrend points={dashboard.attendanceTrend} student={dashboard.studentTrendSummary} staff={dashboard.staffTrendSummary} />
+      <PrincipalQuickActions />
 
-      <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-bold text-slate-950">Quick notice</h2>
-            <p className="text-xs text-slate-500">Publish an announcement to your school</p>
-          </div>
-          <FileText className="h-5 w-5 text-blue-600" />
-        </div>
-        <Link
-          href="/principal/communication"
-          className="mt-3 block min-h-20 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-400"
-        >
-          Write your notice here…
-        </Link>
-        <div className="mt-3 flex items-center justify-between">
-          <span className="rounded-full bg-blue-50 px-3 py-1.5 text-[10px] font-semibold text-blue-700">
-            Publish to: All
-          </span>
-          <Link
-            href="/principal/communication"
-            className="rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-bold text-white"
-          >
-            Compose & publish
-          </Link>
-        </div>
-      </section>
-
-      <section className="mt-5 grid grid-cols-2 gap-2.5">
-        <Link href="/principal/results" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <FileText className="h-5 w-5 text-violet-600" />
-          <h3 className="mt-3 text-xs font-bold text-slate-900">Class performance</h3>
-          <p className="mt-1 text-[10px] leading-4 text-slate-500">Open the latest exam results by class.</p>
-        </Link>
-        <Link href="/principal/fees" className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <Wallet className="h-5 w-5 text-emerald-600" />
-          <h3 className="mt-3 text-xs font-bold text-slate-900">Fee analytics</h3>
-          <p className="mt-1 text-[10px] leading-4 text-slate-500">Review collection records and targets.</p>
-        </Link>
-      </section>
 
     </div>
   );
@@ -1152,27 +1091,6 @@ function MobileKpi({
   );
 }
 
-function QuickAction({
-  href,
-  icon: Icon,
-  label,
-  primary = false,
-}: {
-  href: string;
-  icon: ElementType;
-  label: string;
-  primary?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-2.5 text-xs font-semibold transition sm:min-h-10 sm:px-3 sm:text-sm ${primary ? "bg-blue-600 text-white shadow-sm hover:bg-blue-700" : "border border-slate-100 text-slate-600 hover:bg-slate-100"}`}
-    >
-      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-      {label}
-    </Link>
-  );
-}
 function Metric({
   label,
   value,
