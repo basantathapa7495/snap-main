@@ -716,16 +716,16 @@ export default function PrincipalDashboardPage() {
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-14 lg:ml-64 lg:pt-0">
         <div className="hidden lg:block"><TopBar /></div>
-        <main className="flex-1 px-3.5 pb-24 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pt-24">
+        <main className="flex-1 px-3.5 pb-24 pt-3 sm:px-6 sm:pt-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="border-b border-slate-200 pb-4 dark:border-slate-800 sm:pb-5">
+            <header className="pb-0 sm:border-b sm:border-slate-200 sm:pb-5 dark:sm:border-slate-800">
               <div className="grid items-center gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-5">
                 <div>
                   <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.04em] text-slate-600 dark:text-slate-400 sm:gap-2 sm:text-xs sm:tracking-[0.08em]">
                     <CalendarDays className="h-4 w-4 shrink-0" />
                     {fullDate}
                   </p>
-                  <div className="mt-1 flex items-center justify-between gap-2 sm:mt-2 sm:block">
+                  <div className="mt-0.5 flex items-center justify-between gap-2 sm:mt-2 sm:block">
                     <h1 className="min-w-0 text-[clamp(1.25rem,5.4vw,1.75rem)] font-bold leading-tight tracking-tight text-slate-950 dark:text-slate-50 sm:text-3xl">
                       {greeting},{" "}
                       <span className="text-blue-600">{firstName}</span>
@@ -741,7 +741,7 @@ export default function PrincipalDashboardPage() {
                       Website
                     </Link>
                   </div>
-                  <p className="mt-1 text-[13px] leading-5 text-slate-600 dark:text-slate-300 sm:hidden">
+                  <p className="mt-0.5 text-[13px] leading-[18px] text-slate-600 dark:text-slate-300 sm:hidden">
                     Here&apos;s what&apos;s happening in your school today.
                   </p>
                   <p className="mt-2 hidden text-sm leading-5 text-slate-500 sm:mt-1.5 sm:line-clamp-2">
@@ -1240,7 +1240,7 @@ function MobilePrincipalDashboard({
 
   return (
     <div className="sm:hidden">
-      <section aria-label="Today's school summary" className="mt-4 grid grid-cols-2 gap-2.5">
+      <section aria-label="Today's school summary" className="mt-2.5 grid grid-cols-2 gap-2">
         <MobileKpi
           href="/principal/attendance"
           label="Students present"
@@ -1497,26 +1497,26 @@ function MobileKpi({
     amber: { icon: "bg-gradient-to-br from-orange-300 to-rose-500 text-white", bar: "bg-orange-500", link: "text-orange-700 dark:text-orange-300" },
   };
   return (
-    <Link href={href} className="group flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_3px_12px_rgba(15,23,42,0.08)] transition hover:border-teal-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-teal-600 dark:border-slate-700 dark:bg-slate-900">
+    <Link href={href} className="group flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-2.5 shadow-[0_3px_12px_rgba(15,23,42,0.08)] transition hover:border-teal-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-teal-600 dark:border-slate-700 dark:bg-slate-900">
       <div className="flex items-start justify-between gap-2">
-        <p className="min-h-7 text-[10px] font-bold uppercase leading-4 tracking-[0.02em] text-slate-900 dark:text-slate-100">
+        <p className="text-[10px] font-bold uppercase leading-4 tracking-[0.02em] text-slate-900 dark:text-slate-100">
           {label}
         </p>
-        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm ${tones[tone].icon}`}>
+        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg shadow-sm ${tones[tone].icon}`}>
           <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
       </div>
-      <div className="mt-1 flex min-h-7 flex-wrap items-center gap-1">
+      <div className="mt-0.5 flex flex-wrap items-center gap-1">
         <span className="break-all text-[clamp(0.98rem,4vw,1.5rem)] font-extrabold leading-tight tracking-tight text-slate-950 dark:text-white">{value}</span>
         {badge && <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">{badge}</span>}
       </div>
       {progress != null && (
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
           <div className={`h-full rounded-full ${tones[tone].bar}`} style={{ width: `${progress}%` }} />
         </div>
       )}
-      <p className="mt-1.5 min-h-7 text-[10px] leading-4 text-slate-600 dark:text-slate-300">{meta}</p>
-      <span className={`mt-auto flex min-h-8 items-center gap-1 pt-1 text-[11px] font-bold ${tones[tone].link}`}>
+      <p className="mt-1 text-[10px] leading-4 text-slate-600 dark:text-slate-300">{meta}</p>
+      <span className={`mt-auto flex items-center gap-1 pt-1 text-[11px] font-bold ${tones[tone].link}`}>
         {action}<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
       </span>
     </Link>
