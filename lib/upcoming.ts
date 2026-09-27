@@ -23,6 +23,8 @@ export type UpcomingItem = {
   time: string | null;
   title: string;
   context: string | null;
+  location: string | null;
+  description: string | null;
   type: string;
   href: string;
 };
@@ -68,6 +70,8 @@ export function mergeUpcoming(events: SchoolEvent[], exams: UpcomingExam[], toda
         id: `event-${event.id}`, sourceId: event.id, source: "event" as const,
         date: event.event_date!, time: event.event_time, title: event.title,
         context: event.location?.trim() || event.content?.trim() || null,
+        location: event.location?.trim() || null,
+        description: event.content?.trim() || null,
         type, href: `/principal/calendar?event=${encodeURIComponent(event.id)}`,
       };
     }),
@@ -75,6 +79,8 @@ export function mergeUpcoming(events: SchoolEvent[], exams: UpcomingExam[], toda
       id: `exam-${exam.id}`, sourceId: exam.id, source: "exam" as const,
       date: exam.start_date!, time: null, title: exam.name,
       context: exam.exam_type?.trim() || null,
+      location: null,
+      description: null,
       type: "Exam", href: `/principal/results?exam=${encodeURIComponent(exam.id)}`,
     })),
   ];

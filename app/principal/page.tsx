@@ -809,6 +809,7 @@ export default function PrincipalDashboardPage() {
               ))}
             </section>
             <AttentionCenter items={attention} />
+            <UpcomingPanel items={dashboard.schedule} today={today} />
             <section className="mt-5 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.85fr)]">
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                 <div className="flex justify-between">
@@ -979,7 +980,7 @@ export default function PrincipalDashboardPage() {
                 </Link>
               </div>
             </section>
-            <section className="mt-5 grid gap-4 sm:mt-6 sm:gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)]">
+            <section className="mt-5 sm:mt-6">
               <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <Heading
                   title="Recently added students"
@@ -1034,7 +1035,6 @@ export default function PrincipalDashboardPage() {
                   />
                 )}
               </div>
-              <UpcomingPanel items={dashboard.schedule} today={today} className="" />
             </section>
             </div>
           </div>
@@ -1126,6 +1126,7 @@ function MobilePrincipalDashboard({
       </section>
 
       <AttentionCenter items={attention} compact />
+      <UpcomingPanel items={dashboard.schedule} today={today} />
 
       <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
@@ -1203,7 +1204,6 @@ function MobilePrincipalDashboard({
         </Link>
       </section>
 
-      <UpcomingPanel items={dashboard.schedule} today={today} />
     </div>
   );
 }
