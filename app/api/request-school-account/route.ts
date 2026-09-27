@@ -1,8 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { createHmac } from 'node:crypto';
+import { validateSchoolJoiningCodes, type JoinRole } from '@/lib/server/school-join-codes';
 
 type RequestBody = {
   schoolSlug?: unknown;
+  schoolCode?: unknown;
+  joinCode?: unknown;
   role?: unknown;
   fullName?: unknown;
   email?: unknown;
@@ -21,7 +25,7 @@ const clean = (value: unknown, max = 120) => typeof value === 'string' ? value.t
 
 export async function POST(request: Request) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceRoleKey) return NextResponse.json({ error: 'Account requests are not configured.' }, { status: 500 });
 
   const origin = request.headers.get('origin');
@@ -36,17 +40,37 @@ export async function POST(request: Request) {
 
   const schoolSlug = clean(body.schoolSlug, 100).toLowerCase();
   const role = clean(body.role, 20).toLowerCase();
+  const schoolCode = clean(body.schoolCode, 6);
+  const joinCode = clean(body.joinCode, 6);
   const fullName = clean(body.fullName);
   const email = clean(body.email, 180).toLowerCase();
   const password = typeof body.password === 'string' ? body.password : '';
   const phone = clean(body.phone, 30);
-  if (!schoolSlug || !['teacher', 'student'].includes(role) || fullName.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8) {
-    return NextResponse.json({ error: 'School, role, full name, valid email and an 8-character password are required.' }, { status: 400 });
+  if (!schoolSlug || !['teacher', 'student'].includes(role) || !/^\d{6}$/.test(schoolCode) || !/^\d{6}$/.test(joinCode) || fullName.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8) {
+    return NextResponse.json({ error: 'School Code, role Join Code, full name, email and password are required.' }, { status: 400 });
   }
 
   const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } });
-  const { data: school } = await admin.from('schools').select('id,name').eq('slug', schoolSlug).eq('is_approved', true).maybeSingle();
-  if (!school) return NextResponse.json({ error: 'This school is unavailable for registration.' }, { status: 404 });
+  // Atomically count attempts in Supabase so the limit works across app instances.
+  // The school-wide budget also applies when an address header is unavailable.
+  const address = request.headers.get('x-real-ip') || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  const fingerprint = (value: string) => createHmac('sha256', serviceRoleKey).update(value).digest('hex');
+  const [addressLimit, schoolLimit] = await Promise.all([
+    admin.rpc('consume_school_join_attempt', { p_key_hash: fingerprint(`address:${address}:school:${schoolSlug}`), p_limit: 10 }),
+    admin.rpc('consume_school_join_attempt', { p_key_hash: fingerprint(`school:${schoolSlug}`), p_limit: 100 }),
+  ]);
+  if (addressLimit.error || schoolLimit.error) {
+    console.error('Join attempt limit failed', addressLimit.error || schoolLimit.error);
+    return NextResponse.json({ error: 'Please try again later.' }, { status: 503 });
+  }
+  if (!addressLimit.data || !schoolLimit.data) return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 });
+
+  let matchedSchoolId: string | null;
+  try { matchedSchoolId = await validateSchoolJoiningCodes(admin, schoolCode, joinCode, role as JoinRole); }
+  catch (error) { console.error('Join code validation failed', error); return NextResponse.json({ error: 'Joining is temporarily unavailable.' }, { status: 503 }); }
+  if (!matchedSchoolId) return NextResponse.json({ error: 'School Code or Join Code is incorrect, or joining is disabled.' }, { status: 403 });
+  const { data: school } = await admin.from('schools').select('id,name').eq('id', matchedSchoolId).eq('slug', schoolSlug).eq('is_approved', true).maybeSingle();
+  if (!school) return NextResponse.json({ error: 'School Code or Join Code is incorrect, or joining is disabled.' }, { status: 403 });
 
   const { data: existing } = await admin.from('account_requests').select('id').eq('school_id', school.id).eq('email', email).eq('requested_role', role).eq('status', 'pending').maybeSingle();
   if (existing) return NextResponse.json({ error: 'A pending request already exists for this email.' }, { status: 409 });
