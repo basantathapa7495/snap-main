@@ -77,6 +77,12 @@ export default function FeesPage() {
   const [paymentDate, setPaymentDate] = useState(todayNepal());
 
   useEffect(() => {
+    if (!loading && window.location.hash === '#dues') {
+      document.getElementById('dues')?.scrollIntoView({ block: 'start' });
+    }
+  }, [loading]);
+
+  useEffect(() => {
     let cancelled = false;
     async function load() {
       setRefreshing(true);
@@ -300,7 +306,7 @@ export default function FeesPage() {
               </div>
             </section>
 
-            <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <section id="dues" className="mt-6 scroll-mt-20 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-center">
                 <div className="mr-auto"><h2 className="font-bold text-slate-950">Student fee status</h2><p className="mt-1 text-xs text-slate-500">Monthly dues calculated from your fee structure and recorded payments.</p></div>
                 <input type="month" value={month} max={currentMonth()} onChange={(event) => setMonth(event.target.value)} className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-blue-500" />

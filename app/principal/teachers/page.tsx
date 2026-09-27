@@ -146,6 +146,15 @@ export default function TeachersPage() {
   const [pageTab, setPageTab] = useState<"teachers" | "attendance" | "leave" | "assignments" | "more">("teachers");
 
   useEffect(() => {
+    const requestedTab = new URLSearchParams(window.location.search).get("tab");
+    if (requestedTab === "attendance" || requestedTab === "leave" || requestedTab === "assignments" || requestedTab === "more") {
+      // Read the deep link after hydration so the server and first client render match.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPageTab(requestedTab);
+    }
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     async function loadTeachers() {
       setRefreshing(true);

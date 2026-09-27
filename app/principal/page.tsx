@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ClipboardCheck,
   FileText,
+  Globe2,
   GraduationCap,
   ReceiptText,
   RefreshCw,
@@ -92,6 +93,9 @@ type DashboardData = {
   activeStudents: number;
   teachers: number;
   activeTeachers: number;
+  staffPresent: number | null;
+  staffTotal: number | null;
+  staffAttendanceMarked: boolean;
   classes: number;
   attendance: AttendanceSummary;
   todayAttendance: AttendanceSummary;
@@ -123,6 +127,9 @@ const initialData: DashboardData = {
   activeStudents: 0,
   teachers: 0,
   activeTeachers: 0,
+  staffPresent: null,
+  staffTotal: null,
+  staffAttendanceMarked: false,
   classes: 0,
   attendance: emptyAttendance,
   todayAttendance: emptyAttendance,
@@ -196,18 +203,6 @@ function formatSchoolName(name?: string | null) {
 }
 function money(value: number) {
   return `NPR ${Math.round(value).toLocaleString()}`;
-}
-function bikramSambatDate(date = new Date()) {
-  try {
-    return new Intl.DateTimeFormat("en-US-u-ca-bikram-sambat", {
-      timeZone: "Asia/Kathmandu",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date);
-  } catch {
-    return "BS date unavailable";
-  }
 }
 function dateLabel(key: string, today: string) {
   if (key === today) return "Today";
@@ -291,6 +286,16 @@ export default function PrincipalDashboardPage() {
             .eq("school_id", schoolId)
             .not("user_id", "is", null),
           supabase
+            .from("teachers")
+            .select("id")
+            .eq("school_id", schoolId)
+            .neq("employment_status", "inactive"),
+          supabase
+            .from("teacher_attendance")
+            .select("teacher_id, status")
+            .eq("school_id", schoolId)
+            .eq("attendance_date", today),
+          supabase
             .from("classes")
             .select("id", { count: "exact", head: true })
             .eq("school_id", schoolId),
@@ -343,6 +348,8 @@ export default function PrincipalDashboardPage() {
           activeStudents,
           teachers,
           activeTeachers,
+          activeStaff,
+          staffAttendance,
           classes,
           attendance,
           fees,
@@ -356,6 +363,7 @@ export default function PrincipalDashboardPage() {
           ["school", school.error],
           ["students", students.error || activeStudents.error],
           ["teachers", teachers.error || activeTeachers.error],
+          ["staff attendance", activeStaff.error || staffAttendance.error],
           ["classes", classes.error],
           ["attendance", attendance.error],
           ["fees", fees.error || feeTypes.error],
@@ -386,6 +394,12 @@ export default function PrincipalDashboardPage() {
         const exams = (examsResult.data || []) as ExamRecord[];
         const events = (eventsResult.data || []) as EventRecord[];
         const studentTotal = students.count || 0;
+        const activeStaffIds = new Set(
+          (activeStaff.data || []).map((teacher) => teacher.id),
+        );
+        const staffRows = (staffAttendance.data || []).filter((row) =>
+          activeStaffIds.has(row.teacher_id),
+        );
         const trend = Array.from({ length: 30 }, (_, index) => {
           const date = shiftDateKey(thirtyDayStart, index);
           return {
@@ -460,6 +474,11 @@ export default function PrincipalDashboardPage() {
             activeTeachers: activeTeachers.error
               ? old.activeTeachers
               : activeTeachers.count || 0,
+            staffTotal: activeStaff.error ? null : activeStaffIds.size,
+            staffPresent: activeStaff.error || staffAttendance.error
+              ? null
+              : staffRows.filter((row) => row.status === "present").length,
+            staffAttendanceMarked: !activeStaff.error && !staffAttendance.error && staffRows.length > 0,
             classes: classes.error ? old.classes : classes.count || 0,
             attendance: attendance.error
               ? old.attendance
@@ -706,11 +725,26 @@ export default function PrincipalDashboardPage() {
                     <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                     {fullDate}
                   </p>
-                  <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                    {greeting},{" "}
-                    <span className="text-blue-600">{firstName}</span>
-                  </h1>
-                  <p className="mt-2 line-clamp-2 text-sm leading-5 text-slate-500 sm:mt-1.5">
+                  <div className="mt-2 flex items-center justify-between gap-2 sm:block">
+                    <h1 className="min-w-0 text-[22px] font-bold leading-tight tracking-tight text-slate-950 sm:text-3xl">
+                      {greeting},{" "}
+                      <span className="text-blue-600">{firstName}</span>
+                    </h1>
+                    <Link
+                      href={dashboard.school?.slug ? `/s/${encodeURIComponent(dashboard.school.slug)}` : "/principal/edit_website"}
+                      target={dashboard.school?.slug ? "_blank" : undefined}
+                      rel={dashboard.school?.slug ? "noopener noreferrer" : undefined}
+                      className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl border border-teal-200 bg-teal-50 px-2.5 text-[11px] font-bold text-teal-800 shadow-sm transition hover:bg-teal-100 sm:hidden"
+                      aria-label={dashboard.school?.slug ? "Open school website" : "Set up school website"}
+                    >
+                      <Globe2 className="h-4 w-4" aria-hidden="true" />
+                      Website
+                    </Link>
+                  </div>
+                  <p className="mt-2 text-sm leading-5 text-slate-500 sm:hidden">
+                    Here&apos;s what&apos;s happening in your school today.
+                  </p>
+                  <p className="mt-2 hidden text-sm leading-5 text-slate-500 sm:mt-1.5 sm:line-clamp-2">
                     Manage today’s work for{" "}
                     <span className="font-semibold text-slate-700">
                       {schoolName}
@@ -787,7 +821,6 @@ export default function PrincipalDashboardPage() {
             <MobilePrincipalDashboard
               dashboard={dashboard}
               difference={difference}
-              fullDate={fullDate}
               today={today}
             />
             <div className="hidden sm:block">
@@ -1147,12 +1180,10 @@ export default function PrincipalDashboardPage() {
 function MobilePrincipalDashboard({
   dashboard,
   difference,
-  fullDate,
   today,
 }: {
   dashboard: DashboardData;
   difference: number | null;
-  fullDate: string;
   today: string;
 }) {
   const present = dashboard.todayAttendance.present + dashboard.todayAttendance.late;
@@ -1208,24 +1239,7 @@ function MobilePrincipalDashboard({
 
   return (
     <div className="sm:hidden">
-      <div className="mt-4 flex items-center justify-between">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-blue-600">
-            Morning brief
-          </p>
-          <p className="mt-0.5 text-xs text-slate-500">
-            {bikramSambatDate()} BS · {fullDate} AD
-          </p>
-        </div>
-        <Link
-          href="/principal/reports"
-          className="rounded-lg bg-slate-900 px-3 py-2 text-[11px] font-semibold text-white"
-        >
-          Full report
-        </Link>
-      </div>
-
-      <section className="mt-3 grid grid-cols-2 gap-2.5">
+      <section aria-label="Today's school summary" className="mt-4 grid grid-cols-2 gap-2.5">
         <MobileKpi
           href="/principal/attendance"
           label="Students present"
@@ -1242,14 +1256,22 @@ function MobilePrincipalDashboard({
           trend={difference}
           icon={Users}
           tone="blue"
+          action="View attendance"
         />
         <MobileKpi
-          href="/principal/teachers"
+          href="/principal/teachers?tab=attendance"
           label="Staff present"
-          value="Not available"
-          meta="Staff attendance setup needed"
+          value={dashboard.staffPresent === null || dashboard.staffTotal === null
+            ? "Unavailable"
+            : dashboard.staffTotal === 0
+              ? "0 / 0"
+              : dashboard.staffAttendanceMarked
+                ? `${dashboard.staffPresent} / ${dashboard.staffTotal}`
+                : "Not marked"}
+          meta={dashboard.staffTotal === 0 ? "No active teachers" : "Today’s teacher attendance"}
           icon={GraduationCap}
           tone="violet"
+          action="Manage"
         />
         <MobileKpi
           href="/principal/fees"
@@ -1263,14 +1285,16 @@ function MobilePrincipalDashboard({
           progress={dashboard.expectedFees === null ? null : monthlyProgress}
           icon={Wallet}
           tone="emerald"
+          action="Open fees"
         />
         <MobileKpi
-          href="/principal/fees"
+          href="/principal/fees#dues"
           label="Overdue fees"
-          value="Not available"
-          meta="Student due schedules needed"
+          value="Not tracked"
+          meta="No due dates recorded yet"
           icon={AlertCircle}
           tone="amber"
+          action="View dues"
         />
       </section>
 
@@ -1453,6 +1477,7 @@ function MobileKpi({
   tone,
   trend,
   progress,
+  action,
 }: {
   href: string;
   label: string;
@@ -1462,27 +1487,28 @@ function MobileKpi({
   tone: "blue" | "violet" | "emerald" | "amber";
   trend?: number | null;
   progress?: number | null;
+  action: string;
 }) {
   const tones = {
-    blue: "bg-blue-50 text-blue-600",
-    violet: "bg-violet-50 text-violet-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
+    blue: "bg-blue-50 text-blue-700",
+    violet: "bg-violet-50 text-violet-700",
+    emerald: "bg-emerald-50 text-emerald-700",
+    amber: "bg-amber-50 text-amber-700",
   };
   return (
-    <Link href={href} className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+    <Link href={href} className="group flex min-w-0 flex-col rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm transition hover:border-teal-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-teal-600">
       <div className="flex items-start justify-between gap-2">
         <p className="min-h-8 text-[10px] font-bold uppercase leading-4 tracking-[0.04em] text-slate-500">
           {label}
         </p>
         <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tones[tone]}`}>
-          <Icon className="h-4 w-4" />
+          <Icon className="h-4 w-4" aria-hidden="true" />
         </span>
       </div>
       <p className="mt-2 break-words text-lg font-extrabold leading-tight text-slate-950">{value}</p>
       <div className="mt-1.5 flex min-h-8 items-start gap-1 text-[10px] leading-4 text-slate-500">
         {trend != null && (
-          <span className={trend >= 0 ? "font-bold text-emerald-600" : "font-bold text-red-600"}>
+          <span className={trend >= 0 ? "font-bold text-emerald-700" : "font-bold text-red-600"}>
             {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}%
           </span>
         )}
@@ -1493,6 +1519,9 @@ function MobileKpi({
           <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
         </div>
       )}
+      <span className="mt-auto flex items-center gap-1 pt-3 text-[11px] font-bold text-teal-700 group-hover:text-teal-800">
+        {action}<ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+      </span>
     </Link>
   );
 }
