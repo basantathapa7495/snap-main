@@ -175,6 +175,7 @@ export default function TeachersPage() {
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [overviewError, setOverviewError] = useState("");
   const [showAllMobileTeachers, setShowAllMobileTeachers] = useState(false);
+  const [showAllAttention, setShowAllAttention] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   useEffect(() => {
@@ -541,6 +542,15 @@ export default function TeachersPage() {
     window.setTimeout(() => setAllCredentialsCopied(false), 2000);
   }
 
+  const inactiveCount = teachers.filter((teacher) => teacher.employment_status === "inactive").length;
+  const missingLoginCount = teachers.filter((teacher) => teacher.employment_status !== "inactive" && !teacher.user_id).length;
+  const attentionItems: Array<{ icon: React.ElementType; tone: keyof typeof statTones; title: string; detail: string; onClick: () => void }> = [
+    ...((overview?.pendingLeave ?? 0) > 0 ? [{ icon: ClipboardClock, tone: "amber" as const, title: "Pending leave requests", detail: `${overview?.pendingLeave} require approval`, onClick: () => setPageTab("leave") }] : []),
+    ...((overview?.unassigned ?? 0) > 0 ? [{ icon: UserRound, tone: "violet" as const, title: "Teachers unassigned", detail: `${overview?.unassigned} not assigned to a class`, onClick: () => setPageTab("assignments") }] : []),
+    ...(inactiveCount > 0 ? [{ icon: UserMinus, tone: "rose" as const, title: "Inactive teachers", detail: `${inactiveCount} teacher records marked inactive`, onClick: () => document.getElementById(window.innerWidth < 640 ? "mobile-teacher-records" : "teacher-records")?.scrollIntoView({ behavior: "smooth" }) }] : []),
+    ...(missingLoginCount > 0 ? [{ icon: KeyRound, tone: "blue" as const, title: "Teacher accounts to set up", detail: `${missingLoginCount} teachers without login access`, onClick: () => document.getElementById(window.innerWidth < 640 ? "mobile-teacher-records" : "teacher-records")?.scrollIntoView({ behavior: "smooth" }) }] : []),
+  ];
+
   if (loading) return <TeachersSkeleton />;
   if (!authenticated)
     return (
@@ -606,16 +616,13 @@ export default function TeachersPage() {
               <section className="mt-5 sm:mt-8" aria-labelledby="teacher-attention-title">
                 <div className="flex items-center justify-between gap-2">
                   <h2 id="teacher-attention-title" className="flex items-center gap-2 text-lg font-extrabold text-slate-950 dark:text-white sm:text-xl"><TriangleAlert className="h-5 w-5 fill-red-500 text-white" aria-hidden="true" /> Needs Attention</h2>
-                  <button type="button" onClick={() => setPageTab("more")} className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">View all <ChevronRight className="h-4 w-4" /></button>
+                  {!overviewLoading && !overviewError && attentionItems.length > 3 && <button type="button" onClick={() => setShowAllAttention((value) => !value)} aria-expanded={showAllAttention} className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">{showAllAttention ? "Show less" : "View all"} <ChevronRight className="h-4 w-4" /></button>}
                 </div>
-                {overviewLoading ? <p className="py-4 text-sm text-slate-500">Loading teacher updates…</p> : overviewError ? <p className="py-4 text-sm text-slate-500">Teacher updates are unavailable.</p> : (
+                {overviewLoading ? <p className="py-4 text-sm text-slate-500">Loading teacher updates…</p> : overviewError ? <p className="py-4 text-sm text-slate-500">Teacher updates are unavailable.</p> : attentionItems.length ? (
                   <div className="mt-2 divide-y divide-slate-200 dark:divide-slate-800">
-                    {(overview?.pendingLeave ?? 0) > 0 && <AttentionRow icon={ClipboardClock} tone="amber" title="Pending leave requests" detail={`${overview?.pendingLeave} require approval`} onClick={() => setPageTab("leave")} />}
-                    {(overview?.unassigned ?? 0) > 0 && <AttentionRow icon={UserRound} tone="violet" title="Teachers unassigned" detail={`${overview?.unassigned} not assigned to a class`} onClick={() => setPageTab("assignments")} />}
-                    {teachers.some((teacher) => teacher.employment_status === "inactive") && <AttentionRow icon={UserMinus} tone="rose" title="Inactive teachers" detail={`${teachers.filter((teacher) => teacher.employment_status === "inactive").length} teacher records marked inactive`} onClick={() => document.getElementById("mobile-teacher-records")?.scrollIntoView({ behavior: "smooth" })} />}
-                    {!overview?.pendingLeave && !overview?.unassigned && !teachers.some((teacher) => teacher.employment_status === "inactive") && <p className="py-4 text-sm text-slate-500">No teacher items need attention right now.</p>}
+                    {(showAllAttention ? attentionItems : attentionItems.slice(0, 3)).map((item) => <AttentionRow key={item.title} {...item} />)}
                   </div>
-                )}
+                ) : <p className="py-4 text-sm text-slate-600 dark:text-slate-300">Nothing left to review — you’re all caught up.</p>}
               </section>
             </>}
 
@@ -711,7 +718,7 @@ export default function TeachersPage() {
             {pageTab === "teachers" && <section id="mobile-teacher-records" className="mt-5 scroll-mt-20 sm:hidden" aria-labelledby="mobile-teachers-title">
               <div className="flex items-center justify-between">
                 <h2 id="mobile-teachers-title" className="text-xl font-extrabold text-slate-950 dark:text-white">Teachers</h2>
-                <button type="button" onClick={() => setShowAllMobileTeachers((value) => !value)} className="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">{showAllMobileTeachers ? "Show less" : "View all"}<ChevronRight className="h-4 w-4" /></button>
+                {filteredTeachers.length > 6 && <button type="button" onClick={() => setShowAllMobileTeachers((value) => !value)} aria-expanded={showAllMobileTeachers} className="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">{showAllMobileTeachers ? "Show less" : "View all"}<ChevronRight className="h-4 w-4" /></button>}
               </div>
               <div className="mt-2 flex gap-2">
                 <label className="relative min-w-0 flex-1">
@@ -723,7 +730,7 @@ export default function TeachersPage() {
               </div>
               {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={subject} onChange={setSubject} label="Department" options={subjects} /><Select value={account} onChange={(value) => setAccount(value as typeof account)} label="Account" options={["All", "Active", "Not created"]} /></div>}
               {filteredTeachers.length ? <div className="mt-2 grid grid-cols-2 gap-2">
-                {(showAllMobileTeachers || search || subject !== "All" || account !== "All" ? filteredTeachers : filteredTeachers.slice(0, 4)).map((teacher, index) => <MobileTeacherCard key={teacher.id} teacher={teacher} index={index} status={overview?.statuses[teacher.id] || ""} onClick={() => setSelectedTeacher(teacher)} />)}
+                {(showAllMobileTeachers || search || subject !== "All" || account !== "All" ? filteredTeachers : filteredTeachers.slice(0, 6)).map((teacher, index) => <MobileTeacherCard key={teacher.id} teacher={teacher} index={index} status={overview?.statuses[teacher.id] || ""} onClick={() => setSelectedTeacher(teacher)} />)}
               </div> : <p className="py-5 text-sm text-slate-500">No teachers match your search.</p>}
               <button type="button" onClick={openCreateForm} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add teacher</button>
             </section>}
