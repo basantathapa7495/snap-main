@@ -399,14 +399,15 @@ export default function TeachersPage() {
 
   async function toggleTeacherStatus(teacher: Teacher) {
     if (!schoolId) return;
-    const nextStatus = teacher.employment_status === "inactive" ? "active" : "inactive";
+    const nextStatus = teacher.left_at || teacher.employment_status === "inactive" ? "active" : "inactive";
     const { error: statusError } = await supabase
       .from("teachers")
-      .update({ employment_status: nextStatus })
+      .update({ employment_status: nextStatus, left_at: nextStatus === "active" ? null : teacher.left_at })
       .eq("id", teacher.id)
       .eq("school_id", schoolId);
     if (statusError) {
       setError(statusError.message);
+      setSelectedTeacher(null);
       return;
     }
     setSelectedTeacher(null);
@@ -418,18 +419,18 @@ export default function TeachersPage() {
     if (!schoolId) return;
     if (teacher.user_id) {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { setError("Sign in again before marking this teacher as left."); return; }
+      if (!session) { setError("Sign in again before marking this teacher as left."); setSelectedTeacher(null); return; }
       const response = await fetch("/api/teacher-profile-account", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
         body: JSON.stringify({ teacherId: teacher.id, action: "suspend" }),
       });
-      if (!response.ok) { setError("Portal access could not be removed; the teacher record was not changed."); return; }
+      if (!response.ok) { setError("Portal access could not be removed; the teacher record was not changed."); setSelectedTeacher(null); return; }
     }
     const { error: statusError } = await supabase.from("teachers")
       .update({ employment_status: "inactive", left_at: todayInNepal() })
       .eq("id", teacher.id).eq("school_id", schoolId);
-    if (statusError) { setError(teacher.user_id ? `Portal access was suspended, but the teacher record could not be updated: ${statusError.message}` : statusError.message); return; }
+    if (statusError) { setError(teacher.user_id ? `Portal access was suspended, but the teacher record could not be updated: ${statusError.message}` : statusError.message); setSelectedTeacher(null); return; }
     setSelectedTeacher(null);
     setNotice(`${teacher.name} marked as having left the school.`);
     setRefreshKey((value) => value + 1);
