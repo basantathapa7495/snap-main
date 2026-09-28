@@ -557,11 +557,11 @@ export default function TeachersPage() {
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-white dark:bg-slate-950">
       <Sidebar />
-      <div className="relative z-10 flex min-h-screen flex-col lg:ml-64">
-        <TopBar />
-        <main className="flex-1 px-0 pb-28 pt-16 sm:px-6 sm:pt-[76px] lg:px-8">
+      <div className="relative z-10 flex min-h-screen flex-col pt-14 lg:ml-64 lg:pt-0">
+        <div className="hidden lg:block"><TopBar /></div>
+        <main className="flex-1 px-3.5 pb-28 pt-3 sm:px-6 sm:pt-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="relative flex min-h-[112px] items-center overflow-hidden bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-3 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:min-h-[160px] sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-8 sm:dark:border-blue-900/60">
+            <header className="relative flex min-h-[112px] items-center overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-3 dark:border-blue-900/60 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:min-h-[160px] sm:px-8 sm:py-8">
               <div className="pointer-events-none absolute inset-y-0 right-0 w-[52%] overflow-hidden" aria-hidden="true">
                 <div className="absolute -bottom-16 right-[-15%] h-40 w-[115%] rounded-[50%] bg-blue-300/20 dark:bg-blue-300/10" />
                 <p className="absolute left-[2%] top-[35%] hidden -rotate-6 text-center font-serif text-xs italic leading-snug text-blue-900/80 dark:text-blue-200/60 min-[420px]:block lg:text-sm">Empowered<br />Teachers<br />Brighter Futures</p>
@@ -573,7 +573,7 @@ export default function TeachersPage() {
               </div>
             </header>
 
-            <nav aria-label="Teachers sections" className="mx-3 mt-1 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700 sm:mx-0 sm:mt-3 sm:gap-4">
+            <nav aria-label="Teachers sections" className="mt-1 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700 sm:mt-3 sm:gap-4">
               {([
                 ["teachers", "Overview"],
                 ["attendance", "Attendance"],
@@ -595,7 +595,7 @@ export default function TeachersPage() {
 
             {pageTab === "teachers" && <>
               {overviewError && <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-300">{overviewError}</p>}
-              <section className="mx-3 mt-2 grid grid-cols-3 gap-1.5 sm:mx-0 sm:mt-4 sm:gap-3" aria-label="Teacher overview">
+              <section className="mt-2 grid grid-cols-3 gap-1.5 sm:mt-4 sm:gap-3" aria-label="Teacher overview">
                 <TeacherStat icon={UsersRound} label="Total Teachers" value={teachers.length} tone="blue" onClick={() => document.getElementById(window.innerWidth < 640 ? "mobile-teacher-records" : "teacher-records")?.scrollIntoView({ behavior: "smooth" })} />
                 <TeacherStat icon={UserCheck} label="Present Today" value={overviewLoading || overviewError ? null : overview?.present ?? null} tone="emerald" onClick={() => setPageTab("attendance")} />
                 <TeacherStat icon={UserMinus} label="Absent" value={overviewLoading || overviewError ? null : overview?.absent ?? null} tone="rose" onClick={() => setPageTab("attendance")} />
@@ -603,7 +603,7 @@ export default function TeachersPage() {
                 <TeacherStat icon={UserRound} label="Unassigned Teachers" value={overviewLoading || overviewError ? null : overview?.unassigned ?? null} tone="violet" onClick={() => setPageTab("assignments")} />
                 <TeacherStat icon={ClipboardClock} label="Pending Leave Requests" value={overviewLoading || overviewError ? null : overview?.pendingLeave ?? null} tone="amber" onClick={() => setPageTab("leave")} />
               </section>
-              <section className="mx-3 mt-5 sm:mx-0 sm:mt-8" aria-labelledby="teacher-attention-title">
+              <section className="mt-5 sm:mt-8" aria-labelledby="teacher-attention-title">
                 <div className="flex items-center justify-between gap-2">
                   <h2 id="teacher-attention-title" className="flex items-center gap-2 text-lg font-extrabold text-slate-950 dark:text-white sm:text-xl"><TriangleAlert className="h-5 w-5 fill-red-500 text-white" aria-hidden="true" /> Needs Attention</h2>
                   <button type="button" onClick={() => setPageTab("more")} className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">View all <ChevronRight className="h-4 w-4" /></button>
@@ -708,7 +708,7 @@ export default function TeachersPage() {
               </section>
             )}
 
-            {pageTab === "teachers" && <section id="mobile-teacher-records" className="mx-3 mt-5 scroll-mt-20 sm:hidden" aria-labelledby="mobile-teachers-title">
+            {pageTab === "teachers" && <section id="mobile-teacher-records" className="mt-5 scroll-mt-20 sm:hidden" aria-labelledby="mobile-teachers-title">
               <div className="flex items-center justify-between">
                 <h2 id="mobile-teachers-title" className="text-xl font-extrabold text-slate-950 dark:text-white">Teachers</h2>
                 <button type="button" onClick={() => setShowAllMobileTeachers((value) => !value)} className="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">{showAllMobileTeachers ? "Show less" : "View all"}<ChevronRight className="h-4 w-4" /></button>
