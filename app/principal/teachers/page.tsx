@@ -787,10 +787,10 @@ export default function TeachersPage() {
         </main>
       </div>
 
-      <nav aria-label="Principal mobile navigation" className="fixed inset-x-0 bottom-0 z-30 flex h-[68px] items-center justify-around border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-950 lg:hidden">
+      {!selectedTeacher && <nav aria-label="Principal mobile navigation" className="fixed inset-x-0 bottom-0 z-30 flex h-[68px] items-center justify-around border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-950 lg:hidden">
         {([{ href: "/principal", label: "Dashboard", Icon: LayoutDashboard }, { href: "/principal/students", label: "Students", Icon: UsersRound }, { href: "/principal/teachers", label: "Teachers", Icon: UserRound }, { href: "/principal/classes", label: "Classes", Icon: School }] as const).map(({ href, label, Icon }) => <Link key={href} href={href} aria-current={label === "Teachers" ? "page" : undefined} className={`flex min-w-0 flex-col items-center gap-0.5 text-[10px] ${label === "Teachers" ? "font-bold text-blue-700 dark:text-blue-300" : "text-slate-600 dark:text-slate-300"}`}><Icon className="h-5 w-5" aria-hidden="true" />{label}</Link>)}
         <button type="button" onClick={() => document.querySelector<HTMLButtonElement>('button[aria-label="Open sidebar"]')?.click()} className="flex flex-col items-center gap-0.5 text-[10px] text-slate-600 dark:text-slate-300"><MoreHorizontal className="h-5 w-5" aria-hidden="true" />More</button>
-      </nav>
+      </nav>}
 
       {selectedTeacher && (
         <TeacherProfile
