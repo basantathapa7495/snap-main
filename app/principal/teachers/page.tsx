@@ -13,17 +13,12 @@ import {
   Edit3,
   Eye,
   EyeOff,
-  GraduationCap,
   KeyRound,
-  Mail,
-  MapPin,
-  Phone,
   Plus,
   ClipboardClock,
   RefreshCw,
   Search,
   ShieldCheck,
-  Trash2,
   UserCheck,
   UserMinus,
   UserPlus,
@@ -40,6 +35,7 @@ import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
 import TeacherOperationsPanel from "@/components/TeacherOperationsPanel";
 import SchoolJoiningControls from "@/components/SchoolJoiningControls";
+import TeacherProfile from "@/components/TeacherProfile";
 import AccountRequestsPanel from "@/components/AccountRequestsPanel";
 import { supabase } from "@/lib/supabase";
 
@@ -59,6 +55,8 @@ type Teacher = {
   joining_date: string | null;
   date_of_birth: string | null;
   employment_status: string | null;
+  employee_id: string | null;
+  left_at: string | null;
 };
 
 type TemporaryCredential = {
@@ -80,6 +78,7 @@ type TeacherForm = {
   joining_date: string;
   date_of_birth: string;
   employment_status: string;
+  employee_id: string;
 };
 
 const emptyForm: TeacherForm = {
@@ -94,6 +93,7 @@ const emptyForm: TeacherForm = {
   joining_date: "",
   date_of_birth: "",
   employment_status: "active",
+  employee_id: "",
 };
 
 type TeacherOverview = {
@@ -212,7 +212,7 @@ export default function TeachersPage() {
         const { data, error: teachersError } = await supabase
           .from("teachers")
           .select(
-            "id, school_id, name, subject, phone, email, qualification, address, salary, created_at, user_id, department, joining_date, date_of_birth, employment_status",
+            "id, school_id, name, subject, phone, email, qualification, address, salary, created_at, user_id, department, joining_date, date_of_birth, employment_status, employee_id, left_at",
           )
           .eq("school_id", profile.school_id)
           .order("created_at", { ascending: false });
@@ -269,7 +269,7 @@ export default function TeachersPage() {
         setOverviewError("Teacher overview could not be refreshed.");
         setOverview(null);
       } else {
-        const active = teachers.filter((teacher) => teacher.employment_status !== "inactive");
+        const active = teachers.filter((teacher) => teacher.employment_status !== "inactive" && !teacher.left_at);
         const statuses = new Map((attendance.data || []).map((row) => [row.teacher_id, row.status]));
         const approvedLeaveIds = new Set((leaves.data || []).map((row) => row.teacher_id));
         const assignedIds = new Set([
@@ -342,6 +342,7 @@ export default function TeachersPage() {
       joining_date: teacher.joining_date || "",
       date_of_birth: teacher.date_of_birth || "",
       employment_status: teacher.employment_status || "active",
+      employee_id: teacher.employee_id || "",
     });
     setSelectedTeacher(null);
     setError("");
@@ -366,6 +367,7 @@ export default function TeachersPage() {
       joining_date: form.joining_date || null,
       date_of_birth: form.date_of_birth || null,
       employment_status: form.employment_status,
+      employee_id: form.employee_id.trim() || null,
     };
     try {
       const result = editingTeacher
@@ -395,31 +397,6 @@ export default function TeachersPage() {
     }
   }
 
-  async function deleteTeacher(teacher: Teacher) {
-    if (!schoolId) return;
-    if (teacher.user_id) {
-      setError(
-        "Remove or disable this teacher’s login account before deleting the teacher record.",
-      );
-      return;
-    }
-    if (!window.confirm(`Delete ${teacher.name}? This cannot be undone.`))
-      return;
-    const { error: deleteError } = await supabase
-      .from("teachers")
-      .delete()
-      .eq("id", teacher.id)
-      .eq("school_id", schoolId);
-    if (deleteError) {
-      console.error("Teacher delete error", deleteError);
-      setError(deleteError.message);
-      return;
-    }
-    setSelectedTeacher(null);
-    setNotice("Teacher deleted.");
-    setRefreshKey((value) => value + 1);
-  }
-
   async function toggleTeacherStatus(teacher: Teacher) {
     if (!schoolId) return;
     const nextStatus = teacher.employment_status === "inactive" ? "active" : "inactive";
@@ -434,6 +411,27 @@ export default function TeachersPage() {
     }
     setSelectedTeacher(null);
     setNotice(nextStatus === "inactive" ? "Teacher deactivated." : "Teacher reactivated.");
+    setRefreshKey((value) => value + 1);
+  }
+
+  async function markTeacherLeft(teacher: Teacher) {
+    if (!schoolId) return;
+    if (teacher.user_id) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { setError("Sign in again before marking this teacher as left."); return; }
+      const response = await fetch("/api/teacher-profile-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ teacherId: teacher.id, action: "suspend" }),
+      });
+      if (!response.ok) { setError("Portal access could not be removed; the teacher record was not changed."); return; }
+    }
+    const { error: statusError } = await supabase.from("teachers")
+      .update({ employment_status: "inactive", left_at: todayInNepal() })
+      .eq("id", teacher.id).eq("school_id", schoolId);
+    if (statusError) { setError(teacher.user_id ? `Portal access was suspended, but the teacher record could not be updated: ${statusError.message}` : statusError.message); return; }
+    setSelectedTeacher(null);
+    setNotice(`${teacher.name} marked as having left the school.`);
     setRefreshKey((value) => value + 1);
   }
 
@@ -794,13 +792,14 @@ export default function TeachersPage() {
       </nav>
 
       {selectedTeacher && (
-        <TeacherDetails
+        <TeacherProfile
           teacher={selectedTeacher}
           onClose={() => setSelectedTeacher(null)}
           onEdit={openEditForm}
-          onDelete={deleteTeacher}
           onToggleStatus={toggleTeacherStatus}
+          onMarkLeft={markTeacherLeft}
           onLogin={openLogin}
+          onReassign={() => { setSelectedTeacher(null); setPageTab("assignments"); }}
         />
       )}
       {formOpen && (
@@ -955,13 +954,6 @@ type TeacherActions = {
   onView: (teacher: Teacher) => void;
   onLogin: (teacher: Teacher) => void;
 };
-function Avatar({ name }: { name: string }) {
-  return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">
-      {initials(name || "Teacher")}
-    </span>
-  );
-}
 function AccountBadge({ active }: { active: boolean }) {
   return (
     <span
@@ -974,111 +966,6 @@ function AccountBadge({ active }: { active: boolean }) {
       )}
       {active ? "Active" : "Not created"}
     </span>
-  );
-}
-
-function TeacherDetails({
-  teacher,
-  onClose,
-  onEdit,
-  onDelete,
-  onToggleStatus,
-  onLogin,
-}: {
-  teacher: Teacher;
-  onClose: () => void;
-  onEdit: (teacher: Teacher) => void;
-  onDelete: (teacher: Teacher) => void;
-  onToggleStatus: (teacher: Teacher) => void;
-  onLogin: (teacher: Teacher) => void;
-}) {
-  return (
-    <Modal onClose={onClose} width="max-w-lg">
-      <div className="flex items-start justify-between border-b border-slate-100 p-6">
-        <div className="flex gap-3">
-          <Avatar name={teacher.name} />
-          <div>
-            <h2 className="text-lg font-bold text-slate-950">{teacher.name}</h2>
-            <p className="text-sm text-slate-500">
-              {teacher.subject || "Subject not assigned"}
-            </p>
-          </div>
-        </div>
-        <Close onClick={onClose} />
-      </div>
-      <div className="p-6">
-        <AccountBadge active={Boolean(teacher.user_id)} />
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <Info icon={Phone} label="Phone" value={teacher.phone} />
-          <Info icon={Mail} label="Email" value={teacher.email} />
-          <Info
-            icon={GraduationCap}
-            label="Qualification"
-            value={teacher.qualification}
-          />
-          <Info icon={MapPin} label="Address" value={teacher.address} />
-          <Info icon={UsersRound} label="Department" value={teacher.department} />
-          <Info icon={CalendarDays} label="Joining date" value={teacher.joining_date} />
-        </div>
-        <div className="mt-6 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => onToggleStatus(teacher)}
-            className="inline-flex items-center gap-2 rounded-xl border border-amber-200 px-4 py-2.5 text-sm font-semibold text-amber-700 hover:bg-amber-50"
-          >
-            {teacher.employment_status === "inactive" ? "Reactivate" : "Deactivate"}
-          </button>
-          <button
-            type="button"
-            onClick={() => onEdit(teacher)}
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"
-          >
-            <Edit3 className="h-4 w-4" />
-            Edit details
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              onLogin(teacher);
-            }}
-            className="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-4 py-2.5 text-sm font-semibold text-blue-700"
-          >
-            <KeyRound className="h-4 w-4" />
-            {teacher.user_id ? "Reset access" : "Create login"}
-          </button>
-          <button
-            type="button"
-            onClick={() => onDelete(teacher)}
-            className="ml-auto inline-flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-function Info({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string | null;
-}) {
-  return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-      <p className="flex items-center gap-1.5 text-xs text-slate-400">
-        <Icon className="h-3.5 w-3.5" />
-        {label}
-      </p>
-      <p className="mt-1 truncate text-sm font-semibold text-slate-800">
-        {value || "Not added"}
-      </p>
-    </div>
   );
 }
 
@@ -1131,6 +1018,11 @@ function TeacherFormModal({
             label="Department"
             value={form.department}
             onChange={(value) => field("department", value)}
+          />
+          <Field
+            label="Employee ID (optional)"
+            value={form.employee_id}
+            onChange={(value) => field("employee_id", value)}
           />
           <Field
             label="Phone"
