@@ -5,14 +5,12 @@ import {
   AlertCircle,
   BookOpen,
   CheckCircle2,
-  GraduationCap,
   Plus,
   Search,
   UserRound,
   Users,
   X,
   ChevronDown,
-  CalendarDays,
 } from "lucide-react";
 import Link from "next/link";
 import NepaliDate from "nepali-date-converter";
@@ -154,7 +152,7 @@ export default function ClassesPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState("");
   const currentYear = Number(new NepaliDate(new Date()).format("YYYY"));
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const selectedYear = currentYear;
   const [expandedClass, setExpandedClass] = useState<string | null>(null);
   const [classModalOpen, setClassModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<SchoolClass | null>(null);
@@ -247,7 +245,6 @@ export default function ClassesPage() {
   }, [refreshKey]);
 
   const yearClasses = useMemo(() => classes.filter((item) => item.academicYear === selectedYear), [classes, selectedYear]);
-  const years = useMemo(() => Array.from(new Set([currentYear, ...classes.map((item) => item.academicYear)])).sort((a, b) => b - a), [classes, currentYear]);
   const filteredClasses = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -412,27 +409,6 @@ export default function ClassesPage() {
     setRefreshKey((value) => value + 1);
   }
 
-  async function deleteClass(schoolClass: SchoolClass) {
-    if (schoolClass.students > 0) { setError("Move students out of this class before archiving it."); return; }
-    if (!schoolId || !window.confirm(
-      `Archive ${schoolClass.name} and its sections? Their history will be kept.`,
-    )) return;
-
-    setError("");
-    const ids = Array.from(new Set([
-      schoolClass.id,
-      ...schoolClass.sections.map((section) => section.id),
-    ]));
-    const { error: deleteError } = await supabase
-      .from("classes").update({ archived_at: new Date().toISOString() }).in("id", ids).eq("school_id", schoolId);
-    if (deleteError) {
-      setError(deleteError.message);
-      return;
-    }
-    showNotice(`${schoolClass.name} archived.`);
-    setRefreshKey((value) => value + 1);
-  }
-
   const hasFilters = Boolean(search.trim());
 
   if (loading) return <ClassesSkeleton />;
@@ -461,9 +437,8 @@ export default function ClassesPage() {
 
         <main className="flex-1 px-3.5 pb-28 pt-7 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="relative flex min-h-[112px] items-center overflow-hidden rounded-2xl bg-gradient-to-r from-[#d9edff] via-[#eaf5ff] to-[#d9edff] px-3.5 py-3 dark:from-blue-950 dark:via-slate-900 dark:to-blue-950 sm:min-h-[150px] sm:px-8">
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-300/45 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300 sm:h-20 sm:w-20"><GraduationCap className="h-9 w-9 sm:h-12 sm:w-12" /></span>
-              <div className="relative z-10 ml-3 min-w-0 sm:ml-6"><h1 className="text-xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-3xl">Classes &amp; Sections</h1><p className="mt-1 max-w-sm text-xs leading-4 text-slate-600 dark:text-slate-300 sm:text-sm">Manage classes, sections and student placement.</p></div>
+            <header className="relative -mx-3.5 flex min-h-[112px] items-center overflow-hidden bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-3 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:min-h-[160px] sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-8 sm:dark:border-blue-900/60">
+              <div className="relative z-10 max-w-[65%]"><h1 className="text-[1.55rem] font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">Classes &amp; Sections</h1><p className="mt-1 max-w-sm text-xs leading-4 text-slate-700 dark:text-blue-100 sm:text-base">Manage classes, sections and student placement.</p></div>
               <svg aria-hidden="true" viewBox="0 0 150 105" className="pointer-events-none absolute bottom-0 right-0 hidden h-[90%] w-28 text-blue-500 opacity-55 min-[430px]:block sm:w-44"><path d="M6 54 42 21l35 33v44H6zm65 3 26-42 27 42v41H71z" fill="currentColor" opacity=".12"/><path d="M25 72h16v26H25zm72-9h12v35H97z" fill="currentColor" opacity=".25"/><path d="M26 53h9m58 0h8M100 29v-9m-12 9h24" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/><path d="M57 88h78v10H57zm10-15h66v12H67zm12-16h48v12H79z" fill="currentColor" opacity=".38"/><path d="M77 70h58M64 85h72" stroke="white" strokeWidth="2" opacity=".7"/></svg>
             </header>
 
@@ -482,15 +457,10 @@ export default function ClassesPage() {
               <button type="button" onClick={() => { setError(""); setEditingClass(null); setClassName(""); setClassTeacherId(""); setClassModalOpen(true); }} className="inline-flex h-11 shrink-0 items-center gap-1 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700 sm:px-5 sm:text-sm"><Plus className="h-4 w-4" /> Add</button>
             </div>
 
-            <label className="mt-3 flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 sm:text-sm"><CalendarDays className="h-4 w-4 text-blue-600" />Academic Year:
-              <select aria-label="Academic year" value={selectedYear} onChange={(event) => { setSelectedYear(Number(event.target.value)); setExpandedClass(null); }} className="min-w-0 flex-1 appearance-none bg-transparent text-xs font-semibold outline-none dark:text-white sm:text-sm">{years.map((year) => <option key={year} value={year}>{year} / {String((year + 1) % 100).padStart(2, "0")}</option>)}</select><ChevronDown className="h-4 w-4 text-slate-500" />
-            </label>
-            {selectedYear !== currentYear && <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Student placement is stored for the current year only; historical student totals are unavailable.</p>}
-
             <section className="mt-5" aria-label="All classes">
               <div className="mb-2 flex items-end justify-between"><h2 className="text-xl font-extrabold text-slate-950 dark:text-white">All Classes</h2><span className="text-xs text-slate-500 dark:text-slate-400">{filteredClasses.length} classes</span></div>
               {filteredClasses.length === 0 ? <EmptyState filtered={hasFilters} onAdd={() => { setEditingClass(null); setClassName(""); setClassTeacherId(""); setClassModalOpen(true); }} /> :
-                <div className="space-y-2.5">{filteredClasses.map((schoolClass) => <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24"><ClassCard schoolClass={schoolClass} expanded={(expandedClass === null && filteredClasses[0]?.id === schoolClass.id) || expandedClass === schoolClass.id || (Boolean(search.trim()) && (schoolClass.sections.some((section) => section.name.toLowerCase().includes(search.toLowerCase()) || section.teacher?.toLowerCase().includes(search.toLowerCase()))))} onToggle={() => setExpandedClass((current) => (current === schoolClass.id || (current === null && filteredClasses[0]?.id === schoolClass.id)) ? "" : schoolClass.id)} showStudents={selectedYear === currentYear} onAddSection={openAddSection} onEditClass={(item) => { setError(""); setEditingClass(item); setClassName(item.name); setClassTeacherId(item.teacherId || ""); setClassModalOpen(true); }} onEditSection={openEditSection} onDeleteSection={deleteSection} onDeleteClass={deleteClass} /></div>)}</div>}
+                <div className="space-y-2.5">{filteredClasses.map((schoolClass) => <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24"><ClassCard schoolClass={schoolClass} expanded={(expandedClass === null && filteredClasses[0]?.id === schoolClass.id) || expandedClass === schoolClass.id || (Boolean(search.trim()) && (schoolClass.sections.some((section) => section.name.toLowerCase().includes(search.toLowerCase()) || section.teacher?.toLowerCase().includes(search.toLowerCase()))))} onToggle={() => setExpandedClass((current) => (current === schoolClass.id || (current === null && filteredClasses[0]?.id === schoolClass.id)) ? "" : schoolClass.id)} showStudents onAddSection={openAddSection} onEditClass={(item) => { setError(""); setEditingClass(item); setClassName(item.name); setClassTeacherId(item.teacherId || ""); setClassModalOpen(true); }} onEditSection={openEditSection} onDeleteSection={deleteSection} /></div>)}</div>}
             </section>
           </div>
         </main>
@@ -580,13 +550,12 @@ function StatCard({ icon: Icon, label, value, tone }: { icon: React.ElementType;
   </div>;
 }
 
-function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection, onEditClass, onEditSection, onDeleteSection, onDeleteClass }: {
+function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection, onEditClass, onEditSection, onDeleteSection }: {
   schoolClass: SchoolClass; expanded: boolean; onToggle: () => void; showStudents: boolean;
   onAddSection: (schoolClass: SchoolClass) => void;
   onEditClass: (schoolClass: SchoolClass) => void;
   onEditSection: (schoolClass: SchoolClass, section: Section) => void;
   onDeleteSection: (classId: string, section: Section) => void;
-  onDeleteClass: (schoolClass: SchoolClass) => void;
 }) {
   const displayName = schoolClass.name.replace(/^Class\s+(\d+)$/i, "Grade $1");
   return <article className={`rounded-2xl border shadow-sm ${expanded ? "border-blue-200 bg-blue-50/70 dark:border-blue-800 dark:bg-blue-950/50" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"}`}>
@@ -609,7 +578,7 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection
           <button type="button" onClick={() => onDeleteSection(schoolClass.id, section)} className="rounded-lg px-1 py-1.5 text-rose-600 dark:text-rose-300">Archive</button>
         </div>
       </div>)}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs font-semibold"><button type="button" onClick={() => onAddSection(schoolClass)} className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add section</button><span className="flex gap-3"><button type="button" onClick={() => onEditClass(schoolClass)} className="text-blue-700 dark:text-blue-300">Edit class</button><button type="button" onClick={() => onDeleteClass(schoolClass)} className="text-rose-600 dark:text-rose-300">Archive class</button></span></div>
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs font-semibold"><button type="button" onClick={() => onAddSection(schoolClass)} className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add section</button><button type="button" onClick={() => onEditClass(schoolClass)} className="text-blue-700 dark:text-blue-300">Edit class</button></div>
     </div>}
   </article>;
 }
