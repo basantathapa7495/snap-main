@@ -238,7 +238,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
         </label>
       </div>
 
-      <div className="grid grid-cols-[1.45fr_repeat(3,minmax(0,1fr))] gap-1.5 sm:grid-cols-[1.25fr_repeat(3,minmax(0,1fr))] sm:gap-3" aria-label="Daily attendance summary">
+      <div className="grid grid-cols-[1.25fr_repeat(3,minmax(0,1fr))] gap-1.5 sm:grid-cols-4 sm:gap-3" aria-label="Daily attendance summary">
         {([
           ["Total Teachers", activeTeachers.length, UsersRound, "border-blue-100 bg-blue-50/70 text-blue-600 dark:border-blue-900 dark:bg-blue-500/10"],
           ["Present", summary.present, UserRound, "border-emerald-100 bg-emerald-50/70 text-emerald-600 dark:border-emerald-900 dark:bg-emerald-500/10"],
