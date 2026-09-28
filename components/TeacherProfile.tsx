@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, Edit3, KeyRound, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ArrowLeft, ChevronDown, Edit3, KeyRound, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export type ProfileTeacher = {
@@ -45,8 +46,10 @@ export default function TeacherProfile({ teacher, onClose, onEdit, onToggleStatu
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    return () => { window.removeEventListener("keydown", closeOnEscape); document.body.style.overflow = previousOverflow; };
   }, [onClose]);
 
   useEffect(() => {
@@ -124,15 +127,20 @@ export default function TeacherProfile({ teacher, onClose, onEdit, onToggleStatu
     finally { setActionLoading(false); }
   }
 
-  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-0 sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-    <section role="dialog" aria-modal="true" aria-labelledby="teacher-profile-title" className="flex h-full w-full max-w-4xl flex-col overflow-hidden bg-white text-slate-900 shadow-2xl dark:bg-slate-950 dark:text-white sm:h-auto sm:max-h-[92vh] sm:rounded-3xl">
-      <div className="shrink-0 border-b border-slate-200 p-4 dark:border-slate-800 sm:p-6">
+  if (typeof document === "undefined") return null;
+  return createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-0 sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <section role="dialog" aria-modal="true" aria-labelledby="teacher-profile-title" className="flex h-[100dvh] w-full max-w-4xl flex-col overflow-hidden bg-white text-slate-900 dark:bg-slate-950 dark:text-white sm:h-auto sm:max-h-[92vh] sm:rounded-3xl sm:shadow-2xl">
+      <div className="flex shrink-0 items-center gap-3 border-b border-slate-200 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] dark:border-slate-800 sm:hidden">
+        <button type="button" onClick={onClose} aria-label="Back to teachers" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"><ArrowLeft className="h-5 w-5" /></button>
+        <div><p className="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">Teachers</p><p className="font-bold">Teacher Profile</p></div>
+      </div>
+      <div className="shrink-0 border-b border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-4 dark:border-slate-800 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 sm:p-6">
         <div className="flex items-start gap-3">
           <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-xl font-extrabold text-blue-700 dark:bg-blue-900 dark:text-blue-200" aria-label={`${teacher.name} avatar`}>{teacher.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</span>
           <div className="min-w-0 flex-1"><h2 id="teacher-profile-title" className="truncate text-xl font-bold sm:text-2xl">{teacher.name}</h2><p className="text-sm text-slate-600 dark:text-slate-300">{teacher.subject ? `${teacher.subject} Teacher` : "Teacher"}{teacher.department ? ` · ${teacher.department}` : ""}</p>
             <div className="mt-2 flex flex-wrap gap-1.5"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${teacher.left_at || teacher.employment_status === "inactive" ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"}`}>{teacher.left_at ? "Left school" : label(teacher.employment_status || "active")}</span><span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-900 dark:text-blue-100">Today: {loading ? "Loading…" : label(todayStatus)}</span></div>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close teacher profile" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-5 w-5" /></button>
+          <button type="button" onClick={onClose} aria-label="Close teacher profile" className="hidden rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 sm:block"><X className="h-5 w-5" /></button>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <button type="button" onClick={() => onEdit(teacher)} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"><Edit3 className="h-4 w-4" /> Edit Profile</button>
@@ -150,7 +158,7 @@ export default function TeacherProfile({ teacher, onClose, onEdit, onToggleStatu
         </div>
       </div>
       <nav aria-label="Teacher profile sections" className="flex shrink-0 gap-1 overflow-x-auto border-b border-slate-200 px-3 dark:border-slate-800 sm:px-6">{(["overview", "attendance", "classes", "leave", "account"] as const).map((item) => <button key={item} type="button" onClick={() => setTab(item)} aria-current={tab === item ? "page" : undefined} className={`shrink-0 border-b-2 px-3 py-3 text-sm font-semibold capitalize ${tab === item ? "border-blue-600 text-blue-700 dark:text-blue-300" : "border-transparent text-slate-500 dark:text-slate-400"}`}>{item}</button>)}</nav>
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 pb-8 sm:p-6">
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-4 pb-[max(2rem,env(safe-area-inset-bottom))] sm:p-6">
         {(error || !teacher.school_id) && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-200">{error || "School information is missing."}</p>}
         {tab === "overview" && <><div className="grid gap-5 md:grid-cols-2"><section><h3 className="text-base font-bold">Personal Information</h3><dl className="mt-2"><Detail title="Full name" value={teacher.name} /><Detail title="Phone" value={teacher.phone} /><Detail title="Email" value={teacher.email} /><Detail title="Address" value={teacher.address} /></dl></section><section><h3 className="text-base font-bold">Employment Details</h3><dl className="mt-2"><Detail title="Department" value={teacher.department} /><Detail title="Employee ID" value={teacher.employee_id} /><Detail title="Joining date" value={displayDate(teacher.joining_date)} /><Detail title="Qualification" value={teacher.qualification} />{teacher.left_at && <Detail title="Left school" value={displayDate(teacher.left_at)} />}</dl></section></div><section><h3 className="text-base font-bold">Quick Summary</h3><div className="mt-2 grid grid-cols-3 gap-2">{[["Attendance", loading ? "—" : attendanceRate],["Classes", loading ? "—" : String(classRows.length)],["Leave days", loading ? "—" : String(approvedLeaveDays)]].map(([title, value]) => <div key={title} className="rounded-xl border border-slate-200 p-3 dark:border-slate-700"><p className="text-xs text-slate-500 dark:text-slate-400">{title}</p><p className="mt-1 text-lg font-bold">{value}</p></div>)}</div><p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Attendance uses recorded present, late and absent days; leave days count approved calendar dates.</p></section></>}
         {tab === "attendance" && <section><h3 className="text-base font-bold">Attendance</h3><div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">{[["Today", loading ? "—" : label(todayStatus)],["This month", `${monthly.filter((r) => ["present", "late"].includes(r.status)).length} attended`],["Late arrivals", String(monthly.filter((r) => r.status === "late").length)],["Absences", String(monthly.filter((r) => r.status === "absent").length)]].map(([title, value]) => <div key={title} className="rounded-xl bg-slate-50 p-3 dark:bg-slate-900"><p className="text-xs text-slate-500">{title}</p><p className="mt-1 text-sm font-bold">{value}</p></div>)}</div><h4 className="mt-5 text-sm font-bold">Recent attendance</h4>{attendance.length ? <div className="mt-2 divide-y divide-slate-200 dark:divide-slate-800">{attendance.slice(0, 30).map((row) => <div key={row.id} className="flex justify-between gap-3 py-2 text-sm"><span>{displayDate(row.attendance_date)}</span><span className="font-semibold">{label(row.status)}{row.check_in ? ` · ${row.check_in.slice(0, 5)}` : ""}</span></div>)}</div> : <p className="mt-3 text-sm text-slate-500">No attendance recorded for this teacher.</p>}</section>}
@@ -159,5 +167,5 @@ export default function TeacherProfile({ teacher, onClose, onEdit, onToggleStatu
         {tab === "account" && <section><h3 className="text-base font-bold">Portal Account</h3><dl className="mt-2"><Detail title="Account status" value={!teacher.user_id ? "Not created" : accountLoading ? "Loading…" : !account ? "Unavailable" : account.suspended ? "Access removed" : "Active"} /><Detail title="Login email" value={account?.email || teacher.email} /><Detail title="Last login" value={!account && teacher.user_id ? "Unavailable" : account?.lastLogin ? new Date(account.lastLogin).toLocaleString() : "No login recorded"} /><Detail title="Access state" value={!teacher.user_id ? "No portal access" : !account ? "Unavailable" : account.suspended ? "Suspended" : "Allowed"} /></dl><button type="button" onClick={() => { onClose(); onLogin(teacher); }} className="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 dark:border-blue-800 dark:text-blue-300"><KeyRound className="h-4 w-4" />{teacher.user_id ? "Reset password" : "Create login"}</button>{teacher.user_id && <button type="button" disabled={actionLoading || accountLoading || !account} onClick={updateAccess} className="ml-2 mt-4 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold disabled:opacity-50 dark:border-slate-700">{account?.suspended ? "Restore access" : "Remove access"}</button>}</section>}
       </div>
     </section>
-  </div>;
+  </div>, document.body);
 }
