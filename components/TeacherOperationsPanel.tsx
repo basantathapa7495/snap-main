@@ -128,15 +128,15 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
 
   return (
     <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-900/5 dark:border-slate-700 dark:bg-[#111B2B]">
-      <div className="border-b border-slate-200 px-4 pt-4 dark:border-slate-700 sm:px-5">
+      {tab !== "attendance" && <div className="border-b border-slate-200 px-4 pt-4 dark:border-slate-700 sm:px-5">
         <div className="flex items-center justify-between gap-3 pb-4">
-          <div><h2 className="text-lg font-extrabold text-slate-950 dark:text-white">{tab === "attendance" ? "Teacher attendance" : "Teacher operations"}</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Attendance, workload, approvals and staff records in one place.</p></div>
+          <div><h2 className="text-lg font-extrabold text-slate-950 dark:text-white">Teacher operations</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Attendance, workload, approvals and staff records in one place.</p></div>
           {loading && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
         </div>
         {showTabs && <div className="flex gap-1 overflow-x-auto pb-0 scrollbar-hide" role="tablist" aria-label="Teacher operations">
           {tabs.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setTab(id)} className={`inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-xs font-bold transition sm:text-sm ${tab === id ? "border-blue-600 text-blue-700" : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-900"}`}><Icon className="h-4 w-4" />{label}</button>)}
         </div>}
-      </div>
+      </div>}
 
       {(error || message) && <div className={`m-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ? <AlertTriangle className="h-4 w-4" /> : <Check className="h-4 w-4" />}<span>{error || message}</span><button className="ml-auto" onClick={() => { setError(""); setMessage(""); }}><X className="h-4 w-4" /></button></div>}
 
