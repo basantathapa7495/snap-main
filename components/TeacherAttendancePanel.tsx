@@ -275,13 +275,12 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
                   <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">{initial(teacher.name)}</span>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{teacher.name}</p>
-                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">{teacher.subject || teacher.department || "Teacher"}</p>
+                    <p className="flex min-w-0 items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400"><span className="truncate">{teacher.subject || teacher.department || "Teacher"}</span>{leaveIds.has(teacher.id) && <span className="shrink-0 text-[11px] font-medium text-amber-700 dark:text-amber-300">Approved leave</span>}</p>
                   </div>
                   {busyTeacher === teacher.id && <Loader2 className="ml-auto h-4 w-4 animate-spin text-teal-600" />}
                   <span className={`ml-auto inline-flex min-w-[68px] shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-bold sm:min-w-[90px] sm:text-xs ${selected ? statusTone[selected] : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"}`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{selected ? selected[0].toUpperCase() + selected.slice(1) : "Unmarked"}</span>
                   {!leaveIds.has(teacher.id) && editable && <ChevronRight className={`h-4 w-4 shrink-0 text-slate-400 transition ${editingTeacher === teacher.id ? "rotate-90" : ""}`} aria-hidden="true" />}
                 </button>
-                {leaveIds.has(teacher.id) && <p className="mt-1 pl-[50px] text-[11px] font-medium text-amber-700 dark:text-amber-300">Approved leave</p>}
                 {editingTeacher === teacher.id && editable && !leaveIds.has(teacher.id) && <div className="mt-2 grid grid-cols-3 gap-2 border-t border-slate-100 pt-2 dark:border-slate-700" aria-label={`Attendance options for ${teacher.name}`}>
                   {statuses.map((value) => <button key={value} type="button" onClick={() => void saveOne(teacher.id, value)} disabled={Boolean(busyTeacher) || busy} aria-pressed={selected === value} className={`min-h-10 rounded-lg px-2 text-xs font-semibold ${selected === value ? statusTone[value] : "bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-300"}`}>{value[0].toUpperCase() + value.slice(1)}</button>)}
                 </div>}
