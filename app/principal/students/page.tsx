@@ -175,6 +175,18 @@ export default function StudentsPage() {
         if (!cancelled) {
           setSchoolId(profile.school_id);
           setStudents((data || []) as Student[]);
+          const filters = new URLSearchParams(window.location.search);
+          const requestedClass = filters.get('class');
+          const requestedSection = filters.get('section');
+          if (requestedClass) {
+            const grade = requestedClass.replace(/^(class|grade)\s+/i, '').trim().toLowerCase();
+            const match = (data || []).find((item) => item.class?.replace(/^(class|grade)\s+/i, '').trim().toLowerCase() === grade);
+            setStudentClass(match?.class || requestedClass);
+          }
+          if (requestedSection) {
+            const match = (data || []).find((item) => item.section?.toLowerCase() === requestedSection.toLowerCase());
+            setSection(match?.section || requestedSection);
+          }
           const selectedId = new URLSearchParams(window.location.search).get('student');
           const match = (data || []).find((item) => item.id === selectedId);
           if (match) {
