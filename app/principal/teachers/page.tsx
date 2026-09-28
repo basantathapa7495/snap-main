@@ -571,7 +571,7 @@ export default function TeachersPage() {
         <div className="hidden lg:block"><TopBar /></div>
         <main className="flex-1 px-3.5 pb-28 pt-3 sm:px-6 sm:pt-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="relative flex min-h-[112px] items-center overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-3 dark:border-blue-900/60 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:min-h-[160px] sm:px-8 sm:py-8">
+            <header className="relative -mx-3.5 flex min-h-[112px] items-center overflow-hidden bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-3 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:min-h-[160px] sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-8 sm:dark:border-blue-900/60">
               <div className="pointer-events-none absolute inset-y-0 right-0 w-[52%] overflow-hidden" aria-hidden="true">
                 <div className="absolute -bottom-16 right-[-15%] h-40 w-[115%] rounded-[50%] bg-blue-300/20 dark:bg-blue-300/10" />
                 <p className="absolute left-[2%] top-[35%] hidden -rotate-6 text-center font-serif text-xs italic leading-snug text-blue-900/80 dark:text-blue-200/60 min-[420px]:block lg:text-sm">Empowered<br />Teachers<br />Brighter Futures</p>
@@ -616,7 +616,7 @@ export default function TeachersPage() {
               <section className="mt-5 sm:mt-8" aria-labelledby="teacher-attention-title">
                 <div className="flex items-center justify-between gap-2">
                   <h2 id="teacher-attention-title" className="flex items-center gap-2 text-lg font-extrabold text-slate-950 dark:text-white sm:text-xl"><TriangleAlert className="h-5 w-5 fill-red-500 text-white" aria-hidden="true" /> Needs Attention</h2>
-                  {!overviewLoading && !overviewError && attentionItems.length > 3 && <button type="button" onClick={() => setShowAllAttention((value) => !value)} aria-expanded={showAllAttention} className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">{showAllAttention ? "Show less" : "View all"} <ChevronRight className="h-4 w-4" /></button>}
+                  <button type="button" onClick={() => setShowAllAttention((value) => !value)} aria-expanded={showAllAttention} className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">{showAllAttention ? "Show less" : "View all"} <ChevronRight className="h-4 w-4" /></button>
                 </div>
                 {overviewLoading ? <p className="py-4 text-sm text-slate-500">Loading teacher updates…</p> : overviewError ? <p className="py-4 text-sm text-slate-500">Teacher updates are unavailable.</p> : attentionItems.length ? (
                   <div className="mt-2 divide-y divide-slate-200 dark:divide-slate-800">
