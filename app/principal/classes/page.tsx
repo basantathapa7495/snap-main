@@ -5,16 +5,17 @@ import {
   AlertCircle,
   BookOpen,
   CheckCircle2,
-  Edit3,
   GraduationCap,
   Plus,
-  RefreshCw,
   Search,
-  Trash2,
   UserRound,
   Users,
   X,
+  ChevronDown,
+  CalendarDays,
 } from "lucide-react";
+import Link from "next/link";
+import NepaliDate from "nepali-date-converter";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
 import { supabase } from "@/lib/supabase";
@@ -40,6 +41,8 @@ type ClassRow = {
   section_name: string | null;
   teacher_id: string | null;
   created_at: string | null;
+  academic_year: number;
+  archived_at: string | null;
 };
 
 type StudentRow = { class: string | null; section: string | null };
@@ -51,6 +54,7 @@ type SchoolClass = {
   teacherId: string | null;
   students: number;
   sections: Section[];
+  academicYear: number;
 };
 
 type SectionForm = {
@@ -70,7 +74,7 @@ function normalize(value: string | null | undefined) {
 function classLabel(row: ClassRow) {
   const value =
     row.class_name || row.class || row.name || row.class_number || "Unnamed class";
-  return /^class\s/i.test(value.trim())
+  return /^(class|grade)\s/i.test(value.trim())
     ? titleCase(value)
     : `Class ${value.trim()}`;
 }
@@ -85,8 +89,8 @@ function buildClasses(
 
   for (const row of rows) {
     const name = classLabel(row);
-    const key = normalize(name);
-    const plainClass = name.replace(/^Class\s+/i, "");
+    const key = `${row.academic_year}:${normalize(name)}`;
+    const plainClass = name.replace(/^(Class|Grade)\s+/i, "");
     const classStudentCount = students.filter((student) =>
       [normalize(name), normalize(plainClass)].includes(normalize(student.class)),
     ).length;
@@ -97,6 +101,7 @@ function buildClasses(
       teacherId: null,
       students: classStudentCount,
       sections: [],
+      academicYear: row.academic_year,
     };
     const sectionName = (row.section_name || row.section || "").trim();
 
@@ -140,28 +145,17 @@ function titleCase(value: string) {
     .join(" ");
 }
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
 export default function ClassesPage() {
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState("");
-  const [assignment, setAssignment] = useState<
-    "All" | "Assigned" | "Unassigned"
-  >("All");
+  const currentYear = Number(new NepaliDate(new Date()).format("YYYY"));
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [expandedClass, setExpandedClass] = useState<string | null>(null);
   const [classModalOpen, setClassModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<SchoolClass | null>(null);
   const [className, setClassName] = useState("");
@@ -183,7 +177,6 @@ export default function ClassesPage() {
     let cancelled = false;
 
     async function loadClasses() {
-      setRefreshing(true);
       setError("");
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -206,8 +199,9 @@ export default function ClassesPage() {
           await Promise.all([
             supabase
               .from("classes")
-              .select("id, school_id, class_name, class, name, class_number, section, section_name, teacher_id, created_at")
+              .select("id, school_id, class_name, class, name, class_number, section, section_name, teacher_id, created_at, academic_year, archived_at")
               .eq("school_id", profile.school_id)
+              .is("archived_at", null)
               .order("created_at", { ascending: true }),
             supabase
               .from("teachers")
@@ -244,7 +238,6 @@ export default function ClassesPage() {
       } finally {
         if (!cancelled) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     }
@@ -253,10 +246,12 @@ export default function ClassesPage() {
     return () => { cancelled = true };
   }, [refreshKey]);
 
+  const yearClasses = useMemo(() => classes.filter((item) => item.academicYear === selectedYear), [classes, selectedYear]);
+  const years = useMemo(() => Array.from(new Set([currentYear, ...classes.map((item) => item.academicYear)])).sort((a, b) => b - a), [classes, currentYear]);
   const filteredClasses = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return classes.filter((schoolClass) => {
+    return yearClasses.filter((schoolClass) => {
       const matchesSearch =
         !query ||
         schoolClass.name.toLowerCase().includes(query) ||
@@ -267,32 +262,21 @@ export default function ClassesPage() {
             section.teacher?.toLowerCase().includes(query),
         );
 
-      const hasAssigned =
-        Boolean(schoolClass.teacherId) ||
-        schoolClass.sections.some((section) => Boolean(section.teacherId));
-      const hasUnassigned =
-        !schoolClass.teacherId ||
-        schoolClass.sections.some((section) => !section.teacherId);
-      const matchesAssignment =
-        assignment === "All" ||
-        (assignment === "Assigned" ? hasAssigned : hasUnassigned);
-
-      return matchesSearch && matchesAssignment;
+      return matchesSearch;
     });
-  }, [assignment, classes, search]);
+  }, [yearClasses, search]);
 
-  const totalSections = classes.reduce(
+  const totalSections = yearClasses.reduce(
     (total, schoolClass) => total + schoolClass.sections.length,
     0,
   );
-  const totalStudents = classes.reduce(
+  const totalStudents = selectedYear === currentYear ? yearClasses.reduce(
     (total, schoolClass) => total + schoolClass.students,
     0,
-  );
-  const unassignedSections = classes.reduce(
+  ) : null;
+  const unassignedSections = yearClasses.reduce(
     (total, schoolClass) =>
       total +
-      (schoolClass.teacherId ? 0 : 1) +
       schoolClass.sections.filter((section) => !section.teacherId).length,
     0,
   );
@@ -308,7 +292,7 @@ export default function ClassesPage() {
     if (!schoolId || !name) return;
 
     if (
-      classes.some(
+      yearClasses.some(
         (item) =>
           item.id !== editingClass?.id &&
           normalize(item.name) === normalize(name),
@@ -317,10 +301,15 @@ export default function ClassesPage() {
       setError("A class with this name already exists.");
       return;
     }
+    if (editingClass && normalize(editingClass.name) !== normalize(name) && editingClass.students > 0) {
+      setError("Move students out of this class before renaming it. Their records use the class name.");
+      return;
+    }
 
     setError("");
     const payload = {
       school_id: schoolId,
+      academic_year: selectedYear,
       class_name: name,
       name,
       class_number: name.replace(/^Class\s+/i, "").trim() || null,
@@ -376,10 +365,15 @@ export default function ClassesPage() {
       setError(`Section ${sectionName} already exists in ${activeClass.name}.`);
       return;
     }
+    if (editingSection && normalize(editingSection.name) !== normalize(sectionName) && editingSection.students > 0) {
+      setError("Move students out of this section before renaming it. Their records use the section name.");
+      return;
+    }
 
     setError("");
     const payload = {
       school_id: schoolId,
+      academic_year: selectedYear,
       class_name: activeClass.name,
       name: activeClass.name,
       class_number: activeClass.name.replace(/^Class\s+/i, "").trim() || null,
@@ -405,21 +399,23 @@ export default function ClassesPage() {
   }
 
   async function deleteSection(_classId: string, section: Section) {
-    if (!schoolId || !window.confirm(`Delete Section ${section.name}?`)) return;
+    if (section.students > 0) { setError("Move students out of this section before archiving it."); return; }
+    if (!schoolId || !window.confirm(`Archive Section ${section.name}? Its history will be kept.`)) return;
     setError("");
     const { error: deleteError } = await supabase
-      .from("classes").delete().eq("id", section.id).eq("school_id", schoolId);
+      .from("classes").update({ archived_at: new Date().toISOString() }).eq("id", section.id).eq("school_id", schoolId);
     if (deleteError) {
       setError(deleteError.message);
       return;
     }
-    showNotice("Section deleted.");
+    showNotice("Section archived.");
     setRefreshKey((value) => value + 1);
   }
 
   async function deleteClass(schoolClass: SchoolClass) {
+    if (schoolClass.students > 0) { setError("Move students out of this class before archiving it."); return; }
     if (!schoolId || !window.confirm(
-      `Delete ${schoolClass.name} and all of its sections? This cannot be undone.`,
+      `Archive ${schoolClass.name} and its sections? Their history will be kept.`,
     )) return;
 
     setError("");
@@ -428,16 +424,16 @@ export default function ClassesPage() {
       ...schoolClass.sections.map((section) => section.id),
     ]));
     const { error: deleteError } = await supabase
-      .from("classes").delete().in("id", ids).eq("school_id", schoolId);
+      .from("classes").update({ archived_at: new Date().toISOString() }).in("id", ids).eq("school_id", schoolId);
     if (deleteError) {
       setError(deleteError.message);
       return;
     }
-    showNotice(`${schoolClass.name} deleted.`);
+    showNotice(`${schoolClass.name} archived.`);
     setRefreshKey((value) => value + 1);
   }
 
-  const hasFilters = Boolean(search.trim()) || assignment !== "All";
+  const hasFilters = Boolean(search.trim());
 
   if (loading) return <ClassesSkeleton />;
 
@@ -458,162 +454,43 @@ export default function ClassesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
 
-        <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+        <main className="flex-1 px-3.5 pb-28 pt-7 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="flex flex-col gap-5 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
-                  Academic setup
-                </p>
-                <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                  Classes &amp; sections
-                </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                  Organize every class, section, class teacher, and student count
-                  from one place.
-                </p>
-              </div>
-              <div className="flex w-full gap-2 sm:w-auto">
-                <button
-                  type="button"
-                  onClick={() => setRefreshKey((value) => value + 1)}
-                  disabled={refreshing}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
-                  aria-label="Refresh classes"
-                >
-                  <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-                  <span className="hidden sm:inline">Refresh</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setError("");
-                    setEditingClass(null);
-                    setClassName("");
-                    setClassTeacherId("");
-                    setClassModalOpen(true);
-                  }}
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:flex-none"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add class
-                </button>
-              </div>
+            <header className="relative flex min-h-[112px] items-center overflow-hidden rounded-2xl bg-gradient-to-r from-blue-100 via-sky-50 to-blue-100 px-4 py-4 dark:from-blue-950 dark:via-slate-900 dark:to-blue-950 sm:min-h-[150px] sm:px-8">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-200/75 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300 sm:h-16 sm:w-16"><GraduationCap className="h-8 w-8" /></span>
+              <div className="relative z-10 ml-3 min-w-0 sm:ml-6"><h1 className="text-xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-3xl">Classes &amp; Sections</h1><p className="mt-1 max-w-sm text-xs leading-4 text-slate-600 dark:text-slate-300 sm:text-sm">Manage classes, sections and student placement.</p></div>
+              <div aria-hidden="true" className="pointer-events-none absolute -bottom-6 -right-3 hidden opacity-30 min-[390px]:block"><BookOpen className="h-28 w-28 text-blue-500" /></div>
             </header>
 
-            {error && (
-              <div
-                role="alert"
-                className="mt-5 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
-              >
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
+            {error && <div role="alert" className="mt-3 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/15 dark:text-red-200"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
+            {notice && <div role="status" className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"><CheckCircle2 className="h-4 w-4 shrink-0" />{notice}</div>}
 
-            {notice && (
-              <div
-                role="status"
-                className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700"
-              >
-                <CheckCircle2 className="h-4 w-4 shrink-0" />
-                {notice}
-              </div>
-            )}
-
-            <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard
-                icon={BookOpen}
-                label="Total classes"
-                value={classes.length}
-                tone="blue"
-              />
-              <StatCard
-                icon={Users}
-                label="Total sections"
-                value={totalSections}
-                tone="violet"
-              />
-              <StatCard
-                icon={GraduationCap}
-                label="Total students"
-                value={totalStudents}
-                tone="emerald"
-              />
-              <StatCard
-                icon={AlertCircle}
-                label="Need teachers"
-                value={unassignedSections}
-                tone="amber"
-              />
+            <section aria-label="Class summary" className="mt-3 grid grid-cols-4 gap-1.5 sm:gap-3">
+              <StatCard icon={BookOpen} label="Classes" value={yearClasses.length} tone="blue" />
+              <StatCard icon={BookOpen} label="Sections" value={totalSections} tone="emerald" />
+              <StatCard icon={Users} label="Students" value={totalStudents} tone="amber" />
+              <StatCard icon={UserRound} label="Unassigned" value={unassignedSections} tone="rose" />
             </section>
 
-            <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-                <div className="relative w-full sm:max-w-md">
-                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search class, section, or teacher..."
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
-                  />
-                </div>
+            <div className="mt-4 flex gap-2">
+              <div className="relative min-w-0 flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search class or teacher..." className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-2 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white sm:text-sm" /></div>
+              <button type="button" onClick={() => { setError(""); setEditingClass(null); setClassName(""); setClassTeacherId(""); setClassModalOpen(true); }} className="inline-flex h-11 shrink-0 items-center gap-1 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700 sm:px-5 sm:text-sm"><Plus className="h-4 w-4" /> Add</button>
+            </div>
 
-                <div className="grid grid-cols-3 rounded-xl bg-slate-100 p-1">
-                  {(["All", "Assigned", "Unassigned"] as const).map((option) => (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => setAssignment(option)}
-                      className={`rounded-lg px-3 py-2 text-xs font-semibold transition sm:px-4 ${
-                        assignment === option
-                          ? "bg-white text-slate-900 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <label className="mt-3 flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 sm:text-sm"><CalendarDays className="h-4 w-4 text-blue-600" />Academic Year:
+              <select aria-label="Academic year" value={selectedYear} onChange={(event) => { setSelectedYear(Number(event.target.value)); setExpandedClass(null); }} className="min-w-0 flex-1 appearance-none bg-transparent text-xs font-semibold outline-none dark:text-white sm:text-sm">{years.map((year) => <option key={year} value={year}>{year} / {String((year + 1) % 100).padStart(2, "0")}</option>)}</select><ChevronDown className="h-4 w-4 text-slate-500" />
+            </label>
+            {selectedYear !== currentYear && <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Student placement is stored for the current year only; historical student totals are unavailable.</p>}
 
-              {filteredClasses.length === 0 ? (
-                <EmptyState
-                  filtered={hasFilters}
-                  onAdd={() => {
-                    setEditingClass(null);
-                    setClassName("");
-                    setClassTeacherId("");
-                    setClassModalOpen(true);
-                  }}
-                />
-              ) : (
-                <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3 sm:p-5">
-                  {filteredClasses.map((schoolClass) => (
-                    <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24 rounded-2xl target:ring-2 target:ring-blue-500"><ClassCard
-                      key={schoolClass.id}
-                      schoolClass={schoolClass}
-                      onAddSection={openAddSection}
-                      onEditClass={(item) => {
-                        setError("");
-                        setEditingClass(item);
-                        setClassName(item.name);
-                        setClassTeacherId(item.teacherId || "");
-                        setClassModalOpen(true);
-                      }}
-                      onEditSection={openEditSection}
-                      onDeleteSection={deleteSection}
-                      onDeleteClass={deleteClass}
-                    /></div>
-                  ))}
-                </div>
-              )}
+            <section className="mt-5" aria-label="All classes">
+              <div className="mb-2 flex items-end justify-between"><h2 className="text-xl font-extrabold text-slate-950 dark:text-white">All Classes</h2><span className="text-xs text-slate-500 dark:text-slate-400">{filteredClasses.length} classes</span></div>
+              {filteredClasses.length === 0 ? <EmptyState filtered={hasFilters} onAdd={() => { setEditingClass(null); setClassName(""); setClassTeacherId(""); setClassModalOpen(true); }} /> :
+                <div className="space-y-2.5">{filteredClasses.map((schoolClass) => <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24"><ClassCard schoolClass={schoolClass} expanded={expandedClass === schoolClass.id || (Boolean(search.trim()) && (schoolClass.sections.some((section) => section.name.toLowerCase().includes(search.toLowerCase()) || section.teacher?.toLowerCase().includes(search.toLowerCase()))))} onToggle={() => setExpandedClass((current) => current === schoolClass.id ? null : schoolClass.id)} showStudents={selectedYear === currentYear} onAddSection={openAddSection} onEditClass={(item) => { setError(""); setEditingClass(item); setClassName(item.name); setClassTeacherId(item.teacherId || ""); setClassModalOpen(true); }} onEditSection={openEditSection} onDeleteSection={deleteSection} onDeleteClass={deleteClass} /></div>)}</div>}
             </section>
           </div>
         </main>
@@ -696,194 +573,45 @@ export default function ClassesPage() {
   );
 }
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-  tone: "blue" | "violet" | "emerald" | "amber";
-}) {
-  const colors = {
-    blue: "bg-blue-50 text-blue-600",
-    violet: "bg-violet-50 text-violet-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-  };
-
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-      <div className="flex items-center gap-3">
-        <span
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${colors[tone]}`}
-        >
-          <Icon className="h-5 w-5" />
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-xs font-medium text-slate-500 sm:text-sm">
-            {label}
-          </p>
-          <p className="mt-0.5 text-xl font-bold tabular-nums text-slate-950 sm:text-2xl">
-            {value.toLocaleString()}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+function StatCard({ icon: Icon, label, value, tone }: { icon: React.ElementType; label: string; value: number | null; tone: "blue" | "emerald" | "amber" | "rose" }) {
+  const tones = { blue: "border-blue-200 text-blue-600 dark:border-blue-800", emerald: "border-emerald-200 text-emerald-600 dark:border-emerald-800", amber: "border-amber-200 text-amber-600 dark:border-amber-800", rose: "border-rose-200 text-rose-600 dark:border-rose-800" };
+  return <div className={`min-w-0 rounded-xl border bg-white px-1.5 py-2 dark:bg-slate-900 sm:px-4 sm:py-3 ${tones[tone]}`}>
+    <Icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /><p className="mt-1 truncate text-[9px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">{label}</p><p className="text-lg font-extrabold leading-none tabular-nums text-slate-950 dark:text-white sm:text-2xl">{value === null ? "—" : value.toLocaleString()}</p>
+  </div>;
 }
 
-function ClassCard({
-  schoolClass,
-  onAddSection,
-  onEditClass,
-  onEditSection,
-  onDeleteSection,
-  onDeleteClass,
-}: {
-  schoolClass: SchoolClass;
+function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection, onEditClass, onEditSection, onDeleteSection, onDeleteClass }: {
+  schoolClass: SchoolClass; expanded: boolean; onToggle: () => void; showStudents: boolean;
   onAddSection: (schoolClass: SchoolClass) => void;
   onEditClass: (schoolClass: SchoolClass) => void;
   onEditSection: (schoolClass: SchoolClass, section: Section) => void;
   onDeleteSection: (classId: string, section: Section) => void;
   onDeleteClass: (schoolClass: SchoolClass) => void;
 }) {
-  const totalStudents = schoolClass.students;
-
-  return (
-    <article className="flex min-h-64 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:border-blue-200 hover:shadow-md">
-      <div className="flex items-start justify-between gap-3 border-b border-slate-100 bg-slate-50/70 p-4">
-        <div className="min-w-0">
-          <h2 className="truncate text-lg font-bold text-slate-950">
-            {schoolClass.name}
-          </h2>
-          <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
-            <span>{schoolClass.sections.length} sections</span>
-            <span aria-hidden="true">·</span>
-            <span>{totalStudents} students</span>
-          </p>
+  const displayName = schoolClass.name.replace(/^Class\s+(\d+)$/i, "Grade $1");
+  return <article className={`rounded-2xl border bg-white shadow-sm dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 dark:border-slate-700"}`}>
+    <button type="button" aria-expanded={expanded} onClick={onToggle} className="flex w-full items-center gap-3 p-3 text-left sm:p-4">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300"><BookOpen className="h-5 w-5" /></span>
+      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-950 dark:text-white sm:text-lg">{displayName}</span><span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{showStudents ? `${schoolClass.students} students` : "Students unavailable"} · {schoolClass.sections.length} sections</span></span>
+      <ChevronDown className={`h-5 w-5 shrink-0 text-slate-500 transition-transform ${expanded ? "rotate-180" : ""}`} />
+    </button>
+    {expanded && <div className="space-y-2 px-2.5 pb-3 sm:px-4 sm:pb-4">
+      {schoolClass.sections.length === 0 && <p className="rounded-xl bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-300">No sections yet. Add one when this class needs separate groups.</p>}
+      {schoolClass.sections.map((section) => <div key={section.id} className="rounded-xl border border-slate-200 p-2.5 dark:border-slate-700 sm:p-3">
+        <div className="flex items-center gap-2.5"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">{section.name.slice(0, 2)}</span>
+          <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-950 dark:text-white">Section {section.name}</p><p className="text-xs text-slate-500 dark:text-slate-400">{showStudents ? `${section.students} students` : "Students unavailable"}</p></div>
+          <div className="min-w-0 flex-1 border-l border-slate-200 pl-2 dark:border-slate-700"><p className="text-[10px] text-slate-500 dark:text-slate-400">Class Teacher</p><p className={`truncate text-xs font-semibold ${section.teacher ? "text-slate-800 dark:text-slate-100" : "text-rose-600 dark:text-rose-300"}`}>{section.teacher || "Not assigned"}</p></div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={() => onEditClass(schoolClass)}
-            className="rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
-            aria-label={`Edit ${schoolClass.name}`}
-            title="Edit class"
-          >
-            <Edit3 className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onDeleteClass(schoolClass)}
-            className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-            aria-label={`Delete ${schoolClass.name}`}
-            title="Delete class"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+        <div className="mt-2 flex flex-wrap gap-1.5 pl-[50px] text-[11px] font-semibold sm:text-xs">
+          {showStudents && <Link href={`/principal/students?class=${encodeURIComponent(schoolClass.name)}&section=${encodeURIComponent(section.name)}`} className="rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">View students</Link>}
+          <button type="button" onClick={() => onEditSection(schoolClass, section)} className="rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">Edit</button>
+          {!section.teacherId && <button type="button" onClick={() => onEditSection(schoolClass, section)} className="rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">Assign teacher</button>}
+          <button type="button" onClick={() => onDeleteSection(schoolClass.id, section)} className="rounded-lg px-1 py-1.5 text-rose-600 dark:text-rose-300">Archive</button>
         </div>
-      </div>
-
-      <div className="flex-1 space-y-2 p-4">
-        <div className="mb-3 rounded-xl border border-slate-100 bg-white p-3">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            Class teacher
-          </p>
-          {schoolClass.teacher ? (
-            <div className="mt-2 flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
-                {initials(schoolClass.teacher)}
-              </span>
-              <p className="text-sm font-semibold text-slate-800">
-                {schoolClass.teacher}
-              </p>
-            </div>
-          ) : (
-            <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-amber-700">
-              <AlertCircle className="h-3.5 w-3.5" />
-              Teacher not assigned
-            </p>
-          )}
-        </div>
-        {schoolClass.sections.length === 0 ? (
-          <div className="flex h-28 flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 text-center">
-            <Users className="h-5 w-5 text-slate-300" />
-            <p className="mt-2 text-sm font-medium text-slate-600">
-              No sections yet
-            </p>
-            <p className="mt-0.5 text-xs text-slate-400">
-              Add the first section below.
-            </p>
-          </div>
-        ) : (
-          schoolClass.sections.map((section) => (
-            <div
-              key={section.id}
-              className="group rounded-xl border border-slate-100 bg-slate-50/70 p-3 transition hover:border-blue-200 hover:bg-blue-50/40"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700">
-                  {section.name}
-                </span>
-                <div className="min-w-0 flex-1">
-                  {section.teacher ? (
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
-                        {initials(section.teacher)}
-                      </span>
-                      <p className="truncate text-sm font-semibold text-slate-800">
-                        {section.teacher}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="flex items-center gap-1.5 text-sm font-semibold text-amber-700">
-                      <AlertCircle className="h-3.5 w-3.5" />
-                      Teacher not assigned
-                    </p>
-                  )}
-                  <p className="mt-1 text-xs text-slate-500">
-                    {section.students} students
-                  </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => onEditSection(schoolClass, section)}
-                    className="rounded-lg p-2 text-slate-400 transition hover:bg-white hover:text-blue-600"
-                    aria-label={`Edit Section ${section.name}`}
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onDeleteSection(schoolClass.id, section)}
-                    className="rounded-lg p-2 text-slate-400 transition hover:bg-white hover:text-red-600"
-                    aria-label={`Delete Section ${section.name}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      <div className="border-t border-slate-100 p-3">
-        <button
-          type="button"
-          onClick={() => onAddSection(schoolClass)}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-blue-600 transition hover:bg-blue-50"
-        >
-          <Plus className="h-4 w-4" />
-          Add section
-        </button>
-      </div>
-    </article>
-  );
+      </div>)}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs font-semibold"><button type="button" onClick={() => onAddSection(schoolClass)} className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add section</button><span className="flex gap-3"><button type="button" onClick={() => onEditClass(schoolClass)} className="text-blue-700 dark:text-blue-300">Edit class</button><button type="button" onClick={() => onDeleteClass(schoolClass)} className="text-rose-600 dark:text-rose-300">Archive class</button></span></div>
+    </div>}
+  </article>;
 }
 
 function Field({
@@ -914,7 +642,7 @@ function Field({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
       />
     </label>
   );
@@ -937,7 +665,7 @@ function SelectField({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
       >
         <option value="">Not assigned</option>
         {options.map((teacher) => (
@@ -1027,7 +755,7 @@ function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className={`max-h-[90vh] w-full overflow-y-auto rounded-2xl bg-white shadow-2xl ${width}`}
+        className={`max-h-[90vh] w-full overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-slate-900 dark:text-white ${width}`}
       >
         {children}
       </div>
