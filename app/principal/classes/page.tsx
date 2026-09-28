@@ -430,16 +430,17 @@ export default function ClassesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f2f9ff] dark:bg-slate-950">
+    <div className="min-h-screen bg-white dark:bg-slate-950">
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
 
         <main className="flex-1 px-3.5 pb-28 pt-7 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="relative -mx-3.5 flex min-h-[112px] items-center overflow-hidden bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-3 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:min-h-[160px] sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-8 sm:dark:border-blue-900/60">
-              <div className="relative z-10 max-w-[65%]"><h1 className="text-[1.55rem] font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">Classes &amp; Sections</h1><p className="mt-1 max-w-sm text-xs leading-4 text-slate-700 dark:text-blue-100 sm:text-base">Manage classes, sections and student placement.</p></div>
-              <svg aria-hidden="true" viewBox="0 0 150 105" className="pointer-events-none absolute bottom-0 right-0 hidden h-[90%] w-28 text-blue-500 opacity-55 min-[430px]:block sm:w-44"><path d="M6 54 42 21l35 33v44H6zm65 3 26-42 27 42v41H71z" fill="currentColor" opacity=".12"/><path d="M25 72h16v26H25zm72-9h12v35H97z" fill="currentColor" opacity=".25"/><path d="M26 53h9m58 0h8M100 29v-9m-12 9h24" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/><path d="M57 88h78v10H57zm10-15h66v12H67zm12-16h48v12H79z" fill="currentColor" opacity=".38"/><path d="M77 70h58M64 85h72" stroke="white" strokeWidth="2" opacity=".7"/></svg>
+            <header className="relative -mx-3.5 flex min-h-[138px] items-center overflow-hidden bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-4 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:min-h-[190px] sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-8 sm:dark:border-blue-900/60">
+              <div className="relative z-10 max-w-[62%]"><h1 className="text-[1.7rem] font-extrabold leading-[1.04] tracking-tight text-slate-950 dark:text-white sm:text-4xl">Classes &amp;<br />Sections</h1><p className="mt-2 max-w-sm text-xs leading-4 text-slate-700 dark:text-blue-100 sm:text-base sm:leading-6">Manage classes, sections and student placement.</p></div>
+              <p className="pointer-events-none absolute right-[29%] top-[34%] z-10 hidden -rotate-6 text-center font-serif text-xs italic leading-snug text-blue-900/70 dark:text-blue-200/60 min-[600px]:block lg:text-sm">Empowered<br />Learning,<br />Brighter Futures</p>
+              <ClassesHeroArtwork />
             </header>
 
             {error && <div role="alert" className="mt-3 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/15 dark:text-red-200"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
@@ -558,7 +559,7 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection
   onDeleteSection: (classId: string, section: Section) => void;
 }) {
   const displayName = schoolClass.name.replace(/^Class\s+(\d+)$/i, "Grade $1");
-  return <article className={`rounded-2xl border shadow-sm ${expanded ? "border-blue-200 bg-blue-50/70 dark:border-blue-800 dark:bg-blue-950/50" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"}`}>
+  return <article className={`rounded-2xl border bg-white shadow-sm dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"}`}>
     <button type="button" aria-expanded={expanded} onClick={onToggle} className="flex w-full items-center gap-3 p-3 text-left sm:p-4">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300"><BookOpen className="h-5 w-5" /></span>
       <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-950 dark:text-white sm:text-lg">{displayName}</span><span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{showStudents ? `${schoolClass.students} students` : "Students unavailable"} · {schoolClass.sections.length} sections</span></span>
@@ -791,4 +792,40 @@ function ClassesSkeleton() {
       </div>
     </div>
   );
+}
+
+function ClassesHeroArtwork() {
+  return <svg viewBox="0 0 360 210" preserveAspectRatio="xMaxYMax meet" className="absolute -bottom-2 -right-5 h-[115%] w-[78%] max-w-none opacity-80 dark:opacity-50 sm:right-0 sm:w-[58%] sm:opacity-100" aria-hidden="true">
+    <defs>
+      <linearGradient id="teacherBookBlue" x1="0" x2="1" y1="0" y2="1"><stop stopColor="#b9d9ff" /><stop offset="1" stopColor="#2369d0" /></linearGradient>
+      <linearGradient id="teacherBookWhite" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#ffffff" /><stop offset="1" stopColor="#d9e7fb" /></linearGradient>
+      <linearGradient id="teacherPot" x1="0" x2="1" y1="0" y2="1"><stop stopColor="#fff" /><stop offset="1" stopColor="#d1e3fa" /></linearGradient>
+      <linearGradient id="teacherLeaf" x1="0" x2="1" y1="0" y2="1"><stop stopColor="#64bf6a" /><stop offset="1" stopColor="#167240" /></linearGradient>
+    </defs>
+    <ellipse cx="231" cy="199" rx="126" ry="8" fill="#4780b6" opacity=".16" />
+    <path d="M302 142c-4-29-6-47-1-73m0 73c6-19 20-40 39-55m-38 53c-11-18-25-30-43-40" fill="none" stroke="#29834b" strokeWidth="3" />
+    <path d="M297 96c-21-34-15-61 7-83 11 36 6 62-7 83Z" fill="url(#teacherLeaf)" />
+    <path d="M306 104c9-31 28-47 49-50-6 27-23 45-49 50Z" fill="#319655" />
+    <path d="M297 121c-9-24-25-38-47-40 11 26 26 39 47 40Z" fill="#368d50" />
+    <path d="M306 124c13-21 32-31 52-27-13 20-29 29-52 27Z" fill="#459f56" />
+    <path d="M279 132h55l-6 49c-2 5-8 7-22 7s-21-2-22-7l-5-49Z" fill="url(#teacherPot)" stroke="#bdd4ed" strokeWidth="2" />
+    <path d="M278 133h57" stroke="#f9fcff" strokeWidth="5" strokeLinecap="round" />
+    <rect x="143" y="93" width="19" height="73" rx="3" fill="#3579d8" /><rect x="147" y="97" width="4" height="57" fill="#7bb3f3" opacity=".65" />
+    <rect x="164" y="88" width="20" height="78" rx="3" fill="#84b7ec" /><rect x="167" y="92" width="3" height="56" fill="#dceeff" opacity=".8" />
+    <rect x="187" y="100" width="15" height="66" rx="2" fill="#1c59a8" /><rect x="190" y="104" width="3" height="50" fill="#c8e3ff" opacity=".65" />
+    <rect x="205" y="95" width="19" height="71" rx="2" fill="#4a83cc" /><rect x="209" y="98" width="4" height="59" fill="#d5ebff" opacity=".7" />
+    <rect x="223" y="105" width="11" height="62" rx="2" fill="#dbad6e" />
+    <path d="M88 108 81 52m18 55L101 45m11 63 10-57" stroke="#233f67" strokeWidth="5" strokeLinecap="round" />
+    <path d="m79 50 1-11 3 11m16-6 2-12 3 12m16 5 4-10 1 11" fill="#20477b" />
+    <path d="M62 112h68l-7 73c-1 4-7 6-27 6s-26-2-27-6l-7-73Z" fill="url(#teacherPot)" stroke="#bcd4ec" strokeWidth="2" />
+    <path d="M62 113h68" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
+    <path d="M132 170h205l-5 27H130l2-27Z" fill="#3373c4" />
+    <path d="M136 171h195l-4 21H134l2-21Z" fill="url(#teacherBookWhite)" />
+    <path d="M132 170h205" stroke="#86ace0" strokeWidth="5" strokeLinecap="round" />
+    <path d="M128 143h211l-3 27H125l3-27Z" fill="#2c68b6" />
+    <path d="M130 146h204l-3 19H127l3-19Z" fill="url(#teacherBookWhite)" />
+    <path d="M127 143h211" stroke="#87b7eb" strokeWidth="5" strokeLinecap="round" />
+    <path d="M135 170h198" stroke="#4b8ce0" strokeWidth="2" />
+    <path d="M139 194h191" stroke="#164a93" strokeWidth="3" />
+  </svg>;
 }
