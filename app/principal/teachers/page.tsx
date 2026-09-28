@@ -549,22 +549,21 @@ export default function TeachersPage() {
       <Sidebar />
       <div className="relative z-10 flex min-h-screen flex-col lg:ml-64">
         <TopBar />
-        <main className="flex-1 px-4 pb-24 pt-20 sm:px-6 lg:px-8">
+        <main className="flex-1 px-4 pb-24 pt-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px]">
-            <header className="relative overflow-hidden bg-white px-2 py-5 dark:bg-slate-950 sm:px-4 sm:py-8">
+            <header className="relative overflow-hidden rounded-2xl border border-blue-100 bg-[#f4f9ff] px-4 py-3 dark:border-slate-800 dark:bg-slate-900 sm:px-6 sm:py-5">
               <div className="pointer-events-none absolute inset-y-0 right-0 w-[52%] overflow-hidden" aria-hidden="true">
                 <div className="absolute -bottom-16 right-[-15%] h-40 w-[115%] rounded-[50%] bg-blue-300/20 dark:bg-blue-300/10" />
                 <p className="absolute left-0 top-[34%] hidden -rotate-6 text-center font-serif text-sm italic leading-snug text-blue-600/70 dark:text-blue-200/60 lg:block">Empowered<br />Teachers<br />Brighter Futures</p>
                 <TeachersHeroArtwork />
               </div>
               <div className="relative max-w-[72%] sm:max-w-[55%]">
-                <span className="mb-3 block h-1 w-10 rounded-full bg-blue-600" aria-hidden="true" />
                 <h1 className="text-[2rem] font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">Teachers</h1>
                 <p className="mt-1.5 max-w-md text-sm leading-5 text-slate-700 dark:text-blue-100 sm:text-base sm:leading-6">Manage teachers, attendance, leave and school access.</p>
               </div>
             </header>
 
-            <nav aria-label="Teachers sections" className="mt-2 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700 sm:mt-3 sm:gap-4">
+            <nav aria-label="Teachers sections" className="mt-1 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700 sm:mt-2 sm:gap-4">
               {([
                 ["teachers", "Overview"],
                 ["attendance", "Attendance"],
@@ -586,7 +585,7 @@ export default function TeachersPage() {
 
             {pageTab === "teachers" && <>
               {overviewError && <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-300">{overviewError}</p>}
-              <section className="mt-2 grid grid-cols-2 sm:mt-4 md:grid-cols-3" aria-label="Teacher overview">
+              <section className="mt-2 grid grid-cols-2 gap-2 sm:mt-3 sm:gap-3 md:grid-cols-3" aria-label="Teacher overview">
                 <TeacherStat icon={UsersRound} label="Total Teachers" value={teachers.length} tone="blue" onClick={() => document.getElementById("teacher-records")?.scrollIntoView({ behavior: "smooth" })} />
                 <TeacherStat icon={UserCheck} label="Present Today" value={overviewLoading || overviewError ? null : overview?.present ?? null} tone="emerald" onClick={() => setPageTab("attendance")} />
                 <TeacherStat icon={UserMinus} label="Absent" value={overviewLoading || overviewError ? null : overview?.absent ?? null} tone="rose" onClick={() => setPageTab("attendance")} />
@@ -830,7 +829,7 @@ const statTones = {
 };
 
 function TeacherStat({ icon: Icon, label, value, tone, onClick }: { icon: React.ElementType; label: string; value: number | null; tone: keyof typeof statTones; onClick: () => void }) {
-  return <button type="button" onClick={onClick} aria-label={`${label}: ${value === null ? "Loading" : value}. Open details`} className="group flex min-h-[76px] min-w-0 items-center gap-2 border-b border-slate-200 bg-white p-2 text-left transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:hover:bg-slate-900 sm:min-h-[100px] sm:gap-3 sm:p-4">
+  return <button type="button" onClick={onClick} aria-label={`${label}: ${value === null ? "Loading" : value}. Open details`} className="group flex min-h-[76px] min-w-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2.5 text-left transition hover:border-blue-300 hover:bg-blue-50/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 sm:min-h-[100px] sm:gap-3 sm:p-4">
     <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px] sm:h-12 sm:w-12 ${statTones[tone]}`}><Icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.4} aria-hidden="true" /></span>
     <span className="min-w-0 flex-1"><span className="block text-[11px] font-medium leading-tight text-slate-600 dark:text-slate-300 sm:text-sm">{label}</span><span className="mt-0.5 block text-xl font-extrabold leading-none tabular-nums text-slate-950 dark:text-white sm:text-[1.75rem]">{value ?? "—"}</span></span>
     <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600 dark:text-slate-500" aria-hidden="true" />
