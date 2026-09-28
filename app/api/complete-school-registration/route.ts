@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import NepaliDate from 'nepali-date-converter';
 
 type PendingSchool = {
   name?: unknown;
@@ -10,6 +11,7 @@ type PendingSchool = {
   ward?: unknown;
   school_type?: unknown;
   school_level?: unknown;
+  highest_grade?: unknown;
   phone?: unknown;
   principal?: unknown;
   school_email?: unknown;
@@ -101,6 +103,7 @@ export async function POST(request: Request) {
     ward: safe(pending?.ward),
     school_type: safe(pending?.school_type),
     school_level: safe(pending?.school_level),
+    highest_grade: safe(pending?.school_level) === 'Secondary' ? (Number(pending?.highest_grade) === 12 ? 12 : 10) : null,
     phone: safe(pending?.phone),
     principal: safe(pending?.principal) || safe(user.user_metadata?.full_name),
     school_email: safe(pending?.school_email),
@@ -139,23 +142,26 @@ export async function POST(request: Request) {
   }
 
   const level = schoolRow.school_level || '';
-  const numbers =
-    level === 'Primary' ? [1, 2, 3, 4, 5] :
-    level === 'Basic' ? [1, 2, 3, 4, 5, 6, 7, 8] :
-    level === 'Secondary' ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] :
-    level === 'Higher Secondary' ? [11, 12] : [];
+  const highest = level === 'Primary' ? 5 : level === 'Basic' ? 8 : level === 'Higher Secondary' ? 12 : level === 'Secondary' ? (schoolRow.highest_grade || 10) : 0;
+  const numbers = Array.from({ length: highest }, (_, index) => index + 1);
+  const academicYear = Number(new NepaliDate(new Date()).format('YYYY'));
 
   if (numbers.length) {
     const { error: classError } = await admin.from('classes').insert(
       numbers.map((number) => ({
         school_id: school.id,
+        academic_year: academicYear,
         class_number: String(number),
         section_name: null,
         class_name: `Class ${number}`,
         name: `Class ${number}`,
       })),
     );
-    if (classError) console.error('Default class creation failed', { code: classError.code, schoolId: school.id });
+    if (classError) {
+      console.error('Default class creation failed', { code: classError.code, schoolId: school.id });
+      await admin.from('schools').delete().eq('id', school.id);
+      return NextResponse.json({ error: 'Could not create the initial classes. Please try again.' }, { status: 400 });
+    }
   }
 
   await admin.auth.admin.updateUserById(user.id, {
