@@ -312,35 +312,38 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
           })}
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-5">
+      <section className="bg-white pt-3 dark:bg-slate-900 sm:pt-5">
         <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">Monthly attendance</h3>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">Select a teacher and month to see recorded days.</p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2">
           <select aria-label="Teacher for monthly attendance" value={selectedMonthTeacherId}
             onChange={(event) => setMonthlyTeacher(event.target.value)}
-            className="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white">
+            className="h-11 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-white sm:px-3 sm:text-sm">
             {!activeTeachers.length && <option value="">No teachers</option>}
             {activeTeachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{teacher.name}</option>)}
           </select>
           <input aria-label="Month for attendance" type="month" value={month} max={today.slice(0, 7)}
             onChange={(event) => setMonth(event.target.value)}
-            className="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
+            className="h-11 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-white sm:px-3 sm:text-sm" />
         </div>
         {monthError && <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-300">Monthly attendance could not be loaded: {monthError}</p>}
-        <div className="mt-4 grid grid-cols-4 gap-1.5 sm:gap-3" aria-label="Monthly attendance summary">
+        <div className="mt-4 grid grid-cols-[repeat(3,minmax(0,1fr))_minmax(0,1.5fr)] gap-1.5 sm:gap-3" aria-label="Monthly attendance summary">
           {([
             ["Present", counts.present, "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"],
             ["Absent", counts.absent, "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-200"],
             ["Leave", counts.leave, "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200"],
             ["Attendance Rate", percentage === null ? "—" : `${percentage}%`, "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200"],
           ] as const).map(([label, value, tone]) => (
-            <div key={label} className={`min-w-0 rounded-xl px-1.5 py-2 sm:px-4 sm:py-3 ${tone}`}>
-              <p className="text-base font-extrabold text-slate-950 dark:text-white sm:text-2xl">{monthLoading ? "–" : value}</p>
-              <p className="mt-0.5 text-[9px] leading-tight sm:text-xs">{label}</p>
+            <div key={label} className={`min-w-0 rounded-xl px-1.5 py-1.5 sm:px-4 sm:py-2 ${tone}`}>
+              <div className="flex items-center gap-1">
+                {label === "Attendance Rate" && <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-300" aria-hidden="true"><rect x="2" y="11" width="4" height="7" rx="1" /><rect x="8" y="7" width="4" height="11" rx="1" /><rect x="14" y="2" width="4" height="16" rx="1" /></svg>}
+                <p className="text-base font-extrabold text-slate-950 dark:text-white sm:text-2xl">{monthLoading ? "–" : value}</p>
+              </div>
+              <p className="mt-0.5 whitespace-nowrap text-[8px] leading-tight sm:text-xs">{label}</p>
             </div>
           ))}
         </div>
-        <div className="mt-4 rounded-2xl border border-slate-200 p-2.5 dark:border-slate-700 sm:p-5">
+        <div className="mt-4 pt-2 sm:p-2">
           <div className="flex items-center justify-between gap-2">
             <button type="button" aria-label="Previous month" onClick={() => moveMonth(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"><ChevronLeft className="h-5 w-5" /></button>
             <h4 className="text-center text-sm font-bold sm:text-lg">{monthLabel}</h4>
@@ -357,12 +360,13 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
               </div>
             ))}
           </div>
-          <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-slate-600 dark:text-slate-300 sm:justify-between sm:text-xs">
-            {([["Present", "bg-emerald-500"], ["Absent", "bg-rose-500"], ["Leave", "bg-violet-500"], ["No record / holiday", "bg-slate-300 dark:bg-slate-600"]] as const).map(([label, color]) => <span key={label} className="inline-flex items-center gap-1.5"><span className={`h-2.5 w-2.5 rounded-full ${color}`} />{label}</span>)}
+          <div className="mt-5 flex items-center justify-between gap-1 overflow-x-auto whitespace-nowrap text-[9px] text-slate-600 dark:text-slate-300 sm:text-xs">
+            {([["Present", "bg-emerald-500"], ["Absent", "bg-rose-500"], ["Leave", "bg-violet-500"], ["No record / holiday", "bg-slate-300 dark:bg-slate-600"]] as const).map(([label, color]) => <span key={label} className="inline-flex shrink-0 items-center gap-1"><span className={`h-2 w-2 shrink-0 rounded-full ${color}`} />{label}</span>)}
           </div>
-          <div className="mt-4 rounded-xl bg-blue-50 p-3 text-xs dark:bg-blue-500/10 sm:text-sm">
-            <p className="font-bold text-slate-950 dark:text-white">{monthLoading || monthError ? "—" : `${counts.present} of ${recordedWorkdays}`} recorded workdays present</p>
-            <p className="mt-1 text-slate-500 dark:text-slate-400">Rate = present ÷ recorded workdays (present, absent, leave). Holidays and unmarked days are excluded.</p>
+          <div className="mt-4 flex items-start gap-3 rounded-xl bg-blue-50 p-3 text-xs dark:bg-blue-500/10 sm:p-4 sm:text-sm">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-5 w-5 shrink-0 text-blue-600 dark:text-blue-300" aria-hidden="true"><rect x="2" y="11" width="4" height="7" rx="1" /><rect x="8" y="7" width="4" height="11" rx="1" /><rect x="14" y="2" width="4" height="16" rx="1" /></svg>
+            <div><p className="font-bold text-slate-950 dark:text-white">{monthLoading || monthError ? "—" : `${counts.present} of ${recordedWorkdays}`} recorded workdays present</p>
+            <p className="mt-1 text-slate-500 dark:text-slate-400">Rate = present ÷ recorded workdays (excluding holidays and unmarked days).</p></div>
           </div>
         </div>
       </section>
