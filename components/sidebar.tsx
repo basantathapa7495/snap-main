@@ -48,17 +48,6 @@ type SchoolInfo = {
   slug: string | null;
 };
 
-function formatSchoolName(name?: string | null) {
-  const shortenedName = name
-    ?.replace(/\b(?:primary|secondary)\s+school\b/gi, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-
-  if (!shortenedName) return 'My School';
-
-  return shortenedName.charAt(0).toUpperCase() + shortenedName.slice(1);
-}
-
 // =========================================================
 // PRINCIPAL MENU
 // =========================================================
@@ -262,7 +251,11 @@ export default function Sidebar() {
       {/* =====================================================
           MOBILE TOP BAR
       ===================================================== */}
-      <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center border-b border-gray-200 bg-white px-4 lg:hidden">
+      {pathname === '/principal/teachers' ? <div className="fixed left-0 right-0 top-0 z-40 flex h-16 items-center gap-2 border-b border-slate-200 bg-white px-3 dark:border-slate-800 dark:bg-slate-950 lg:hidden">
+        <Link href="/principal" className="shrink-0" aria-label="NEPSOM dashboard"><Image src="/logo2.png" alt="NEPSOM" width={120} height={52} priority className="h-10 w-[120px] object-contain" /></Link>
+        <button type="button" onClick={() => setMobileOpen(true)} className="min-w-0 flex-1 truncate rounded-full bg-slate-100 px-2 py-2 text-left text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-200" aria-label="Open school menu">{school?.name || 'My School'} <span aria-hidden="true">⌄</span></button>
+        <button type="button" onClick={() => setMobileOpen(true)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white" aria-label="Open sidebar">{school?.name?.slice(0, 1).toUpperCase() || 'N'}</button>
+      </div> : <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center border-b border-gray-200 bg-white px-4 lg:hidden">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
@@ -297,7 +290,7 @@ export default function Sidebar() {
             <Search className="h-5 w-5" aria-hidden="true" />
           </button>
         )}
-      </div>
+      </div>}
 
       {/* =====================================================
           MOBILE OVERLAY
