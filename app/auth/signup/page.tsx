@@ -45,6 +45,7 @@ export default function SignupPage() {
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedLocalLevel, setSelectedLocalLevel] = useState('');
   const [selectedWard, setSelectedWard] = useState('');
+  const [schoolLevel, setSchoolLevel] = useState('');
 
   const districts = selectedProvince ? getDistricts(selectedProvince) : [];
   const localLevels = selectedProvince && selectedDistrict ? getLocalLevels(selectedProvince, selectedDistrict) : [];
@@ -82,6 +83,7 @@ export default function SignupPage() {
       ward: selectedWard,
       school_type: String(formData.get('school_type') || ''),
       school_level: String(formData.get('school_level') || ''),
+      highest_grade: String(formData.get('highest_grade') || ''),
       phone: String(formData.get('phone') || ''),
       school_email: schoolEmail || '',
       pan_number: panNumber || '',
@@ -343,14 +345,20 @@ export default function SignupPage() {
                     </select>
                   </Field>
                   <Field label="School level">
-                    <select className={inputClass} name="school_level" required defaultValue="">
+                    <select className={inputClass} name="school_level" required value={schoolLevel} onChange={(event) => setSchoolLevel(event.target.value)}>
                       <option value="" disabled>Select school level</option>
                       <option value="Primary">Primary (1–5)</option>
                       <option value="Basic">Basic (1–8)</option>
                       <option value="Secondary">Secondary (1–10)</option>
-                      <option value="Higher Secondary">Higher Secondary (11–12)</option>
+                      <option value="Higher Secondary">Higher Secondary (1–12)</option>
                     </select>
                   </Field>
+                  {schoolLevel === 'Secondary' && <Field label="Highest grade">
+                    <select className={inputClass} name="highest_grade" defaultValue="10">
+                      <option value="10">Grade 10</option>
+                      <option value="12">Grade 12</option>
+                    </select>
+                  </Field>}
                   <Field label="School email" optional icon={Mail}>
                     <input className={`${inputClass} pl-11`} type="email" name="school_email" inputMode="email" autoComplete="email" placeholder="info@school.edu.np" />
                   </Field>
