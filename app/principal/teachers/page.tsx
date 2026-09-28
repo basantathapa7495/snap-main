@@ -3,8 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
+  ArrowRight,
+  BookOpen,
   CalendarDays,
   Check,
+  ChevronRight,
   ChevronDown,
   Copy,
   Edit3,
@@ -16,11 +19,13 @@ import {
   MapPin,
   Phone,
   Plus,
+  ClipboardClock,
   RefreshCw,
   Search,
   ShieldCheck,
   Trash2,
   UserCheck,
+  UserMinus,
   UserPlus,
   UserRound,
   UsersRound,
@@ -86,6 +91,20 @@ const emptyForm: TeacherForm = {
   employment_status: "active",
 };
 
+type TeacherOverview = {
+  present: number;
+  absent: number;
+  leave: number;
+  unassigned: number;
+  pendingLeave: number;
+};
+
+function todayInNepal() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kathmandu", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
+}
+
 function initials(name: string) {
   return name
     .split(" ")
@@ -145,11 +164,14 @@ export default function TeachersPage() {
   const [showCredentialTray, setShowCredentialTray] = useState(true);
   const [showSavedPasswords, setShowSavedPasswords] = useState(false);
   const [allCredentialsCopied, setAllCredentialsCopied] = useState(false);
-  const [pageTab, setPageTab] = useState<"teachers" | "attendance" | "leave" | "assignments" | "more">("teachers");
+  const [pageTab, setPageTab] = useState<"teachers" | "attendance" | "leave" | "assignments" | "joining" | "more">("teachers");
+  const [overview, setOverview] = useState<TeacherOverview | null>(null);
+  const [overviewLoading, setOverviewLoading] = useState(true);
+  const [overviewError, setOverviewError] = useState("");
 
   useEffect(() => {
     const requestedTab = new URLSearchParams(window.location.search).get("tab");
-    if (requestedTab === "attendance" || requestedTab === "leave" || requestedTab === "assignments" || requestedTab === "more") {
+    if (requestedTab === "attendance" || requestedTab === "leave" || requestedTab === "assignments" || requestedTab === "joining" || requestedTab === "more") {
       // Read the deep link after hydration so the server and first client render match.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPageTab(requestedTab);
@@ -217,6 +239,48 @@ export default function TeachersPage() {
     };
   }, [refreshKey]);
 
+  useEffect(() => {
+    if (!schoolId || pageTab !== "teachers") return;
+    let cancelled = false;
+    async function loadOverview() {
+      setOverviewLoading(true);
+      setOverviewError("");
+      const today = todayInNepal();
+      const [attendance, leaves, pending, classes, assignments] = await Promise.all([
+        supabase.from("teacher_attendance").select("teacher_id,status").eq("school_id", schoolId).eq("attendance_date", today),
+        supabase.from("teacher_leave_requests").select("teacher_id").eq("school_id", schoolId).eq("status", "approved").lte("start_date", today).gte("end_date", today),
+        supabase.from("teacher_leave_requests").select("id", { count: "exact", head: true }).eq("school_id", schoolId).eq("status", "pending"),
+        supabase.from("classes").select("teacher_id").eq("school_id", schoolId).not("teacher_id", "is", null),
+        supabase.from("teacher_assignments").select("teacher_id").eq("school_id", schoolId).eq("active", true),
+      ]);
+      if (cancelled) return;
+      const failure = [attendance.error, leaves.error, pending.error, classes.error, assignments.error].find(Boolean);
+      if (failure) {
+        console.error("Teacher overview load failed", failure);
+        setOverviewError("Teacher overview could not be refreshed.");
+        setOverview(null);
+      } else {
+        const active = teachers.filter((teacher) => teacher.employment_status !== "inactive");
+        const statuses = new Map((attendance.data || []).map((row) => [row.teacher_id, row.status]));
+        const approvedLeaveIds = new Set((leaves.data || []).map((row) => row.teacher_id));
+        const assignedIds = new Set([
+          ...(classes.data || []).map((row) => row.teacher_id),
+          ...(assignments.data || []).map((row) => row.teacher_id),
+        ]);
+        setOverview({
+          present: active.filter((teacher) => statuses.get(teacher.id) === "present").length,
+          absent: active.filter((teacher) => statuses.get(teacher.id) === "absent").length,
+          leave: active.filter((teacher) => statuses.get(teacher.id) === "leave" || (!statuses.has(teacher.id) && approvedLeaveIds.has(teacher.id))).length,
+          unassigned: active.filter((teacher) => !assignedIds.has(teacher.id)).length,
+          pendingLeave: pending.count || 0,
+        });
+      }
+      setOverviewLoading(false);
+    }
+    void loadOverview();
+    return () => { cancelled = true; };
+  }, [schoolId, pageTab, refreshKey, teachers]);
+
   const subjects = useMemo(
     () => [
       "All",
@@ -247,7 +311,6 @@ export default function TeachersPage() {
     });
   }, [account, search, subject, teachers]);
 
-  const activeAccounts = teachers.filter((teacher) => teacher.user_id).length;
   function openCreateForm() {
     setEditingTeacher(null);
     setForm(emptyForm);
@@ -483,79 +546,60 @@ export default function TeachersPage() {
     );
 
   return (
-    <div className="school-pattern-grid relative isolate min-h-screen overflow-hidden bg-slate-50">
+    <div className="school-pattern-grid relative isolate min-h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       <Sidebar />
       <div className="relative z-10 flex min-h-screen flex-col lg:ml-64">
         <TopBar />
         <main className="flex-1 px-4 pb-24 pt-20 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px]">
-            <header className="relative overflow-hidden rounded-3xl border border-blue-100 bg-white/90 p-5 shadow-xl shadow-blue-900/5 backdrop-blur-sm sm:p-7 lg:flex lg:items-center lg:justify-between lg:gap-8">
-              <div className="pointer-events-none absolute -right-12 -top-20 h-56 w-56 rounded-full bg-blue-100/70 blur-3xl" aria-hidden="true" />
-              <div className="relative max-w-2xl">
-                <p className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
-                  <UsersRound className="h-3.5 w-3.5" />
-                  Staff management
-                </p>
-                <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
-                  Your teaching team
-                </h1>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
-                  Keep staff details organised, manage portal access and quickly find the right teacher.
-                </p>
+            <header className="relative overflow-hidden rounded-[26px] border border-blue-100 bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#d9ebff] px-5 py-6 shadow-sm dark:border-blue-900/60 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:px-8 sm:py-8">
+              <div className="pointer-events-none absolute -bottom-12 right-4 h-40 w-64 rounded-full bg-blue-300/25 blur-3xl dark:bg-blue-400/10" aria-hidden="true" />
+              <div className="pointer-events-none absolute bottom-0 right-3 flex h-full items-end gap-1 opacity-40 dark:opacity-25 sm:right-10" aria-hidden="true">
+                <span className="mb-4 flex h-16 w-12 items-center justify-center rounded-lg border border-blue-300 bg-white/70 shadow-sm sm:h-24 sm:w-16"><BookOpen className="h-7 w-7 text-blue-600 sm:h-10 sm:w-10" /></span>
+                <span className="mb-3 flex h-20 w-8 items-center justify-center rounded-md border border-blue-300 bg-sky-100/90 shadow-sm sm:h-28 sm:w-11"><BookOpen className="h-5 w-5 text-sky-700" /></span>
+                <span className="mb-4 flex h-14 w-8 items-center justify-center rounded-md border border-blue-300 bg-indigo-100/90 shadow-sm sm:h-20 sm:w-11"><GraduationCap className="h-5 w-5 text-indigo-700" /></span>
               </div>
-
-              <div className="relative mt-6 flex flex-wrap gap-2 lg:mt-0 lg:justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setRefreshKey((value) => value + 1)}
-                    disabled={refreshing}
-                    className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 shadow-sm transition hover:border-blue-200 hover:text-blue-700 disabled:opacity-60"
-                  >
-                    <RefreshCw
-                      className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-                    />
-                    Refresh
-                  </button>
-                  <button
-                    type="button"
-                    onClick={openCreateForm}
-                    className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:bg-blue-700 sm:flex-none"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add teacher
-                  </button>
+              <div className="relative max-w-[75%] sm:max-w-xl">
+                <span className="mb-3 block h-1 w-10 rounded-full bg-blue-600" aria-hidden="true" />
+                <h1 className="text-[2rem] font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">Teachers</h1>
+                <p className="mt-1.5 max-w-md text-sm leading-5 text-slate-700 dark:text-blue-100 sm:text-base sm:leading-6">Manage teachers, attendance, leave and school access.</p>
               </div>
             </header>
 
-            <nav aria-label="Teachers sections" className="mt-5 grid grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900 min-[380px]:grid-cols-5">
+            <nav aria-label="Teachers sections" className="mt-3 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700 sm:gap-4">
               {([
-                ["teachers", "Teachers"],
+                ["teachers", "Overview"],
                 ["attendance", "Attendance"],
                 ["leave", "Leave"],
                 ["assignments", "Assignments"],
-                ["more", "More"],
+                ["joining", "Joining"],
               ] as const).map(([value, label]) => (
                 <button key={value} type="button" onClick={() => setPageTab(value)}
                   aria-current={pageTab === value ? "page" : undefined}
-                  className={`min-h-10 min-w-0 rounded-lg px-0.5 text-xs font-bold transition sm:px-3 sm:text-sm ${
+                  className={`relative min-h-12 shrink-0 whitespace-nowrap rounded-t-xl border-b-[3px] px-3 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-blue-500 sm:px-4 ${
                     pageTab === value
-                      ? "bg-teal-700 text-white dark:bg-teal-500/20 dark:text-teal-100"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                      ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-900/40 dark:text-blue-200"
+                      : "border-transparent text-slate-600 hover:bg-blue-50/70 hover:text-blue-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                   }`}>
-                  <span className="block truncate">{label}</span>
+                  {label}
                 </button>
               ))}
             </nav>
 
-            {pageTab === "teachers" && <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Teacher overview">
-              <TeacherStat icon={UsersRound} label="Total teachers" value={teachers.length} tone="blue" />
-              <TeacherStat icon={UserCheck} label="Active accounts" value={activeAccounts} tone="emerald" />
-              <TeacherStat icon={KeyRound} label="Need access" value={teachers.length - activeAccounts} tone="amber" />
-              <TeacherStat icon={GraduationCap} label="Subjects" value={Math.max(0, subjects.length - 1)} tone="violet" />
-            </section>}
+            {pageTab === "teachers" && <>
+              {overviewError && <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-300">{overviewError}</p>}
+              <section className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3" aria-label="Teacher overview">
+                <TeacherStat icon={UsersRound} label="Total Teachers" value={teachers.length} tone="blue" onClick={() => document.getElementById("teacher-records")?.scrollIntoView({ behavior: "smooth" })} />
+                <TeacherStat icon={UserCheck} label="Present Today" value={overviewLoading || overviewError ? null : overview?.present ?? null} tone="emerald" onClick={() => setPageTab("attendance")} />
+                <TeacherStat icon={UserMinus} label="Absent" value={overviewLoading || overviewError ? null : overview?.absent ?? null} tone="rose" onClick={() => setPageTab("attendance")} />
+                <TeacherStat icon={CalendarDays} label="On Leave" value={overviewLoading || overviewError ? null : overview?.leave ?? null} tone="orange" onClick={() => setPageTab("leave")} />
+                <TeacherStat icon={UserRound} label="Unassigned Teachers" value={overviewLoading || overviewError ? null : overview?.unassigned ?? null} tone="violet" onClick={() => setPageTab("assignments")} />
+                <TeacherStat icon={ClipboardClock} label="Pending Leave Requests" value={overviewLoading || overviewError ? null : overview?.pendingLeave ?? null} tone="amber" onClick={() => setPageTab("leave")} />
+              </section>
+            </>}
 
-            {pageTab === "teachers" && <><SchoolJoiningControls role="teacher" /><AccountRequestsPanel role="teacher" onApproved={() => setRefreshKey((value) => value + 1)} /></>}
-            {pageTab === "teachers" && <section className="mt-5 flex flex-col gap-4 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-blue-50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            {pageTab === "joining" && <><SchoolJoiningControls role="teacher" /><AccountRequestsPanel role="teacher" onApproved={() => setRefreshKey((value) => value + 1)} /></>}
+            {pageTab === "joining" && <section className="mt-5 flex flex-col gap-4 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-blue-50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="flex items-start gap-3">
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-600/20"><ShieldCheck className="h-5 w-5" /></span>
                 <div><h2 className="font-bold text-slate-950">Self-registration with school approval</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-slate-600 sm:text-sm">Teachers will request an account from the school website. You review their details before portal access is activated.</p></div>
@@ -563,7 +607,8 @@ export default function TeachersPage() {
               <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-bold text-violet-700"><UserPlus className="h-3.5 w-3.5" /> Approval enabled</span>
             </section>}
 
-            {schoolId && pageTab !== "teachers" && <TeacherOperationsPanel key={pageTab} schoolId={schoolId} teachers={teachers} onTeacherChanged={() => setRefreshKey((value) => value + 1)} initialTab={pageTab === "assignments" ? "assignments" : pageTab === "more" ? "overview" : pageTab} showTabs={pageTab === "more"} />}
+            {pageTab === "more" && <button type="button" onClick={() => setPageTab("teachers")} className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-blue-200 px-4 text-sm font-semibold text-blue-700 dark:border-blue-700 dark:text-blue-300">Back to overview</button>}
+            {schoolId && pageTab !== "teachers" && pageTab !== "joining" && <TeacherOperationsPanel key={pageTab} schoolId={schoolId} teachers={teachers} onTeacherChanged={() => setRefreshKey((value) => value + 1)} initialTab={pageTab === "assignments" ? "assignments" : pageTab === "more" ? "overview" : pageTab} showTabs={pageTab === "more"} />}
 
             {(error || notice) && (
               <div
@@ -642,7 +687,7 @@ export default function TeachersPage() {
               </section>
             )}
 
-            {pageTab === "teachers" && <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-lg shadow-slate-900/5 backdrop-blur-sm">
+            {pageTab === "teachers" && <section id="teacher-records" className="mt-5 scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-lg shadow-slate-900/5 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-5">
                 <div>
                   <h2 className="font-bold text-slate-950">Teacher records</h2>
@@ -650,11 +695,14 @@ export default function TeachersPage() {
                     Search, update details, or create teacher login access.
                   </p>
                 </div>
-                <span className="shrink-0 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
-                  {filteredTeachers.length} of {teachers.length}
-                </span>
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                  <button type="button" onClick={() => setPageTab("more")} className="hidden min-h-10 items-center gap-1 text-xs font-semibold text-blue-700 focus-visible:ring-2 dark:text-blue-300 sm:inline-flex">More tools <ArrowRight className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => setRefreshKey((value) => value + 1)} disabled={refreshing} aria-label="Refresh teachers" className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-60"><RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /></button>
+                  <button type="button" onClick={openCreateForm} className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:px-4 sm:text-sm"><Plus className="h-4 w-4" /><span className="hidden min-[390px]:inline">Add teacher</span><span className="min-[390px]:hidden">Add</span></button>
+                </div>
               </div>
 
+              <button type="button" onClick={() => setPageTab("more")} className="flex min-h-10 w-full items-center justify-end gap-1.5 px-4 text-xs font-semibold text-blue-700 dark:text-blue-300 sm:hidden">More teacher tools <ArrowRight className="h-4 w-4" /></button>
               <div className="grid gap-3 border-y border-slate-100 bg-slate-50/60 p-3 sm:p-4 md:grid-cols-[minmax(0,1fr)_200px_180px]">
                 <label className="relative">
                   <span className="sr-only">Search teachers</span>
@@ -739,14 +787,20 @@ export default function TeachersPage() {
 }
 
 const statTones = {
-  blue: "border-blue-200 bg-blue-50 text-blue-700",
-  emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  amber: "border-amber-200 bg-amber-50 text-amber-700",
-  violet: "border-violet-200 bg-violet-50 text-violet-700",
+  blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300",
+  emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300",
+  rose: "bg-rose-50 text-rose-600 dark:bg-rose-900/40 dark:text-rose-300",
+  orange: "bg-orange-50 text-orange-600 dark:bg-orange-900/40 dark:text-orange-300",
+  violet: "bg-violet-50 text-violet-600 dark:bg-violet-900/40 dark:text-violet-300",
+  amber: "bg-amber-50 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300",
 };
 
-function TeacherStat({ icon: Icon, label, value, tone }: { icon: React.ElementType; label: string; value: number; tone: keyof typeof statTones }) {
-  return <article className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm backdrop-blur-sm"><div className={`flex h-10 w-10 items-center justify-center rounded-xl border ${statTones[tone]}`}><Icon className="h-5 w-5" /></div><p className="mt-3 text-2xl font-extrabold tracking-tight text-slate-950">{value}</p><p className="mt-0.5 text-xs font-semibold text-slate-500 sm:text-sm">{label}</p></article>;
+function TeacherStat({ icon: Icon, label, value, tone, onClick }: { icon: React.ElementType; label: string; value: number | null; tone: keyof typeof statTones; onClick: () => void }) {
+  return <button type="button" onClick={onClick} aria-label={`${label}: ${value === null ? "Unavailable" : value}. Open details`} className="group flex min-h-[88px] min-w-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2.5 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-600 sm:min-h-[104px] sm:gap-3 sm:p-4">
+    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12 ${statTones[tone]}`}><Icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" /></span>
+    <span className="min-w-0 flex-1"><span className="block text-[11px] font-medium leading-tight text-slate-600 dark:text-slate-300 sm:text-sm">{label}</span><span className="mt-1 block text-2xl font-extrabold leading-none tabular-nums text-slate-950 dark:text-white sm:text-[1.75rem]">{value ?? "—"}</span></span>
+    <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600 dark:text-slate-500" aria-hidden="true" />
+  </button>;
 }
 
 const teacherTones = [
