@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   AlertCircle,
   ArrowRight,
@@ -28,6 +29,11 @@ import {
   UserPlus,
   UserRound,
   UsersRound,
+  LayoutDashboard,
+  School,
+  MoreHorizontal,
+  SlidersHorizontal,
+  TriangleAlert,
   X,
 } from "lucide-react";
 import Sidebar from "@/components/sidebar";
@@ -96,6 +102,7 @@ type TeacherOverview = {
   leave: number;
   unassigned: number;
   pendingLeave: number;
+  statuses: Record<string, string>;
 };
 
 function todayInNepal() {
@@ -167,6 +174,8 @@ export default function TeachersPage() {
   const [overview, setOverview] = useState<TeacherOverview | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [overviewError, setOverviewError] = useState("");
+  const [showAllMobileTeachers, setShowAllMobileTeachers] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   useEffect(() => {
     const requestedTab = new URLSearchParams(window.location.search).get("tab");
@@ -272,6 +281,7 @@ export default function TeachersPage() {
           leave: active.filter((teacher) => statuses.get(teacher.id) === "leave" || (!statuses.has(teacher.id) && approvedLeaveIds.has(teacher.id))).length,
           unassigned: active.filter((teacher) => !assignedIds.has(teacher.id)).length,
           pendingLeave: pending.count || 0,
+          statuses: Object.fromEntries(active.map((teacher) => [teacher.id, statuses.get(teacher.id) || (approvedLeaveIds.has(teacher.id) ? "leave" : "") ])),
         });
       }
       setOverviewLoading(false);
@@ -549,21 +559,21 @@ export default function TeachersPage() {
       <Sidebar />
       <div className="relative z-10 flex min-h-screen flex-col lg:ml-64">
         <TopBar />
-        <main className="flex-1 px-4 pb-24 pt-16 sm:px-6 lg:px-8">
+        <main className="flex-1 px-4 pb-28 pt-[76px] sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px]">
-            <header className="relative overflow-hidden rounded-[26px] border border-blue-100 bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#d9ebff] px-5 py-5 shadow-sm dark:border-blue-900/60 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:px-8 sm:py-8">
+            <header className="relative flex min-h-[132px] items-center overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-4 dark:border-blue-900/60 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:min-h-[160px] sm:px-8 sm:py-8">
               <div className="pointer-events-none absolute inset-y-0 right-0 w-[52%] overflow-hidden" aria-hidden="true">
                 <div className="absolute -bottom-16 right-[-15%] h-40 w-[115%] rounded-[50%] bg-blue-300/20 dark:bg-blue-300/10" />
-                <p className="absolute left-0 top-[34%] hidden -rotate-6 text-center font-serif text-sm italic leading-snug text-blue-600/70 dark:text-blue-200/60 lg:block">Empowered<br />Teachers<br />Brighter Futures</p>
+                <p className="absolute left-[2%] top-[35%] hidden -rotate-6 text-center font-serif text-xs italic leading-snug text-blue-900/80 dark:text-blue-200/60 min-[420px]:block lg:text-sm">Empowered<br />Teachers<br />Brighter Futures</p>
                 <TeachersHeroArtwork />
               </div>
-              <div className="relative max-w-[72%] sm:max-w-[55%]">
-                <h1 className="text-[2rem] font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">Teachers</h1>
-                <p className="mt-1.5 max-w-md text-sm leading-5 text-slate-700 dark:text-blue-100 sm:text-base sm:leading-6">Manage teachers, attendance, leave and school access.</p>
+              <div className="relative max-w-[64%] sm:max-w-[55%]">
+                <h1 className="text-[1.7rem] font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">Teachers</h1>
+                <p className="mt-1 max-w-md text-xs leading-4 text-slate-800 dark:text-blue-100 min-[420px]:text-sm min-[420px]:leading-5 sm:text-base sm:leading-6">Manage teachers, attendance, leave and school access.</p>
               </div>
             </header>
 
-            <nav aria-label="Teachers sections" className="mt-1 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700 sm:mt-2 sm:gap-4">
+            <nav aria-label="Teachers sections" className="mt-2 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700 sm:mt-3 sm:gap-4">
               {([
                 ["teachers", "Overview"],
                 ["attendance", "Attendance"],
@@ -573,9 +583,9 @@ export default function TeachersPage() {
               ] as const).map(([value, label]) => (
                 <button key={value} type="button" onClick={() => setPageTab(value)}
                   aria-current={pageTab === value ? "page" : undefined}
-                  className={`relative min-h-12 shrink-0 whitespace-nowrap rounded-t-xl border-b-[3px] px-3 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-blue-500 sm:px-4 ${
+                  className={`relative min-h-10 shrink-0 whitespace-nowrap border-b-[3px] px-2 text-xs transition focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-blue-500 min-[420px]:px-3 min-[420px]:text-sm sm:min-h-12 sm:px-4 ${
                     pageTab === value
-                      ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-900/40 dark:text-blue-200"
+                      ? "border-blue-600 font-bold text-slate-950 dark:border-blue-400 dark:text-blue-200"
                       : "border-transparent text-slate-600 hover:bg-blue-50/70 hover:text-blue-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                   }`}>
                   {label}
@@ -585,13 +595,27 @@ export default function TeachersPage() {
 
             {pageTab === "teachers" && <>
               {overviewError && <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-300">{overviewError}</p>}
-              <section className="mt-2 grid grid-cols-3 gap-1.5 sm:mt-3 sm:gap-3" aria-label="Teacher overview">
-                <TeacherStat icon={UsersRound} label="Total Teachers" value={teachers.length} tone="blue" onClick={() => document.getElementById("teacher-records")?.scrollIntoView({ behavior: "smooth" })} />
+              <section className="mt-3 grid grid-cols-3 gap-1.5 sm:mt-4 sm:gap-3" aria-label="Teacher overview">
+                <TeacherStat icon={UsersRound} label="Total Teachers" value={teachers.length} tone="blue" onClick={() => document.getElementById(window.innerWidth < 640 ? "mobile-teacher-records" : "teacher-records")?.scrollIntoView({ behavior: "smooth" })} />
                 <TeacherStat icon={UserCheck} label="Present Today" value={overviewLoading || overviewError ? null : overview?.present ?? null} tone="emerald" onClick={() => setPageTab("attendance")} />
                 <TeacherStat icon={UserMinus} label="Absent" value={overviewLoading || overviewError ? null : overview?.absent ?? null} tone="rose" onClick={() => setPageTab("attendance")} />
                 <TeacherStat icon={CalendarDays} label="On Leave" value={overviewLoading || overviewError ? null : overview?.leave ?? null} tone="orange" onClick={() => setPageTab("leave")} />
                 <TeacherStat icon={UserRound} label="Unassigned Teachers" value={overviewLoading || overviewError ? null : overview?.unassigned ?? null} tone="violet" onClick={() => setPageTab("assignments")} />
                 <TeacherStat icon={ClipboardClock} label="Pending Leave Requests" value={overviewLoading || overviewError ? null : overview?.pendingLeave ?? null} tone="amber" onClick={() => setPageTab("leave")} />
+              </section>
+              <section className="mt-6 sm:mt-8" aria-labelledby="teacher-attention-title">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 id="teacher-attention-title" className="flex items-center gap-2 text-lg font-extrabold text-slate-950 dark:text-white sm:text-xl"><TriangleAlert className="h-5 w-5 fill-red-500 text-white" aria-hidden="true" /> Needs Attention</h2>
+                  <button type="button" onClick={() => setPageTab("more")} className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">View all <ChevronRight className="h-4 w-4" /></button>
+                </div>
+                {overviewLoading ? <p className="py-4 text-sm text-slate-500">Loading teacher updates…</p> : overviewError ? <p className="py-4 text-sm text-slate-500">Teacher updates are unavailable.</p> : (
+                  <div className="mt-2 divide-y divide-slate-200 dark:divide-slate-800">
+                    {(overview?.pendingLeave ?? 0) > 0 && <AttentionRow icon={ClipboardClock} tone="amber" title="Pending leave requests" detail={`${overview?.pendingLeave} require approval`} onClick={() => setPageTab("leave")} />}
+                    {(overview?.unassigned ?? 0) > 0 && <AttentionRow icon={UserRound} tone="violet" title="Teachers unassigned" detail={`${overview?.unassigned} not assigned to a class`} onClick={() => setPageTab("assignments")} />}
+                    {teachers.some((teacher) => teacher.employment_status === "inactive") && <AttentionRow icon={UserMinus} tone="rose" title="Inactive teachers" detail={`${teachers.filter((teacher) => teacher.employment_status === "inactive").length} teacher records marked inactive`} onClick={() => document.getElementById("mobile-teacher-records")?.scrollIntoView({ behavior: "smooth" })} />}
+                    {!overview?.pendingLeave && !overview?.unassigned && !teachers.some((teacher) => teacher.employment_status === "inactive") && <p className="py-4 text-sm text-slate-500">No teacher items need attention right now.</p>}
+                  </div>
+                )}
               </section>
             </>}
 
@@ -684,7 +708,27 @@ export default function TeachersPage() {
               </section>
             )}
 
-            {pageTab === "teachers" && <section id="teacher-records" className="mt-5 scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-lg shadow-slate-900/5 backdrop-blur-sm">
+            {pageTab === "teachers" && <section id="mobile-teacher-records" className="mt-6 scroll-mt-20 sm:hidden" aria-labelledby="mobile-teachers-title">
+              <div className="flex items-center justify-between">
+                <h2 id="mobile-teachers-title" className="text-xl font-extrabold text-slate-950 dark:text-white">Teachers</h2>
+                <button type="button" onClick={() => setShowAllMobileTeachers((value) => !value)} className="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">{showAllMobileTeachers ? "Show less" : "View all"}<ChevronRight className="h-4 w-4" /></button>
+              </div>
+              <div className="mt-2 flex gap-2">
+                <label className="relative min-w-0 flex-1">
+                  <span className="sr-only">Search teachers</span>
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                  <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search teachers by name or subject…" className="h-11 w-full rounded-xl bg-slate-100 pl-9 pr-3 text-sm text-slate-950 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white" />
+                </label>
+                <button type="button" aria-label="Filter teachers" aria-expanded={showMobileFilters} onClick={() => setShowMobileFilters((value) => !value)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200"><SlidersHorizontal className="h-5 w-5" /></button>
+              </div>
+              {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={subject} onChange={setSubject} label="Department" options={subjects} /><Select value={account} onChange={(value) => setAccount(value as typeof account)} label="Account" options={["All", "Active", "Not created"]} /></div>}
+              {filteredTeachers.length ? <div className="mt-2 grid grid-cols-2 gap-2">
+                {(showAllMobileTeachers || search || subject !== "All" || account !== "All" ? filteredTeachers : filteredTeachers.slice(0, 4)).map((teacher, index) => <MobileTeacherCard key={teacher.id} teacher={teacher} index={index} status={overview?.statuses[teacher.id] || ""} onClick={() => setSelectedTeacher(teacher)} />)}
+              </div> : <p className="py-5 text-sm text-slate-500">No teachers match your search.</p>}
+              <button type="button" onClick={openCreateForm} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add teacher</button>
+            </section>}
+
+            {pageTab === "teachers" && <section id="teacher-records" className="mt-5 hidden scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200 bg-white/90 shadow-lg shadow-slate-900/5 backdrop-blur-sm sm:block">
               <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-5">
                 <div>
                   <h2 className="font-bold text-slate-950">Teacher records</h2>
@@ -736,6 +780,11 @@ export default function TeachersPage() {
           </div>
         </main>
       </div>
+
+      <nav aria-label="Principal mobile navigation" className="fixed inset-x-0 bottom-0 z-30 flex h-[68px] items-center justify-around border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-950 lg:hidden">
+        {([{ href: "/principal", label: "Dashboard", Icon: LayoutDashboard }, { href: "/principal/students", label: "Students", Icon: UsersRound }, { href: "/principal/teachers", label: "Teachers", Icon: UserRound }, { href: "/principal/classes", label: "Classes", Icon: School }] as const).map(({ href, label, Icon }) => <Link key={href} href={href} aria-current={label === "Teachers" ? "page" : undefined} className={`flex min-w-0 flex-col items-center gap-0.5 text-[10px] ${label === "Teachers" ? "font-bold text-blue-700 dark:text-blue-300" : "text-slate-600 dark:text-slate-300"}`}><Icon className="h-5 w-5" aria-hidden="true" />{label}</Link>)}
+        <button type="button" onClick={() => document.querySelector<HTMLButtonElement>('button[aria-label="Open sidebar"]')?.click()} className="flex flex-col items-center gap-0.5 text-[10px] text-slate-600 dark:text-slate-300"><MoreHorizontal className="h-5 w-5" aria-hidden="true" />More</button>
+      </nav>
 
       {selectedTeacher && (
         <TeacherDetails
@@ -829,10 +878,27 @@ const statTones = {
 };
 
 function TeacherStat({ icon: Icon, label, value, tone, onClick }: { icon: React.ElementType; label: string; value: number | null; tone: keyof typeof statTones; onClick: () => void }) {
-  return <button type="button" onClick={onClick} aria-label={`${label}: ${value === null ? "Loading" : value}. Open details`} className="group flex min-h-[108px] min-w-0 flex-col items-start justify-center gap-1 rounded-xl border border-slate-200 bg-white p-2 text-left transition hover:border-blue-300 hover:bg-blue-50/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 sm:min-h-[100px] sm:flex-row sm:items-center sm:gap-3 sm:rounded-2xl sm:p-4">
-    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-12 sm:w-12 sm:rounded-[12px] ${statTones[tone]}`}><Icon className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.4} aria-hidden="true" /></span>
-    <span className="min-w-0 flex-1"><span className="block text-[10px] font-medium leading-tight break-words text-slate-600 dark:text-slate-300 sm:text-sm">{label}</span><span className="mt-0.5 block text-xl font-extrabold leading-none tabular-nums text-slate-950 dark:text-white sm:text-[1.75rem]">{value ?? "—"}</span></span>
+  return <button type="button" onClick={onClick} aria-label={`${label}: ${value === null ? "Loading" : value}. Open details`} className="group flex min-h-[78px] min-w-0 items-center gap-1 rounded-xl border border-slate-300 bg-white p-1.5 text-left transition hover:border-blue-300 hover:bg-blue-50/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 sm:min-h-[100px] sm:gap-3 sm:rounded-2xl sm:p-4">
+    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg min-[420px]:h-9 min-[420px]:w-9 sm:h-12 sm:w-12 sm:rounded-[12px] ${statTones[tone]}`}><Icon className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.4} aria-hidden="true" /></span>
+    <span className="min-w-0 flex-1"><span className="block text-[9px] font-medium leading-tight break-words text-slate-700 dark:text-slate-300 min-[420px]:text-[10px] sm:text-sm">{label}</span><span className="mt-0.5 block text-lg font-extrabold leading-none tabular-nums text-slate-950 dark:text-white sm:text-[1.75rem]">{value ?? "—"}</span></span>
     <ChevronRight className="hidden h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600 dark:text-slate-500 sm:block" aria-hidden="true" />
+  </button>;
+}
+
+function AttentionRow({ icon: Icon, tone, title, detail, onClick }: { icon: React.ElementType; tone: keyof typeof statTones; title: string; detail: string; onClick: () => void }) {
+  return <button type="button" onClick={onClick} className="flex w-full items-center gap-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900">
+    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${statTones[tone]}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
+    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-slate-950 dark:text-white">{title}</span><span className="block text-xs text-slate-600 dark:text-slate-300">{detail}</span></span>
+    <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
+  </button>;
+}
+
+function MobileTeacherCard({ teacher, index, status, onClick }: { teacher: Teacher; index: number; status: string; onClick: () => void }) {
+  const displayStatus = teacher.employment_status === "inactive" ? "Inactive" : status === "present" ? "Present" : status === "late" ? "Late" : status === "absent" ? "Absent" : status === "leave" ? "On leave" : "Not marked";
+  const badgeTone = displayStatus === "Present" ? "bg-emerald-100 text-emerald-800" : displayStatus === "Late" ? "bg-amber-100 text-amber-800" : displayStatus === "Absent" || displayStatus === "Inactive" ? "bg-rose-100 text-rose-800" : displayStatus === "On leave" ? "bg-violet-100 text-violet-800" : "bg-slate-100 text-slate-600";
+  return <button type="button" onClick={onClick} className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-300 bg-white p-2 text-left dark:border-slate-700 dark:bg-slate-900">
+    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-xs font-bold text-white ${teacherTones[index % teacherTones.length]}`}>{initials(teacher.name || "Teacher")}</span>
+    <span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold text-slate-950 dark:text-white">{teacher.name}</span><span className="block truncate text-[11px] text-slate-600 dark:text-slate-300">{teacher.subject || "Subject not assigned"}</span><span className={`mt-0.5 inline-block max-w-full truncate rounded-full px-1.5 py-0.5 text-[10px] font-medium ${badgeTone}`}>{displayStatus}</span></span>
   </button>;
 }
 
