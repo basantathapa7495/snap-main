@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, ChevronRight, Loader2, UserCheck, UsersRound, UserRound, UserX, Clock3 } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Loader2, UserCheck, UsersRound, UserRound, UserX, Clock3 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type Status = "present" | "absent" | "leave" | "holiday";
@@ -52,7 +52,9 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
   const [monthlyTeacher, setMonthlyTeacher] = useState("");
   const [month, setMonth] = useState(() => todayInNepal().slice(0, 7));
   const [monthRows, setMonthRows] = useState<Attendance[]>([]);
+  const [monthLeaves, setMonthLeaves] = useState<Leave[]>([]);
   const [monthLoading, setMonthLoading] = useState(false);
+  const [monthError, setMonthError] = useState("");
 
   const activeTeachers = useMemo(
     () => teachers.filter((teacher) => teacher.employment_status !== "inactive" && !teacher.left_at)
@@ -101,20 +103,27 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
     if (!selectedMonthTeacherId || !/^\d{4}-\d{2}$/.test(month)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMonthRows([]);
+      setMonthLeaves([]);
       return;
     }
     let cancelled = false;
     setMonthLoading(true);
+    setMonthError("");
     const start = `${month}-01`;
     const end = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 1))
       .toISOString().slice(0, 10);
-    supabase.from("teacher_attendance").select("teacher_id,attendance_date,status")
-      .eq("school_id", schoolId).eq("teacher_id", selectedMonthTeacherId)
-      .gte("attendance_date", start).lt("attendance_date", end)
-      .then(({ data, error: queryError }) => {
+    Promise.all([
+      supabase.from("teacher_attendance").select("teacher_id,attendance_date,status")
+        .eq("school_id", schoolId).eq("teacher_id", selectedMonthTeacherId)
+        .gte("attendance_date", start).lt("attendance_date", end),
+      supabase.from("teacher_leave_requests").select("teacher_id,start_date,end_date")
+        .eq("school_id", schoolId).eq("teacher_id", selectedMonthTeacherId).eq("status", "approved")
+        .lt("start_date", end).gte("end_date", start),
+    ]).then(([saved, approved]) => {
         if (cancelled) return;
-        setMonthRows(queryError ? [] : (data || []) as Attendance[]);
-        if (queryError) setError(queryError.message);
+        setMonthRows(saved.error || approved.error ? [] : (saved.data || []) as Attendance[]);
+        setMonthLeaves(saved.error || approved.error ? [] : (approved.data || []) as Leave[]);
+        setMonthError(saved.error?.message || approved.error?.message || "");
         setMonthLoading(false);
       });
     return () => { cancelled = true; };
@@ -133,15 +142,29 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
     leave: activeTeachers.filter((teacher) => statusFor(teacher.id) === "leave").length,
     holiday: activeTeachers.filter((teacher) => statusFor(teacher.id) === "holiday").length,
   };
+  const [year, monthNumber] = month.split("-").map(Number);
+  const daysInMonth = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+  const firstWeekday = new Date(Date.UTC(year, monthNumber - 1, 1)).getUTCDay();
+  const monthLabel = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(year, monthNumber - 1, 1)));
+  const monthStatuses = new Map(monthRows.map((row) => [row.attendance_date, row.status]));
+  const statusOnDay = (day: number): Status | null => {
+    const dayDate = `${month}-${String(day).padStart(2, "0")}`;
+    if (monthLeaves.some((leave) => leave.start_date <= dayDate && leave.end_date >= dayDate)) return "leave";
+    return monthStatuses.get(dayDate) || null;
+  };
+  const calendarDays = Array.from({ length: daysInMonth }, (_, index) => ({ day: index + 1, status: statusOnDay(index + 1) }));
   const counts = {
-    present: monthRows.filter((row) => row.status === "present").length,
-    absent: monthRows.filter((row) => row.status === "absent").length,
-    leave: monthRows.filter((row) => row.status === "leave").length,
-    holiday: monthRows.filter((row) => row.status === "holiday").length,
+    present: calendarDays.filter(({ status }) => status === "present").length,
+    absent: calendarDays.filter(({ status }) => status === "absent").length,
+    leave: calendarDays.filter(({ status }) => status === "leave").length,
   };
   const recordedWorkdays = counts.present + counts.absent + counts.leave;
   const percentage = recordedWorkdays ? Math.round(counts.present / recordedWorkdays * 100) : null;
   const editable = date === today;
+  function moveMonth(offset: number) {
+    const next = new Date(Date.UTC(year, monthNumber - 1 + offset, 1));
+    setMonth(next.toISOString().slice(0, 7));
+  }
 
   async function saveOne(teacherId: string, status: Status) {
     if (!editable || busy || busyTeacher || loading || loadFailed || leaveIds.has(teacherId)) return;
@@ -289,32 +312,59 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
           })}
       </div>
 
-      <section className="border-t border-slate-200 pt-5 dark:border-slate-700">
-        <h3 className="font-bold">Monthly attendance</h3>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Select a teacher and month to see recorded days.</p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+      <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-5">
+        <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">Monthly attendance</h3>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">Select a teacher and month to see recorded days.</p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
           <select aria-label="Teacher for monthly attendance" value={selectedMonthTeacherId}
             onChange={(event) => setMonthlyTeacher(event.target.value)}
-            className="h-11 min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white">
+            className="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white">
             {!activeTeachers.length && <option value="">No teachers</option>}
             {activeTeachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{teacher.name}</option>)}
           </select>
           <input aria-label="Month for attendance" type="month" value={month} max={today.slice(0, 7)}
             onChange={(event) => setMonth(event.target.value)}
-            className="h-11 min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
+            className="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
         </div>
-        <div className="mt-3 grid grid-cols-5 gap-1.5 text-center sm:gap-2">
-          {([["Present", counts.present], ["Absent", counts.absent], ["Leave", counts.leave],
-            ["Holiday", counts.holiday], ["Rate", percentage === null ? "—" : `${percentage}%`]] as const).map(([label, value]) => (
-            <div key={label} className="rounded-lg bg-slate-50 px-1 py-2.5 dark:bg-slate-800">
-              <p className="text-sm font-bold sm:text-lg">{monthLoading ? "–" : value}</p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">{label}</p>
+        {monthError && <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-300">Monthly attendance could not be loaded: {monthError}</p>}
+        <div className="mt-4 grid grid-cols-4 gap-1.5 sm:gap-3" aria-label="Monthly attendance summary">
+          {([
+            ["Present", counts.present, "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"],
+            ["Absent", counts.absent, "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-200"],
+            ["Leave", counts.leave, "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200"],
+            ["Attendance Rate", percentage === null ? "—" : `${percentage}%`, "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200"],
+          ] as const).map(([label, value, tone]) => (
+            <div key={label} className={`min-w-0 rounded-xl px-1.5 py-2 sm:px-4 sm:py-3 ${tone}`}>
+              <p className="text-base font-extrabold text-slate-950 dark:text-white sm:text-2xl">{monthLoading ? "–" : value}</p>
+              <p className="mt-0.5 text-[9px] leading-tight sm:text-xs">{label}</p>
             </div>
           ))}
         </div>
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          Rate = present ÷ recorded workdays (present, absent, leave). Holidays and unmarked days are excluded.
-        </p>
+        <div className="mt-4 rounded-2xl border border-slate-200 p-2.5 dark:border-slate-700 sm:p-5">
+          <div className="flex items-center justify-between gap-2">
+            <button type="button" aria-label="Previous month" onClick={() => moveMonth(-1)} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"><ChevronLeft className="h-5 w-5" /></button>
+            <h4 className="text-center text-sm font-bold sm:text-lg">{monthLabel}</h4>
+            <button type="button" aria-label="Next month" onClick={() => moveMonth(1)} disabled={month >= today.slice(0, 7)} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-35 dark:bg-slate-800 dark:text-slate-200"><ChevronRight className="h-5 w-5" /></button>
+          </div>
+          <div className="mt-3 grid grid-cols-7 gap-y-1 text-center text-[11px] text-slate-500 dark:text-slate-400 sm:text-sm">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <span key={day}>{day}</span>)}
+          </div>
+          <div className="mt-2 grid grid-cols-7 gap-y-1.5 sm:gap-y-3" aria-label={`${monthLabel} attendance calendar`}>
+            {Array.from({ length: firstWeekday }, (_, index) => <span key={`empty-${index}`} />)}
+            {calendarDays.map(({ day, status }) => (
+              <div key={day} className="flex justify-center">
+                <span title={`${monthLabel} ${day}: ${monthLoading || monthError ? "Loading" : status || "No record"}`} aria-label={`${monthLabel} ${day}: ${monthLoading || monthError ? "Unavailable" : status || "No record"}`} className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold sm:h-10 sm:w-10 sm:text-sm ${!monthLoading && !monthError && status === "present" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/25 dark:text-emerald-200" : !monthLoading && !monthError && status === "absent" ? "bg-rose-100 text-rose-800 dark:bg-rose-500/25 dark:text-rose-200" : !monthLoading && !monthError && status === "leave" ? "bg-violet-100 text-violet-800 dark:bg-violet-500/25 dark:text-violet-200" : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"}`}>{day}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-slate-600 dark:text-slate-300 sm:justify-between sm:text-xs">
+            {([["Present", "bg-emerald-500"], ["Absent", "bg-rose-500"], ["Leave", "bg-violet-500"], ["No record / holiday", "bg-slate-300 dark:bg-slate-600"]] as const).map(([label, color]) => <span key={label} className="inline-flex items-center gap-1.5"><span className={`h-2.5 w-2.5 rounded-full ${color}`} />{label}</span>)}
+          </div>
+          <div className="mt-4 rounded-xl bg-blue-50 p-3 text-xs dark:bg-blue-500/10 sm:text-sm">
+            <p className="font-bold text-slate-950 dark:text-white">{monthLoading || monthError ? "—" : `${counts.present} of ${recordedWorkdays}`} recorded workdays present</p>
+            <p className="mt-1 text-slate-500 dark:text-slate-400">Rate = present ÷ recorded workdays (present, absent, leave). Holidays and unmarked days are excluded.</p>
+          </div>
+        </div>
       </section>
     </div>
   );
