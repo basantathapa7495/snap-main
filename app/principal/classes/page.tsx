@@ -454,17 +454,17 @@ export default function ClassesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-[#f2f9ff] dark:bg-slate-950">
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
 
         <main className="flex-1 px-3.5 pb-28 pt-7 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="relative flex min-h-[112px] items-center overflow-hidden rounded-2xl bg-gradient-to-r from-blue-100 via-sky-50 to-blue-100 px-4 py-4 dark:from-blue-950 dark:via-slate-900 dark:to-blue-950 sm:min-h-[150px] sm:px-8">
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-200/75 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300 sm:h-16 sm:w-16"><GraduationCap className="h-8 w-8" /></span>
+            <header className="relative flex min-h-[112px] items-center overflow-hidden rounded-2xl bg-gradient-to-r from-[#d9edff] via-[#eaf5ff] to-[#d9edff] px-3.5 py-3 dark:from-blue-950 dark:via-slate-900 dark:to-blue-950 sm:min-h-[150px] sm:px-8">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-300/45 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300 sm:h-20 sm:w-20"><GraduationCap className="h-9 w-9 sm:h-12 sm:w-12" /></span>
               <div className="relative z-10 ml-3 min-w-0 sm:ml-6"><h1 className="text-xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-3xl">Classes &amp; Sections</h1><p className="mt-1 max-w-sm text-xs leading-4 text-slate-600 dark:text-slate-300 sm:text-sm">Manage classes, sections and student placement.</p></div>
-              <div aria-hidden="true" className="pointer-events-none absolute -bottom-6 -right-3 hidden opacity-30 min-[390px]:block"><BookOpen className="h-28 w-28 text-blue-500" /></div>
+              <svg aria-hidden="true" viewBox="0 0 150 105" className="pointer-events-none absolute bottom-0 right-0 hidden h-[90%] w-28 text-blue-500 opacity-55 min-[430px]:block sm:w-44"><path d="M6 54 42 21l35 33v44H6zm65 3 26-42 27 42v41H71z" fill="currentColor" opacity=".12"/><path d="M25 72h16v26H25zm72-9h12v35H97z" fill="currentColor" opacity=".25"/><path d="M26 53h9m58 0h8M100 29v-9m-12 9h24" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/><path d="M57 88h78v10H57zm10-15h66v12H67zm12-16h48v12H79z" fill="currentColor" opacity=".38"/><path d="M77 70h58M64 85h72" stroke="white" strokeWidth="2" opacity=".7"/></svg>
             </header>
 
             {error && <div role="alert" className="mt-3 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/15 dark:text-red-200"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
@@ -490,7 +490,7 @@ export default function ClassesPage() {
             <section className="mt-5" aria-label="All classes">
               <div className="mb-2 flex items-end justify-between"><h2 className="text-xl font-extrabold text-slate-950 dark:text-white">All Classes</h2><span className="text-xs text-slate-500 dark:text-slate-400">{filteredClasses.length} classes</span></div>
               {filteredClasses.length === 0 ? <EmptyState filtered={hasFilters} onAdd={() => { setEditingClass(null); setClassName(""); setClassTeacherId(""); setClassModalOpen(true); }} /> :
-                <div className="space-y-2.5">{filteredClasses.map((schoolClass) => <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24"><ClassCard schoolClass={schoolClass} expanded={expandedClass === schoolClass.id || (Boolean(search.trim()) && (schoolClass.sections.some((section) => section.name.toLowerCase().includes(search.toLowerCase()) || section.teacher?.toLowerCase().includes(search.toLowerCase()))))} onToggle={() => setExpandedClass((current) => current === schoolClass.id ? null : schoolClass.id)} showStudents={selectedYear === currentYear} onAddSection={openAddSection} onEditClass={(item) => { setError(""); setEditingClass(item); setClassName(item.name); setClassTeacherId(item.teacherId || ""); setClassModalOpen(true); }} onEditSection={openEditSection} onDeleteSection={deleteSection} onDeleteClass={deleteClass} /></div>)}</div>}
+                <div className="space-y-2.5">{filteredClasses.map((schoolClass) => <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24"><ClassCard schoolClass={schoolClass} expanded={(expandedClass === null && filteredClasses[0]?.id === schoolClass.id) || expandedClass === schoolClass.id || (Boolean(search.trim()) && (schoolClass.sections.some((section) => section.name.toLowerCase().includes(search.toLowerCase()) || section.teacher?.toLowerCase().includes(search.toLowerCase()))))} onToggle={() => setExpandedClass((current) => (current === schoolClass.id || (current === null && filteredClasses[0]?.id === schoolClass.id)) ? "" : schoolClass.id)} showStudents={selectedYear === currentYear} onAddSection={openAddSection} onEditClass={(item) => { setError(""); setEditingClass(item); setClassName(item.name); setClassTeacherId(item.teacherId || ""); setClassModalOpen(true); }} onEditSection={openEditSection} onDeleteSection={deleteSection} onDeleteClass={deleteClass} /></div>)}</div>}
             </section>
           </div>
         </main>
@@ -574,9 +574,9 @@ export default function ClassesPage() {
 }
 
 function StatCard({ icon: Icon, label, value, tone }: { icon: React.ElementType; label: string; value: number | null; tone: "blue" | "emerald" | "amber" | "rose" }) {
-  const tones = { blue: "border-blue-200 text-blue-600 dark:border-blue-800", emerald: "border-emerald-200 text-emerald-600 dark:border-emerald-800", amber: "border-amber-200 text-amber-600 dark:border-amber-800", rose: "border-rose-200 text-rose-600 dark:border-rose-800" };
-  return <div className={`min-w-0 rounded-xl border bg-white px-1.5 py-2 dark:bg-slate-900 sm:px-4 sm:py-3 ${tones[tone]}`}>
-    <Icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /><p className="mt-1 truncate text-[9px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">{label}</p><p className="text-lg font-extrabold leading-none tabular-nums text-slate-950 dark:text-white sm:text-2xl">{value === null ? "—" : value.toLocaleString()}</p>
+  const tones = { blue: "border-blue-200 text-blue-600 bg-blue-100 dark:border-blue-800 dark:bg-blue-500/20", emerald: "border-emerald-200 text-emerald-600 bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-500/20", amber: "border-amber-200 text-amber-600 bg-amber-100 dark:border-amber-800 dark:bg-amber-500/20", rose: "border-rose-200 text-rose-600 bg-rose-100 dark:border-rose-800 dark:bg-rose-500/20" };
+  return <div className={`flex min-w-0 items-center gap-1 rounded-xl border bg-white px-1 py-2 shadow-sm dark:bg-slate-900 sm:gap-3 sm:px-4 sm:py-3 ${tones[tone].split(" ").filter((item) => item.startsWith("border-")).join(" ")}`}>
+    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-11 sm:w-11 ${tones[tone].split(" ").filter((item) => !item.startsWith("border-")).join(" ")}`}><Icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /></span><span className="min-w-0"><span className="block truncate text-[8px] leading-tight font-medium text-slate-600 dark:text-slate-300 min-[380px]:text-[9px] sm:text-xs">{label}</span><span className="mt-0.5 block text-base font-extrabold leading-none tabular-nums text-slate-950 dark:text-white sm:text-2xl">{value === null ? "—" : value.toLocaleString()}</span></span>
   </div>;
 }
 
@@ -589,7 +589,7 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection
   onDeleteClass: (schoolClass: SchoolClass) => void;
 }) {
   const displayName = schoolClass.name.replace(/^Class\s+(\d+)$/i, "Grade $1");
-  return <article className={`rounded-2xl border bg-white shadow-sm dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 dark:border-slate-700"}`}>
+  return <article className={`rounded-2xl border shadow-sm ${expanded ? "border-blue-200 bg-blue-50/70 dark:border-blue-800 dark:bg-blue-950/50" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"}`}>
     <button type="button" aria-expanded={expanded} onClick={onToggle} className="flex w-full items-center gap-3 p-3 text-left sm:p-4">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300"><BookOpen className="h-5 w-5" /></span>
       <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-950 dark:text-white sm:text-lg">{displayName}</span><span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{showStudents ? `${schoolClass.students} students` : "Students unavailable"} · {schoolClass.sections.length} sections</span></span>
@@ -597,14 +597,14 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection
     </button>
     {expanded && <div className="space-y-2 px-2.5 pb-3 sm:px-4 sm:pb-4">
       {schoolClass.sections.length === 0 && <p className="rounded-xl bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-300">No sections yet. Add one when this class needs separate groups.</p>}
-      {schoolClass.sections.map((section) => <div key={section.id} className="rounded-xl border border-slate-200 p-2.5 dark:border-slate-700 sm:p-3">
-        <div className="flex items-center gap-2.5"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">{section.name.slice(0, 2)}</span>
+      {schoolClass.sections.map((section, index) => <div key={section.id} className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900 sm:p-3">
+        <div className="flex items-center gap-2.5"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-bold ${["bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300", "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300", "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"][index % 3]}`}>{section.name.slice(0, 2)}</span>
           <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-950 dark:text-white">Section {section.name}</p><p className="text-xs text-slate-500 dark:text-slate-400">{showStudents ? `${section.students} students` : "Students unavailable"}</p></div>
           <div className="min-w-0 flex-1 border-l border-slate-200 pl-2 dark:border-slate-700"><p className="text-[10px] text-slate-500 dark:text-slate-400">Class Teacher</p><p className={`truncate text-xs font-semibold ${section.teacher ? "text-slate-800 dark:text-slate-100" : "text-rose-600 dark:text-rose-300"}`}>{section.teacher || "Not assigned"}</p></div>
         </div>
         <div className="mt-2 flex flex-wrap gap-1.5 pl-[50px] text-[11px] font-semibold sm:text-xs">
-          {showStudents && <Link href={`/principal/students?class=${encodeURIComponent(schoolClass.name)}&section=${encodeURIComponent(section.name)}`} className="rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">View students</Link>}
-          <button type="button" onClick={() => onEditSection(schoolClass, section)} className="rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">Edit</button>
+          {showStudents && <Link href={`/principal/students?class=${encodeURIComponent(schoolClass.name)}&section=${encodeURIComponent(section.name)}`} className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300"><Users className="h-3.5 w-3.5" /> View students</Link>}
+          <button type="button" onClick={() => onEditSection(schoolClass, section)} className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">✎ Edit</button>
           {!section.teacherId && <button type="button" onClick={() => onEditSection(schoolClass, section)} className="rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">Assign teacher</button>}
           <button type="button" onClick={() => onDeleteSection(schoolClass.id, section)} className="rounded-lg px-1 py-1.5 text-rose-600 dark:text-rose-300">Archive</button>
         </div>
