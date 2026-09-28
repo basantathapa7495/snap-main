@@ -238,16 +238,16 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
         </label>
       </div>
 
-      <div className="grid grid-cols-4 gap-1.5 sm:gap-3" aria-label="Daily attendance summary">
+      <div className="grid grid-cols-[1.45fr_repeat(3,minmax(0,1fr))] gap-1.5 sm:grid-cols-[1.25fr_repeat(3,minmax(0,1fr))] sm:gap-3" aria-label="Daily attendance summary">
         {([
           ["Total Teachers", activeTeachers.length, UsersRound, "border-blue-100 bg-blue-50/70 text-blue-600 dark:border-blue-900 dark:bg-blue-500/10"],
           ["Present", summary.present, UserRound, "border-emerald-100 bg-emerald-50/70 text-emerald-600 dark:border-emerald-900 dark:bg-emerald-500/10"],
           ["Absent", summary.absent, UserX, "border-rose-100 bg-rose-50/70 text-rose-600 dark:border-rose-900 dark:bg-rose-500/10"],
           ["Leave", summary.leave, Clock3, "border-amber-100 bg-amber-50/70 text-amber-600 dark:border-amber-900 dark:bg-amber-500/10"],
         ] as const).map(([label, count, Icon, tone]) => (
-          <div key={label} className={`min-w-0 rounded-xl border px-1.5 py-2.5 sm:px-4 sm:py-3 ${tone}`}>
+          <div key={label} className={`min-w-0 rounded-xl border px-1.5 py-1.5 sm:px-4 sm:py-2 ${tone}`}>
             <div className="flex items-center justify-between gap-0.5"><p className="text-lg font-extrabold leading-none text-slate-950 dark:text-white sm:text-2xl">{loading ? "–" : count}</p><Icon className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" aria-hidden="true" /></div>
-            <p className="mt-1 text-[10px] leading-tight font-medium text-slate-600 dark:text-slate-300 sm:text-xs">{label}</p>
+            <p className="mt-1 whitespace-nowrap text-[9px] leading-tight font-medium text-slate-600 dark:text-slate-300 min-[380px]:text-[10px] sm:text-xs">{label}</p>
           </div>
         ))}
       </div>
