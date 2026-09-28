@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   ArrowRight,
-  BookOpen,
   CalendarDays,
   Check,
   ChevronRight,
@@ -553,13 +552,12 @@ export default function TeachersPage() {
         <main className="flex-1 px-4 pb-24 pt-20 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px]">
             <header className="relative overflow-hidden rounded-[26px] border border-blue-100 bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#d9ebff] px-5 py-6 shadow-sm dark:border-blue-900/60 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:px-8 sm:py-8">
-              <div className="pointer-events-none absolute -bottom-12 right-4 h-40 w-64 rounded-full bg-blue-300/25 blur-3xl dark:bg-blue-400/10" aria-hidden="true" />
-              <div className="pointer-events-none absolute bottom-0 right-3 flex h-full items-end gap-1 opacity-40 dark:opacity-25 sm:right-10" aria-hidden="true">
-                <span className="mb-4 flex h-16 w-12 items-center justify-center rounded-lg border border-blue-300 bg-white/70 shadow-sm sm:h-24 sm:w-16"><BookOpen className="h-7 w-7 text-blue-600 sm:h-10 sm:w-10" /></span>
-                <span className="mb-3 flex h-20 w-8 items-center justify-center rounded-md border border-blue-300 bg-sky-100/90 shadow-sm sm:h-28 sm:w-11"><BookOpen className="h-5 w-5 text-sky-700" /></span>
-                <span className="mb-4 flex h-14 w-8 items-center justify-center rounded-md border border-blue-300 bg-indigo-100/90 shadow-sm sm:h-20 sm:w-11"><GraduationCap className="h-5 w-5 text-indigo-700" /></span>
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-[52%] overflow-hidden" aria-hidden="true">
+                <div className="absolute -bottom-16 right-[-15%] h-40 w-[115%] rounded-[50%] bg-blue-300/20 dark:bg-blue-300/10" />
+                <p className="absolute left-0 top-[34%] hidden -rotate-6 text-center font-serif text-sm italic leading-snug text-blue-600/70 dark:text-blue-200/60 lg:block">Empowered<br />Teachers<br />Brighter Futures</p>
+                <TeachersHeroArtwork />
               </div>
-              <div className="relative max-w-[75%] sm:max-w-xl">
+              <div className="relative max-w-[72%] sm:max-w-[55%]">
                 <span className="mb-3 block h-1 w-10 rounded-full bg-blue-600" aria-hidden="true" />
                 <h1 className="text-[2rem] font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">Teachers</h1>
                 <p className="mt-1.5 max-w-md text-sm leading-5 text-slate-700 dark:text-blue-100 sm:text-base sm:leading-6">Manage teachers, attendance, leave and school access.</p>
@@ -786,6 +784,42 @@ export default function TeachersPage() {
   );
 }
 
+function TeachersHeroArtwork() {
+  return <svg viewBox="0 0 360 210" preserveAspectRatio="xMaxYMax meet" className="absolute -bottom-2 -right-3 h-[115%] w-[95%] max-w-none opacity-75 dark:opacity-50 sm:right-0 sm:w-[72%] sm:opacity-100" aria-hidden="true">
+    <defs>
+      <linearGradient id="teacherBookBlue" x1="0" x2="1" y1="0" y2="1"><stop stopColor="#b9d9ff" /><stop offset="1" stopColor="#2369d0" /></linearGradient>
+      <linearGradient id="teacherBookWhite" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#ffffff" /><stop offset="1" stopColor="#d9e7fb" /></linearGradient>
+      <linearGradient id="teacherPot" x1="0" x2="1" y1="0" y2="1"><stop stopColor="#fff" /><stop offset="1" stopColor="#d1e3fa" /></linearGradient>
+      <linearGradient id="teacherLeaf" x1="0" x2="1" y1="0" y2="1"><stop stopColor="#64bf6a" /><stop offset="1" stopColor="#167240" /></linearGradient>
+    </defs>
+    <ellipse cx="231" cy="199" rx="126" ry="8" fill="#4780b6" opacity=".16" />
+    <path d="M302 142c-4-29-6-47-1-73m0 73c6-19 20-40 39-55m-38 53c-11-18-25-30-43-40" fill="none" stroke="#29834b" strokeWidth="3" />
+    <path d="M297 96c-21-34-15-61 7-83 11 36 6 62-7 83Z" fill="url(#teacherLeaf)" />
+    <path d="M306 104c9-31 28-47 49-50-6 27-23 45-49 50Z" fill="#319655" />
+    <path d="M297 121c-9-24-25-38-47-40 11 26 26 39 47 40Z" fill="#368d50" />
+    <path d="M306 124c13-21 32-31 52-27-13 20-29 29-52 27Z" fill="#459f56" />
+    <path d="M279 132h55l-6 49c-2 5-8 7-22 7s-21-2-22-7l-5-49Z" fill="url(#teacherPot)" stroke="#bdd4ed" strokeWidth="2" />
+    <path d="M278 133h57" stroke="#f9fcff" strokeWidth="5" strokeLinecap="round" />
+    <rect x="143" y="93" width="19" height="73" rx="3" fill="#3579d8" /><rect x="147" y="97" width="4" height="57" fill="#7bb3f3" opacity=".65" />
+    <rect x="164" y="88" width="20" height="78" rx="3" fill="#84b7ec" /><rect x="167" y="92" width="3" height="56" fill="#dceeff" opacity=".8" />
+    <rect x="187" y="100" width="15" height="66" rx="2" fill="#1c59a8" /><rect x="190" y="104" width="3" height="50" fill="#c8e3ff" opacity=".65" />
+    <rect x="205" y="95" width="19" height="71" rx="2" fill="#4a83cc" /><rect x="209" y="98" width="4" height="59" fill="#d5ebff" opacity=".7" />
+    <rect x="223" y="105" width="11" height="62" rx="2" fill="#dbad6e" />
+    <path d="M88 108 81 52m18 55L101 45m11 63 10-57" stroke="#233f67" strokeWidth="5" strokeLinecap="round" />
+    <path d="m79 50 1-11 3 11m16-6 2-12 3 12m16 5 4-10 1 11" fill="#20477b" />
+    <path d="M62 112h68l-7 73c-1 4-7 6-27 6s-26-2-27-6l-7-73Z" fill="url(#teacherPot)" stroke="#bcd4ec" strokeWidth="2" />
+    <path d="M62 113h68" stroke="#fff" strokeWidth="6" strokeLinecap="round" />
+    <path d="M132 170h205l-5 27H130l2-27Z" fill="#3373c4" />
+    <path d="M136 171h195l-4 21H134l2-21Z" fill="url(#teacherBookWhite)" />
+    <path d="M132 170h205" stroke="#86ace0" strokeWidth="5" strokeLinecap="round" />
+    <path d="M128 143h211l-3 27H125l3-27Z" fill="#2c68b6" />
+    <path d="M130 146h204l-3 19H127l3-19Z" fill="url(#teacherBookWhite)" />
+    <path d="M127 143h211" stroke="#87b7eb" strokeWidth="5" strokeLinecap="round" />
+    <path d="M135 170h198" stroke="#4b8ce0" strokeWidth="2" />
+    <path d="M139 194h191" stroke="#164a93" strokeWidth="3" />
+  </svg>;
+}
+
 const statTones = {
   blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300",
   emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300",
@@ -795,9 +829,18 @@ const statTones = {
   amber: "bg-amber-50 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300",
 };
 
+const statCardTones = {
+  blue: "from-white to-blue-50/75 dark:from-slate-900 dark:to-blue-950/40",
+  emerald: "from-white to-emerald-50/60 dark:from-slate-900 dark:to-emerald-950/30",
+  rose: "from-white to-rose-50/60 dark:from-slate-900 dark:to-rose-950/30",
+  orange: "from-white to-orange-50/65 dark:from-slate-900 dark:to-orange-950/30",
+  violet: "from-white to-violet-50/70 dark:from-slate-900 dark:to-violet-950/35",
+  amber: "from-white to-amber-50/70 dark:from-slate-900 dark:to-amber-950/35",
+};
+
 function TeacherStat({ icon: Icon, label, value, tone, onClick }: { icon: React.ElementType; label: string; value: number | null; tone: keyof typeof statTones; onClick: () => void }) {
-  return <button type="button" onClick={onClick} aria-label={`${label}: ${value === null ? "Unavailable" : value}. Open details`} className="group flex min-h-[88px] min-w-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2.5 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-600 sm:min-h-[104px] sm:gap-3 sm:p-4">
-    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12 ${statTones[tone]}`}><Icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" /></span>
+  return <button type="button" onClick={onClick} aria-label={`${label}: ${value === null ? "Loading" : value}. Open details`} className={`group flex min-h-[88px] min-w-0 items-center gap-2 rounded-[20px] border border-slate-200/80 bg-gradient-to-br p-2.5 text-left shadow-[0_8px_25px_rgba(32,75,132,0.07)] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:hover:border-blue-600 sm:min-h-[118px] sm:gap-3 sm:p-4 ${statCardTones[tone]}`}>
+    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] sm:h-14 sm:w-14 ${statTones[tone]}`}><Icon className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={2.4} aria-hidden="true" /></span>
     <span className="min-w-0 flex-1"><span className="block text-[11px] font-medium leading-tight text-slate-600 dark:text-slate-300 sm:text-sm">{label}</span><span className="mt-1 block text-2xl font-extrabold leading-none tabular-nums text-slate-950 dark:text-white sm:text-[1.75rem]">{value ?? "—"}</span></span>
     <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600 dark:text-slate-500" aria-hidden="true" />
   </button>;
