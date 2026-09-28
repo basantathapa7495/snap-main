@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, Check, Loader2, UserCheck } from "lucide-react";
+import { CalendarDays, ChevronRight, Loader2, UserCheck, UsersRound, UserRound, UserX, Clock3 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type Status = "present" | "absent" | "leave" | "holiday";
@@ -11,15 +11,17 @@ type Teacher = {
   department?: string | null;
   subject: string | null;
   employment_status?: string | null;
+  left_at?: string | null;
 };
 type Attendance = { teacher_id: string; attendance_date: string; status: Status };
 type Leave = { teacher_id: string; start_date: string; end_date: string };
-const statuses: { value: Status; label: string; tone: string }[] = [
-  { value: "present", label: "Present", tone: "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200" },
-  { value: "absent", label: "Absent", tone: "border-rose-500 bg-rose-50 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200" },
-  { value: "leave", label: "Leave", tone: "border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200" },
-  { value: "holiday", label: "Holiday", tone: "border-sky-500 bg-sky-50 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200" },
-];
+const statuses = ["present", "absent", "leave"] as const;
+const statusTone: Record<Status, string> = {
+  present: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
+  absent: "bg-rose-50 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200",
+  leave: "bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200",
+  holiday: "bg-sky-50 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200",
+};
 
 // Use the school's local day, including around midnight in Nepal.
 function todayInNepal() {
@@ -42,6 +44,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [busyTeacher, setBusyTeacher] = useState<string | null>(null);
+  const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loadFailed, setLoadFailed] = useState(false);
   const [message, setMessage] = useState("");
@@ -52,7 +55,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
   const [monthLoading, setMonthLoading] = useState(false);
 
   const activeTeachers = useMemo(
-    () => teachers.filter((teacher) => teacher.employment_status !== "inactive")
+    () => teachers.filter((teacher) => teacher.employment_status !== "inactive" && !teacher.left_at)
       .sort((a, b) => a.name.localeCompare(b.name)),
     [teachers],
   );
@@ -123,7 +126,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
     [attendance],
   );
   const statusFor = (teacherId: string): Status | null =>
-    savedByTeacher.get(teacherId) || (leaveIds.has(teacherId) ? "leave" : null);
+    leaveIds.has(teacherId) ? "leave" : savedByTeacher.get(teacherId) || null;
   const summary = {
     present: activeTeachers.filter((teacher) => statusFor(teacher.id) === "present").length,
     absent: activeTeachers.filter((teacher) => statusFor(teacher.id) === "absent").length,
@@ -141,10 +144,22 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
   const editable = date === today;
 
   async function saveOne(teacherId: string, status: Status) {
-    if (!editable || busy || busyTeacher || loading || loadFailed) return;
+    if (!editable || busy || busyTeacher || loading || loadFailed || leaveIds.has(teacherId)) return;
     setBusyTeacher(teacherId);
     setError("");
     setMessage("");
+    const approved = await supabase.from("teacher_leave_requests").select("teacher_id,start_date,end_date")
+      .eq("school_id", schoolId).eq("teacher_id", teacherId).eq("status", "approved")
+      .lte("start_date", date).gte("end_date", date);
+    if (approved.error || approved.data?.length) {
+      if (approved.data?.length) {
+        setLeaves((current) => [...current.filter((row) => row.teacher_id !== teacherId), ...(approved.data as Leave[])]);
+        setError("This teacher has approved leave for the selected date.");
+        setEditingTeacher(null);
+      } else setError(approved.error?.message || "Approved leave could not be checked.");
+      setBusyTeacher(null);
+      return;
+    }
     const { error: saveError } = await supabase.from("teacher_attendance").upsert({
       school_id: schoolId, teacher_id: teacherId, attendance_date: date, status,
       check_in: null, check_out: null, updated_at: new Date().toISOString(),
@@ -157,6 +172,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
       ]);
       onSaved();
       setSaveRevision((revision) => revision + 1);
+      setEditingTeacher(null);
     }
     setBusyTeacher(null);
   }
@@ -166,8 +182,27 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
     setBusy(true);
     setError("");
     setMessage("");
+    // Refresh approved leave at the point of saving, since approvals may have changed
+    // while the principal had this page open.
+    const approved = await supabase.from("teacher_leave_requests").select("teacher_id,start_date,end_date")
+      .eq("school_id", schoolId).eq("status", "approved")
+      .lte("start_date", date).gte("end_date", date);
+    if (approved.error) {
+      setError(approved.error.message);
+      setBusy(false);
+      return;
+    }
+    const currentLeaves = (approved.data || []) as Leave[];
+    const approvedIds = new Set(currentLeaves.map((leave) => leave.teacher_id));
+    setLeaves(currentLeaves);
+    const eligible = activeTeachers.filter((teacher) => !approvedIds.has(teacher.id));
+    if (!eligible.length) {
+      setMessage("All teachers have approved leave for this date.");
+      setBusy(false);
+      return;
+    }
     const { error: saveError } = await supabase.from("teacher_attendance").upsert(
-      activeTeachers.map((teacher) => ({
+      eligible.map((teacher) => ({
         school_id: schoolId, teacher_id: teacher.id, attendance_date: date,
         status: "present" as const, check_in: null, check_out: null,
         updated_at: new Date().toISOString(),
@@ -176,10 +211,13 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
     );
     if (saveError) setError(saveError.message);
     else {
-      setAttendance(activeTeachers.map((teacher) => ({
+      setAttendance((current) => [
+        ...current.filter((row) => approvedIds.has(row.teacher_id)),
+        ...eligible.map((teacher) => ({
         teacher_id: teacher.id, attendance_date: date, status: "present",
-      })));
-      setMessage("All active teachers marked present. You can change individual statuses below.");
+        } as Attendance)),
+      ]);
+      setMessage(`${eligible.length} teachers marked present. Approved leave was kept. You can change individual statuses below.`);
       onSaved();
       setSaveRevision((revision) => revision + 1);
     }
@@ -187,25 +225,29 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
   }
 
   return (
-    <div className="space-y-5 text-slate-900 dark:text-slate-100">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-bold">Daily attendance</h3>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Tap a status to save it. Approved leave appears automatically.</p>
+    <div className="space-y-4 pb-8 text-slate-900 dark:text-slate-100 sm:space-y-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">Daily attendance</h3>
+          <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500 dark:text-slate-400 sm:text-sm">Tap a status to save it. Approved leave appears automatically.</p>
         </div>
-        <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+        <label className="w-[136px] shrink-0 text-xs font-semibold text-slate-600 dark:text-slate-300 sm:w-[180px]">
           Date
           <input type="date" value={date} max={today} onChange={(event) => setDate(event.target.value)}
-            className="mt-1 block h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
+            className="mt-1 block h-10 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-1 text-[11px] text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white sm:px-3 sm:text-sm" />
         </label>
       </div>
 
-      <div className="grid grid-cols-5 gap-1.5 sm:gap-3">
-        {([["Teachers", activeTeachers.length], ["Present", summary.present], ["Absent", summary.absent],
-          ["Leave", summary.leave], ["Holiday", summary.holiday]] as const).map(([label, count]) => (
-          <div key={label} className="rounded-xl border border-slate-200 bg-slate-50 px-1.5 py-2.5 text-center dark:border-slate-700 dark:bg-slate-800 sm:p-3">
-            <p className="text-lg font-bold sm:text-xl">{loading ? "–" : count}</p>
-            <p className="truncate text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:text-xs">{label}</p>
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-3" aria-label="Daily attendance summary">
+        {([
+          ["Total Teachers", activeTeachers.length, UsersRound, "border-blue-100 bg-blue-50/70 text-blue-600 dark:border-blue-900 dark:bg-blue-500/10"],
+          ["Present", summary.present, UserRound, "border-emerald-100 bg-emerald-50/70 text-emerald-600 dark:border-emerald-900 dark:bg-emerald-500/10"],
+          ["Absent", summary.absent, UserX, "border-rose-100 bg-rose-50/70 text-rose-600 dark:border-rose-900 dark:bg-rose-500/10"],
+          ["Leave", summary.leave, Clock3, "border-amber-100 bg-amber-50/70 text-amber-600 dark:border-amber-900 dark:bg-amber-500/10"],
+        ] as const).map(([label, count, Icon, tone]) => (
+          <div key={label} className={`min-w-0 rounded-xl border px-1.5 py-2.5 sm:px-4 sm:py-3 ${tone}`}>
+            <div className="flex items-center justify-between gap-0.5"><p className="text-lg font-extrabold leading-none text-slate-950 dark:text-white sm:text-2xl">{loading ? "–" : count}</p><Icon className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" aria-hidden="true" /></div>
+            <p className="mt-1 text-[10px] leading-tight font-medium text-slate-600 dark:text-slate-300 sm:text-xs">{label}</p>
           </div>
         ))}
       </div>
@@ -213,7 +255,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
       {editable && (
         <button type="button" onClick={markAllPresent}
           disabled={loading || loadFailed || busy || Boolean(busyTeacher) || !activeTeachers.length}
-          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 text-sm font-bold text-white transition hover:bg-teal-800 disabled:opacity-50 dark:bg-teal-600 dark:hover:bg-teal-500 sm:w-auto">
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-500 sm:min-h-12">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
           Mark All Present
         </button>
@@ -222,33 +264,27 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
       {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-500/15 dark:text-rose-200">{error}</p>}
       {message && <p role="status" className="rounded-lg bg-teal-50 p-3 text-sm text-teal-800 dark:bg-teal-500/15 dark:text-teal-200">{message}</p>}
 
-      <div className="divide-y divide-slate-200 rounded-xl border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
+      <div className="space-y-2 border-t border-slate-200 pt-4 dark:border-slate-700">
         {loading ? <p className="p-5 text-sm text-slate-500">Loading attendance…</p>
           : activeTeachers.length === 0 ? <p className="p-5 text-sm text-slate-500">No active teachers added yet.</p>
           : activeTeachers.map((teacher) => {
             const selected = statusFor(teacher.id);
             return (
-              <div key={teacher.id} className="px-3 py-2.5 sm:flex sm:items-center sm:justify-between sm:gap-4">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-800 dark:bg-teal-500/20 dark:text-teal-200">{initial(teacher.name)}</span>
+              <div key={teacher.id} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/60 sm:px-4">
+                <button type="button" onClick={() => setEditingTeacher((current) => current === teacher.id ? null : teacher.id)} disabled={!editable || loadFailed || busy || Boolean(busyTeacher) || leaveIds.has(teacher.id)} aria-expanded={editingTeacher === teacher.id} aria-label={`Change attendance for ${teacher.name}`} className="flex w-full min-w-0 items-center gap-2.5 text-left disabled:cursor-default">
+                  <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">{initial(teacher.name)}</span>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{teacher.name}</p>
-                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">{teacher.department || teacher.subject || "Teacher"}{selected === "leave" && leaveIds.has(teacher.id) && !savedByTeacher.has(teacher.id) ? " · Approved leave" : ""}</p>
+                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">{teacher.subject || teacher.department || "Teacher"}</p>
                   </div>
                   {busyTeacher === teacher.id && <Loader2 className="ml-auto h-4 w-4 animate-spin text-teal-600" />}
-                </div>
-                <div className="mt-2 grid grid-cols-4 gap-1 sm:mt-0 sm:w-[300px]">
-                  {statuses.map(({ value, label, tone }) => (
-                    <button key={value} type="button" aria-label={`Mark ${teacher.name} ${label}`}
-                      aria-pressed={selected === value} onClick={() => void saveOne(teacher.id, value)}
-                      disabled={!editable || loadFailed || busy || Boolean(busyTeacher)}
-                      className={`min-h-10 rounded-lg border px-0.5 text-[10px] font-semibold transition sm:text-xs ${
-                        selected === value ? tone : "border-slate-200 bg-white text-slate-600 hover:border-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                      } disabled:cursor-default`}>
-                      {selected === value && <Check className="mr-0.5 inline h-3 w-3" />}{label}
-                    </button>
-                  ))}
-                </div>
+                  <span className={`ml-auto inline-flex min-w-[68px] shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-bold sm:min-w-[90px] sm:text-xs ${selected ? statusTone[selected] : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"}`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{selected ? selected[0].toUpperCase() + selected.slice(1) : "Unmarked"}</span>
+                  {!leaveIds.has(teacher.id) && editable && <ChevronRight className={`h-4 w-4 shrink-0 text-slate-400 transition ${editingTeacher === teacher.id ? "rotate-90" : ""}`} aria-hidden="true" />}
+                </button>
+                {leaveIds.has(teacher.id) && <p className="mt-1 pl-[50px] text-[11px] font-medium text-amber-700 dark:text-amber-300">Approved leave</p>}
+                {editingTeacher === teacher.id && editable && !leaveIds.has(teacher.id) && <div className="mt-2 grid grid-cols-3 gap-2 border-t border-slate-100 pt-2 dark:border-slate-700" aria-label={`Attendance options for ${teacher.name}`}>
+                  {statuses.map((value) => <button key={value} type="button" onClick={() => void saveOne(teacher.id, value)} disabled={Boolean(busyTeacher) || busy} aria-pressed={selected === value} className={`min-h-10 rounded-lg px-2 text-xs font-semibold ${selected === value ? statusTone[value] : "bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-300"}`}>{value[0].toUpperCase() + value.slice(1)}</button>)}
+                </div>}
               </div>
             );
           })}
