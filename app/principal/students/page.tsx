@@ -12,7 +12,6 @@ import {
   Edit3,
   Eye,
   EyeOff,
-  GraduationCap,
   Hash,
   KeyRound,
   Mail,
@@ -20,12 +19,10 @@ import {
   MoreVertical,
   Phone,
   Plus,
-  RefreshCw,
   Search,
   Trash2,
   UserCheck,
   UserRound,
-  Users,
   X,
 } from "lucide-react";
 import Sidebar from "@/components/sidebar";
@@ -117,7 +114,6 @@ export default function StudentsPage() {
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState("");
   const [studentClass, setStudentClass] = useState("All");
@@ -145,7 +141,6 @@ export default function StudentsPage() {
     let cancelled = false;
 
     async function loadStudents() {
-      setRefreshing(true);
       setError("");
       try {
         const {
@@ -212,7 +207,6 @@ export default function StudentsPage() {
       } finally {
         if (!cancelled) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     }
@@ -284,10 +278,6 @@ export default function StudentsPage() {
     (safePage - 1) * pageSize,
     safePage * pageSize,
   );
-  const activeAccounts = students.filter((student) => student.user_id).length;
-  const incompleteRecords = students.filter(
-    (student) => !student.class || !student.parent_phone || !student.roll_no,
-  ).length;
 
   function resetFiltersPage() {
     setCurrentPage(1);
@@ -514,27 +504,7 @@ export default function StudentsPage() {
             {pageTab === "attendance" && <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"><h2 className="font-bold text-slate-950 dark:text-white">Student attendance</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Review school-wide attendance and mark each class.</p><a href="/principal/attendance" className="mt-3 inline-flex rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white">Open attendance</a></section>}
             {pageTab === "joining" && <><SchoolJoiningControls role="student" /><StudentJoiningOversight /></>}
 
-            {pageTab === "students" && <><div className="mb-1 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRefreshKey((value) => value + 1)}
-                  disabled={refreshing}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                >
-                  <RefreshCw
-                    className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-                  />
-                  Refresh
-                </button>
-                <button
-                  type="button"
-                  onClick={openCreateForm}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-xs font-semibold text-white hover:bg-blue-700"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add student
-                </button>
-              </div>
+            {pageTab === "students" && <>
               {unassignedIds && <button type="button" onClick={() => setUnassignedIds(null)} className="mb-2 text-xs font-semibold text-blue-600">Showing unassigned students · Clear filter</button>}
 
             {(error || notice) && (
@@ -562,38 +532,7 @@ export default function StudentsPage() {
               </div>
             )}
 
-            <section aria-label="Student summary" className="grid grid-cols-4 gap-1 sm:gap-3">
-              <Stat
-                icon={Users}
-                label="Students"
-                value={students.length}
-                helper="Records"
-                color="blue"
-              />
-              <Stat
-                icon={UserCheck}
-                label="Access"
-                value={activeAccounts}
-                helper="Portal active"
-                color="emerald"
-              />
-              <Stat
-                icon={GraduationCap}
-                label="Classes"
-                value={Math.max(0, classes.length - 1)}
-                helper="Represented"
-                color="violet"
-              />
-              <Stat
-                icon={AlertCircle}
-                label="Incomplete"
-                value={incompleteRecords}
-                helper="Missing info"
-                color="amber"
-              />
-            </section>
-
-            <section className="mt-3">
+            <section className="mt-2">
               <div className="space-y-2">
                 <label className="relative block">
                   <span className="sr-only">Search students</span>
@@ -729,39 +668,6 @@ export default function StudentsPage() {
           onClose={() => setLoginStudent(null)}
         />
       )}
-    </div>
-  );
-}
-
-function Stat({
-  icon: Icon,
-  label,
-  value,
-  helper,
-  color,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-  helper: string;
-  color: "blue" | "emerald" | "violet" | "amber";
-}) {
-  const colors = {
-    blue: "bg-blue-50 text-blue-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    violet: "bg-violet-50 text-violet-600",
-    amber: "bg-amber-50 text-amber-600",
-  };
-  return (
-    <div className="min-w-0 rounded-lg border border-slate-200 bg-white px-1.5 py-1 dark:border-slate-700 dark:bg-slate-900 sm:px-3 sm:py-2">
-      <div className="flex items-center justify-between gap-0.5">
-        <p className="truncate text-[9px] font-semibold leading-none text-slate-500 dark:text-slate-400 sm:text-xs">{label}</p>
-        <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded ${colors[color]}`}><Icon className="h-2.5 w-2.5" /></span>
-      </div>
-      <div className="mt-0.5 flex items-end gap-1">
-        <p className="text-base font-bold leading-none text-slate-950 dark:text-white sm:text-xl">{value}</p>
-        <p className="min-w-0 truncate text-[8px] leading-none text-slate-400 sm:text-[10px]">{helper}</p>
-      </div>
     </div>
   );
 }
