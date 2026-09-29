@@ -5,6 +5,7 @@ import {
   AlertCircle,
   BookOpen,
   CheckCircle2,
+  Layers3,
   Plus,
   Search,
   UserRound,
@@ -632,7 +633,14 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection
   return <article className={`rounded-2xl border bg-white shadow-sm dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"}`}>
     <button type="button" aria-expanded={expanded} onClick={onToggle} className="flex w-full items-center gap-3 p-3 text-left sm:p-4">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300"><BookOpen className="h-5 w-5" /></span>
-      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-950 dark:text-white sm:text-lg">{displayName}</span><span className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[11px] leading-4 sm:text-xs"><span className="text-slate-500 dark:text-slate-400">{showStudents ? `${schoolClass.students} students` : "Students unavailable"}{hasSections ? ` · ${schoolClass.sections.length} sections` : ""}</span>{hasSections ? schoolClass.sections.map((section) => <span key={section.id} className={section.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}>{section.name}: {section.teacherId ? section.teacher : "Not assigned"}</span>) : <span className={schoolClass.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}>{schoolClass.teacherId ? schoolClass.teacher : "Not assigned"}</span>}</span></span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-bold text-slate-950 dark:text-white sm:text-lg">{displayName}</span>
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] leading-4 sm:text-xs">
+          <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400" aria-label={showStudents ? `${schoolClass.students} students` : "Students unavailable"} title="Students"><Users className="h-3.5 w-3.5" aria-hidden="true" />{showStudents ? schoolClass.students : "—"}</span>
+          {hasSections && <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400" aria-label={`${schoolClass.sections.length} sections`} title="Sections"><Layers3 className="h-3.5 w-3.5" aria-hidden="true" />{schoolClass.sections.length}</span>}
+          {hasSections ? schoolClass.sections.map((section) => <span key={section.id} className={`inline-flex min-w-0 items-center gap-1 ${section.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}`} title={`Section ${section.name}: ${section.teacher || "Not assigned"}`}><UserRound className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{section.name}: {section.teacherId ? section.teacher : "Not assigned"}</span>) : <span className={`inline-flex min-w-0 items-center gap-1 ${schoolClass.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}`} title={schoolClass.teacher || "Not assigned"}><UserRound className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{schoolClass.teacherId ? schoolClass.teacher : "Not assigned"}</span>}
+        </span>
+      </span>
       <ChevronDown className={`h-5 w-5 shrink-0 text-slate-500 transition-transform ${expanded ? "rotate-180" : ""}`} />
     </button>
     {expanded && <div className="space-y-2 px-2.5 pb-3 sm:px-4 sm:pb-4">
