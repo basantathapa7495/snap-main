@@ -9,6 +9,7 @@ import {
   Plus,
   GraduationCap,
   Search,
+  Trash2,
   UserRound,
   Users,
   X,
@@ -149,6 +150,7 @@ export default function ClassesPage() {
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [schoolId, setSchoolId] = useState<string | null>(null);
+  const [defaultHighestGrade, setDefaultHighestGrade] = useState<number | null>(null);
   const [authenticated, setAuthenticated] = useState(true);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -196,7 +198,7 @@ export default function ClassesPage() {
           throw new Error("Your school profile could not be loaded.");
         }
 
-        const [classesResult, teachersResult, studentsResult] =
+        const [classesResult, teachersResult, studentsResult, schoolResult] =
           await Promise.all([
             supabase
               .from("classes")
@@ -213,11 +215,17 @@ export default function ClassesPage() {
               .from("students")
               .select("class, section")
               .eq("school_id", profile.school_id),
+            supabase
+              .from("schools")
+              .select("school_level, highest_grade")
+              .eq("id", profile.school_id)
+              .single(),
           ]);
 
         if (classesResult.error) throw classesResult.error;
         if (teachersResult.error) throw teachersResult.error;
         if (studentsResult.error) throw studentsResult.error;
+        if (schoolResult.error) throw schoolResult.error;
 
         if (!cancelled) {
           const teacherRows = (teachersResult.data || []) as Teacher[];
@@ -228,6 +236,8 @@ export default function ClassesPage() {
           const linkedClass = linkedRow && schoolClasses.find((item) => normalize(item.name) === normalize(classLabel(linkedRow)));
           if (linkedClass) window.history.replaceState(window.history.state, '', `/principal/classes#class-${linkedClass.id}`);
           setSchoolId(profile.school_id);
+          const level = schoolResult.data.school_level;
+          setDefaultHighestGrade(level === "Primary" ? 5 : level === "Basic" ? 8 : level === "Secondary" ? (schoolResult.data.highest_grade === 12 ? 12 : 10) : level === "Higher Secondary" ? 12 : null);
           setTeachers(teacherRows);
           setClasses(schoolClasses);
         }
@@ -305,6 +315,53 @@ export default function ClassesPage() {
   function showNotice(message: string) {
     setNotice(message);
     window.setTimeout(() => setNotice(""), 3000);
+  }
+
+  function isExtraGrade(schoolClass: SchoolClass) {
+    const match = /^(?:class|grade)\s+(\d+)$/i.exec(schoolClass.name.trim());
+    return defaultHighestGrade !== null && Boolean(match) && Number(match![1]) > defaultHighestGrade;
+  }
+
+  async function deleteExtraClass(schoolClass: SchoolClass) {
+    if (!schoolId || !isExtraGrade(schoolClass)) return;
+    if (schoolClass.students > 0) {
+      setError("Move students out of this class before deleting it.");
+      return;
+    }
+    if (!window.confirm(`Delete ${schoolClass.name}? It will be removed from active classes while its history is preserved.`)) return;
+    setError("");
+    const ids = [schoolClass.id, ...schoolClass.sections.map((section) => section.id)];
+    const [studentsResult, assignmentsResult, documentsResult] = await Promise.all([
+      supabase.from("students").select("class").eq("school_id", schoolId),
+      supabase.from("teacher_assignments").select("class_id").in("class_id", ids).limit(1),
+      supabase.from("document_target_classes").select("class_id").in("class_id", ids).limit(1),
+    ]);
+    const checkError = studentsResult.error || assignmentsResult.error || documentsResult.error;
+    if (checkError) { setError(checkError.message); return; }
+    const plainName = schoolClass.name.replace(/^(?:class|grade)\s+/i, "");
+    if (studentsResult.data?.some((student) => [schoolClass.name, plainName].some((name) => normalize(student.class) === normalize(name)))) {
+      setError("Move students out of this class before deleting it.");
+      return;
+    }
+    if (assignmentsResult.data?.length || documentsResult.data?.length) {
+      setError("Remove teacher assignments and document targets for this class before deleting it.");
+      return;
+    }
+    const { data: archivedRows, error: archiveError } = await supabase.from("classes")
+      .update({ archived_at: new Date().toISOString() })
+      .eq("school_id", schoolId)
+      .eq("academic_year", schoolClass.academicYear)
+      .is("archived_at", null)
+      .in("id", ids)
+      .select("id");
+    if (archiveError) { setError(archiveError.message); return; }
+    if (archivedRows?.length !== new Set(ids).size) {
+      setError("The class could not be fully removed. Refresh and try again.");
+      setRefreshKey((value) => value + 1);
+      return;
+    }
+    showNotice(`${schoolClass.name} removed from active classes.`);
+    setRefreshKey((value) => value + 1);
   }
 
   async function saveClass(event: React.FormEvent<HTMLFormElement>) {
@@ -530,7 +587,7 @@ export default function ClassesPage() {
             <section className="mt-5" aria-label="All classes">
               <div className="mb-2 flex items-end justify-between"><h2 className="text-xl font-extrabold text-slate-950 dark:text-white">All Classes</h2><span className="text-xs text-slate-500 dark:text-slate-400">{filteredClasses.length} classes</span></div>
               {filteredClasses.length === 0 ? <EmptyState filtered={hasFilters} onAdd={() => { setEditingClass(null); setClassName(""); setClassTeacherId(""); setClassModalOpen(true); }} /> :
-                <div className="space-y-2.5">{filteredClasses.map((schoolClass) => <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24"><ClassCard schoolClass={schoolClass} expanded={(expandedClass === null && filteredClasses[0]?.id === schoolClass.id) || expandedClass === schoolClass.id || (Boolean(search.trim()) && (schoolClass.sections.some((section) => section.name.toLowerCase().includes(search.toLowerCase()) || section.teacher?.toLowerCase().includes(search.toLowerCase()))))} onToggle={() => setExpandedClass((current) => (current === schoolClass.id || (current === null && filteredClasses[0]?.id === schoolClass.id)) ? "" : schoolClass.id)} showStudents onAddSection={openAddSection} onEditClass={(item) => { setError(""); setEditingClass(item); setClassName(item.name); setClassTeacherId(item.teacherId || ""); setClassModalOpen(true); }} onEditSection={openEditSection} onDeleteSection={deleteSection} /></div>)}</div>}
+                <div className="space-y-2.5">{filteredClasses.map((schoolClass) => <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24"><ClassCard schoolClass={schoolClass} expanded={(expandedClass === null && filteredClasses[0]?.id === schoolClass.id) || expandedClass === schoolClass.id || (Boolean(search.trim()) && (schoolClass.sections.some((section) => section.name.toLowerCase().includes(search.toLowerCase()) || section.teacher?.toLowerCase().includes(search.toLowerCase()))))} onToggle={() => setExpandedClass((current) => (current === schoolClass.id || (current === null && filteredClasses[0]?.id === schoolClass.id)) ? "" : schoolClass.id)} showStudents canDelete={isExtraGrade(schoolClass)} onDeleteClass={deleteExtraClass} onAddSection={openAddSection} onEditClass={(item) => { setError(""); setEditingClass(item); setClassName(item.name); setClassTeacherId(item.teacherId || ""); setClassModalOpen(true); }} onEditSection={openEditSection} onDeleteSection={deleteSection} /></div>)}</div>}
             </section>
           </div>
         </main>
@@ -622,8 +679,9 @@ function StatCard({ icon: Icon, label, value, tone }: { icon: React.ElementType;
   </div>;
 }
 
-function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection, onEditClass, onEditSection, onDeleteSection }: {
-  schoolClass: SchoolClass; expanded: boolean; onToggle: () => void; showStudents: boolean;
+function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, onDeleteClass, onAddSection, onEditClass, onEditSection, onDeleteSection }: {
+  schoolClass: SchoolClass; expanded: boolean; onToggle: () => void; showStudents: boolean; canDelete: boolean;
+  onDeleteClass: (schoolClass: SchoolClass) => void;
   onAddSection: (schoolClass: SchoolClass) => void;
   onEditClass: (schoolClass: SchoolClass) => void;
   onEditSection: (schoolClass: SchoolClass, section: Section) => void;
@@ -659,6 +717,7 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection
         </div>
       </div>)}
       {schoolClass.sections.length > 0 && <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs font-semibold"><button type="button" onClick={() => onAddSection(schoolClass)} className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add section</button><button type="button" onClick={() => onEditClass(schoolClass)} className="text-blue-700 dark:text-blue-300">Edit class</button></div>}
+      {canDelete && <button type="button" onClick={() => onDeleteClass(schoolClass)} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400"><Trash2 className="h-3.5 w-3.5" /> Delete class</button>}
     </div>}
   </article>;
 }
