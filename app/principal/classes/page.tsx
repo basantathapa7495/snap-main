@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   Layers3,
   Plus,
+  Presentation,
   Search,
   UserRound,
   Users,
@@ -638,7 +639,7 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection
         <span className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] leading-4 sm:text-xs">
           <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400" aria-label={showStudents ? `${schoolClass.students} students` : "Students unavailable"} title="Students"><Users className="h-3.5 w-3.5" aria-hidden="true" />{showStudents ? schoolClass.students : "—"}</span>
           {hasSections && <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400" aria-label={`${schoolClass.sections.length} sections`} title="Sections"><Layers3 className="h-3.5 w-3.5" aria-hidden="true" />{schoolClass.sections.length}</span>}
-          {hasSections ? schoolClass.sections.map((section) => <span key={section.id} className={`inline-flex min-w-0 items-center gap-1 ${section.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}`} title={`Section ${section.name}: ${section.teacher || "Not assigned"}`}><UserRound className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{section.name}: {section.teacherId ? section.teacher : "Not assigned"}</span>) : <span className={`inline-flex min-w-0 items-center gap-1 ${schoolClass.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}`} title={schoolClass.teacher || "Not assigned"}><UserRound className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{schoolClass.teacherId ? schoolClass.teacher : "Not assigned"}</span>}
+          {hasSections ? schoolClass.sections.map((section) => <span key={section.id} className={`inline-flex min-w-0 items-center gap-1 ${section.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}`} title={`Section ${section.name}: ${section.teacher || "Not assigned"}`} aria-label={`Section ${section.name} teacher: ${section.teacher || "Not assigned"}`}><Presentation className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{section.name}: {section.teacherId ? section.teacher?.trim().split(/\s+/)[0] : "Not assigned"}</span>) : <span className={`inline-flex min-w-0 items-center gap-1 ${schoolClass.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}`} title={schoolClass.teacher || "Not assigned"}><Presentation className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{schoolClass.teacherId ? schoolClass.teacher : "Not assigned"}</span>}
         </span>
       </span>
       <ChevronDown className={`h-5 w-5 shrink-0 text-slate-500 transition-transform ${expanded ? "rotate-180" : ""}`} />
