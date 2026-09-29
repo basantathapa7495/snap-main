@@ -281,6 +281,25 @@ export default function ClassesPage() {
     0,
   );
 
+  function assignedElsewhere(teacherId: string, currentRowId?: string) {
+    if (!teacherId) return null;
+    for (const schoolClass of yearClasses) {
+      const assignments = schoolClass.sections.length > 0
+        ? schoolClass.sections.map((section) => ({ ...section, label: `${schoolClass.name} · Section ${section.name}` }))
+        : [{ id: schoolClass.id, teacherId: schoolClass.teacherId, label: schoolClass.name }];
+      const match = assignments.find((item) => item.teacherId === teacherId && item.id !== currentRowId);
+      if (match) return match.label;
+    }
+    return null;
+  }
+
+  function teacherOptions(currentRowId?: string) {
+    return teachers.map((teacher) => ({
+      ...teacher,
+      assignment: assignedElsewhere(teacher.id, currentRowId),
+    }));
+  }
+
   function showNotice(message: string) {
     setNotice(message);
     window.setTimeout(() => setNotice(""), 3000);
@@ -290,8 +309,13 @@ export default function ClassesPage() {
     event.preventDefault();
     const name = titleCase(className);
     if (!schoolId || !name) return;
-    if (classTeacherId && !teachers.some((teacher) => teacher.id === classTeacherId)) {
+    if ((!editingClass || editingClass.sections.length === 0) && classTeacherId && !teachers.some((teacher) => teacher.id === classTeacherId)) {
       setError("Select a teacher from this school.");
+      return;
+    }
+    const existingAssignment = (!editingClass || editingClass.sections.length === 0) && assignedElsewhere(classTeacherId, editingClass?.id);
+    if (existingAssignment) {
+      setError(`This teacher is already assigned to ${existingAssignment}. Choose another teacher.`);
       return;
     }
 
@@ -387,6 +411,11 @@ export default function ClassesPage() {
     if (!schoolId || !activeClass || !sectionForm.name.trim()) return;
     if (sectionForm.teacherId && !teachers.some((teacher) => teacher.id === sectionForm.teacherId)) {
       setError("Select a teacher from this school.");
+      return;
+    }
+    const existingAssignment = assignedElsewhere(sectionForm.teacherId, editingSection?.id);
+    if (existingAssignment) {
+      setError(`This teacher is already assigned to ${existingAssignment}. Choose another teacher.`);
       return;
     }
 
@@ -531,7 +560,7 @@ export default function ClassesPage() {
                 label="Class teacher"
                 value={classTeacherId}
                 onChange={setClassTeacherId}
-                options={teachers}
+                options={teacherOptions(editingClass?.id)}
               />}
             </div>
             <ModalFooter
@@ -568,7 +597,7 @@ export default function ClassesPage() {
                   onChange={(value) =>
                     setSectionForm((current) => ({ ...current, teacherId: value }))
                   }
-                  options={teachers}
+                  options={teacherOptions(editingSection?.id)}
                 />
               </div>
             </div>
@@ -599,10 +628,11 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection
   onDeleteSection: (classId: string, section: Section) => void;
 }) {
   const displayName = schoolClass.name.replace(/^Class\s+(\d+)$/i, "Grade $1");
+  const hasSections = schoolClass.sections.length > 0;
   return <article className={`rounded-2xl border bg-white shadow-sm dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"}`}>
     <button type="button" aria-expanded={expanded} onClick={onToggle} className="flex w-full items-center gap-3 p-3 text-left sm:p-4">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300"><BookOpen className="h-5 w-5" /></span>
-      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-950 dark:text-white sm:text-lg">{displayName}</span><span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{showStudents ? `${schoolClass.students} students` : "Students unavailable"}{schoolClass.sections.length > 0 ? ` · ${schoolClass.sections.length} sections` : ""}</span></span>
+      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-950 dark:text-white sm:text-lg">{displayName}</span><span className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-[11px] leading-4 sm:text-xs"><span className="text-slate-500 dark:text-slate-400">{showStudents ? `${schoolClass.students} students` : "Students unavailable"}{hasSections ? ` · ${schoolClass.sections.length} sections` : ""}</span><span className="text-slate-500 dark:text-slate-400">Class teacher:</span>{hasSections ? schoolClass.sections.map((section) => <span key={section.id} className={section.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}>{section.name}: {section.teacherId ? section.teacher : "Not assigned"}</span>) : <span className={schoolClass.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}>{schoolClass.teacherId ? schoolClass.teacher : "Not assigned"}</span>}</span></span>
       <ChevronDown className={`h-5 w-5 shrink-0 text-slate-500 transition-transform ${expanded ? "rotate-180" : ""}`} />
     </button>
     {expanded && <div className="space-y-2 px-2.5 pb-3 sm:px-4 sm:pb-4">
@@ -667,7 +697,7 @@ function SelectField({
   label: string;
   value: string;
   onChange: (value: string) => void;
-  options: Teacher[];
+  options: (Teacher & { assignment?: string | null })[];
 }) {
   return (
     <label className="block">
@@ -679,7 +709,7 @@ function SelectField({
       >
         <option value="">Not assigned</option>
         {options.map((teacher) => (
-          <option key={teacher.id} value={teacher.id}>{teacher.name}</option>
+          <option key={teacher.id} value={teacher.id} disabled={Boolean(teacher.assignment)}>{teacher.name}{teacher.assignment ? ` — ${teacher.assignment}` : ""}</option>
         ))}
       </select>
       {options.length === 0 && (
