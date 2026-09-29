@@ -213,10 +213,11 @@ export default function AttendancePage() {
         <TopBar />
         <main className="flex-1 px-3.5 pb-28 pt-7 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px] space-y-4">
-            <header className="relative -mx-3.5 flex min-h-32 items-center gap-4 overflow-hidden rounded-b-2xl bg-gradient-to-br from-[#e7f2ff] via-[#f7fbff] to-[#cfe5ff] px-5 py-5 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:min-h-36 sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:dark:border-blue-900/60">
-              <span className="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-3xl bg-blue-100/80 text-blue-600 dark:bg-blue-400/15 dark:text-blue-200"><CalendarDays className="h-8 w-8" /></span>
-              <div className="relative z-10"><h1 className="text-[1.7rem] font-extrabold tracking-tight sm:text-4xl">Attendance</h1><p className="mt-1 max-w-xs text-xs leading-5 text-slate-600 dark:text-blue-100 sm:max-w-md sm:text-base">Manage student and teacher attendance across your school.</p></div>
-              <CalendarDays className="pointer-events-none absolute -right-3 -bottom-6 h-32 w-32 rotate-[-12deg] text-blue-400/10 dark:text-blue-300/10" aria-hidden="true" />
+            <header className="-mx-3.5 flex min-h-[112px] items-center bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-3 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:min-h-[160px] sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-8 sm:dark:border-blue-900/60">
+              <div>
+                <h1 className="text-[1.7rem] font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">Attendance</h1>
+                <p className="mt-1 max-w-md text-xs leading-4 text-slate-800 dark:text-blue-100 min-[420px]:text-sm min-[420px]:leading-5 sm:text-base sm:leading-6">Manage student and teacher attendance across your school.</p>
+              </div>
             </header>
 
             {(error || notice) && <p role={error ? 'alert' : 'status'} className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${error ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300' : 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300'}`}>{error ? <AlertCircle className="h-4 w-4" /> : <Check className="h-4 w-4" />}{error || notice}</p>}
