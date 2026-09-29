@@ -13,7 +13,9 @@ export function daysBefore(date: string, days: number) {
 }
 
 export function sectionKey(className: string | null, section: string | null) {
-  return JSON.stringify([className || '', section || '']);
+  const classPart = (className || '').trim().replace(/^(class|grade)\s+/i, '').toLowerCase();
+  const sectionPart = (section || '').trim().replace(/^section\s+/i, '').toLowerCase();
+  return JSON.stringify([classPart, sectionPart]);
 }
 
 export function attendanceCounts(rows: Mark[], kind: 'student' | 'teacher') {
