@@ -18,7 +18,7 @@ const nameOf = (row: ClassRow) => row.class_name || row.class || row.name || row
 const key = (value: string) => value.trim().toLowerCase().replace(/^(class|grade)\s+/, "");
 const shortDate = (value: string | null) => value ? new Date(value).toLocaleString("en-NP", { dateStyle: "medium", timeStyle: "short" }) : "Not scheduled";
 const localInputDate = (value: string) => { const date = new Date(value); return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
-const nepalDate = (value: Date) => value.toLocaleDateString("en-CA", { timeZone: "Asia/Kathmandu", year: "numeric", month: "2-digit", day: "2-digit" });
+const nepalDate = (value: Date) => { const parts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Kathmandu", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(value); const part = (type: string) => parts.find((item) => item.type === type)?.value || ""; return `${part("year")}-${part("month")}-${part("day")}`; };
 const audienceLabel = (item: SchoolNotice) => item.target_audience === "class" ? `Class ${item.target_class}` : item.target_audience === "section" ? `Class ${item.target_class} · Section ${item.target_section}` : item.target_audience === "teachers" ? "Teachers" : item.target_audience === "students" ? "Students" : "Everyone";
 
 export default function PrincipalNoticesPanel({ schoolId, notices, onChanged, initialNoticeId, composerAudience, composerKey, initialFilter }: {
@@ -72,6 +72,8 @@ export default function PrincipalNoticesPanel({ schoolId, notices, onChanged, in
     if (form.audience === "section" && !form.section) { setError("Choose a section."); return; }
     const scheduledAt = form.mode === "scheduled" ? new Date(form.scheduledAt) : null;
     if (form.mode === "scheduled" && (!form.scheduledAt || !scheduledAt || Number.isNaN(scheduledAt.getTime()) || scheduledAt <= new Date())) { setError("Choose a future date and time."); return; }
+    const existing = notices.find((item) => item.id === editing);
+    if (existing?.status === "published" && form.mode !== "published" && !window.confirm(`Unpublish “${existing.title}”? Recipients will no longer see it.`)) return;
     setSaving(true); setError("");
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -81,8 +83,8 @@ export default function PrincipalNoticesPanel({ schoolId, notices, onChanged, in
         target_class: ["class", "section"].includes(form.audience) ? form.className : null,
         target_section: form.audience === "section" ? form.section : null,
         status: form.mode, scheduled_at: scheduledAt?.toISOString() || null,
-        published_at: form.mode === "published" ? (editing && notices.find((item) => item.id === editing)?.status === "published" ? notices.find((item) => item.id === editing)?.published_at || new Date().toISOString() : new Date().toISOString()) : null,
-        publish_date: form.mode === "published" ? nepalDate(new Date()) : null,
+        published_at: form.mode === "published" ? (existing?.status === "published" ? existing.published_at || new Date().toISOString() : new Date().toISOString()) : null,
+        publish_date: form.mode === "published" ? nepalDate(existing?.status === "published" && existing.published_at ? new Date(existing.published_at) : new Date()) : null,
         updated_at: new Date().toISOString(),
       };
       const result = editing
@@ -104,7 +106,8 @@ export default function PrincipalNoticesPanel({ schoolId, notices, onChanged, in
   }
   async function duplicate(item: SchoolNotice) {
     setMenu(null); setError("");
-    const { data, error: insertError } = await supabase.from("notices").insert({ school_id: schoolId, title: item.title, content: item.content, target_audience: item.target_audience || "all", target_class: item.target_class, target_section: item.target_section, status: "draft", publish_date: null }).select("id").single();
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error: insertError } = await supabase.from("notices").insert({ school_id: schoolId, title: item.title, content: item.content, target_audience: item.target_audience || "all", target_class: item.target_class, target_section: item.target_section, status: "draft", publish_date: null, created_by: user?.id || null }).select("id").single();
     if (insertError || !data) { setError("Notice could not be duplicated."); return; }
     onChanged(); setEditing(data.id); setForm({ title: item.title, content: item.content, audience: (item.target_audience || "all") as Audience, className: item.target_class || "", section: item.target_section || "", mode: "draft", scheduledAt: "" }); setComposerOpen(true);
   }
