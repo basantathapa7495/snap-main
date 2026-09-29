@@ -753,13 +753,15 @@ function Stat({
     amber: "bg-amber-50 text-amber-600",
   };
   return (
-    <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-1.5 py-2 dark:border-slate-700 dark:bg-slate-900 sm:px-3">
+    <div className="min-w-0 rounded-lg border border-slate-200 bg-white px-1.5 py-1 dark:border-slate-700 dark:bg-slate-900 sm:px-3 sm:py-2">
       <div className="flex items-center justify-between gap-0.5">
-        <p className="truncate text-[9px] font-semibold text-slate-500 dark:text-slate-400 sm:text-xs">{label}</p>
-        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${colors[color]}`}><Icon className="h-3 w-3" /></span>
+        <p className="truncate text-[9px] font-semibold leading-none text-slate-500 dark:text-slate-400 sm:text-xs">{label}</p>
+        <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded ${colors[color]}`}><Icon className="h-2.5 w-2.5" /></span>
       </div>
-      <p className="mt-0.5 text-lg font-bold leading-none text-slate-950 dark:text-white sm:text-xl">{value}</p>
-      <p className="mt-1 truncate text-[8px] leading-none text-slate-400 sm:text-[10px]">{helper}</p>
+      <div className="mt-0.5 flex items-end gap-1">
+        <p className="text-base font-bold leading-none text-slate-950 dark:text-white sm:text-xl">{value}</p>
+        <p className="min-w-0 truncate text-[8px] leading-none text-slate-400 sm:text-[10px]">{helper}</p>
+      </div>
     </div>
   );
 }
