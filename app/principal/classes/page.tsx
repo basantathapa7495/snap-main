@@ -162,6 +162,7 @@ export default function ClassesPage() {
   const [editingSection, setEditingSection] = useState<Section | null>(null);
   const [sectionForm, setSectionForm] =
     useState<SectionForm>(emptySection);
+  const [creatingSections, setCreatingSections] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
@@ -274,7 +275,9 @@ export default function ClassesPage() {
   const unassignedSections = yearClasses.reduce(
     (total, schoolClass) =>
       total +
-      schoolClass.sections.filter((section) => !section.teacherId).length,
+      (schoolClass.sections.length === 0
+        ? Number(!schoolClass.teacherId)
+        : schoolClass.sections.filter((section) => !section.teacherId).length),
     0,
   );
 
@@ -287,6 +290,10 @@ export default function ClassesPage() {
     event.preventDefault();
     const name = titleCase(className);
     if (!schoolId || !name) return;
+    if (classTeacherId && !teachers.some((teacher) => teacher.id === classTeacherId)) {
+      setError("Select a teacher from this school.");
+      return;
+    }
 
     if (
       yearClasses.some(
@@ -310,7 +317,7 @@ export default function ClassesPage() {
       class_name: name,
       name,
       class_number: name.replace(/^Class\s+/i, "").trim() || null,
-      teacher_id: classTeacherId || null,
+      ...(editingClass?.sections.length ? {} : { teacher_id: classTeacherId || null }),
     };
     const result = editingClass
       ? await supabase
@@ -333,10 +340,37 @@ export default function ClassesPage() {
     setRefreshKey((value) => value + 1);
   }
 
-  function openAddSection(schoolClass: SchoolClass) {
+  async function openAddSection(schoolClass: SchoolClass) {
+    if (!schoolId || creatingSections) return;
+    if (schoolClass.sections.length === 0) {
+      setCreatingSections(true);
+      setError("");
+      const base = {
+        school_id: schoolId,
+        academic_year: schoolClass.academicYear,
+        class_name: schoolClass.name,
+        name: schoolClass.name,
+        class_number: schoolClass.name.replace(/^Class\s+/i, "").trim() || null,
+      };
+      // A single insert keeps the pair together; neither students nor the class row are changed.
+      const { error: insertError } = await supabase.from("classes").insert([
+        { ...base, section: "A", section_name: "A", teacher_id: schoolClass.teacherId },
+        { ...base, section: "B", section_name: "B", teacher_id: null },
+      ]);
+      setCreatingSections(false);
+      if (insertError) {
+        setError(insertError.message);
+        return;
+      }
+      showNotice("Sections A and B added. Students remain in their current placement.");
+      setRefreshKey((value) => value + 1);
+      return;
+    }
     setActiveClass(schoolClass);
     setEditingSection(null);
-    setSectionForm(emptySection);
+    const used = new Set(schoolClass.sections.map((section) => normalize(section.name)));
+    const next = "CDEFGHIJKLMNOPQRSTUVWXYZ".split("").find((letter) => !used.has(normalize(letter))) || "";
+    setSectionForm({ name: next, teacherId: "" });
   }
 
   function openEditSection(schoolClass: SchoolClass, section: Section) {
@@ -351,6 +385,10 @@ export default function ClassesPage() {
   async function saveSection(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!schoolId || !activeClass || !sectionForm.name.trim()) return;
+    if (sectionForm.teacherId && !teachers.some((teacher) => teacher.id === sectionForm.teacherId)) {
+      setError("Select a teacher from this school.");
+      return;
+    }
 
     const sectionName = sectionForm.name.trim().toUpperCase();
     const duplicate = activeClass.sections.some(
@@ -474,7 +512,9 @@ export default function ClassesPage() {
               title={editingClass ? "Edit class" : "Add a new class"}
               description={
                 editingClass
-                  ? "Update the class name or assigned class teacher."
+                  ? editingClass.sections.length === 0
+                    ? "Update the class name or assigned class teacher."
+                    : "Update the class name. Teachers are assigned to sections."
                   : "Create the class and optionally assign its class teacher."
               }
               onClose={() => setClassModalOpen(false)}
@@ -487,12 +527,12 @@ export default function ClassesPage() {
                 placeholder="For example: Class 7"
                 required
               />
-              <SelectField
+              {(!editingClass || editingClass.sections.length === 0) && <SelectField
                 label="Class teacher"
                 value={classTeacherId}
                 onChange={setClassTeacherId}
                 options={teachers}
-              />
+              />}
             </div>
             <ModalFooter
               submitLabel={editingClass ? "Save changes" : "Add class"}
@@ -562,11 +602,11 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection
   return <article className={`rounded-2xl border bg-white shadow-sm dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"}`}>
     <button type="button" aria-expanded={expanded} onClick={onToggle} className="flex w-full items-center gap-3 p-3 text-left sm:p-4">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300"><BookOpen className="h-5 w-5" /></span>
-      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-950 dark:text-white sm:text-lg">{displayName}</span><span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{showStudents ? `${schoolClass.students} students` : "Students unavailable"} · {schoolClass.sections.length} sections</span></span>
+      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-950 dark:text-white sm:text-lg">{displayName}</span><span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{showStudents ? `${schoolClass.students} students` : "Students unavailable"}{schoolClass.sections.length > 0 ? ` · ${schoolClass.sections.length} sections` : ""}</span></span>
       <ChevronDown className={`h-5 w-5 shrink-0 text-slate-500 transition-transform ${expanded ? "rotate-180" : ""}`} />
     </button>
     {expanded && <div className="space-y-2 px-2.5 pb-3 sm:px-4 sm:pb-4">
-      {schoolClass.sections.length === 0 && <p className="rounded-xl bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-300">No sections yet. Add one when this class needs separate groups.</p>}
+      {schoolClass.sections.length === 0 && <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-700"><p className="text-[10px] text-slate-500 dark:text-slate-400">Class Teacher</p><p className={`mt-0.5 text-sm font-semibold ${schoolClass.teacherId ? "text-slate-900 dark:text-white" : "text-rose-600 dark:text-rose-300"}`}>{schoolClass.teacher || "Not assigned"}</p><div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold"><Link href={`/principal/students?class=${encodeURIComponent(schoolClass.name)}`} className="rounded-lg border border-blue-200 px-2.5 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">View students</Link><button type="button" onClick={() => onEditClass(schoolClass)} className="rounded-lg border border-blue-200 px-2.5 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">{schoolClass.teacherId ? "Change teacher" : "Assign teacher"}</button><button type="button" onClick={() => onAddSection(schoolClass)} className="rounded-lg border border-blue-200 px-2.5 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">Add sections</button></div></div>}
       {schoolClass.sections.map((section, index) => <div key={section.id} className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900 sm:p-3">
         <div className="flex items-center gap-2.5"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-bold ${["bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300", "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300", "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"][index % 3]}`}>{section.name.slice(0, 2)}</span>
           <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-950 dark:text-white">Section {section.name}</p><p className="text-xs text-slate-500 dark:text-slate-400">{showStudents ? `${section.students} students` : "Students unavailable"}</p></div>
@@ -579,7 +619,7 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, onAddSection
           <button type="button" onClick={() => onDeleteSection(schoolClass.id, section)} className="rounded-lg px-1 py-1.5 text-rose-600 dark:text-rose-300">Archive</button>
         </div>
       </div>)}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs font-semibold"><button type="button" onClick={() => onAddSection(schoolClass)} className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add section</button><button type="button" onClick={() => onEditClass(schoolClass)} className="text-blue-700 dark:text-blue-300">Edit class</button></div>
+      {schoolClass.sections.length > 0 && <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs font-semibold"><button type="button" onClick={() => onAddSection(schoolClass)} className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add section</button><button type="button" onClick={() => onEditClass(schoolClass)} className="text-blue-700 dark:text-blue-300">Edit class</button></div>}
     </div>}
   </article>;
 }
