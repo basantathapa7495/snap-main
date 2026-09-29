@@ -213,11 +213,12 @@ export default function AttendancePage() {
         <TopBar />
         <main className="flex-1 px-3.5 pb-28 pt-7 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px] space-y-4">
-            <header className="-mx-3.5 flex min-h-[112px] items-center bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-3 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:min-h-[160px] sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-8 sm:dark:border-blue-900/60">
-              <div>
+            <header className="relative -mx-3.5 flex min-h-[112px] items-center overflow-hidden bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-3 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:min-h-[160px] sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-8 sm:dark:border-blue-900/60">
+              <div className="relative z-10 max-w-[64%] sm:max-w-[55%]">
                 <h1 className="text-[1.7rem] font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-4xl">Attendance</h1>
                 <p className="mt-1 max-w-md text-xs leading-4 text-slate-800 dark:text-blue-100 min-[420px]:text-sm min-[420px]:leading-5 sm:text-base sm:leading-6">Manage student and teacher attendance across your school.</p>
               </div>
+              <AttendanceHeroArtwork />
             </header>
 
             {(error || notice) && <p role={error ? 'alert' : 'status'} className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs ${error ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300' : 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300'}`}>{error ? <AlertCircle className="h-4 w-4" /> : <Check className="h-4 w-4" />}{error || notice}</p>}
@@ -288,3 +289,32 @@ function TrendCard({ title, tone, soft, days, setDays, trend, previous }: { titl
 }
 
 function PageSkeleton() { return <div className="min-h-screen bg-white dark:bg-slate-950"><Sidebar /><div className="pt-10 lg:ml-64"><TopBar /><main className="px-3.5 pb-24 pt-7 sm:px-6 lg:pt-24"><div className="mx-auto max-w-[1500px] animate-pulse"><div className="h-28 rounded-2xl bg-blue-50 dark:bg-slate-900" /><div className="mt-3 grid grid-cols-4 gap-1.5">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-24 rounded-2xl bg-slate-100 dark:bg-slate-900" />)}</div><div className="mt-3 h-48 rounded-2xl bg-slate-100 dark:bg-slate-900" /></div></main></div></div>; }
+
+function AttendanceHeroArtwork() {
+  return <svg viewBox="0 0 360 210" preserveAspectRatio="xMaxYMax meet" className="pointer-events-none absolute -bottom-2 -right-5 h-[115%] w-[55%] max-w-none opacity-75 dark:opacity-45 sm:right-0 sm:w-[48%] sm:opacity-100" aria-hidden="true">
+    <defs>
+      <linearGradient id="attendancePaper" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff" /><stop offset="1" stopColor="#d8e8fc" /></linearGradient>
+      <linearGradient id="attendanceLeaf" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#77c982" /><stop offset="1" stopColor="#25834d" /></linearGradient>
+      <linearGradient id="attendancePen" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#80b8f0" /><stop offset="1" stopColor="#2565b7" /></linearGradient>
+    </defs>
+    <ellipse cx="224" cy="195" rx="165" ry="119" fill="#a9d0ff" opacity=".31" />
+    <ellipse cx="235" cy="202" rx="120" ry="7" fill="#4381bd" opacity=".15" />
+    <path d="M305 161c-4-28-4-53 0-81m0 66c-13-21-25-36-42-47m43 44c10-22 23-35 44-47" fill="none" stroke="#348a55" strokeWidth="3" />
+    <path d="M304 106c-20-30-16-57 7-77 8 33 4 59-7 77Z" fill="url(#attendanceLeaf)" />
+    <path d="M309 121c9-29 25-44 47-47-7 24-21 40-47 47Z" fill="#43a662" />
+    <path d="M302 135c-11-23-25-34-46-35 9 22 23 34 46 35Z" fill="#55ae68" />
+    <path d="M280 150h51l-6 43c-2 5-8 7-19 7s-18-2-20-7l-6-43Z" fill="url(#attendancePaper)" stroke="#b8d4ef" strokeWidth="2" />
+    <path d="M280 150h51" stroke="#fff" strokeWidth="5" strokeLinecap="round" />
+    <g transform="rotate(-8 179 124)">
+      <rect x="94" y="42" width="160" height="161" rx="13" fill="#477fbd" opacity=".17" />
+      <rect x="89" y="36" width="160" height="161" rx="12" fill="url(#attendancePaper)" stroke="#93bdec" strokeWidth="2" />
+      <path d="M89 48a12 12 0 0 1 12-12h136a12 12 0 0 1 12 12v24H89V48Z" fill="#6ba6e9" />
+      <path d="M118 31v15m100-15v15" stroke="#2e69b4" strokeWidth="7" strokeLinecap="round" />
+      <rect x="108" y="83" width="18" height="18" rx="5" fill="#d3e5fb" /><path d="m112 91 5 5 7-9" fill="none" stroke="#1eae79" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /><path d="M139 89h69m-69 8h45" stroke="#8db7e2" strokeWidth="5" strokeLinecap="round" />
+      <rect x="108" y="113" width="18" height="18" rx="5" fill="#d3e5fb" /><path d="m112 121 5 5 7-9" fill="none" stroke="#1eae79" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /><path d="M139 119h63m-63 8h54" stroke="#8db7e2" strokeWidth="5" strokeLinecap="round" />
+      <rect x="108" y="143" width="18" height="18" rx="5" fill="#d3e5fb" /><path d="m112 151 5 5 7-9" fill="none" stroke="#1eae79" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /><path d="M139 149h68m-68 8h40" stroke="#8db7e2" strokeWidth="5" strokeLinecap="round" />
+      <path d="M109 178h112" stroke="#c3daf2" strokeWidth="3" strokeLinecap="round" />
+    </g>
+    <g transform="rotate(30 269 136)"><rect x="262" y="79" width="14" height="100" rx="4" fill="url(#attendancePen)" /><path d="M262 165h14l-7 18-7-18Z" fill="#d6a777" /><path d="m266 175 3 8 3-8" fill="#25466a" /><path d="M263 83h12" stroke="#dceeff" strokeWidth="3" /></g>
+  </svg>;
+}
