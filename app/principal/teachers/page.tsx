@@ -18,10 +18,8 @@ import {
   ClipboardClock,
   RefreshCw,
   Search,
-  ShieldCheck,
   UserCheck,
   UserMinus,
-  UserPlus,
   UserRound,
   UsersRound,
   LayoutDashboard,
@@ -625,14 +623,14 @@ export default function TeachersPage() {
               </section>
             </>}
 
-            {pageTab === "joining" && <><SchoolJoiningControls role="teacher" /><AccountRequestsPanel role="teacher" onApproved={() => setRefreshKey((value) => value + 1)} /></>}
-            {pageTab === "joining" && <section className="mt-5 flex flex-col gap-4 rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-white to-blue-50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
-              <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-600/20"><ShieldCheck className="h-5 w-5" /></span>
-                <div><h2 className="font-bold text-slate-950">Self-registration with school approval</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-slate-600 sm:text-sm">Teachers will request an account from the school website. You review their details before portal access is activated.</p></div>
-              </div>
-              <span className="inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border border-violet-200 bg-white px-3 py-1.5 text-xs font-bold text-violet-700"><UserPlus className="h-3.5 w-3.5" /> Approval enabled</span>
-            </section>}
+            {pageTab === "joining" && <>
+              <SchoolJoiningControls role="teacher" />
+              <section aria-label="Teacher joining approval" className="mt-3 flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50/60 px-3 py-2.5 text-sm dark:border-blue-900 dark:bg-blue-950/30">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-300" aria-hidden="true" />
+                <div><h2 className="font-semibold text-slate-900 dark:text-white">Approval required</h2><p className="mt-0.5 text-xs leading-5 text-slate-600 dark:text-slate-300">All teacher joining requests must be approved by the principal before portal access is granted.</p></div>
+              </section>
+              <AccountRequestsPanel role="teacher" onApproved={() => setRefreshKey((value) => value + 1)} />
+            </>}
 
             {pageTab === "more" && <button type="button" onClick={() => setPageTab("teachers")} className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-blue-200 px-4 text-sm font-semibold text-blue-700 dark:border-blue-700 dark:text-blue-300">Back to overview</button>}
             {schoolId && pageTab !== "teachers" && pageTab !== "joining" && <TeacherOperationsPanel key={pageTab} schoolId={schoolId} teachers={teachers} onTeacherChanged={() => setRefreshKey((value) => value + 1)} initialTab={pageTab === "assignments" ? "assignments" : pageTab === "more" ? "overview" : pageTab} showTabs={pageTab === "more"} />}
