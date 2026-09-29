@@ -514,7 +514,7 @@ export default function StudentsPage() {
             {pageTab === "attendance" && <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"><h2 className="font-bold text-slate-950 dark:text-white">Student attendance</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Review school-wide attendance and mark each class.</p><a href="/principal/attendance" className="mt-3 inline-flex rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white">Open attendance</a></section>}
             {pageTab === "joining" && <><SchoolJoiningControls role="student" /><StudentJoiningOversight /></>}
 
-            {pageTab === "students" && <><div className="mb-3 flex gap-2">
+            {pageTab === "students" && <><div className="mb-1 flex gap-2">
                 <button
                   type="button"
                   onClick={() => setRefreshKey((value) => value + 1)}
@@ -562,7 +562,7 @@ export default function StudentsPage() {
               </div>
             )}
 
-            <section aria-label="Student summary" className="mt-2 grid grid-cols-4 gap-1 sm:gap-3">
+            <section aria-label="Student summary" className="grid grid-cols-4 gap-1 sm:gap-3">
               <Stat
                 icon={Users}
                 label="Students"
