@@ -17,6 +17,7 @@ import {
   KeyRound,
   Mail,
   MapPin,
+  MoreVertical,
   Phone,
   Plus,
   RefreshCw,
@@ -518,7 +519,7 @@ export default function StudentsPage() {
                   type="button"
                   onClick={() => setRefreshKey((value) => value + 1)}
                   disabled={refreshing}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-600 shadow-sm disabled:opacity-60"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
                 >
                   <RefreshCw
                     className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
@@ -528,7 +529,7 @@ export default function StudentsPage() {
                 <button
                   type="button"
                   onClick={openCreateForm}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-xs font-semibold text-white hover:bg-blue-700"
                 >
                   <Plus className="h-4 w-4" />
                   Add student
@@ -561,40 +562,40 @@ export default function StudentsPage() {
               </div>
             )}
 
-            <section className="mt-3 grid grid-cols-4 gap-1.5 sm:gap-3">
+            <section aria-label="Student summary" className="mt-2 grid grid-cols-4 gap-1 sm:gap-3">
               <Stat
                 icon={Users}
-                label="Total students"
+                label="Students"
                 value={students.length}
-                helper="Student records"
+                helper="Records"
                 color="blue"
               />
               <Stat
                 icon={UserCheck}
-                label="Login active"
+                label="Access"
                 value={activeAccounts}
-                helper={`${students.length - activeAccounts} still need access`}
+                helper="Portal active"
                 color="emerald"
               />
               <Stat
                 icon={GraduationCap}
                 label="Classes"
                 value={Math.max(0, classes.length - 1)}
-                helper="Classes represented"
+                helper="Represented"
                 color="violet"
               />
               <Stat
                 icon={AlertCircle}
-                label="Incomplete records"
+                label="Incomplete"
                 value={incompleteRecords}
-                helper="Missing class, roll or parent phone"
+                helper="Missing info"
                 color="amber"
               />
             </section>
 
-            <section className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="grid gap-3 border-b border-slate-100 p-4 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_160px_150px_170px]">
-                <label className="relative">
+            <section className="mt-3">
+              <div className="space-y-2">
+                <label className="relative block">
                   <span className="sr-only">Search students</span>
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
@@ -603,50 +604,27 @@ export default function StudentsPage() {
                       setSearch(event.target.value);
                       resetFiltersPage();
                     }}
-                    placeholder="Search name, roll, parent, phone or email"
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
+                    placeholder="Search student, roll, parent or phone..."
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-9 text-xs text-slate-900 outline-none focus:border-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                   />
+                  {search && <button type="button" onClick={() => { setSearch(""); resetFiltersPage(); }} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500"><X className="h-4 w-4" /></button>}
                 </label>
-                <Select
-                  value={studentClass}
-                  onChange={(value) => {
-                    setStudentClass(value);
-                    setSection("All");
-                    resetFiltersPage();
-                  }}
-                  label="Class"
-                  options={classes}
-                  allLabel="All classes"
-                />
-                <Select
-                  value={section}
-                  onChange={(value) => {
-                    setSection(value);
-                    resetFiltersPage();
-                  }}
-                  label="Section"
-                  options={sections}
-                  allLabel="All sections"
-                />
-                <Select
-                  value={account}
-                  onChange={(value) => {
-                    setAccount(value as typeof account);
-                    resetFiltersPage();
-                  }}
-                  label="Account"
-                  options={["All", "Active", "Not created"]}
-                  allLabel="All accounts"
-                />
+                <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]">
+                  <button type="button" onClick={() => { setStudentClass("All"); setSection("All"); setAccount("All"); setUnassignedIds(null); resetFiltersPage(); }} className={`shrink-0 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold ${studentClass === "All" && section === "All" && account === "All" && !unassignedIds ? "border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/30" : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300"}`}>All students</button>
+                  {(["class", "section", "account"] as const).map((kind) => {
+                    const selected = kind === "class" ? studentClass : kind === "section" ? section : account;
+                    const options = kind === "class" ? classes : kind === "section" ? sections : ["All", "Active", "Not created"];
+                    return <label key={kind} className={`relative inline-flex shrink-0 items-center rounded-full border text-[11px] font-semibold ${selected !== "All" ? "border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/30" : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300"}`}><span className="sr-only">{kind} filter</span><select value={selected} onChange={(event) => { const option = event.target.value; if (kind === "class") { setStudentClass(option); setSection("All"); } else if (kind === "section") setSection(option); else setAccount(option as typeof account); resetFiltersPage(); }} className="max-w-32 appearance-none bg-transparent py-1.5 pl-2.5 pr-5 outline-none"><option value="All">{kind[0].toUpperCase() + kind.slice(1)}</option>{options.filter((option) => option !== "All").map((option) => <option key={option} value={option}>{option === "Active" ? "Access active" : option === "Not created" ? "No access" : option}</option>)}</select><ChevronDown className="pointer-events-none absolute right-1 h-3 w-3" /></label>;
+                  })}
+                  {(studentClass !== "All" || section !== "All" || account !== "All" || unassignedIds) && <button type="button" onClick={() => { setStudentClass("All"); setSection("All"); setAccount("All"); setUnassignedIds(null); resetFiltersPage(); }} className="shrink-0 text-[11px] font-semibold text-blue-600">Clear</button>}
+                </div>
               </div>
 
-              <div className="flex items-center justify-between px-5 py-4">
+              <div className="flex items-center justify-between py-2">
                 <div>
-                  <h2 className="font-bold text-slate-950">Student records</h2>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    Showing {filteredStudents.length} of {students.length}
-                  </p>
+                  <h2 className="text-sm font-bold text-slate-950 dark:text-white">Student records</h2>
                 </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Showing {filteredStudents.length} of {students.length}</p>
               </div>
 
               {filteredStudents.length === 0 ? (
@@ -655,7 +633,7 @@ export default function StudentsPage() {
                     search ||
                     studentClass !== "All" ||
                     section !== "All" ||
-                    account !== "All",
+                    account !== "All" || unassignedIds,
                   )}
                   onAdd={openCreateForm}
                 />
@@ -687,12 +665,13 @@ export default function StudentsPage() {
                       </tbody>
                     </table>
                   </div>
-                  <div className="divide-y divide-slate-100 md:hidden">
+                  <div className="space-y-1.5 md:hidden">
                     {visibleStudents.map((student) => (
                       <StudentCard
                         key={student.id}
                         student={student}
                         onView={setSelectedStudent}
+                        onEdit={openEditForm}
                         onLogin={openLogin}
                       />
                     ))}
@@ -754,38 +733,6 @@ export default function StudentsPage() {
   );
 }
 
-function Select({
-  value,
-  onChange,
-  label,
-  options,
-  allLabel,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  label: string;
-  options: string[];
-  allLabel: string;
-}) {
-  return (
-    <label className="relative">
-      <span className="sr-only">{label}</span>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-9 text-sm text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option === "All" ? allLabel : option}
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-    </label>
-  );
-}
-
 function Stat({
   icon: Icon,
   label,
@@ -806,19 +753,13 @@ function Stat({
     amber: "bg-amber-50 text-amber-600",
   };
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex justify-between">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-2 text-3xl font-bold text-slate-950">{value}</p>
-        </div>
-        <span
-          className={`flex h-10 w-10 items-center justify-center rounded-xl ${colors[color]}`}
-        >
-          <Icon className="h-5 w-5" />
-        </span>
+    <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-1.5 py-2 dark:border-slate-700 dark:bg-slate-900 sm:px-3">
+      <div className="flex items-center justify-between gap-0.5">
+        <p className="truncate text-[9px] font-semibold text-slate-500 dark:text-slate-400 sm:text-xs">{label}</p>
+        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md ${colors[color]}`}><Icon className="h-3 w-3" /></span>
       </div>
-      <p className="mt-2 text-xs text-slate-400">{helper}</p>
+      <p className="mt-0.5 text-lg font-bold leading-none text-slate-950 dark:text-white sm:text-xl">{value}</p>
+      <p className="mt-1 truncate text-[8px] leading-none text-slate-400 sm:text-[10px]">{helper}</p>
     </div>
   );
 }
@@ -895,50 +836,46 @@ function StudentRow({
   );
 }
 
-function StudentCard({ student, onView, onLogin }: StudentActions) {
+function StudentCard({ student, onView, onEdit, onLogin }: StudentActions & { onEdit: (student: Student) => void }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
-    <div className="p-4">
+    <div className="relative rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900">
+      <div className="flex items-center gap-1">
       <button
         type="button"
         onClick={() => onView(student)}
-        className="flex w-full items-start gap-3 text-left"
+        className="flex min-w-0 flex-1 items-center gap-2 text-left"
       >
         <Avatar name={student.name} />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <p className="truncate font-semibold text-slate-900">
+          <div className="flex items-center gap-1.5">
+            <p className="truncate text-xs font-semibold text-slate-900 dark:text-white">
               {student.name}
             </p>
-            <AccountBadge active={Boolean(student.user_id)} />
           </div>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-0.5 truncate text-[10px] text-slate-500 dark:text-slate-400">
             {student.class ? `Class ${student.class}` : "Class not assigned"}
             {student.section ? ` · Section ${student.section}` : ""}
+            {student.roll_no ? ` · Roll ${student.roll_no}` : ""}
           </p>
-          <p className="mt-2 truncate text-xs text-slate-400">
-            {student.parent_phone ||
-              student.email ||
-              "Contact details not added"}
-          </p>
+          <p className="mt-1 truncate text-[10px] text-slate-400">{student.parent_name || student.parent_phone || student.email || "Contact not added"}</p>
         </div>
       </button>
-      {!student.user_id && (
-        <button
-          type="button"
-          onClick={() => onLogin(student)}
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-50 py-2 text-xs font-semibold text-blue-700"
-        >
-          <KeyRound className="h-3.5 w-3.5" />
-          Create login
-        </button>
-      )}
+      <AccountBadge active={Boolean(student.user_id)} />
+      <button type="button" aria-label={`Actions for ${student.name}`} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)} className="rounded p-1 text-slate-500 dark:text-slate-300"><MoreVertical className="h-4 w-4" /></button>
+      </div>
+      {menuOpen && <div className="absolute right-2 top-9 z-20 min-w-32 rounded-lg border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+        <button type="button" onClick={() => { setMenuOpen(false); onView(student); }} className="block w-full rounded px-2 py-1.5 text-left text-xs text-slate-700 dark:text-slate-200">View profile</button>
+        <button type="button" onClick={() => { setMenuOpen(false); onEdit(student); }} className="block w-full rounded px-2 py-1.5 text-left text-xs text-slate-700 dark:text-slate-200">Edit details</button>
+        {!student.user_id && <button type="button" onClick={() => { setMenuOpen(false); onLogin(student); }} className="block w-full rounded px-2 py-1.5 text-left text-xs text-blue-700 dark:text-blue-300">Create login</button>}
+      </div>}
     </div>
   );
 }
 
 function Avatar({ name }: { name: string }) {
   return (
-    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
       {initials(name || "Student")}
     </span>
   );
@@ -947,14 +884,14 @@ function Avatar({ name }: { name: string }) {
 function AccountBadge({ active }: { active: boolean }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${active ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
+      className={`inline-flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${active ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200" : "bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"}`}
     >
       {active ? (
         <UserCheck className="h-3 w-3" />
       ) : (
         <KeyRound className="h-3 w-3" />
       )}
-      {active ? "Active" : "Not created"}
+      {active ? "Access active" : "No access"}
     </span>
   );
 }
