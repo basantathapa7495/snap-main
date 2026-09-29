@@ -88,6 +88,16 @@ export default function CommunicationPage() {
     return () => { cancelled = true; };
   }, [refreshKey]);
 
+  useEffect(() => {
+    if (!schoolId || !principalId || tab !== "overview") return;
+    let active = true;
+    const timer = window.setInterval(async () => {
+      const result = await supabase.from("direct_messages").select("id", { count: "exact", head: true }).eq("school_id", schoolId).neq("sender_id", principalId).is("read_at", null);
+      if (active && !result.error) setUnreadMessages(result.count || 0);
+    }, 20000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [schoolId, principalId, tab]);
+
   function chooseTab(value: Tab) {
     setTab(value);
     setInitialNoticeId(null);
