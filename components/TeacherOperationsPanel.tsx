@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import AccountRequestsPanel from "@/components/AccountRequestsPanel";
 import TeacherAttendancePanel from "@/components/TeacherAttendancePanel";
+import TeacherAssignmentsPanel from "@/components/TeacherAssignmentsPanel";
 import { supabase } from "@/lib/supabase";
 
 export type TeacherOperationsTeacher = {
@@ -62,7 +63,7 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
       setLoading(true);
       const tables = tab === "attendance" ? []
         : tab === "leave" ? ["teacher_leave_requests"]
-        : tab === "assignments" ? ["teacher_assignments", "classes"]
+        : tab === "assignments" ? []
         : ["teacher_attendance", "teacher_leave_requests", "teacher_assignments", "teacher_timetable_entries", "teacher_performance", "teacher_payroll", "teacher_documents", "teacher_tasks", "activity_logs", "classes"];
       const results = await Promise.all(tables.map((name) => supabase.from(name).select("*").eq("school_id", schoolId).order("created_at", { ascending: false }).limit(250)));
       const { data: { session } } = tab === "overview" ? await supabase.auth.getSession() : { data: { session: null } };
@@ -127,8 +128,8 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
   ] as const;
 
   return (
-    <section className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-900/5 dark:border-slate-700 dark:bg-[#111B2B]">
-      {tab !== "attendance" && <div className="border-b border-slate-200 px-4 pt-4 dark:border-slate-700 sm:px-5">
+    <section className={tab === "assignments" ? "mt-3" : "mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-900/5 dark:border-slate-700 dark:bg-[#111B2B]"}>
+      {tab !== "attendance" && tab !== "assignments" && <div className="border-b border-slate-200 px-4 pt-4 dark:border-slate-700 sm:px-5">
         <div className="flex items-center justify-between gap-3 pb-4">
           <div><h2 className="text-lg font-extrabold text-slate-950 dark:text-white">Teacher operations</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Attendance, workload, approvals and staff records in one place.</p></div>
           {loading && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
@@ -140,7 +141,7 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
 
       {(error || message) && <div className={`m-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ? <AlertTriangle className="h-4 w-4" /> : <Check className="h-4 w-4" />}<span>{error || message}</span><button className="ml-auto" onClick={() => { setError(""); setMessage(""); }}><X className="h-4 w-4" /></button></div>}
 
-      <div className="p-4 sm:p-5">
+      <div className={tab === "assignments" ? "" : "p-4 sm:p-5"}>
         {tab === "overview" && <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{stats.map(([label, value, Icon, tone]) => <Metric key={label} label={label} value={value} icon={Icon} tone={tone} />)}</div>
           <div className="grid gap-4 xl:grid-cols-2">
@@ -151,7 +152,7 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
         </div>}
         {tab === "attendance" && <TeacherAttendancePanel schoolId={schoolId} teachers={teachers} onSaved={() => setRefresh((value) => value + 1)} />}
         {tab === "leave" && <LeavePanel teachers={teachers} rows={leaves} working={working} run={run} />}
-        {tab === "assignments" && <AssignmentsPanel schoolId={schoolId} teachers={teachers} rows={assignments} classes={rows.classes || []} working={working} run={run} />}
+        {tab === "assignments" && <TeacherAssignmentsPanel schoolId={schoolId} teachers={teachers} onTeacherChanged={onTeacherChanged} />}
         {tab === "timetable" && <TimetablePanel schoolId={schoolId} teachers={teachers} rows={timetable} working={working} run={run} />}
         {tab === "performance" && <PerformancePanel schoolId={schoolId} teachers={teachers} rows={performance} working={working} run={run} />}
         {tab === "payroll" && <PayrollPanel schoolId={schoolId} teachers={teachers} rows={payroll} working={working} run={run} />}
@@ -180,13 +181,6 @@ function LeavePanel({ teachers, rows, working, run }: any) {
   const [filter, setFilter] = useState("pending"); const shown = filter === "all" ? rows : rows.filter((r: Row) => r.status === filter);
   async function review(id: string, status: string) { const note = status === "approved" ? "Approved by principal" : window.prompt(status === "clarification" ? "What clarification is required?" : "Reason for rejection?") || ""; if (status !== "approved" && !note) return; await run(() => supabase.from("teacher_leave_requests").update({ status, principal_note: note, reviewed_at: new Date().toISOString() }).eq("id", id), status === "approved" ? "Leave approved and attendance updated." : "Leave request updated."); }
   return <div className="space-y-4"><div className="flex gap-2 overflow-x-auto">{["pending","approved","clarification","rejected","all"].map((v) => <button key={v} onClick={() => setFilter(v)} className={`rounded-full px-4 py-2 text-xs font-bold capitalize ${filter === v ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"}`}>{v}</button>)}</div>{shown.length ? <div className="space-y-3">{shown.map((row: Row) => <article key={row.id} className="rounded-2xl border border-slate-200 p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-bold text-slate-950">{teacherName(teachers,row.teacher_id)}</p><p className="mt-1 text-xs text-slate-500">{row.leave_type} · {row.start_date} to {row.end_date}</p><p className="mt-3 text-sm text-slate-700">{row.reason}</p>{row.principal_note && <p className="mt-2 rounded-lg bg-slate-50 p-2 text-xs text-slate-600">Principal note: {row.principal_note}</p>}</div><Status value={row.status} /></div>{row.status === "pending" && <div className="mt-4 flex flex-wrap gap-2"><button disabled={working} onClick={() => review(row.id,"approved")} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white">Approve</button><button disabled={working} onClick={() => review(row.id,"clarification")} className="rounded-lg bg-amber-100 px-3 py-2 text-xs font-bold text-amber-800">Request clarification</button><button disabled={working} onClick={() => review(row.id,"rejected")} className="rounded-lg bg-rose-100 px-3 py-2 text-xs font-bold text-rose-700">Reject</button></div>}</article>)}</div> : <Empty text="No leave requests in this view." />}</div>;
-}
-
-function AssignmentsPanel({ schoolId, teachers, rows, classes, working, run }: any) {
-  const [teacherId,setTeacherId]=useState(teachers[0]?.id||""); const [className,setClassName]=useState(""); const [subject,setSubject]=useState(""); const [periods,setPeriods]=useState("5");
-  async function add(e:React.FormEvent){e.preventDefault();await run(()=>supabase.from("teacher_assignments").insert({school_id:schoolId,teacher_id:teacherId,class_name:className,subject,periods_per_week:Number(periods),active:true}),"Class and subject assigned.");setClassName("");setSubject("");}
-  const workload = teachers.map((t:TeacherOperationsTeacher)=>({teacher:t,total:rows.filter((r:Row)=>r.teacher_id===t.id&&r.active).reduce((sum:number,r:Row)=>sum+Number(r.periods_per_week||0),0)})).filter((x:any)=>x.total);
-  return <div className="space-y-5"><form onSubmit={add} className="grid gap-3 rounded-2xl bg-slate-50 p-4 md:grid-cols-5"><select required value={teacherId} onChange={(e)=>setTeacherId(e.target.value)} className={input}>{teachers.map((t:TeacherOperationsTeacher)=><option key={t.id} value={t.id}>{t.name}</option>)}</select><input required list="school-classes" value={className} onChange={(e)=>setClassName(e.target.value)} placeholder="Class" className={input}/><datalist id="school-classes">{classes.map((c:Row)=><option key={c.id} value={c.name||c.class_name||c.class||"Class"}/>)}</datalist><input required value={subject} onChange={(e)=>setSubject(e.target.value)} placeholder="Subject" className={input}/><input required type="number" min="1" max="60" value={periods} onChange={(e)=>setPeriods(e.target.value)} placeholder="Periods/week" className={input}/><button disabled={working||!teacherId} className={button}><Plus className="h-4 w-4"/>Assign</button></form><div className="grid gap-4 lg:grid-cols-[1fr_280px]"><div className="space-y-2">{rows.map((r:Row)=><div key={r.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 p-3"><div><p className="text-sm font-bold text-slate-900">{teacherName(teachers,r.teacher_id)} · {r.subject}</p><p className="mt-1 text-xs text-slate-500">{r.class_name} · {r.periods_per_week} periods/week</p></div><button onClick={()=>run(()=>supabase.from("teacher_assignments").update({active:!r.active}).eq("id",r.id),r.active?"Assignment deactivated.":"Assignment activated.")} className="text-xs font-bold text-blue-700">{r.active?"Deactivate":"Activate"}</button></div>)}{!rows.length&&<Empty text="No class or subject assignments yet."/>}</div><Panel title="Teacher workload">{workload.length?<div className="space-y-2">{workload.map((x:any)=><SummaryLine key={x.teacher.id} label={x.teacher.name} value={`${x.total} periods`} />)}</div>:<p className="text-sm text-slate-500">No workload data yet.</p>}</Panel></div></div>;
 }
 
 function TimetablePanel({schoolId,teachers,rows,working,run}:any){const [teacherId,setTeacherId]=useState(teachers[0]?.id||"");const [day,setDay]=useState("1");const [start,setStart]=useState("10:00");const [end,setEnd]=useState("10:45");const [className,setClassName]=useState("");const [subject,setSubject]=useState("");const [room,setRoom]=useState("");const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
