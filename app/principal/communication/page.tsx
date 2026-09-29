@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
-  AlertCircle, Bell, CalendarDays, Check, Edit3, Eye, FileText,
-  Loader2, Plus, RefreshCw, Search, Send, Trash2, X,
+  AlertCircle, Bell, CalendarDays, Check, ChevronRight, Clock3, Edit3, Eye, FileText,
+  GraduationCap, Loader2, Mail, Plus, RefreshCw, Search, Send, Trash2, UsersRound, X,
 } from 'lucide-react';
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
@@ -31,10 +31,25 @@ function dateLabel(value: string | null) {
     day: 'numeric', month: 'short', year: 'numeric',
   });
 }
+function relativeTime(value: string | null) {
+  if (!value) return 'Date unavailable';
+  const elapsed = Math.max(0, Date.now() - new Date(value).getTime());
+  const minutes = Math.floor(elapsed / 60000);
+  if (minutes < 60) return `${Math.max(1, minutes)}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return days < 7 ? `${days}d ago` : dateLabel(value);
+}
 
 export default function CommunicationPage() {
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [notices, setNotices] = useState<Notice[]>([]);
+  const [tab, setTab] = useState<'overview' | 'notices' | 'messages' | 'scheduled'>('overview');
+  const [teacherCount, setTeacherCount] = useState<number | null>(null);
+  const [studentCount, setStudentCount] = useState<number | null>(null);
+  const [countsError, setCountsError] = useState('');
+  const [audienceInfo, setAudienceInfo] = useState('');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Notice | null>(null);
   const [editing, setEditing] = useState<Notice | null>(null);
@@ -63,23 +78,34 @@ export default function CommunicationPage() {
           .from('profiles').select('school_id').eq('user_id', user.id).single();
         if (profileError || !profile?.school_id) throw new Error('Your school profile could not be loaded.');
 
-        const { data, error: noticesError } = await supabase
-          .from('news_events')
-          .select('id, title, description, event_date, is_event, created_at')
-          .eq('school_id', profile.school_id)
-          .eq('is_event', false)
-          .order('event_date', { ascending: false });
+        const [noticeResult, teacherResult, studentResult] = await Promise.all([
+          supabase.from('news_events')
+            .select('id, title, description, event_date, is_event, created_at')
+            .eq('school_id', profile.school_id)
+            .eq('is_event', false)
+            .order('created_at', { ascending: false }),
+          supabase.from('teachers').select('id', { count: 'exact', head: true }).eq('school_id', profile.school_id),
+          supabase.from('students').select('id', { count: 'exact', head: true }).eq('school_id', profile.school_id),
+        ]);
+        const { data, error: noticesError } = noticeResult;
         if (noticesError) throw noticesError;
 
         if (!cancelled) {
           setSchoolId(profile.school_id);
           setNotices((data || []) as Notice[]);
+          setTeacherCount(teacherResult.error ? null : teacherResult.count || 0);
+          setStudentCount(studentResult.error ? null : studentResult.count || 0);
+          setCountsError(teacherResult.error || studentResult.error ? 'Audience counts could not be loaded.' : '');
           const params = new URLSearchParams(window.location.search);
+          const requestedTab = params.get('tab');
+          if (requestedTab === 'notices' || requestedTab === 'messages' || requestedTab === 'scheduled') setTab(requestedTab);
           const selectedNotice = (data || []).find((item) => item.id === params.get('notice'));
           if (selectedNotice) {
+            setTab('notices');
             setSelected(selectedNotice as Notice);
             window.history.replaceState(window.history.state, '', window.location.pathname);
           } else if (params.get('action') === 'create') {
+            setTab('notices');
             setEditing(null);
             setForm({ title: '', description: '', publishDate: todayNepal() });
             setFormOpen(true);
@@ -105,11 +131,13 @@ export default function CommunicationPage() {
   }, [notices, search]);
 
   function openCreate() {
+    setTab('notices');
     setEditing(null);
     setForm({ title: '', description: '', publishDate: todayNepal() });
     setError(''); setNotice(''); setFormOpen(true);
   }
   function openEdit(item: Notice) {
+    setTab('notices');
     setEditing(item);
     setForm({ title: item.title, description: item.description || '', publishDate: item.event_date || todayNepal() });
     setSelected(null); setError(''); setNotice(''); setFormOpen(true);
@@ -155,6 +183,12 @@ export default function CommunicationPage() {
     setNotice('Notice deleted.');
   }
 
+  function chooseTab(value: typeof tab) {
+    setTab(value);
+    setAudienceInfo('');
+    window.history.replaceState(window.history.state, '', value === 'overview' ? window.location.pathname : `${window.location.pathname}?tab=${value}`);
+  }
+
   if (loading) return <PageSkeleton />;
   if (!authenticated) return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
@@ -167,18 +201,41 @@ export default function CommunicationPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white dark:bg-slate-950">
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
-        <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+        <main className="flex-1 px-3.5 pb-28 pt-7 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-blue-600">School notice board</p>
-                <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">Communication</h1>
-                <p className="mt-2 text-sm text-slate-500">Publish and manage announcements for your school community.</p>
-              </div>
+            <header className="-mx-3.5 bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-5 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-7 sm:dark:border-blue-900/60">
+              <h1 className="text-[1.7rem] font-extrabold leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">Communication</h1>
+              <p className="mt-1 text-xs text-slate-700 dark:text-blue-100 sm:text-base">Notices, messages and school announcements in one place.</p>
+            </header>
+            <nav aria-label="Communication sections" className="mb-3 mt-2 flex gap-5 overflow-x-auto border-b border-slate-200 dark:border-slate-700 [scrollbar-width:none]">
+              {(['overview', 'notices', 'messages', 'scheduled'] as const).map((item) => <button key={item} type="button" onClick={() => chooseTab(item)} className={`shrink-0 border-b-2 px-0.5 py-2 text-xs font-semibold capitalize sm:text-sm ${tab === item ? 'border-blue-600 text-blue-700 dark:text-blue-300' : 'border-transparent text-slate-500 dark:text-slate-400'}`}>{item}</button>)}
+            </nav>
+
+            {tab === 'overview' && <CommunicationOverview
+              notices={notices}
+              error={error}
+              teacherCount={teacherCount}
+              studentCount={studentCount}
+              countsError={countsError}
+              audienceInfo={audienceInfo}
+              onAudience={(audience) => {
+                if (audience === 'Everyone') openCreate();
+                else setAudienceInfo(`${audience} targeting is not yet supported by the current school notice board. No notice has been sent.`);
+              }}
+              onNotice={(item) => setSelected(item)}
+              onTab={chooseTab}
+              onCreate={openCreate}
+              onDrafts={() => { chooseTab('notices'); setAudienceInfo('Draft saving is not available in the current notice board. Existing notices are published immediately.'); }}
+            />}
+
+            {(tab === 'messages' || tab === 'scheduled') && <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"><h2 className="text-sm font-bold text-slate-950 dark:text-white">{tab === 'messages' ? 'Messages' : 'Scheduled communications'}</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{tab === 'messages' ? 'Direct messaging is not available in the current school communication system.' : 'Scheduled delivery is not available in the current school communication system.'}</p></section>}
+
+            {tab === 'notices' && <>
+              {audienceInfo && <p role="status" className="mb-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">{audienceInfo}</p>}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setRefreshKey((value) => value + 1)} disabled={refreshing} className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
                   <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />Refresh
@@ -187,7 +244,6 @@ export default function CommunicationPage() {
                   <Plus className="h-4 w-4" />Create notice
                 </button>
               </div>
-            </header>
 
             {(error || notice) && <div role={error ? 'alert' : 'status'} className={`mt-5 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
               {error ? <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> : <Check className="mt-0.5 h-4 w-4 shrink-0" />}{error || notice}
@@ -230,6 +286,7 @@ export default function CommunicationPage() {
               <h2 className="font-bold text-amber-950">Delivery channels</h2>
               <p className="mt-2 text-sm leading-6 text-amber-800">Notice-board publishing is connected. SMS and email are not shown because no SMS or email provider is configured in this repository; showing those options would not actually deliver a message.</p>
             </section>
+            </>}
           </div>
         </main>
       </div>
@@ -238,6 +295,51 @@ export default function CommunicationPage() {
       {selected && <ViewModal item={selected} onClose={() => setSelected(null)} onEdit={() => openEdit(selected)} onDelete={() => deleteNotice(selected)} />}
     </div>
   );
+}
+
+function CommunicationOverview({ notices, error, teacherCount, studentCount, countsError, audienceInfo, onAudience, onNotice, onTab, onCreate, onDrafts }: {
+  notices: Notice[];
+  error: string;
+  teacherCount: number | null;
+  studentCount: number | null;
+  countsError: string;
+  audienceInfo: string;
+  onAudience: (audience: 'Teachers' | 'Students' | 'Everyone') => void;
+  onNotice: (item: Notice) => void;
+  onTab: (tab: 'overview' | 'notices' | 'messages' | 'scheduled') => void;
+  onCreate: () => void;
+  onDrafts: () => void;
+}) {
+  const summary = [
+    { label: 'Published', count: String(notices.length), icon: Bell, tone: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300' },
+    { label: 'Scheduled', count: '—', icon: Clock3, tone: 'bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300' },
+    { label: 'Drafts', count: '—', icon: Edit3, tone: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300' },
+    { label: 'Unread', count: '—', icon: Mail, tone: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300' },
+  ];
+  const actions = [
+    { title: 'Send Notice', detail: 'School announcement', icon: Bell, action: onCreate, tone: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30' },
+    { title: 'New Message', detail: 'Message someone', icon: Mail, action: () => onTab('messages'), tone: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30' },
+    { title: 'Schedule', detail: 'Send later', icon: CalendarDays, action: () => onTab('scheduled'), tone: 'bg-violet-50 text-violet-600 dark:bg-violet-900/30' },
+    { title: 'Drafts', detail: 'Continue writing', icon: FileText, action: onDrafts, tone: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30' },
+  ];
+  const audiences = [
+    { title: 'Teachers' as const, members: teacherCount === null ? 'Unavailable' : `${teacherCount} members`, icon: GraduationCap },
+    { title: 'Students' as const, members: studentCount === null ? 'Unavailable' : `${studentCount} members`, icon: UsersRound },
+    { title: 'Everyone' as const, members: 'Whole school', icon: Send },
+  ];
+  return <div className="space-y-4 pb-6 text-slate-950 dark:text-white">
+    {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{error}</p>}
+    <section aria-label="Communication summary" className="grid grid-cols-4 gap-1.5 sm:gap-3">{summary.map(({ label, count, icon: Icon, tone }) => <div key={label} title={count === '—' ? `${label} data is not available in the current communication system` : undefined} className="min-w-0 rounded-xl border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900 sm:px-3 sm:py-2"><span className={`flex h-5 w-5 items-center justify-center rounded-md ${tone}`}><Icon className="h-3 w-3" /></span><strong className="mt-1 block text-base leading-none sm:text-xl">{count}</strong><span className="mt-1 block truncate text-[9px] leading-none text-slate-500 dark:text-slate-400 sm:text-xs">{label}</span></div>)}</section>
+    <p className="-mt-2 text-[10px] text-slate-500 dark:text-slate-400">— means this feature is not available yet.</p>
+
+    <section><div className="mb-2"><h2 className="text-base font-bold">Quick Actions</h2><p className="text-[11px] text-slate-500 dark:text-slate-400">Reach the right people quickly.</p></div><div className="grid grid-cols-2 gap-2">{actions.map(({ title, detail, icon: Icon, action, tone }) => <button key={title} type="button" onClick={action} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 text-left dark:border-slate-700 dark:bg-slate-900"><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tone}`}><Icon className="h-4 w-4" /></span><span className="min-w-0"><strong className="block truncate text-xs">{title}</strong><span className="block truncate text-[10px] text-slate-500 dark:text-slate-400">{detail}</span></span></button>)}</div></section>
+
+    <section><div className="mb-2"><h2 className="text-base font-bold">Send To</h2><p className="text-[11px] text-slate-500 dark:text-slate-400">Start communication by audience.</p></div>{countsError && <p role="alert" className="mb-2 text-xs text-rose-600">{countsError}</p>}{audienceInfo && <p role="status" className="mb-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">{audienceInfo}</p>}<div className="grid grid-cols-3 gap-1.5">{audiences.map(({ title, members, icon: Icon }) => <button key={title} type="button" onClick={() => onAudience(title)} className="min-w-0 rounded-xl border border-slate-200 bg-white p-2 text-left dark:border-slate-700 dark:bg-slate-900"><Icon className="mb-1 h-4 w-4 text-blue-600 dark:text-blue-300" /><strong className="block truncate text-[11px]">{title}</strong><span className="block truncate text-[9px] text-slate-500 dark:text-slate-400">{members}</span></button>)}</div></section>
+
+    <section><div className="mb-2 flex items-end justify-between gap-2"><div><h2 className="text-base font-bold">Recent Notices</h2><p className="text-[11px] text-slate-500 dark:text-slate-400">Latest school announcements.</p></div><button type="button" onClick={() => onTab('notices')} className="shrink-0 text-xs font-semibold text-blue-600 dark:text-blue-300">View all</button></div><div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900">{notices.slice(0, 4).map((item) => <button key={item.id} type="button" onClick={() => onNotice(item)} className="flex w-full items-center gap-2 px-3 py-2 text-left"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300"><Bell className="h-4 w-4" /></span><span className="min-w-0 flex-1"><strong className="block truncate text-xs">{item.title}</strong><span className="block truncate text-[10px] text-slate-500 dark:text-slate-400">School-wide • {relativeTime(item.created_at)}</span></span><span className="rounded-full bg-emerald-50 px-1.5 py-1 text-[9px] font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Published</span><ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" /></button>)}{!notices.length && <p className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">No notices published yet.</p>}</div></section>
+
+    <section><div className="mb-2 flex items-end justify-between gap-2"><div><h2 className="text-base font-bold">Scheduled</h2><p className="text-[11px] text-slate-500 dark:text-slate-400">Communications waiting to be published.</p></div><button type="button" onClick={() => onTab('scheduled')} className="shrink-0 text-xs font-semibold text-blue-600 dark:text-blue-300">View all</button></div><p className="rounded-xl border border-slate-200 bg-white p-3 text-center text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">Scheduled delivery is not available yet.</p></section>
+  </div>;
 }
 
 function NoticeModal({ editing, form, setForm, saving, onClose, onSubmit }: { editing: boolean; form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>; saving: boolean; onClose: () => void; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void }) {
@@ -257,5 +359,5 @@ function Field({ label, value, onChange, type = 'text', placeholder, required }:
   return <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">{label}{required && <span className="text-red-500"> *</span>}</span><input required={required} type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" /></label>;
 }
 function PageSkeleton() {
-  return <div className="min-h-screen bg-slate-50"><Sidebar /><div className="pt-10 lg:ml-64"><TopBar /><main className="px-4 pb-24 pt-24 sm:px-6 lg:px-8"><div className="mx-auto max-w-[1500px] animate-pulse"><div className="h-24 border-b border-slate-200" /><div className="mt-6 grid gap-4 sm:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <div key={index} className="h-24 rounded-2xl bg-white" />)}</div><div className="mt-6 h-96 rounded-2xl bg-white" /></div></main></div></div>;
+  return <div className="min-h-screen bg-white dark:bg-slate-950"><Sidebar /><div className="pt-10 lg:ml-64"><TopBar /><main className="px-3.5 pb-28 pt-7 sm:px-6 lg:pt-24"><div className="mx-auto max-w-[1500px] animate-pulse"><div className="h-24 rounded-xl bg-blue-50 dark:bg-slate-900" /><div className="mt-2 h-8 border-b border-slate-200 dark:border-slate-700" /><div className="mt-3 grid grid-cols-4 gap-1.5">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-14 rounded-xl bg-slate-100 dark:bg-slate-900" />)}</div><div className="mt-4 grid grid-cols-2 gap-2">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-12 rounded-xl bg-slate-100 dark:bg-slate-900" />)}</div></div></main></div></div>;
 }
