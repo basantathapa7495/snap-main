@@ -45,24 +45,30 @@ export default function SchoolJoiningControls({ role }: { role: 'teacher' | 'stu
         <span className={`whitespace-nowrap text-[10px] font-bold sm:text-xs ${enabled ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>{enabled ? '● Joining ON' : 'Joining OFF'}</span>
       </div>
     </section>
-    {codes && enabled && <section className="divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white px-3 dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900">
-      <div className="flex min-w-0 items-center gap-2.5 py-2.5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300"><School className="h-4 w-4" aria-hidden="true" /></span>
-        <div className="min-w-0 flex-1"><h3 className="text-[11px] text-slate-500 dark:text-slate-300">School Code</h3><code className="block text-lg font-extrabold leading-tight tracking-[0.12em]">{codes.school_code}</code></div>
-        <button type="button" onClick={() => copy('School Code', codes.school_code)} aria-label="Copy School Code" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-300"><Copy className="h-4 w-4" /></button>
-      </div>
-      <div className="flex min-w-0 items-center gap-2.5 py-2.5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300"><UsersRound className="h-4 w-4" aria-hidden="true" /></span>
-        <div className="min-w-0 flex-1"><h3 className="text-[11px] text-slate-500 dark:text-slate-300">{roleLabel} Join Code</h3><code className="block text-lg font-extrabold leading-tight tracking-[0.12em]">{joinCode}</code></div>
-        <button type="button" onClick={() => copy(`${roleLabel} Join Code`, joinCode || '')} aria-label={`Copy ${roleLabel} Join Code`} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-violet-200 text-blue-700 dark:border-violet-800 dark:text-blue-300"><Copy className="h-4 w-4" /></button>
-        <div className="relative"><button type="button" aria-label="Join code options" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} className="flex h-10 w-8 items-center justify-center rounded-lg border border-violet-200 dark:border-violet-800"><EllipsisVertical className="h-4 w-4" /></button>
-          {menuOpen && <div className="absolute right-0 top-full z-20 mt-2 w-52 rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-            <button type="button" disabled={busy} onClick={() => { setMenuOpen(false); void update('regenerate'); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700"><RefreshCw className="h-4 w-4 text-blue-600" />Regenerate</button>
-            <button type="button" onClick={() => { setMenuOpen(false); setShowCodeInfo((show) => !show); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700"><Info className="h-4 w-4 text-slate-500" />About this code</button>
-          </div>}
+    {codes && enabled && <div className="grid grid-cols-2 gap-2 sm:gap-3">
+      <section className="min-w-0 rounded-xl border border-blue-200 bg-blue-50/30 p-2.5 dark:border-blue-900 dark:bg-blue-950/20 sm:flex sm:items-start sm:gap-3 sm:p-4">
+        <div className="flex items-center justify-between gap-1 sm:contents">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300 sm:h-10 sm:w-10"><School className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /></span>
+          <button type="button" onClick={() => copy('School Code', codes.school_code)} aria-label="Copy School Code" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-white text-blue-700 dark:border-blue-800 dark:bg-slate-900 dark:text-blue-300 sm:order-last sm:h-10 sm:w-10"><Copy className="h-4 w-4" /></button>
         </div>
-      </div>
-    </section>}
+        <div className="mt-2 min-w-0 sm:mt-0 sm:flex-1"><h3 className="text-[10px] text-slate-500 dark:text-slate-300 sm:text-xs">School Code</h3><code className="block text-base font-extrabold leading-tight tracking-[0.08em] sm:mt-1 sm:text-2xl">{codes.school_code}</code><p className="mt-1 hidden text-xs text-slate-500 dark:text-slate-300 sm:block">Identifies your school.</p></div>
+      </section>
+      <section className="min-w-0 rounded-xl border border-violet-200 bg-violet-50/30 p-2.5 dark:border-violet-900 dark:bg-violet-950/20 sm:flex sm:items-start sm:gap-3 sm:p-4">
+        <div className="flex items-center justify-between gap-1 sm:contents">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300 sm:h-10 sm:w-10"><UsersRound className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /></span>
+          <div className="flex shrink-0 items-center gap-1 sm:order-last">
+            <button type="button" onClick={() => copy(`${roleLabel} Join Code`, joinCode || '')} aria-label={`Copy ${roleLabel} Join Code`} className="flex h-8 w-8 items-center justify-center rounded-lg border border-violet-200 bg-white text-blue-700 dark:border-violet-800 dark:bg-slate-900 dark:text-blue-300 sm:h-10 sm:w-10"><Copy className="h-4 w-4" /></button>
+            <div className="relative"><button type="button" aria-label="Join code options" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} className="flex h-8 w-7 items-center justify-center rounded-lg border border-violet-200 bg-white dark:border-violet-800 dark:bg-slate-900 sm:h-10 sm:w-9"><EllipsisVertical className="h-4 w-4" /></button>
+              {menuOpen && <div className="absolute right-0 top-full z-20 mt-2 w-52 rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+                <button type="button" disabled={busy} onClick={() => { setMenuOpen(false); void update('regenerate'); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700"><RefreshCw className="h-4 w-4 text-blue-600" />Regenerate</button>
+                <button type="button" onClick={() => { setMenuOpen(false); setShowCodeInfo((show) => !show); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700"><Info className="h-4 w-4 text-slate-500" />About this code</button>
+              </div>}
+            </div>
+          </div>
+        </div>
+        <div className="mt-2 min-w-0 sm:mt-0 sm:flex-1"><h3 className="text-[10px] text-slate-500 dark:text-slate-300 sm:text-xs">{roleLabel} Join Code</h3><code className="block text-base font-extrabold leading-tight tracking-[0.08em] sm:mt-1 sm:text-2xl">{joinCode}</code><p className="mt-1 hidden text-xs text-slate-500 dark:text-slate-300 sm:block">{roleLabel}s use this code to request access.</p></div>
+      </section>
+    </div>}
     {enabled && showCodeInfo && <p className="rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs text-slate-700 dark:border-violet-900 dark:bg-violet-950/20 dark:text-slate-200">Share the School Code and {roleLabel} Join Code with {person} you invite. Regenerating the join code makes the previous code stop working. Existing approved accounts remain active.</p>}
     {error && <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">{error}</p>}{message && <p role="status" className="text-sm text-emerald-700 dark:text-emerald-400">{message}</p>}
   </div>;
