@@ -77,11 +77,12 @@ export default function PrincipalStudentsOverview({ schoolId, students, onAdd, o
     marks.filter((mark) => studentIds.has(mark.student_id) && mark.attendance_date === today()).forEach((mark) => byId.set(mark.student_id, mark));
     return [...byId.values()];
   }, [marks, studentIds]);
-  const present = latest.filter((mark) => mark.status === "present" || mark.status === "late").length;
+  const present = latest.filter((mark) => mark.status === "present").length;
+  const late = latest.filter((mark) => mark.status === "late").length;
   const absent = latest.filter((mark) => mark.status === "absent").length;
   const leave = latest.filter((mark) => mark.status === "leave").length;
-  const marked = present + absent + leave;
-  const rate = marked ? Math.round(present / marked * 100) : null;
+  const marked = present + late + absent + leave;
+  const rate = marked ? Math.round((present + late) / marked * 100) : null;
   const lowAttendance = useMemo(() => {
     const totals = new Map<string, { present: number; marked: number }>();
     for (const mark of marks) {
