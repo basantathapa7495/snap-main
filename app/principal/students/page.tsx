@@ -29,6 +29,7 @@ import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
 import SchoolJoiningControls from "@/components/SchoolJoiningControls";
 import PrincipalStudentsOverview from "@/components/PrincipalStudentsOverview";
+import PrincipalStudentAttendanceTab from "@/components/PrincipalStudentAttendanceTab";
 import StudentJoiningOversight from "@/components/StudentJoiningOversight";
 import { supabase } from "@/lib/supabase";
 
@@ -501,7 +502,7 @@ export default function StudentsPage() {
               onClass={(name) => { const target = name.replace(/^(Grade|Class)\s+/i, "").toLowerCase(); setUnassignedIds(null); setStudentClass(name === "All" ? "All" : classes.find((value) => value.replace(/^(Grade|Class)\s+/i, "").toLowerCase() === target) || name); setSection("All"); setCurrentPage(1); setPageTab("students"); }}
               onUnassigned={(ids) => { setUnassignedIds(ids); setStudentClass("All"); setSection("All"); setCurrentPage(1); setPageTab("students"); }}
               onJoining={() => setPageTab("joining")} />}
-            {pageTab === "attendance" && <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"><h2 className="font-bold text-slate-950 dark:text-white">Student attendance</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Review school-wide attendance and mark each class.</p><a href="/principal/attendance" className="mt-3 inline-flex rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white">Open attendance</a></section>}
+            {pageTab === "attendance" && schoolId && <PrincipalStudentAttendanceTab schoolId={schoolId} students={students} />}
             {pageTab === "joining" && <><SchoolJoiningControls role="student" /><StudentJoiningOversight /></>}
 
             {pageTab === "students" && <>
