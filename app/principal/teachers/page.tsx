@@ -18,6 +18,7 @@ import {
   ClipboardClock,
   RefreshCw,
   Search,
+  ShieldCheck,
   UserCheck,
   UserMinus,
   UserRound,
@@ -625,9 +626,9 @@ export default function TeachersPage() {
 
             {pageTab === "joining" && <>
               <SchoolJoiningControls role="teacher" />
-              <section aria-label="Teacher joining approval" className="mt-3 flex items-start gap-2.5 rounded-xl border border-blue-200 bg-blue-50/60 px-3 py-2.5 text-sm dark:border-blue-900 dark:bg-blue-950/30">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-300" aria-hidden="true" />
-                <div><h2 className="font-semibold text-slate-900 dark:text-white">Approval required</h2><p className="mt-0.5 text-xs leading-5 text-slate-600 dark:text-slate-300">All teacher joining requests must be approved by the principal before portal access is granted.</p></div>
+              <section aria-label="Teacher joining approval" className="mt-3 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950/20 sm:p-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
+                <div className="min-w-0 border-l border-amber-200 pl-3 dark:border-amber-800"><h2 className="font-bold text-slate-900 dark:text-white">Approval required</h2><p className="mt-0.5 text-xs leading-5 text-slate-600 dark:text-slate-300">All teacher joining requests must be approved by the principal before portal access is granted.</p></div>
               </section>
               <AccountRequestsPanel role="teacher" onApproved={() => setRefreshKey((value) => value + 1)} />
             </>}
