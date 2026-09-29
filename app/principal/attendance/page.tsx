@@ -90,7 +90,12 @@ export default function AttendancePage() {
           supabase.from('attendance')
             .select('student_id, attendance_date, status')
             .eq('school_id', profile.school_id)
-            .gte('attendance_date', dateDaysAgo(89))
+            .gte('attendance_date', (() => {
+              const requestedDate = new URLSearchParams(window.location.search).get('date');
+              return requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) && requestedDate <= nepalDateKey()
+                ? requestedDate < dateDaysAgo(89) ? requestedDate : dateDaysAgo(89)
+                : dateDaysAgo(89);
+            })())
             .lte('attendance_date', nepalDateKey()),
         ]);
         if (studentResult.error) throw studentResult.error;
@@ -100,6 +105,14 @@ export default function AttendancePage() {
           setSchoolId(profile.school_id);
           setStudents((studentResult.data || []) as Student[]);
           setHistory((attendanceResult.data || []) as Attendance[]);
+          const params = new URLSearchParams(window.location.search);
+          const requestedDate = params.get('date');
+          if (requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) && requestedDate <= nepalDateKey()) setSelectedDate(requestedDate);
+          const requestedClass = params.get('class')?.replace(/^(class|grade)\s+/i, '').trim().toLowerCase();
+          if (requestedClass) {
+            const matchingClass = (studentResult.data || []).find((student) => student.class?.replace(/^(class|grade)\s+/i, '').trim().toLowerCase() === requestedClass)?.class;
+            if (matchingClass) setSelectedClass(matchingClass);
+          }
         }
       } catch (loadError) {
         console.error('Attendance load error', loadError);
