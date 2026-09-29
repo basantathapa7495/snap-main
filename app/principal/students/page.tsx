@@ -29,8 +29,9 @@ import {
 } from "lucide-react";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
-import AccountRequestsPanel from "@/components/AccountRequestsPanel";
 import SchoolJoiningControls from "@/components/SchoolJoiningControls";
+import PrincipalStudentsOverview from "@/components/PrincipalStudentsOverview";
+import StudentJoiningOversight from "@/components/StudentJoiningOversight";
 import { supabase } from "@/lib/supabase";
 
 type Student = {
@@ -110,6 +111,8 @@ function createPassword() {
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [pageTab, setPageTab] = useState<"overview" | "students" | "attendance" | "joining">("overview");
+  const [unassignedIds, setUnassignedIds] = useState<string[] | null>(null);
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -182,10 +185,12 @@ export default function StudentsPage() {
             const grade = requestedClass.replace(/^(class|grade)\s+/i, '').trim().toLowerCase();
             const match = (data || []).find((item) => item.class?.replace(/^(class|grade)\s+/i, '').trim().toLowerCase() === grade);
             setStudentClass(match?.class || requestedClass);
+            setPageTab("students");
           }
           if (requestedSection) {
             const match = (data || []).find((item) => item.section?.toLowerCase() === requestedSection.toLowerCase());
             setSection(match?.section || requestedSection);
+            setPageTab("students");
           }
           const selectedId = new URLSearchParams(window.location.search).get('student');
           const match = (data || []).find((item) => item.id === selectedId);
@@ -267,9 +272,10 @@ export default function StudentsPage() {
       const matchesAccount =
         account === "All" ||
         (account === "Active" ? Boolean(student.user_id) : !student.user_id);
-      return matchesSearch && matchesClass && matchesSection && matchesAccount;
+      return matchesSearch && matchesClass && matchesSection && matchesAccount &&
+        (!unassignedIds || unassignedIds.includes(student.id));
     });
-  }, [account, search, section, studentClass, students]);
+  }, [account, search, section, studentClass, students, unassignedIds]);
 
   const totalPages = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
@@ -476,26 +482,37 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
-        <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
+        <main className="flex-1 px-3 pb-28 pt-24 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-[1500px]">
-            <header className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
+            <header className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 dark:border-blue-900 dark:bg-blue-950/30">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-blue-600">
-                  School directory
-                </p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                <h1 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-2xl">
                   Students
                 </h1>
-                <p className="mt-1.5 text-sm text-slate-500">
-                  Keep student records, family contacts, and login access
-                  organized.
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
+                  Manage students, attendance and school access.
                 </p>
               </div>
-              <div className="flex gap-2">
+            </header>
+            <nav aria-label="Student sections" className="mb-3 mt-2 flex gap-5 overflow-x-auto border-b border-slate-200 dark:border-slate-700">
+              {(["overview", "students", "attendance", "joining"] as const).map((tab) => <button key={tab} type="button" onClick={() => setPageTab(tab)} className={`shrink-0 border-b-2 px-0.5 py-2 text-xs font-semibold capitalize sm:text-sm ${pageTab === tab ? "border-blue-600 text-blue-700 dark:text-blue-300" : "border-transparent text-slate-500 dark:text-slate-400"}`}>{tab}</button>)}
+            </nav>
+
+            {pageTab === "overview" && schoolId && <PrincipalStudentsOverview schoolId={schoolId} students={students}
+              onAdd={openCreateForm}
+              onMove={() => { setUnassignedIds(null); setStudentClass("All"); setPageTab("students"); setNotice("Choose a student and use Edit to change their class or section."); }}
+              onStudents={() => { setUnassignedIds(null); setStudentClass("All"); setPageTab("students"); }}
+              onClass={(name) => { const target = name.replace(/^(Grade|Class)\s+/i, "").toLowerCase(); setUnassignedIds(null); setStudentClass(name === "All" ? "All" : classes.find((value) => value.replace(/^(Grade|Class)\s+/i, "").toLowerCase() === target) || name); setSection("All"); setCurrentPage(1); setPageTab("students"); }}
+              onUnassigned={(ids) => { setUnassignedIds(ids); setStudentClass("All"); setSection("All"); setCurrentPage(1); setPageTab("students"); }}
+              onJoining={() => setPageTab("joining")} />}
+            {pageTab === "attendance" && <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"><h2 className="font-bold text-slate-950 dark:text-white">Student attendance</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Review school-wide attendance and mark each class.</p><a href="/principal/attendance" className="mt-3 inline-flex rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white">Open attendance</a></section>}
+            {pageTab === "joining" && <><SchoolJoiningControls role="student" /><StudentJoiningOversight /></>}
+
+            {pageTab === "students" && <><div className="mb-3 flex gap-2">
                 <button
                   type="button"
                   onClick={() => setRefreshKey((value) => value + 1)}
@@ -516,10 +533,7 @@ export default function StudentsPage() {
                   Add student
                 </button>
               </div>
-            </header>
-
-            <SchoolJoiningControls role="student" />
-            <AccountRequestsPanel role="student" onApproved={() => setRefreshKey((value) => value + 1)} />
+              {unassignedIds && <button type="button" onClick={() => setUnassignedIds(null)} className="mb-2 text-xs font-semibold text-blue-600">Showing unassigned students · Clear filter</button>}
 
             {(error || notice) && (
               <div
@@ -546,7 +560,7 @@ export default function StudentsPage() {
               </div>
             )}
 
-            <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <section className="mt-3 grid grid-cols-4 gap-1.5 sm:gap-3">
               <Stat
                 icon={Users}
                 label="Total students"
@@ -693,6 +707,7 @@ export default function StudentsPage() {
                 </>
               )}
             </section>
+            </>}
           </div>
         </main>
       </div>
