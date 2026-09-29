@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import NepaliDate from 'nepali-date-converter';
 import { AlertCircle, CalendarDays, Check, ChevronRight, Clock3, Download, Filter, GraduationCap, Loader2, RefreshCw, Save, Search, TriangleAlert, UserPlus, UserX, Users, UsersRound } from 'lucide-react';
 import { CartesianGrid, LabelList, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import Sidebar from '@/components/sidebar';
@@ -14,6 +15,7 @@ type Student = { id: string; name: string; class: string | null; section: string
 type Attendance = Mark & { student_id: string };
 type EditableStudent = Student & { status: Status };
 type Group = { key: string; className: string; section: string; label: string; students: Student[] };
+type SavedClass = { class_name: string | null; class: string | null; name: string | null; class_number: string | null; section: string | null; section_name: string | null };
 const PAGE_SIZE = 1000;
 const field = 'h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-950 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white';
 
@@ -38,6 +40,7 @@ function initials(name: string) { return name.split(' ').filter(Boolean).map((wo
 export default function AttendancePage() {
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
+  const [savedClasses, setSavedClasses] = useState<SavedClass[]>([]);
   const [history, setHistory] = useState<Attendance[]>([]);
   const [teacherHistory, setTeacherHistory] = useState<Mark[]>([]);
   const [selectedDate, setSelectedDate] = useState(initialDate);
@@ -72,13 +75,15 @@ export default function AttendancePage() {
         const { data: profile, error: profileError } = await supabase.from('profiles').select('school_id,role').eq('user_id', user.id).single();
         if (profileError || !profile?.school_id || profile.role !== 'admin') throw new Error('Principal school access could not be loaded.');
         const id = profile.school_id;
-        const [studentRows, marks, teacherMarks] = await Promise.all([
+        const academicYear = Number(new NepaliDate(new Date()).format('YYYY'));
+        const [studentRows, classRows, marks, teacherMarks] = await Promise.all([
           allRows<Student>((offset) => supabase.from('students').select('id,name,class,section,roll_no').eq('school_id', id).order('id').range(offset, offset + PAGE_SIZE - 1)),
+          allRows<SavedClass>((offset) => supabase.from('classes').select('class_name,class,name,class_number,section,section_name').eq('school_id', id).eq('academic_year', academicYear).is('archived_at', null).order('id').range(offset, offset + PAGE_SIZE - 1)),
           allRows<Attendance>((offset) => supabase.from('attendance').select('student_id,attendance_date,status').eq('school_id', id).gte('attendance_date', historyStart).lte('attendance_date', today).order('attendance_date').order('id').range(offset, offset + PAGE_SIZE - 1)),
           allRows<Mark>((offset) => supabase.from('teacher_attendance').select('teacher_id,attendance_date,status').eq('school_id', id).gte('attendance_date', daysBefore(today, 59)).lte('attendance_date', today).order('attendance_date').order('id').range(offset, offset + PAGE_SIZE - 1)),
         ]);
         if (cancelled) return;
-        setSchoolId(id); setStudents(studentRows); setHistory(marks); setTeacherHistory(teacherMarks); setAuthenticated(true); setLoadedSuccessfully(true);
+        setSchoolId(id); setStudents(studentRows); setSavedClasses(classRows); setHistory(marks); setTeacherHistory(teacherMarks); setAuthenticated(true); setLoadedSuccessfully(true);
         const params = new URLSearchParams(window.location.search);
         const requestedClass = params.get('class')?.replace(/^(class|grade)\s+/i, '').trim().toLowerCase();
         if (requestedClass) {
@@ -105,13 +110,23 @@ export default function AttendancePage() {
 
   const groups = useMemo(() => {
     const map = new Map<string, Group>();
+    const configuredSections = new Set(savedClasses.filter((row) => row.section_name || row.section).map((row) => sectionKey(row.class_name || row.class || row.name || row.class_number, null)));
+    savedClasses.forEach((row) => {
+      const rawClass = (row.class_name || row.class || row.name || row.class_number || '').trim();
+      if (!rawClass) return;
+      const className = /^(class|grade)\s+/i.test(rawClass) ? rawClass : `Class ${rawClass}`;
+      const section = (row.section_name || row.section || '').trim().replace(/^section\s+/i, '').toUpperCase();
+      if (!section && configuredSections.has(sectionKey(rawClass, null))) return;
+      const key = sectionKey(rawClass, section);
+      if (!map.has(key)) map.set(key, { key, className, section, label: [className, section && `Section ${section}`].filter(Boolean).join(' · '), students: [] });
+    });
     students.forEach((student) => {
       const key = sectionKey(student.class, student.section);
       if (!map.has(key)) map.set(key, { key, className: student.class || 'Unassigned', section: student.section || '', label: [student.class || 'Unassigned', student.section && `Section ${student.section}`].filter(Boolean).join(' · '), students: [] });
       map.get(key)!.students.push(student);
     });
     return [...map.values()].sort((a, b) => a.className.localeCompare(b.className, undefined, { numeric: true }) || a.section.localeCompare(b.section, undefined, { numeric: true }));
-  }, [students]);
+  }, [students, savedClasses]);
   const dateRecords = useMemo(() => (selectedDate < historyStart ? olderDate === selectedDate ? olderRecords : [] : history.filter((row) => row.attendance_date === selectedDate)), [history, selectedDate, historyStart, olderRecords, olderDate]);
   const rosterIds = useMemo(() => new Set(students.map((student) => student.id)), [students]);
   const dateReady = !olderLoading && !(selectedDate < historyStart && (olderError || olderDate !== selectedDate));
@@ -125,6 +140,7 @@ export default function AttendancePage() {
     return { ...group, ...counts, total: group.students.length };
   }), [groups, selectedMarks]);
   const selected = groups.find((group) => group.key === selectedGroup);
+  const firstMarkableGroup = groups.find((group) => group.students.length > 0);
 
   useEffect(() => {
     // The marking form intentionally resets when the selected group or date changes.
@@ -232,19 +248,20 @@ export default function AttendancePage() {
                 </div>
                 <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2 sm:max-w-xl">
                   <button type="button" onClick={() => setRefreshKey((value) => value + 1)} disabled={refreshing} className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-2 text-[10px] font-semibold shadow-sm disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 sm:px-3 sm:text-xs"><RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} />Refresh</button>
-                  <button type="button" onClick={() => chooseGroup(selectedGroup === 'All' ? groups[0]?.key || 'All' : selectedGroup)} disabled={!groups.length || !dateReady} className="inline-flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl bg-blue-600 px-2 text-[10px] font-semibold text-white shadow-sm shadow-blue-200 disabled:opacity-50 dark:shadow-none sm:text-xs"><UserPlus className="h-3.5 w-3.5 shrink-0" />Mark attendance</button>
+                  <button type="button" onClick={() => chooseGroup(selected?.students.length ? selected.key : firstMarkableGroup?.key || 'All')} disabled={!firstMarkableGroup || !dateReady} className="inline-flex h-10 min-w-0 items-center justify-center gap-1 rounded-xl bg-blue-600 px-2 text-[10px] font-semibold text-white shadow-sm shadow-blue-200 disabled:opacity-50 dark:shadow-none sm:text-xs"><UserPlus className="h-3.5 w-3.5 shrink-0" />Mark attendance</button>
                   <button type="button" onClick={exportCsv} disabled={!dateReady} className="inline-flex h-10 items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-2 text-[10px] font-semibold shadow-sm disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 sm:px-3 sm:text-xs"><Download className="h-3.5 w-3.5" />Export CSV</button>
                 </div>
               </section>
 
-              {!dateReady ? <p role="status" className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-900">{olderError ? 'Attendance for this date is unavailable. Refresh to retry.' : `Loading attendance for ${selectedDate}…`}</p> : !students.length ? <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-xs dark:border-slate-700 dark:bg-slate-900"><Users className="mx-auto mb-2 h-6 w-6 text-slate-400" /><strong>No students assigned yet</strong><p className="mt-1 text-slate-500">Add students before taking attendance.</p><Link href="/principal/students" className="mt-2 inline-block font-semibold text-blue-600">Open students</Link></section> : <>
+              {!dateReady ? <p role="status" className="rounded-xl border border-slate-200 bg-white p-4 text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-900">{olderError ? 'Attendance for this date is unavailable. Refresh to retry.' : `Loading attendance for ${selectedDate}…`}</p> : !groups.length ? <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-6 text-center text-xs dark:border-slate-700 dark:bg-slate-900"><Users className="mx-auto mb-2 h-6 w-6 text-slate-400" /><strong>No classes yet</strong><p className="mt-1 text-slate-500">Add a class to start managing attendance.</p><Link href="/principal/classes" className="mt-2 inline-block font-semibold text-blue-600">Open classes</Link></section> : <>
                 {selected ? <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
                   <div className="flex items-center justify-between gap-2 border-b border-slate-100 p-3 dark:border-slate-700"><div><h2 className="text-sm font-bold">Mark attendance · {selected.label}</h2><p className="text-[11px] text-slate-500 dark:text-slate-400">{editable.length} students · {unmarked} unmarked</p></div><button type="button" onClick={() => setEditable((current) => current.map((student) => ({ ...student, status: 'present' })))} className="rounded-lg border border-slate-200 px-2 py-1.5 text-[10px] font-semibold dark:border-slate-700">Mark all present</button></div>
+                  {!editable.length && <p className="px-3 py-5 text-center text-xs text-slate-500">No students are assigned to this class. <Link href="/principal/students" className="font-semibold text-blue-600">Open students</Link></p>}
                   <div className="divide-y divide-slate-100 dark:divide-slate-800">{editable.map((student) => <div key={student.id} className="flex items-center gap-2 px-3 py-2"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">{initials(student.name)}</span><span className="min-w-0 flex-1"><strong className="block truncate text-xs">{student.name}</strong><span className="block truncate text-[10px] text-slate-500">Roll {student.roll_no || '—'}</span></span><select aria-label={`Attendance for ${student.name}`} value={student.status} onChange={(event) => setEditable((current) => current.map((row) => row.id === student.id ? { ...row, status: event.target.value as Status } : row))} className={`${field} max-w-28`}><option value="unmarked">Unmarked</option><option value="present">Present</option><option value="late">Late</option><option value="absent">Absent</option></select></div>)}</div>
                   <div className="flex items-center justify-between gap-2 border-t border-slate-100 p-3 dark:border-slate-700"><span className="text-[10px] text-slate-500">{editStats.present} present · {editStats.late} late · {editStats.absent} absent</span><button type="button" onClick={saveAttendance} disabled={saving || refreshing || olderLoading || olderError || (selectedDate < historyStart && olderDate !== selectedDate) || !editable.length || unmarked > 0} className="inline-flex h-9 items-center gap-1 rounded-lg bg-blue-600 px-3 text-xs font-semibold text-white disabled:opacity-50">{saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}{saving ? 'Saving…' : 'Save attendance'}</button></div>
                 </section> : <>
                   <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                    <button type="button" disabled={!groups.length} onClick={() => chooseGroup(groups[0]?.key || 'All')} className="flex w-full items-center justify-between text-left"><h2 className="text-base font-bold">{selectedDate === today ? "Today's attendance" : `Attendance · ${selectedDate}`}</h2><ChevronRight className="h-4 w-4 text-slate-500" /></button>
+                    <button type="button" disabled={!firstMarkableGroup} onClick={() => chooseGroup(firstMarkableGroup?.key || 'All')} className="flex w-full items-center justify-between text-left"><h2 className="text-base font-bold">{selectedDate === today ? "Today's attendance" : `Attendance · ${selectedDate}`}</h2><ChevronRight className="h-4 w-4 text-slate-500" /></button>
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{stats.marked ? `${stats.present + stats.late} of ${stats.marked} marked students attended` : 'Attendance has not been marked yet.'}</p>
                     <div className="mt-3 flex items-center gap-3"><strong className="shrink-0 text-2xl font-extrabold">{stats.percentage === null ? '—' : `${stats.percentage}%`}</strong><span className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"><span className="block h-full rounded-full bg-emerald-500" style={{ width: `${stats.percentage || 0}%` }} /></span></div>
                     <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500 dark:text-slate-400"><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-emerald-500" />{stats.present} Present</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-rose-500" />{stats.absent} Absent</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full bg-amber-500" />{stats.late} Late</span><span className="ml-auto">{stats.marked}/{students.length} marked</span></div>
@@ -277,7 +294,7 @@ type ClassSummary = Group & ReturnType<typeof attendanceCounts> & { total: numbe
 function ClassRow({ group, index, onClick }: { group: ClassSummary; index: number; onClick: () => void }) {
   const badge = ['bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300', 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300', 'bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300', 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300'][index % 4];
   const number = group.className.match(/\d+/)?.[0] || group.className.slice(0, 1).toUpperCase();
-  return <button type="button" onClick={onClick} className="grid w-full grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-2 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800"><span className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold ${badge}`}>{number}</span><span className="min-w-0"><strong className="block truncate text-xs">{group.className}{group.section ? ` (${group.section})` : ''}</strong><span className="mt-1 block truncate text-[10px] text-slate-500 dark:text-slate-400">{group.total} students <span className="mx-1 text-emerald-600">●</span>{group.present} <span className="mx-1 text-rose-500">●</span>{group.absent} <span className="mx-1 text-amber-500">●</span>{group.late}</span><span title={`${group.marked} of ${group.total} marked`} className="mt-1.5 block h-1.5 max-w-52 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"><span className="block h-full rounded-full bg-emerald-500" style={{ width: `${group.total ? group.marked / group.total * 100 : 0}%` }} /></span></span><span className="flex items-center gap-1"><span className="text-right"><strong className="block rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{group.percentage === null ? '—' : `${group.percentage}%`}</strong><span className={`mt-1 block whitespace-nowrap text-[9px] ${group.marked === group.total ? 'text-slate-500' : 'text-amber-600 dark:text-amber-400'}`}>{group.marked === group.total ? `Marked ${group.marked}/${group.total}` : `Not marked ${group.marked}/${group.total}`}</span></span><ChevronRight className="h-4 w-4 text-slate-400" /></span></button>;
+  return <button type="button" onClick={onClick} className="grid w-full grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-2 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800"><span className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg font-bold ${badge}`}>{number}</span><span className="min-w-0"><strong className="block truncate text-xs">{group.className}{group.section ? ` (${group.section})` : ''}</strong><span className="mt-1 block truncate text-[10px] text-slate-500 dark:text-slate-400">{group.total} students <span className="mx-1 text-emerald-600">●</span>{group.present} <span className="mx-1 text-rose-500">●</span>{group.absent} <span className="mx-1 text-amber-500">●</span>{group.late}</span><span title={`${group.marked} of ${group.total} marked`} className="mt-1.5 block h-1.5 max-w-52 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"><span className="block h-full rounded-full bg-emerald-500" style={{ width: `${group.total ? group.marked / group.total * 100 : 0}%` }} /></span></span><span className="flex items-center gap-1"><span className="text-right"><strong className="block rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{group.percentage === null ? '—' : `${group.percentage}%`}</strong><span className={`mt-1 block whitespace-nowrap text-[9px] ${group.total > 0 && group.marked === group.total ? 'text-slate-500' : 'text-amber-600 dark:text-amber-400'}`}>{!group.total ? 'No students' : group.marked === group.total ? `Marked ${group.marked}/${group.total}` : `Not marked ${group.marked}/${group.total}`}</span></span><ChevronRight className="h-4 w-4 text-slate-400" /></span></button>;
 }
 
 function TrendCard({ title, tone, soft, days, setDays, trend, previous }: { title: string; tone: string; soft: 'blue' | 'violet'; days: 7 | 14 | 30; setDays: (days: 7 | 14 | 30) => void; trend: ReturnType<typeof dailyRates>; previous: number | null }) {
