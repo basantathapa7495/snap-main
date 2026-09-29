@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell, CalendarDays, ChevronRight, Clock3, Edit3, FileText, GraduationCap, Mail, Send, UsersRound } from "lucide-react";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
 import PrincipalNoticesPanel, { type SchoolNotice } from "@/components/PrincipalNoticesPanel";
+import PrincipalMessagesPanel from "@/components/PrincipalMessagesPanel";
 import { supabase } from "@/lib/supabase";
 
 type Tab = "overview" | "notices" | "messages" | "scheduled";
@@ -27,6 +28,9 @@ function relativeTime(value: string | null) {
 
 export default function CommunicationPage() {
   const [schoolId, setSchoolId] = useState<string | null>(null);
+  const [principalId, setPrincipalId] = useState<string | null>(null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [messageKey, setMessageKey] = useState(0);
   const [notices, setNotices] = useState<SchoolNotice[]>([]);
   const [tab, setTab] = useState<Tab>("overview");
   const [teacherCount, setTeacherCount] = useState<number | null>(null);
@@ -51,14 +55,17 @@ export default function CommunicationPage() {
         if (!user) { if (!cancelled) setAuthenticated(false); return; }
         const { data: profile, error: profileError } = await supabase.from("profiles").select("school_id,role").eq("user_id", user.id).single();
         if (profileError || !profile?.school_id || profile.role !== "admin") throw new Error("School access unavailable.");
-        const [noticeResult, teacherResult, studentResult] = await Promise.all([
+        const [noticeResult, teacherResult, studentResult, unreadResult] = await Promise.all([
           supabase.from("notices").select("id,school_id,title,content,target_audience,target_class,target_section,status,scheduled_at,published_at,created_at,updated_at,created_by").eq("school_id", profile.school_id).order("created_at", { ascending: false }),
           supabase.from("teachers").select("id", { count: "exact", head: true }).eq("school_id", profile.school_id),
           supabase.from("students").select("id", { count: "exact", head: true }).eq("school_id", profile.school_id),
+          supabase.from("direct_messages").select("id", { count: "exact", head: true }).eq("school_id", profile.school_id).neq("sender_id", user.id).is("read_at", null),
         ]);
         if (noticeResult.error) throw noticeResult.error;
         if (!cancelled) {
           setSchoolId(profile.school_id);
+          setPrincipalId(user.id);
+          if (!unreadResult.error) setUnreadMessages(unreadResult.count || 0);
           setNotices((noticeResult.data || []) as SchoolNotice[]);
           setTeacherCount(teacherResult.error ? null : teacherResult.count || 0);
           setStudentCount(studentResult.error ? null : studentResult.count || 0);
@@ -91,6 +98,8 @@ export default function CommunicationPage() {
   function openComposer(audience: Audience = "all") {
     setComposerAudience(audience); setComposerKey((value) => value + 1); setTab("notices");
   }
+  const handleUnread = useCallback((count: number) => setUnreadMessages(count), []);
+  function openNewMessage() { setMessageKey((value) => value + 1); setTab("messages"); }
 
   if (loading) return <PageSkeleton />;
   if (!authenticated) return <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6"><div className="rounded-xl bg-white p-6 text-center"><h1 className="text-lg font-bold">Please sign in</h1><Link href="/auth/login?role=principal" className="mt-3 inline-block text-sm text-blue-600">Go to login</Link></div></main>;
@@ -98,15 +107,18 @@ export default function CommunicationPage() {
   return <div className="min-h-screen bg-white dark:bg-slate-950"><Sidebar /><div className="flex min-h-screen flex-col pt-10 lg:ml-64"><TopBar /><main className="flex-1 px-3.5 pb-28 pt-7 sm:px-6 lg:px-8 lg:pt-24"><div className="mx-auto max-w-[1500px]">
     <header className="-mx-3.5 bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-5 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-7 sm:dark:border-blue-900/60"><h1 className="text-[1.7rem] font-extrabold leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">Communication</h1><p className="mt-1 text-xs text-slate-700 dark:text-blue-100 sm:text-base">Notices, messages and school announcements in one place.</p></header>
     <nav aria-label="Communication sections" className="mb-3 mt-2 flex gap-5 overflow-x-auto border-b border-slate-200 dark:border-slate-700 [scrollbar-width:none]">{(["overview","notices","messages","scheduled"] as const).map((item) => <button key={item} type="button" onClick={() => chooseTab(item)} className={`shrink-0 border-b-2 px-0.5 py-2 text-xs font-semibold capitalize sm:text-sm ${tab === item ? "border-blue-600 text-blue-700 dark:text-blue-300" : "border-transparent text-slate-500 dark:text-slate-400"}`}>{item}</button>)}</nav>
-    {tab === "overview" && <CommunicationOverview notices={notices} error={error} teacherCount={teacherCount} studentCount={studentCount} countsError={countsError} audienceInfo="" onAudience={(audience) => openComposer(audience === "Everyone" ? "all" : audience.toLowerCase() as Audience)} onNotice={(item) => { setComposerAudience(null); setInitialNoticeId(item.id); setTab("notices"); }} onTab={chooseTab} onCreate={() => openComposer()} onDrafts={() => { setComposerAudience(null); setInitialFilter("Drafts"); setTab("notices"); }} />}
+    {tab === "overview" && <CommunicationOverview notices={notices} unreadMessages={unreadMessages} error={error} teacherCount={teacherCount} studentCount={studentCount} countsError={countsError} audienceInfo="" onAudience={(audience) => openComposer(audience === "Everyone" ? "all" : audience.toLowerCase() as Audience)} onNotice={(item) => { setComposerAudience(null); setInitialNoticeId(item.id); setTab("notices"); }} onTab={chooseTab} onCreate={() => openComposer()} onNewMessage={openNewMessage} onDrafts={() => { setComposerAudience(null); setInitialFilter("Drafts"); setTab("notices"); }} />}
     {tab === "notices" && schoolId && <PrincipalNoticesPanel key={`${initialNoticeId || ""}-${composerKey}-${initialFilter}`} schoolId={schoolId} notices={notices} onChanged={() => setRefreshKey((value) => value + 1)} initialNoticeId={initialNoticeId} composerAudience={composerAudience} composerKey={composerKey} initialFilter={initialFilter} />}
     {tab === "notices" && !schoolId && error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300">{error}</p>}
-    {(tab === "messages" || tab === "scheduled") && <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"><h2 className="text-sm font-bold text-slate-950 dark:text-white">{tab === "messages" ? "Messages" : "Scheduled communications"}</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{tab === "messages" ? "Direct messaging is not available in the current school communication system." : "The full Scheduled page is coming later. Scheduled notices appear in Notices and in Overview."}</p></section>}
+    {tab === "messages" && schoolId && principalId && <PrincipalMessagesPanel schoolId={schoolId} principalId={principalId} newMessageKey={messageKey} onUnread={handleUnread} />}
+    {tab === "messages" && !schoolId && error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300">{error}</p>}
+    {tab === "scheduled" && <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"><h2 className="text-sm font-bold text-slate-950 dark:text-white">Scheduled communications</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">The full Scheduled page is coming later. Scheduled notices appear in Notices and in Overview.</p></section>}
   </div></main></div></div>;
 }
 
-function CommunicationOverview({ notices, error, teacherCount, studentCount, countsError, audienceInfo, onAudience, onNotice, onTab, onCreate, onDrafts }: {
+function CommunicationOverview({ notices, unreadMessages, error, teacherCount, studentCount, countsError, audienceInfo, onAudience, onNotice, onTab, onCreate, onNewMessage, onDrafts }: {
   notices: SchoolNotice[];
+  unreadMessages: number;
   error: string;
   teacherCount: number | null;
   studentCount: number | null;
@@ -116,6 +128,7 @@ function CommunicationOverview({ notices, error, teacherCount, studentCount, cou
   onNotice: (item: SchoolNotice) => void;
   onTab: (tab: 'overview' | 'notices' | 'messages' | 'scheduled') => void;
   onCreate: () => void;
+  onNewMessage: () => void;
   onDrafts: () => void;
 }) {
   const published = notices.filter((item) => item.status === 'published');
@@ -124,11 +137,11 @@ function CommunicationOverview({ notices, error, teacherCount, studentCount, cou
     { label: 'Published', count: String(published.length), icon: Bell, tone: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300' },
     { label: 'Scheduled', count: String(scheduled.length), icon: Clock3, tone: 'bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300' },
     { label: 'Drafts', count: String(notices.filter((item) => item.status === 'draft').length), icon: Edit3, tone: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300' },
-    { label: 'Unread', count: '—', icon: Mail, tone: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300' },
+    { label: 'Unread', count: String(unreadMessages), icon: Mail, tone: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300' },
   ];
   const actions = [
     { title: 'Send Notice', detail: 'School announcement', icon: Bell, action: onCreate, tone: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30' },
-    { title: 'New Message', detail: 'Message someone', icon: Mail, action: () => onTab('messages'), tone: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30' },
+    { title: 'New Message', detail: 'Message someone', icon: Mail, action: onNewMessage, tone: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30' },
     { title: 'Schedule', detail: 'Send later', icon: CalendarDays, action: () => onTab('scheduled'), tone: 'bg-violet-50 text-violet-600 dark:bg-violet-900/30' },
     { title: 'Drafts', detail: 'Continue writing', icon: FileText, action: onDrafts, tone: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30' },
   ];
@@ -140,7 +153,6 @@ function CommunicationOverview({ notices, error, teacherCount, studentCount, cou
   return <div className="space-y-4 pb-6 text-slate-950 dark:text-white">
     {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{error}</p>}
     <section aria-label="Communication summary" className="grid grid-cols-4 gap-1.5 sm:gap-3">{summary.map(({ label, count, icon: Icon, tone }) => <div key={label} title={count === '—' ? `${label} data is not available in the current communication system` : undefined} className="min-w-0 rounded-xl border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900 sm:px-3 sm:py-2"><span className={`flex h-5 w-5 items-center justify-center rounded-md ${tone}`}><Icon className="h-3 w-3" /></span><strong className="mt-1 block text-base leading-none sm:text-xl">{count}</strong><span className="mt-1 block truncate text-[9px] leading-none text-slate-500 dark:text-slate-400 sm:text-xs">{label}</span></div>)}</section>
-    <p className="-mt-2 text-[10px] text-slate-500 dark:text-slate-400">Unread messages will appear when direct messaging is available.</p>
 
     <section><div className="mb-2"><h2 className="text-base font-bold">Quick Actions</h2><p className="text-[11px] text-slate-500 dark:text-slate-400">Reach the right people quickly.</p></div><div className="grid grid-cols-2 gap-2">{actions.map(({ title, detail, icon: Icon, action, tone }) => <button key={title} type="button" onClick={action} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 text-left dark:border-slate-700 dark:bg-slate-900"><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tone}`}><Icon className="h-4 w-4" /></span><span className="min-w-0"><strong className="block truncate text-xs">{title}</strong><span className="block truncate text-[10px] text-slate-500 dark:text-slate-400">{detail}</span></span></button>)}</div></section>
 
