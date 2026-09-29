@@ -72,6 +72,30 @@ function normalize(value: string | null | undefined) {
   return (value || "").trim().toLowerCase();
 }
 
+function matchesSectionOrTeacher(schoolClass: SchoolClass, query: string) {
+  return schoolClass.sections.some((section) =>
+    normalize(section.name).includes(query) ||
+    normalize(`Section ${section.name}`).includes(query) ||
+    normalize(section.teacher).includes(query),
+  );
+}
+
+function matchesClassSearch(schoolClass: SchoolClass, query: string) {
+  if (!query) return true;
+  const names = [
+    schoolClass.name,
+    schoolClass.name.replace(/^class\s+/i, "Grade "),
+    schoolClass.name.replace(/^grade\s+/i, "Class "),
+  ];
+  // A single letter such as A should find Section A rather than every "Class".
+  const matchesName = names.some((name) => query.length === 1
+    ? normalize(name) === query
+    : normalize(name).includes(query));
+  return matchesName ||
+    (schoolClass.sections.length === 0 && normalize(schoolClass.teacher).includes(query)) ||
+    matchesSectionOrTeacher(schoolClass, query);
+}
+
 function classLabel(row: ClassRow) {
   const value =
     row.class_name || row.class || row.name || row.class_number || "Unnamed class";
@@ -259,21 +283,8 @@ export default function ClassesPage() {
 
   const yearClasses = useMemo(() => classes.filter((item) => item.academicYear === selectedYear), [classes, selectedYear]);
   const filteredClasses = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return yearClasses.filter((schoolClass) => {
-      const matchesSearch =
-        !query ||
-        schoolClass.name.toLowerCase().includes(query) ||
-        schoolClass.teacher?.toLowerCase().includes(query) ||
-        schoolClass.sections.some(
-          (section) =>
-            section.name.toLowerCase().includes(query) ||
-            section.teacher?.toLowerCase().includes(query),
-        );
-
-      return matchesSearch;
-    });
+    const query = normalize(search);
+    return yearClasses.filter((schoolClass) => matchesClassSearch(schoolClass, query));
   }, [yearClasses, search]);
 
   const totalSections = yearClasses.reduce(
@@ -580,14 +591,14 @@ export default function ClassesPage() {
             </section>
 
             <div className="mt-4 flex gap-2">
-              <div className="relative min-w-0 flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search class or teacher..." className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-2 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white sm:text-sm" /></div>
+              <div className="relative min-w-0 flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input type="text" aria-label="Search class, section or teacher" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search class, section or teacher..." className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-9 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white sm:text-sm" />{search && <button type="button" onClick={() => { setSearch(""); setExpandedClass(null); }} aria-label="Clear search" className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>}</div>
               <button type="button" onClick={() => { setError(""); setEditingClass(null); setClassName(""); setClassTeacherId(""); setClassModalOpen(true); }} className="inline-flex h-11 shrink-0 items-center gap-1 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700 sm:px-5 sm:text-sm"><Plus className="h-4 w-4" /> Add</button>
             </div>
 
             <section className="mt-5" aria-label="All classes">
               <div className="mb-2 flex items-end justify-between"><h2 className="text-xl font-extrabold text-slate-950 dark:text-white">All Classes</h2><span className="text-xs text-slate-500 dark:text-slate-400">{filteredClasses.length} classes</span></div>
               {filteredClasses.length === 0 ? <EmptyState filtered={hasFilters} onAdd={() => { setEditingClass(null); setClassName(""); setClassTeacherId(""); setClassModalOpen(true); }} /> :
-                <div className="space-y-2.5">{filteredClasses.map((schoolClass) => <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24"><ClassCard schoolClass={schoolClass} expanded={(expandedClass === null && filteredClasses[0]?.id === schoolClass.id) || expandedClass === schoolClass.id || (Boolean(search.trim()) && (schoolClass.sections.some((section) => section.name.toLowerCase().includes(search.toLowerCase()) || section.teacher?.toLowerCase().includes(search.toLowerCase()))))} onToggle={() => setExpandedClass((current) => (current === schoolClass.id || (current === null && filteredClasses[0]?.id === schoolClass.id)) ? "" : schoolClass.id)} showStudents canDelete={isExtraGrade(schoolClass)} onDeleteClass={deleteExtraClass} onAddSection={openAddSection} onEditClass={(item) => { setError(""); setEditingClass(item); setClassName(item.name); setClassTeacherId(item.teacherId || ""); setClassModalOpen(true); }} onEditSection={openEditSection} onDeleteSection={deleteSection} /></div>)}</div>}
+                <div className="space-y-2.5">{filteredClasses.map((schoolClass) => <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24"><ClassCard schoolClass={schoolClass} expanded={(expandedClass === null && filteredClasses[0]?.id === schoolClass.id) || expandedClass === schoolClass.id || (Boolean(search.trim()) && (matchesSectionOrTeacher(schoolClass, normalize(search)) || (schoolClass.sections.length === 0 && normalize(schoolClass.teacher).includes(normalize(search)))))} onToggle={() => setExpandedClass((current) => (current === schoolClass.id || (current === null && filteredClasses[0]?.id === schoolClass.id)) ? "" : schoolClass.id)} showStudents canDelete={isExtraGrade(schoolClass)} onDeleteClass={deleteExtraClass} onAddSection={openAddSection} onEditClass={(item) => { setError(""); setEditingClass(item); setClassName(item.name); setClassTeacherId(item.teacherId || ""); setClassModalOpen(true); }} onEditSection={openEditSection} onDeleteSection={deleteSection} /></div>)}</div>}
             </section>
           </div>
         </main>
@@ -887,14 +898,10 @@ function EmptyState({
           <UserRound className="h-5 w-5" />
         )}
       </span>
-      <h3 className="mt-4 font-bold text-slate-900">
-        {filtered ? "No matching classes" : "No classes added yet"}
+      <h3 className="mt-4 font-bold text-slate-900 dark:text-white">
+        {filtered ? "No classes found. Try another class, section or teacher name." : "No classes added yet"}
       </h3>
-      <p className="mt-1 text-sm text-slate-500">
-        {filtered
-          ? "Try changing the search or teacher filter."
-          : "Add your first class to create the academic structure."}
-      </p>
+      {!filtered && <p className="mt-1 text-sm text-slate-500">Add your first class to create the academic structure.</p>}
       {!filtered && (
         <button
           type="button"
