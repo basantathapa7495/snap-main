@@ -22,10 +22,22 @@ export default function SchoolJoiningControls({ role }: { role: 'teacher' | 'stu
   }, []);
   useEffect(() => { void call().then((result) => setCodes(result.codes)).catch((cause) => setError(cause.message)); }, [call]);
   async function update(action: 'regenerate' | 'set-enabled', enabled?: boolean) {
+    if (busy || !codes) return;
     if (action === 'regenerate' && !window.confirm(`Regenerate the ${role} Join Code? The old code will stop working immediately.`)) return;
+    const previousCodes = codes;
+    const enabledKey = role === 'teacher' ? 'teacher_join_enabled' : 'student_join_enabled';
+    const codeKey = role === 'teacher' ? 'teacher_join_code' : 'student_join_code';
     setBusy(true); setError(''); setMessage('');
-    try { await call({ role, action, enabled }); setCodes((await call()).codes); setMessage(action === 'regenerate' ? 'New code is ready. The old code no longer works.' : `${role === 'teacher' ? 'Teacher' : 'Student'} joining setting saved.`); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : 'Please try again.'); }
+    if (action === 'set-enabled') setCodes({ ...previousCodes, [enabledKey]: enabled });
+    try {
+      const result = await call({ role, action, enabled });
+      if (action === 'regenerate') setCodes((current) => current ? { ...current, [codeKey]: result.joinCode } : current);
+      setMessage(action === 'regenerate' ? 'New code is ready. The old code no longer works.' : `${role === 'teacher' ? 'Teacher' : 'Student'} joining setting saved.`);
+    }
+    catch (cause) {
+      if (action === 'set-enabled') setCodes(previousCodes);
+      setError(cause instanceof Error ? cause.message : 'Please try again.');
+    }
     finally { setBusy(false); }
   }
   const enabled = role === 'teacher' ? codes?.teacher_join_enabled : codes?.student_join_enabled;
