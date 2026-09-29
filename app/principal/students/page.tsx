@@ -482,21 +482,22 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-white dark:bg-slate-950">
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
-        <main className="flex-1 px-3 pb-28 pt-24 sm:px-6 lg:px-8">
+        <main className="flex-1 px-3.5 pb-28 pt-7 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <header className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 dark:border-blue-900 dark:bg-blue-950/30">
-              <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-2xl">
+            <header className="relative -mx-3.5 flex min-h-[138px] items-center overflow-hidden bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-4 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:min-h-[190px] sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-8 sm:dark:border-blue-900/60">
+              <div className="relative z-10 max-w-[62%]">
+                <h1 className="text-[1.7rem] font-extrabold leading-[1.04] tracking-tight text-slate-950 dark:text-white sm:text-4xl">
                   Students
                 </h1>
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">
+                <p className="mt-2 max-w-sm text-xs leading-4 text-slate-700 dark:text-blue-100 sm:text-base sm:leading-6">
                   Manage students, attendance and school access.
                 </p>
               </div>
+              <StudentsHeroArtwork />
             </header>
             <nav aria-label="Student sections" className="mb-3 mt-2 flex gap-5 overflow-x-auto border-b border-slate-200 dark:border-slate-700">
               {(["overview", "students", "attendance", "joining"] as const).map((tab) => <button key={tab} type="button" onClick={() => setPageTab(tab)} className={`shrink-0 border-b-2 px-0.5 py-2 text-xs font-semibold capitalize sm:text-sm ${pageTab === tab ? "border-blue-600 text-blue-700 dark:text-blue-300" : "border-transparent text-slate-500 dark:text-slate-400"}`}>{tab}</button>)}
@@ -1497,4 +1498,23 @@ function StudentsSkeleton() {
       </div>
     </div>
   );
+}
+
+function StudentsHeroArtwork() {
+  return <svg viewBox="0 0 360 210" preserveAspectRatio="xMaxYMax meet" className="pointer-events-none absolute -bottom-2 -right-5 h-[115%] w-[78%] max-w-none opacity-80 dark:opacity-50 sm:right-0 sm:w-[58%] sm:opacity-100" aria-hidden="true">
+    <defs>
+      <linearGradient id="studentHeroBooks" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#fff" /><stop offset="1" stopColor="#d9e7fb" /></linearGradient>
+      <linearGradient id="studentHeroPlant" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#68c876" /><stop offset="1" stopColor="#238350" /></linearGradient>
+    </defs>
+    <ellipse cx="248" cy="199" rx="115" ry="8" fill="#4780b6" opacity=".15" />
+    <path d="M283 133c-7-31-5-66 1-102m0 104c9-28 25-47 47-62m-47 62c-13-25-30-39-50-48" fill="none" stroke="#368d50" strokeWidth="3" />
+    <path d="M279 80c-21-31-19-55 3-75 12 30 10 55-3 75Z" fill="url(#studentHeroPlant)" /><path d="M292 101c9-25 25-40 50-41-8 27-25 40-50 41Z" fill="#369f60" /><path d="M274 112c-12-21-28-32-48-30 11 20 26 30 48 30Z" fill="#4aaa65" />
+    <path d="M258 131h55l-6 52c-2 6-7 8-21 8s-21-2-22-8l-6-52Z" fill="url(#studentHeroBooks)" stroke="#bed6ee" strokeWidth="2" />
+    <path d="M258 132h55" stroke="#fff" strokeWidth="5" strokeLinecap="round" />
+    <rect x="130" y="91" width="17" height="71" rx="3" fill="#2c6ed0" /><rect x="150" y="84" width="20" height="78" rx="3" fill="#8ab8ec" /><rect x="173" y="97" width="17" height="65" rx="3" fill="#23599f" /><rect x="193" y="87" width="21" height="75" rx="3" fill="#4c8ad0" /><rect x="217" y="101" width="14" height="61" rx="3" fill="#d6a567" />
+    <path d="M67 119 61 65m18 54 5-61m8 61 16-54" stroke="#29466b" strokeWidth="5" strokeLinecap="round" />
+    <path d="M54 122h65l-7 63c-2 5-8 6-26 6s-25-1-26-6l-6-63Z" fill="url(#studentHeroBooks)" stroke="#bcd4ec" strokeWidth="2" /><path d="M54 123h65" stroke="#fff" strokeWidth="5" strokeLinecap="round" />
+    <path d="M118 163h219l-3 29H115l3-29Z" fill="#2c68b6" /><path d="M121 166h211l-3 20H118l3-20Z" fill="url(#studentHeroBooks)" /><path d="M118 163h219" stroke="#8bb9ef" strokeWidth="5" strokeLinecap="round" />
+    <path d="M127 190h208l-4 16H123l4-16Z" fill="#3c7bcb" /><path d="M130 191h201l-3 10H127l3-10Z" fill="url(#studentHeroBooks)" /><path d="M127 190h208" stroke="#a8cdf5" strokeWidth="4" strokeLinecap="round" />
+  </svg>;
 }
