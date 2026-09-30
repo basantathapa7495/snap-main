@@ -39,12 +39,14 @@ type School = {
   why_choose_us: unknown;
   achievement_stats: unknown;
   is_approved: boolean;
+  show_teachers: boolean;
 };
 type NewsItem = { id: string; title: string; content: string | null; event_date: string | null; category: string | null; location: string | null; is_event: boolean | null };
 type Notice = { id: string; title: string; content: string | null; publish_date: string | null; priority: string | null };
 type AwardItem = { id: string; title: string; year: string | null; description: string | null };
 type Testimonial = { id: string; name: string; role: string | null; content: string | null };
 type GalleryImage = { id: string; image_url: string; label: string | null };
+type PublicTeacher = {id:string;name:string;subject:string|null;qualification:string|null};
 type ExperienceItem = { title: string; desc: string };
 type AchievementStat = { label: string; value: string };
 
@@ -74,6 +76,7 @@ export default function PublicSchoolPage() {
   const [awards, setAwards] = useState<AwardItem[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [gallery, setGallery] = useState<GalleryImage[]>([]);
+  const [publicTeachers,setPublicTeachers] = useState<PublicTeacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -89,16 +92,17 @@ export default function PublicSchoolPage() {
         if (schoolError) throw schoolError;
         if (!schoolRow) throw new Error('We could not find a school website with this address, or it is still awaiting approval.');
         const schoolId = schoolRow.id;
-        const [newsResult, noticesResult, awardsResult, testimonialsResult, galleryResult] = await Promise.all([
+        const [newsResult, noticesResult, awardsResult, testimonialsResult, galleryResult, teacherResult] = await Promise.all([
           supabase.from('news_events').select('id,title,content,event_date,category,location,is_event').eq('school_id', schoolId).order('created_at', { ascending: false }).limit(6),
           supabase.from('notices').select('id,title,content,publish_date,priority').eq('school_id', schoolId).order('created_at', { ascending: false }).limit(5),
           supabase.from('awards').select('id,title,year,description').eq('school_id', schoolId).order('created_at', { ascending: false }).limit(6),
           supabase.from('testimonials').select('id,name,role,content').eq('school_id', schoolId).order('created_at', { ascending: false }).limit(6),
           supabase.from('gallery_images').select('id,image_url,label').eq('school_id', schoolId).order('created_at', { ascending: false }).limit(8),
+          supabase.from('public_school_teachers').select('id,name,subject,qualification').eq('school_id',schoolId).order('name').limit(40),
         ]);
-        const firstError = [newsResult.error, noticesResult.error, awardsResult.error, testimonialsResult.error, galleryResult.error].find(Boolean);
+        const firstError = [newsResult.error, noticesResult.error, awardsResult.error, testimonialsResult.error, galleryResult.error, teacherResult.error].find(Boolean);
         if (firstError) throw firstError;
-        if (!cancelled) { setSchool(schoolRow); setNews(newsResult.data ?? []); setNotices(noticesResult.data ?? []); setAwards(awardsResult.data ?? []); setTestimonials(testimonialsResult.data ?? []); setGallery(galleryResult.data ?? []); }
+        if (!cancelled) { setSchool(schoolRow); setNews(newsResult.data ?? []); setNotices(noticesResult.data ?? []); setAwards(awardsResult.data ?? []); setTestimonials(testimonialsResult.data ?? []); setGallery(galleryResult.data ?? []); setPublicTeachers(teacherResult.data ?? []); }
       } catch (reason) { if (!cancelled) setError(reason instanceof Error ? reason.message : 'Could not load this school website.'); }
       finally { if (!cancelled) setLoading(false); }
     };
@@ -134,7 +138,7 @@ export default function PublicSchoolPage() {
   const nav = [
     { label: 'About', href: '#about', icon: Building2 },
     { label: 'Programs', href: '#programs', icon: BookOpen },
-    { label: 'Teachers', href: '#teachers', icon: UsersRound },
+    ...(school.show_teachers ? [{ label: 'Teachers', href: '#teachers', icon: UsersRound }] : []),
     { label: 'Gallery', href: '#gallery', icon: ImageIcon },
     { label: 'Updates', href: '#updates', icon: CalendarDays },
     { label: 'Documents', href: '#documents', icon: FileText },
@@ -398,18 +402,7 @@ export default function PublicSchoolPage() {
         </div>
       </section>
 
-      <section id="teachers" className="scroll-mt-24 py-14 sm:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl">
-            <Eyebrow text="Meet our educators" color={theme.text} />
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-950">Teachers who help students thrive</h2>
-            <p className="mt-3 text-base leading-7 text-gray-600">A caring team of educators committed to strong learning, confidence and character.</p>
-          </div>
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            <p className="col-span-full rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">Teacher profiles have not been published by this school.</p>
-          </div>
-        </div>
-      </section>
+      {school.show_teachers && <section id="teachers" className="scroll-mt-24 bg-white py-14 sm:py-20"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><Eyebrow text="Meet our educators" color={theme.text} /><h2 className="mt-3 text-3xl font-bold text-gray-950">Our teachers</h2>{publicTeachers.length ? <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">{publicTeachers.map(teacher => <article key={teacher.id} className="rounded-xl border border-gray-200 bg-white p-4"><UserRound className={`h-7 w-7 ${theme.text}`} /><h3 className="mt-2 font-bold text-gray-950">{teacher.name}</h3>{teacher.subject && <p className="text-sm text-gray-600">{teacher.subject}</p>}{teacher.qualification && <p className="text-xs text-gray-500">{teacher.qualification}</p>}</article>)}</div> : <p className="mt-4 text-sm text-gray-500">No teacher profiles published yet.</p>}</div></section>}
 
       <section id="gallery" className="scroll-mt-24 bg-gray-50 py-14 sm:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
