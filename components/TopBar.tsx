@@ -130,9 +130,21 @@ export default function TopBar() {
       </div>
 
       {/* Center: Search Bar */}
-      {pathname.startsWith('/principal') && <div className="hidden min-w-0 max-w-md flex-1 px-4 md:block">
-        <button type="button" onClick={() => window.dispatchEvent(new Event('principal-search:open'))} aria-label="Search school records" className="flex h-10 w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"><Search className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="truncate">Search students, teachers, fees...</span></button>
-      </div>}
+      {(pathname.startsWith('/principal') || pathname.startsWith('/teacher')) && (
+        <div className="hidden min-w-0 max-w-md flex-1 px-4 md:block">
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event(pathname.startsWith('/teacher') ? 'teacher-search:open' : 'principal-search:open'))}
+            aria-label={pathname.startsWith('/teacher') ? 'Search students and classes' : 'Search school records'}
+            className="flex h-10 w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">
+              {pathname.startsWith('/teacher') ? 'Search students and classes...' : 'Search students, teachers, fees...'}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Right: Badge, Actions & Profile */}
       <div className="flex items-center gap-4 shrink-0">
