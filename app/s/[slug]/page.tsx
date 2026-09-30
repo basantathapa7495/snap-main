@@ -40,6 +40,7 @@ type School = {
   achievement_stats: unknown;
   is_approved: boolean;
   show_teachers: boolean;
+  online_admissions_enabled: boolean;
 };
 type NewsItem = { id: string; title: string; content: string | null; event_date: string | null; category: string | null; location: string | null; is_event: boolean | null };
 type Notice = { id: string; title: string; content: string | null; publish_date: string | null; priority: string | null };
@@ -195,13 +196,13 @@ export default function PublicSchoolPage() {
 
         {/* Actions */}
         <div className="hidden shrink-0 items-center justify-self-end gap-2 lg:flex">
-          <Link
+          {school.online_admissions_enabled && <Link
             href={`/s/${school.slug}/admission`}
             className={`group inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 ${theme.solid} ${theme.hover}`}
           >
             Apply now
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-          </Link>
+          </Link>}
           <Link
             href={`/s/${school.slug}/login`}
             className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-bold text-gray-800 transition hover:border-gray-400 hover:bg-gray-50"
@@ -236,13 +237,13 @@ export default function PublicSchoolPage() {
               </a>
             ))}
             <div className="mt-3 grid grid-cols-2 gap-2.5 border-t border-gray-100 pt-4">
-              <Link
+              {school.online_admissions_enabled && <Link
                 href={`/s/${school.slug}/admission`}
                 onClick={() => setMenuOpen(false)}
                 className={`rounded-xl px-4 py-3 text-center text-sm font-bold text-white shadow-sm transition ${theme.solid} ${theme.hover}`}
               >
                 Apply now
-              </Link>
+              </Link>}
               <Link
                 href={`/s/${school.slug}/login`}
                 onClick={() => setMenuOpen(false)}
@@ -289,13 +290,13 @@ export default function PublicSchoolPage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link
+              {school.online_admissions_enabled && <Link
                 href={`/s/${school.slug}/admission`}
                 className={`group inline-flex items-center gap-2 rounded-xl px-5 py-3.5 text-sm font-bold text-white shadow-lg transition duration-200 hover:-translate-y-0.5 ${theme.solid} ${theme.hover}`}
               >
                 Apply for admission
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
+              </Link>}
               <a
                 href="#contact"
                 className="rounded-xl border border-gray-300 bg-white px-5 py-3.5 text-sm font-bold text-gray-800 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
@@ -460,7 +461,7 @@ export default function PublicSchoolPage() {
 
               <div className="mt-6 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {directionsUrl && <a href={directionsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-gray-950 transition hover:bg-blue-50"><Navigation className="h-4 w-4 text-blue-600" /> Get directions</a>}
-                <Link href={`/s/${school.slug}/admission`} className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white transition ${theme.solid} ${theme.hover}`}>Apply for admission <ArrowRight className="h-4 w-4" /></Link>
+                {school.online_admissions_enabled && <Link href={`/s/${school.slug}/admission`} className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold text-white transition ${theme.solid} ${theme.hover}`}>Apply for admission <ArrowRight className="h-4 w-4" /></Link>}
               </div>
             </div>
 
