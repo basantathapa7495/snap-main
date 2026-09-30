@@ -68,7 +68,7 @@ export default function ResultsPage() {
       ]);
       const failure=[e,s,m,st,c].find(result=>result.error)?.error;
       if (failure) throw failure;
-      if (active) {setSchoolId(school);setExams((e.data||[]) as Exam[]);setSubjects((s.data||[]) as Subject[]);setMarks((m.data||[]) as Mark[]);setStudents((st.data||[]) as Student[]);setClasses((c.data||[]) as ClassRow[]);}
+      if (active) {setSchoolId(school);setExams((e.data||[]) as Exam[]);setSubjects((s.data||[]) as Subject[]);setMarks((m.data||[]) as Mark[]);setStudents((st.data||[]) as Student[]);setClasses((c.data||[]) as ClassRow[]);const linked=new URLSearchParams(window.location.search).get('exam');if(linked&&e.data?.some(item=>item.id===linked))setSelectedExam(linked);}
     } catch (cause) {if(active)setError(cause instanceof Error?cause.message:'Exam data could not be loaded.');}
     finally {if(active)setLoading(false);}
   } load();return()=>{active=false;};},[reload]);
