@@ -55,6 +55,20 @@ type ClassOption = {
   className: string;
   section: string;
 };
+type ClassJoin = {
+  id: string;
+  class_name: string | null;
+  class: string | null;
+  name: string | null;
+  class_number: string | null;
+  section: string | null;
+  section_name: string | null;
+  archived_at: string | null;
+};
+type AssignmentWithClass = {
+  class_name: string | null;
+  classes: ClassJoin | ClassJoin[] | null;
+};
 type StudentOption = {
   id: string;
   userId: string;
@@ -84,6 +98,9 @@ type ChatMessage = {
   attachment_name?: string | null;
   attachment_mime?: string | null;
   attachment_size?: number | null;
+};
+type RecentTeacherMessage = Pick<ChatMessage, 'id' | 'sender_id' | 'content' | 'read_at' | 'created_at'> & {
+  conversation_id: string;
 };
 
 const allowedTypes = new Set([
@@ -135,7 +152,7 @@ function validateFile(file: File | null) {
   if (file.size > maxFileSize) return 'The attachment must be 10 MB or smaller.';
   return '';
 }
-function classLabel(row: any) {
+function classLabel(row: ClassJoin) {
   const name = row.class_name || row.class || row.name || row.class_number || 'Class';
   const section = row.section_name || row.section || '';
   return section ? name + ' · ' + section : name;
@@ -220,14 +237,15 @@ export default function TeacherCommunicationPage() {
 
       const classMap = new Map<string, ClassOption>();
       for (const assignment of assignmentResult.data || []) {
-        const nested = Array.isArray((assignment as any).classes)
-          ? (assignment as any).classes[0]
-          : (assignment as any).classes;
+        const typedAssignment = assignment as unknown as AssignmentWithClass;
+        const nested = Array.isArray(typedAssignment.classes)
+          ? typedAssignment.classes[0]
+          : typedAssignment.classes;
         if (!nested || nested.archived_at) continue;
         classMap.set(nested.id, {
           id: nested.id,
           label: classLabel(nested),
-          className: nested.class_name || nested.class || nested.name || nested.class_number || assignment.class_name,
+          className: nested.class_name || nested.class || nested.name || nested.class_number || typedAssignment.class_name || 'Class',
           section: nested.section_name || nested.section || '',
         });
       }
@@ -284,7 +302,7 @@ export default function TeacherCommunicationPage() {
       const studentById = new Map(assignedStudents.map((student) => [student.id, student]));
 
       const teacherConversationIds = (teacherConversationResult.data || []).map((row) => row.id);
-      let recentTeacherMessages: any[] = [];
+      let recentTeacherMessages: RecentTeacherMessage[] = [];
       if (teacherConversationIds.length) {
         const recentResult = await supabase
           .from('teacher_student_messages')
@@ -293,7 +311,7 @@ export default function TeacherCommunicationPage() {
           .order('created_at', { ascending: false })
           .limit(2000);
         if (recentResult.error) throw recentResult.error;
-        recentTeacherMessages = recentResult.data || [];
+        recentTeacherMessages = (recentResult.data || []) as RecentTeacherMessage[];
       }
 
       const unified: Conversation[] = [];
@@ -336,20 +354,22 @@ export default function TeacherCommunicationPage() {
       setStudents(assignedStudents);
       setNotices((noticeResult.data || []) as NoticeRow[]);
       setConversations(unified);
-      if (selectedConversation) {
-        setSelectedConversation(unified.find((item) => item.id === selectedConversation.id && item.source === selectedConversation.source) || null);
-      }
+      setSelectedConversation((current) => current
+        ? unified.find((item) => item.id === current.id && item.source === current.source) || null
+        : null);
     } catch (cause) {
       console.error('Teacher communication load failed', cause);
       setError('Communication could not be loaded. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [selectedConversation]);
+  }, []);
 
   useEffect(() => {
+    // Loading is an external Supabase synchronization initiated by this effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadData();
-  }, [refreshKey]);
+  }, [loadData, refreshKey]);
 
   useEffect(() => {
     if (loading || !schoolId) return;
@@ -378,8 +398,9 @@ export default function TeacherCommunicationPage() {
           .order('created_at', { ascending: true })
           .limit(500);
       if (result.error) throw result.error;
-      setMessages((result.data || []) as ChatMessage[]);
-      const unread = (result.data || []).filter((item: any) => item.sender_id !== userId && !item.read_at).map((item: any) => item.id);
+      const resultMessages = (result.data || []) as ChatMessage[];
+      setMessages(resultMessages);
+      const unread = resultMessages.filter((item) => item.sender_id !== userId && !item.read_at).map((item) => item.id);
       if (unread.length) {
         await supabase.from(table).update({ read_at: new Date().toISOString() }).in('id', unread);
         setConversations((current) => current.map((item) => item.id === conversation.id && item.source === conversation.source ? { ...item, unread: 0 } : item));
@@ -394,10 +415,9 @@ export default function TeacherCommunicationPage() {
   }, [schoolId, userId]);
 
   useEffect(() => {
-    if (!selectedConversation) {
-      setMessages([]);
-      return;
-    }
+    if (!selectedConversation) return;
+    // Message history is an external Supabase synchronization initiated by this effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadMessages(selectedConversation);
     const timer = window.setInterval(() => void loadMessages(selectedConversation), 12000);
     return () => window.clearInterval(timer);
@@ -432,14 +452,29 @@ export default function TeacherCommunicationPage() {
   function chooseTab(value: Tab) {
     setTab(value);
     setSelectedConversation(null);
+    setMessages([]);
     setNotice('');
     window.history.replaceState(window.history.state, '', value === 'overview' ? window.location.pathname : window.location.pathname + '?tab=' + value);
   }
 
   useEffect(() => {
     const requested = new URLSearchParams(window.location.search).get('tab');
+    // The URL is an external navigation source synchronized on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (requested && ['overview', 'notices', 'messages', 'scheduled'].includes(requested)) setTab(requested as Tab);
   }, []);
+
+  function openConversation(item: Conversation) {
+    setMessages([]);
+    setMessageError('');
+    setSelectedConversation(item);
+  }
+
+  function closeConversation() {
+    setSelectedConversation(null);
+    setMessages([]);
+    setMessageError('');
+  }
 
   function openComposer(item?: NoticeRow) {
     setEditingNotice(item || null);
@@ -606,7 +641,7 @@ export default function TeacherCommunicationPage() {
         studentId: student.id,
       };
       setNewMessageOpen(false);
-      setSelectedConversation(conversation);
+      openConversation(conversation);
       setTab('messages');
       setConversations((current) => current.some((item) => item.id === id && item.source === 'student') ? current : [conversation, ...current]);
     } catch (cause) {
@@ -749,7 +784,7 @@ export default function TeacherCommunicationPage() {
             <section>
               <div className="mb-2 flex items-end justify-between gap-2"><h2 className="text-base font-bold">Recent Messages</h2><button type="button" onClick={() => chooseTab('messages')} className="text-xs font-semibold text-blue-600 dark:text-blue-300">View all →</button></div>
               <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900">
-                {conversations.slice(0, 3).map((item) => <ConversationRow key={item.source + item.id} item={item} onClick={() => { setSelectedConversation(item); setTab('messages'); }} />)}
+                {conversations.slice(0, 3).map((item) => <ConversationRow key={item.source + item.id} item={item} onClick={() => { openConversation(item); setTab('messages'); }} />)}
                 {!conversations.length && <Empty compact title="No conversations yet" detail="Messages from the principal and assigned students will appear here." />}
               </div>
             </section>
@@ -777,14 +812,14 @@ export default function TeacherCommunicationPage() {
             <FilterBar items={['All', 'Students', 'My Classes']} value={messageFilter} onChange={setMessageFilter} />
             {messageError && <p role="alert" className="rounded-lg bg-rose-50 p-2 text-xs text-rose-700 dark:bg-rose-950 dark:text-rose-300">{messageError}</p>}
             <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900">
-              {filteredConversations.map((item) => <ConversationRow key={item.source + item.id} item={item} onClick={() => setSelectedConversation(item)} />)}
+              {filteredConversations.map((item) => <ConversationRow key={item.source + item.id} item={item} onClick={() => openConversation(item)} />)}
               {!filteredConversations.length && <Empty title="No messages found" detail={messageQuery ? 'Try another search.' : 'Start a conversation with an authenticated student in your assigned class.'} />}
             </div>
           </div>}
 
           {tab === 'messages' && selectedConversation && <section className="flex min-h-[60dvh] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
             <div className="flex items-center gap-2 border-b border-slate-200 p-2.5 dark:border-slate-700">
-              <button type="button" onClick={() => setSelectedConversation(null)} aria-label="Back to conversations" className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronLeft className="h-5 w-5" /></button>
+              <button type="button" onClick={closeConversation} aria-label="Back to conversations" className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronLeft className="h-5 w-5" /></button>
               <Avatar name={selectedConversation.name} />
               <div className="min-w-0 flex-1"><h2 className="truncate text-sm font-bold">{selectedConversation.name}</h2><p className="truncate text-[10px] text-slate-500 dark:text-slate-400">{selectedConversation.detail}</p></div>
               <button type="button" onClick={() => void loadMessages(selectedConversation)} aria-label="Refresh messages" className="rounded-lg p-2 text-slate-500"><RefreshCw className="h-4 w-4" /></button>
