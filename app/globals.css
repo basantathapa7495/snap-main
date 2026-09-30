@@ -139,3 +139,9 @@ html { scroll-behavior: smooth; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Keep the principal website editor in its light appearance regardless of app or OS theme. */
+.website-editor-light { color-scheme: light; }
+.website-editor-light :is(input, textarea, select, button) { color-scheme: light; }
+.website-editor-light :is(input, textarea, select) { -webkit-text-fill-color: #0f172a; }
+.website-editor-light input::placeholder, .website-editor-light textarea::placeholder { -webkit-text-fill-color: #94a3b8; color: #94a3b8; }
