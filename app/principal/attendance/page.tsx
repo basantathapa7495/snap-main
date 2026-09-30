@@ -61,6 +61,7 @@ export default function AttendancePage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [lowThreshold, setLowThreshold] = useState(75);
   const today = nepalToday();
   const historyStart = daysBefore(today, 89);
 
@@ -76,14 +77,15 @@ export default function AttendancePage() {
         if (profileError || !profile?.school_id || profile.role !== 'admin') throw new Error('Principal school access could not be loaded.');
         const id = profile.school_id;
         const academicYear = Number(new NepaliDate(new Date()).format('YYYY'));
-        const [studentRows, classRows, marks, teacherMarks] = await Promise.all([
+        const [studentRows, classRows, marks, teacherMarks, schoolSettings] = await Promise.all([
           allRows<Student>((offset) => supabase.from('students').select('id,name,class,section,roll_no').eq('school_id', id).order('id').range(offset, offset + PAGE_SIZE - 1)),
           allRows<SavedClass>((offset) => supabase.from('classes').select('class_name,class,name,class_number,section,section_name').eq('school_id', id).eq('academic_year', academicYear).is('archived_at', null).order('id').range(offset, offset + PAGE_SIZE - 1)),
           allRows<Attendance>((offset) => supabase.from('attendance').select('student_id,attendance_date,status').eq('school_id', id).gte('attendance_date', historyStart).lte('attendance_date', today).order('attendance_date').order('id').range(offset, offset + PAGE_SIZE - 1)),
           allRows<Mark>((offset) => supabase.from('teacher_attendance').select('teacher_id,attendance_date,status').eq('school_id', id).gte('attendance_date', daysBefore(today, 59)).lte('attendance_date', today).order('attendance_date').order('id').range(offset, offset + PAGE_SIZE - 1)),
+          supabase.from('schools').select('low_attendance_alert_pct').eq('id', id).single(),
         ]);
         if (cancelled) return;
-        setSchoolId(id); setStudents(studentRows); setSavedClasses(classRows); setHistory(marks); setTeacherHistory(teacherMarks); setAuthenticated(true); setLoadedSuccessfully(true);
+        setSchoolId(id); setStudents(studentRows); setSavedClasses(classRows); setHistory(marks); setTeacherHistory(teacherMarks); setLowThreshold(Number(schoolSettings.data?.low_attendance_alert_pct ?? 75)); setAuthenticated(true); setLoadedSuccessfully(true);
         const params = new URLSearchParams(window.location.search);
         const requestedClass = params.get('class')?.replace(/^(class|grade)\s+/i, '').trim().toLowerCase();
         if (requestedClass) {
@@ -158,11 +160,11 @@ export default function AttendancePage() {
       tally.set(row.student_id, item);
     });
     return students.map((student) => ({ ...student, tally: tally.get(student.id) }))
-      .filter((student) => student.tally && student.tally.attended / student.tally.marked < 0.75)
+      .filter((student) => student.tally && student.tally.attended / student.tally.marked * 100 < lowThreshold)
       .filter((student) => selectedGroup === 'All' || sectionKey(student.class, student.section) === selectedGroup)
       .filter((student) => student.name.toLowerCase().includes(search.trim().toLowerCase()))
       .sort((a, b) => a.tally!.attended / a.tally!.marked - b.tally!.attended / b.tally!.marked);
-  }, [history, students, rosterIds, selectedGroup, search]);
+  }, [history, students, rosterIds, selectedGroup, search, lowThreshold]);
   const editStats = useMemo(() => attendanceCounts(editable.filter((student) => student.status !== 'unmarked').map((student) => ({ attendance_date: selectedDate, status: student.status })), 'student'), [editable, selectedDate]);
   const unmarked = editable.length - editStats.marked;
   const studentTrend = useMemo(() => dailyRates(history.filter((row) => rosterIds.has(row.student_id)), today, studentDays, 'student'), [history, rosterIds, today, studentDays]);
@@ -272,10 +274,10 @@ export default function AttendancePage() {
 
               <div className="grid gap-4 xl:grid-cols-2"><TrendCard title="Student attendance" tone="#1675ef" soft="blue" days={studentDays} setDays={setStudentDays} trend={studentTrend} previous={studentPrevious} /><TrendCard title="Teacher attendance" tone="#7839ee" soft="violet" days={teacherDays} setDays={setTeacherDays} trend={teacherTrend} previous={teacherPrevious} /></div>
 
-              <section id="low-attendance" className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"><div className="flex items-start gap-2"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300"><TriangleAlert className="h-4 w-4" /></span><div className="min-w-0 flex-1"><h2 className="text-sm font-bold">Low attendance</h2><p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">Students below 75% during the last 90 days.</p></div><span className="shrink-0 rounded-full bg-rose-50 px-2 py-1 text-[10px] font-semibold text-rose-600 dark:bg-rose-900/30 dark:text-rose-300">{lowAttendance.length} students</span></div>
+              <section id="low-attendance" className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"><div className="flex items-start gap-2"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300"><TriangleAlert className="h-4 w-4" /></span><div className="min-w-0 flex-1"><h2 className="text-sm font-bold">Low attendance</h2><p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">Students below {lowThreshold}% during the last 90 days.</p></div><span className="shrink-0 rounded-full bg-rose-50 px-2 py-1 text-[10px] font-semibold text-rose-600 dark:bg-rose-900/30 dark:text-rose-300">{lowAttendance.length} students</span></div>
                 <label className="mt-3 flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 dark:border-slate-700 dark:bg-slate-800"><Search className="h-4 w-4 text-slate-400" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search student..." className="w-full bg-transparent text-xs outline-none" /></label>
                 <div className="mt-2 divide-y divide-slate-100 dark:divide-slate-800">{lowAttendance.map((student) => <Link href={`/principal/students?student=${encodeURIComponent(student.id)}`} key={student.id} className="flex items-center gap-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">{initials(student.name)}</span><span className="min-w-0 flex-1"><strong className="block truncate text-xs">{student.name}</strong><span className="block truncate text-[10px] text-slate-500 dark:text-slate-400">{[student.class || 'Unassigned', student.section && `Section ${student.section}`].filter(Boolean).join(' · ')}</span></span><strong className="rounded-full bg-rose-50 px-2.5 py-1 text-xs text-rose-600 dark:bg-rose-900/30 dark:text-rose-300">{Math.round(student.tally!.attended / student.tally!.marked * 100)}%</strong><ChevronRight className="h-4 w-4 text-slate-400" /></Link>)}</div>
-                {!lowAttendance.length && <div className="mt-2 rounded-xl bg-slate-50 p-5 text-center dark:bg-slate-800"><UsersRound className="mx-auto h-6 w-6 text-slate-400" /><p className="mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">{search ? 'No matching students.' : 'No low-attendance students.'}</p><p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{search ? 'Try another name.' : 'No recorded student is below 75% in the last 90 days.'}</p></div>}
+                {!lowAttendance.length && <div className="mt-2 rounded-xl bg-slate-50 p-5 text-center dark:bg-slate-800"><UsersRound className="mx-auto h-6 w-6 text-slate-400" /><p className="mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">{search ? 'No matching students.' : 'No low-attendance students.'}</p><p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{search ? 'Try another name.' : `No recorded student is below ${lowThreshold}% in the last 90 days.`}</p></div>}
               </section>
             </>}
           </div>
