@@ -118,3 +118,24 @@ attendance history, complete published results, payment states, private PDFs,
 anonymous isolation and a student's own published marks. It writes a private
 summary to `.demo-runtime/verification.json`. Credentials and sessions are excluded
 from git. Cross-school RLS and reset are also tested in rollback-only SQL sessions.
+
+### Initial setup verification, 2026-09-30
+
+All 28 normal Auth sign-ins and the live checks above passed. Other-school access
+to demo tables and legacy RPCs was denied. All 134 existing public/storage RLS
+policies were unchanged; non-demo module and existing Auth fingerprints matched.
+Seed reruns retained identical counts. A full reset/recreate transaction passed
+and was rolled back; a manual addition correctly made reset refuse to proceed.
+The provisioning endpoint returns HTTP 410. Published exam deletion protections
+remain active after the trigger fixes.
+
+Tests, TypeScript and targeted ESLint passed. A production webpack build generated
+all 70 pages with TypeScript validation. This execution environment required a
+temporary `experimental.useTypeScriptCli: false` setting because subprocess CLI
+output was empty; the repository's Next configuration was restored unchanged.
+The default Turbopack worker could not bind a port in this environment.
+
+The browser module walkthrough is **not verified**: the secure Principal sign-in
+request was declined. Database/Auth/API checks do not prove every rendered page.
+The frontend pagination fixes require merging/deploying the accompanying PR before
+the live app can use them. No frontend redesign or deployment was performed.
