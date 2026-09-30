@@ -56,6 +56,9 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
   const [error, setError] = useState("");
   const [refresh, setRefresh] = useState(0);
   const [accountRequestCount, setAccountRequestCount] = useState(0);
+  const [birthdayAlerts, setBirthdayAlerts] = useState(true);
+
+  useEffect(() => { supabase.from('schools').select('birthday_alerts_enabled').eq('id', schoolId).single().then(({data}) => setBirthdayAlerts(data?.birthday_alerts_enabled !== false)); }, [schoolId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -123,7 +126,7 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
     ["On leave", todayAttendance.filter((r) => r.status === "leave").length, CalendarDays, "amber"],
     ["Classes assigned", assignments.filter((r) => r.active).length, BookOpen, "violet"],
     ["Pending tasks", tasks.filter((r) => r.status === "pending").length, Check, "cyan"],
-    ["Birthdays soon", birthdayCount, Gift, "pink"],
+    ...(birthdayAlerts ? [["Birthdays soon", birthdayCount, Gift, "pink"]] as const : []),
     ["New teacher requests", accountRequestCount, ShieldCheck, "orange"],
   ] as const;
 
@@ -145,7 +148,7 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
         {tab === "overview" && <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{stats.map(([label, value, Icon, tone]) => <Metric key={label} label={label} value={value} icon={Icon} tone={tone} />)}</div>
           <div className="grid gap-4 xl:grid-cols-2">
-            <Panel title="Upcoming birthdays" subtitle="Next 30 days"><BirthdayList teachers={teachers} /></Panel>
+            {birthdayAlerts && <Panel title="Upcoming birthdays" subtitle="Next 30 days"><BirthdayList teachers={teachers} /></Panel>}
             <Panel title="Pending work" subtitle="Tasks and approvals that need attention"><div className="space-y-2"><SummaryLine label="Teacher account requests" value="Review below" /><SummaryLine label="Leave requests" value={String(leaves.filter((r) => r.status === "pending").length)} /><SummaryLine label="Timetable changes" value={String(timetable.filter((r) => r.status === "change_requested").length)} /><SummaryLine label="Payroll drafts" value={String(payroll.filter((r) => r.status === "draft").length)} /></div></Panel>
           </div>
           <AccountRequestsPanel role="teacher" onApproved={() => { onTeacherChanged(); setRefresh((value) => value + 1); }} />
