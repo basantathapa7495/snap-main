@@ -1,141 +1,136 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight, Clock3, MapPin, Plus, RefreshCw, X } from "lucide-react";
-import Sidebar from "@/components/sidebar";
-import TopBar from "@/components/TopBar";
-import { UpcomingRow } from "@/components/UpcomingPanel";
-import { supabase } from "@/lib/supabase";
-import { formatEventTime, mergeUpcoming, nepalDay, type SchoolEvent, type UpcomingExam, type UpcomingItem } from "@/lib/upcoming";
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { CalendarDays, ChevronLeft, ChevronRight, Clock3, FileText, GraduationCap, MapPin, Pencil, Plus, Trash2, UsersRound, X } from 'lucide-react';
+import Sidebar from '@/components/sidebar';
+import TopBar from '@/components/TopBar';
+import { supabase } from '@/lib/supabase';
+import { formatEventTime, nepalDay } from '@/lib/upcoming';
 
-type EventForm = { title: string; date: string; time: string; location: string; content: string; category: string };
-const blankForm: EventForm = { title: "", date: "", time: "", location: "", content: "", category: "event" };
-const inputStyle = "min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white";
+type Category = 'event' | 'exam' | 'meeting' | 'holiday';
+type Filter = 'all' | Category;
+type CalendarEvent = { id:string; school_id:string; title:string; event_date:string|null; end_date:string|null; event_time:string|null; end_time:string|null; all_day:boolean; content:string|null; location:string|null; category:string|null; audience:string|null; class_targets:string[]|null; created_by:string|null; created_at:string|null };
+type Exam = { id:string; name:string; start_date:string|null; end_date:string|null; exam_type:string|null };
+type Class = { id:string; class_number:string|null; class:string|null; class_name:string|null; section_name:string|null; section:string|null };
+type ExamClass = { exam_id:string; class_name:string; section:string };
+type Item = { id:string; source:'event'|'exam'; sourceId:string; title:string; type:Category; start:string; end:string; startTime:string|null; endTime:string|null; allDay:boolean; description:string|null; location:string|null; audience:string|null; classes:string[]; createdBy:string|null };
+type Form = { title:string; type:Category; date:string; endDate:string; startTime:string; endTime:string; allDay:boolean; description:string; location:string; audience:'public'|'school'|'classes'; classes:string[] };
+const emptyForm:Form = { title:'',type:'event',date:'',endDate:'',startTime:'',endTime:'',allDay:true,description:'',location:'',audience:'public',classes:[] };
+const types:{value:Filter;label:string}[] = [{value:'all',label:'All'},{value:'event',label:'Events'},{value:'exam',label:'Exams'},{value:'meeting',label:'Meetings'},{value:'holiday',label:'Holidays'}];
+const color:Record<Category,{dot:string;badge:string;box:string}> = {
+  event:{dot:'bg-blue-600',badge:'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300',box:'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'},
+  exam:{dot:'bg-rose-500',badge:'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300',box:'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300'},
+  meeting:{dot:'bg-violet-600',badge:'bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300',box:'bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-300'},
+  holiday:{dot:'bg-amber-500',badge:'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300',box:'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'},
+};
+const normalize=(value:string|null):Category=>value==='exam'||value==='meeting'||value==='holiday'?value:'event';
+const classKey=(name:string,section:string)=>`${name}::${section}`;
+const classLabel=(value:string)=>{const [name,section]=value.split('::');return `Class ${name}${section?` (${section})`:''}`;};
+const formatDate=(date:string)=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(`${date}T00:00:00Z`));
+const nextDate=(date:string,offset:number)=>{const d=new Date(`${date}T00:00:00Z`);d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10);};
+const monthOffset=(month:string,offset:number)=>{const [year,m]=month.split('-').map(Number);return new Date(Date.UTC(year,m-1+offset,1)).toISOString().slice(0,7);};
+const timeLabel=(item:Item)=>item.allDay?'All day':`${formatEventTime(item.startTime)||'Time not set'}${item.endTime?` – ${formatEventTime(item.endTime)}`:''}`;
+const dateBox=(date:string)=>({month:new Intl.DateTimeFormat('en-US',{month:'short',timeZone:'UTC'}).format(new Date(`${date}T00:00:00Z`)).toUpperCase(),day:Number(date.slice(-2))});
+const inputClass='mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-normal text-slate-900 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white';
 
-function monthOffset(key: string, offset: number) {
-  const [year, month] = key.split("-").map(Number);
-  return new Date(Date.UTC(year, month - 1 + offset, 1)).toISOString().slice(0, 7);
-}
+export default function CalendarPage(){
+  const today=nepalDay();
+  const [month,setMonth]=useState(today.slice(0,7));
+  const [day,setDay]=useState(today);
+  const [filter,setFilter]=useState<Filter>('all');
+  const [schoolId,setSchoolId]=useState('');
+  const [userId,setUserId]=useState('');
+  const [events,setEvents]=useState<CalendarEvent[]>([]);
+  const [exams,setExams]=useState<Exam[]>([]);
+  const [examClasses,setExamClasses]=useState<ExamClass[]>([]);
+  const [classes,setClasses]=useState<Class[]>([]);
+  const [creatorNames,setCreatorNames]=useState<Record<string,string>>({});
+  const [selectedId,setSelectedId]=useState<string|null>(null);
+  const [editingId,setEditingId]=useState<string|null>(null);
+  const [form,setForm]=useState<Form>(emptyForm);
+  const [formOpen,setFormOpen]=useState(false);
+  const [confirmDelete,setConfirmDelete]=useState(false);
+  const [showAll,setShowAll]=useState(false);
+  const [loading,setLoading]=useState(true);
+  const [saving,setSaving]=useState(false);
+  const [error,setError]=useState('');
+  const [notice,setNotice]=useState('');
+  const [reload,setReload]=useState(0);
 
-export default function CalendarPage() {
-  const today = nepalDay();
-  const [month, setMonth] = useState(today.slice(0, 7));
-  const [schoolId, setSchoolId] = useState<string | null>(null);
-  const [events, setEvents] = useState<SchoolEvent[]>([]);
-  const [exams, setExams] = useState<UpcomingExam[]>([]);
-  const [selected, setSelected] = useState<SchoolEvent | null>(null);
-  const [editing, setEditing] = useState<SchoolEvent | null>(null);
-  const [form, setForm] = useState<EventForm>(blankForm);
-  const [formOpen, setFormOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
+  useEffect(()=>{let active=true;async function load(){setLoading(true);setError('');try{
+    const {data:{user},error:authError}=await supabase.auth.getUser();
+    if(authError)throw authError;
+    if(!user)throw new Error('Sign in as principal to view the school calendar.');
+    const {data:profile,error:profileError}=await supabase.from('profiles').select('school_id,role').eq('user_id',user.id).single();
+    if(profileError||!profile?.school_id||!['admin','principal','school_admin'].includes(profile.role))throw new Error('Your principal school profile could not be loaded.');
+    const school=profile.school_id;
+    const [eventResult,examResult,classResult,examClassResult]=await Promise.all([
+      supabase.from('news_events').select('id,school_id,title,event_date,end_date,event_time,end_time,all_day,content,location,category,audience,class_targets,created_by,created_at').eq('school_id',school).eq('is_event',true).order('event_date',{ascending:true}),
+      supabase.from('exams').select('id,name,start_date,end_date,exam_type').eq('school_id',school).order('start_date',{ascending:true}),
+      supabase.from('classes').select('id,class_number,class,class_name,section_name,section').eq('school_id',school).is('archived_at',null),
+      supabase.from('exam_subjects').select('exam_id,class_name,section').eq('school_id',school),
+    ]);
+    const failure=[eventResult,examResult,classResult,examClassResult].find(result=>result.error)?.error;
+    if(failure)throw failure;
+    const records=(eventResult.data||[]) as CalendarEvent[];
+    const ids=[...new Set(records.map(event=>event.created_by).filter((id):id is string=>Boolean(id)))];
+    const names:Record<string,string>={};
+    if(ids.length){const {data:profiles}=await supabase.from('profiles').select('user_id,full_name').eq('school_id',school).in('user_id',ids);for(const p of profiles||[])if(p.user_id&&p.full_name)names[p.user_id]=p.full_name;}
+    if(!active)return;
+    setSchoolId(school);setUserId(user.id);setEvents(records);setExams((examResult.data||[]) as Exam[]);setClasses((classResult.data||[]) as Class[]);setExamClasses((examClassResult.data||[]) as ExamClass[]);setCreatorNames(names);
+    const params=new URLSearchParams(window.location.search);
+    const id=params.get('event');
+    if(id&&records.some(event=>event.id===id)){setSelectedId(`event-${id}`);const event=records.find(item=>item.id===id);if(event?.event_date){setMonth(event.event_date.slice(0,7));setDay(event.event_date);}}
+    else if(params.get('action')==='create'){setForm({...emptyForm,date:nepalDay(),endDate:nepalDay()});setEditingId(null);setFormOpen(true);window.history.replaceState(window.history.state,'',window.location.pathname);}
+  }catch(cause){if(active)setError(cause instanceof Error?cause.message:'Calendar could not be loaded.');}finally{if(active)setLoading(false);}}load();return()=>{active=false;};},[reload]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        if (!user) throw new Error("Sign in to view your school calendar.");
-        const { data: profile, error: profileError } = await supabase.from("profiles").select("school_id, role").eq("user_id", user.id).single();
-        if (profileError || !profile?.school_id) throw new Error("Your school profile could not be loaded.");
-        if (!["principal", "admin", "school_admin"].includes(profile.role)) throw new Error("Only school principals can manage this calendar.");
-        const [eventResult, examResult] = await Promise.all([
-          supabase.from("news_events").select("id, title, event_date, event_time, location, content, category").eq("school_id", profile.school_id).eq("is_event", true).order("event_date", { ascending: true }).limit(1000),
-          supabase.from("exams").select("id, name, start_date, exam_type").eq("school_id", profile.school_id).order("start_date", { ascending: true }).limit(1000),
-        ]);
-        if (eventResult.error) throw eventResult.error;
-        if (examResult.error) throw examResult.error;
-        if (cancelled) return;
-        const schoolEvents = (eventResult.data || []) as SchoolEvent[];
-        setSchoolId(profile.school_id);
-        setEvents(schoolEvents);
-        setExams((examResult.data || []) as UpcomingExam[]);
-        const params = new URLSearchParams(window.location.search);
-        const eventId = params.get("event");
-        const match = schoolEvents.find((event) => event.id === eventId);
-        if (match) {
-          setSelected(match);
-          if (match.event_date) setMonth(match.event_date.slice(0, 7));
-        } else if (params.get("action") === "create") {
-          setEditing(null);
-          setForm({ ...blankForm, date: nepalDay() });
-          setFormOpen(true);
-          window.history.replaceState(window.history.state, "", window.location.pathname);
-        }
-        setError("");
-      } catch (cause) {
-        if (!cancelled) setError(cause instanceof Error ? cause.message : "Calendar could not be loaded.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => { cancelled = true; };
-  }, [refreshKey]);
+  const availableClasses=useMemo(()=>[...new Set(classes.map(c=>classKey(c.class_number||c.class||c.class_name||'',c.section_name||c.section||'')).filter(value=>value.split('::')[0]))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})),[classes]);
+  const allItems=useMemo<Item[]>(()=>[
+    ...events.filter(event=>event.event_date).map(event=>({id:`event-${event.id}`,source:'event' as const,sourceId:event.id,title:event.title,type:normalize(event.category),start:event.event_date!,end:event.end_date&&event.end_date>=event.event_date!?event.end_date:event.event_date!,startTime:event.event_time,endTime:event.end_time,allDay:Boolean(event.all_day)||!event.event_time,description:event.content,location:event.location,audience:event.audience,classes:event.class_targets||[],createdBy:event.created_by?creatorNames[event.created_by]||null:null})),
+    ...exams.filter(exam=>exam.start_date).map(exam=>({id:`exam-${exam.id}`,source:'exam' as const,sourceId:exam.id,title:exam.name,type:'exam' as const,start:exam.start_date!,end:exam.end_date&&exam.end_date>=exam.start_date!?exam.end_date:exam.start_date!,startTime:null,endTime:null,allDay:true,description:exam.exam_type,location:null,audience:'school',classes:[...new Set(examClasses.filter(row=>row.exam_id===exam.id).map(row=>classKey(row.class_name,row.section)))],createdBy:null})),
+  ].sort((a,b)=>a.start.localeCompare(b.start)||(a.startTime||'').localeCompare(b.startTime||'')||a.title.localeCompare(b.title)),[events,exams,examClasses,creatorNames]);
+  const visible=allItems.filter(item=>filter==='all'||item.type===filter);
+  const upcoming=visible.filter(item=>item.end>=today);
+  const selected=allItems.find(item=>item.id===selectedId)||null;
+  const selectedDayItems=visible.filter(item=>item.start<=day&&item.end>=day);
+  const related=selected?visible.filter(item=>item.id!==selected.id&&item.start>=selected.start&&item.start<=nextDate(selected.end,7)).slice(0,3):[];
+  const [year,monthNumber]=month.split('-').map(Number);
+  const firstWeekday=new Date(Date.UTC(year,monthNumber-1,1)).getUTCDay();
+  const daysInMonth=new Date(Date.UTC(year,monthNumber,0)).getUTCDate();
+  const totalCells=Math.ceil((firstWeekday+daysInMonth)/7)*7;
+  const firstDate=`${month}-01`;
+  const cells=Array.from({length:totalCells},(_,index)=>nextDate(firstDate,index-firstWeekday));
+  const monthTitle=new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${firstDate}T00:00:00Z`));
+  const typeCounts={event:visible.filter(item=>item.type==='event'&&item.start.slice(0,7)===month).length,exam:visible.filter(item=>item.type==='exam'&&item.start.slice(0,7)===month).length,meeting:visible.filter(item=>item.type==='meeting'&&item.start.slice(0,7)===month).length,holiday:visible.filter(item=>item.type==='holiday'&&item.start.slice(0,7)===month).length};
 
-  const allItems = useMemo(() => mergeUpcoming(events, exams, "0000-01-01"), [events, exams]);
-  const upcoming = useMemo(() => mergeUpcoming(events, exams, today), [events, exams, today]);
-  const [year, monthNumber] = month.split("-").map(Number);
-  const firstWeekday = new Date(Date.UTC(year, monthNumber - 1, 1)).getUTCDay();
-  const daysInMonth = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
-  const cells = [...Array.from({ length: firstWeekday }, () => null), ...Array.from({ length: daysInMonth }, (_, index) => index + 1)];
-  const byDate = new Map<string, UpcomingItem[]>();
-  allItems.forEach((item) => byDate.set(item.date, [...(byDate.get(item.date) || []), item]));
-
-  function openItem(item: UpcomingItem) {
-    if (item.source === "exam") { window.location.assign(item.href); return; }
-    setSelected(events.find((event) => event.id === item.sourceId) || null);
+  function selectDate(date:string){setDay(date);if(date.slice(0,7)!==month)setMonth(date.slice(0,7));}
+  function openForm(event?:CalendarEvent){setSelectedId(null);setEditingId(event?.id||null);setForm(event?{title:event.title,type:normalize(event.category),date:event.event_date||today,endDate:event.end_date||event.event_date||today,startTime:event.event_time?.slice(0,5)||'',endTime:event.end_time?.slice(0,5)||'',allDay:Boolean(event.all_day)||!event.event_time,description:event.content||'',location:event.location||'',audience:event.audience==='school'||event.audience==='classes'?event.audience:'public',classes:event.class_targets||[]}:{...emptyForm,date:day,endDate:day});setFormOpen(true);setError('');setNotice('');}
+  async function saveEvent(e:FormEvent){e.preventDefault();if(!schoolId)return;
+    if(!form.title.trim()||!form.date||form.endDate<form.date||(!form.allDay&&(!form.startTime||(form.endDate===form.date&&form.endTime&&form.endTime<=form.startTime)))||(form.audience==='classes'&&!form.classes.length)){setError('Check the title, dates, times and selected classes.');return;}
+    if(form.type==='exam'&&exams.some(exam=>exam.start_date===form.date&&exam.name.trim().toLowerCase()===form.title.trim().toLowerCase())){setError('This exam already appears automatically from Exams & Results.');return;}
+    setSaving(true);setError('');setNotice('');
+    const payload={school_id:schoolId,title:form.title.trim(),event_date:form.date,end_date:form.endDate||form.date,event_time:form.allDay?null:form.startTime,end_time:form.allDay?null:form.endTime||null,all_day:form.allDay,content:form.description.trim()||null,location:form.location.trim()||null,category:form.type,audience:form.audience,class_targets:form.audience==='classes'?form.classes:[],is_event:true,...(!editingId?{created_by:userId}:{})};
+    const result=editingId?await supabase.from('news_events').update(payload).eq('id',editingId).eq('school_id',schoolId).eq('is_event',true):await supabase.from('news_events').insert(payload);
+    setSaving(false);if(result.error){setError(result.error.message);return;}
+    setFormOpen(false);setMonth(form.date.slice(0,7));setDay(form.date);setNotice(editingId?'Event updated.':'Event added.');setReload(value=>value+1);
   }
+  async function deleteEvent(){if(!selected||selected.source!=='event'||!schoolId)return;setSaving(true);setError('');const {error:deleteError}=await supabase.from('news_events').delete().eq('id',selected.sourceId).eq('school_id',schoolId).eq('is_event',true);setSaving(false);setConfirmDelete(false);if(deleteError){setError(deleteError.message);return;}setSelectedId(null);setNotice('Event deleted.');setReload(value=>value+1);}
 
-  function openForm(event?: SchoolEvent) {
-    setSelected(null);
-    setEditing(event || null);
-    setForm(event ? { title: event.title, date: event.event_date || today, time: event.event_time || "", location: event.location || "", content: event.content || "", category: event.category || "event" } : { ...blankForm, date: today });
-    setFormOpen(true);
-    setError("");
-  }
-
-  async function saveEvent(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!schoolId || !form.title.trim() || !form.date) return;
-    setSaving(true);
-    const payload = { school_id: schoolId, title: form.title.trim(), event_date: form.date, event_time: form.time || null, location: form.location.trim() || null, content: form.content.trim() || null, category: form.category, is_event: true };
-    const result = editing
-      ? await supabase.from("news_events").update(payload).eq("id", editing.id).eq("school_id", schoolId)
-      : await supabase.from("news_events").insert(payload);
-    setSaving(false);
-    if (result.error) { setError(result.error.message); return; }
-    setFormOpen(false);
-    setMonth(form.date.slice(0, 7));
-    setRefreshKey((value) => value + 1);
-  }
-
-  async function removeEvent(event: SchoolEvent) {
-    if (!schoolId || !window.confirm(`Delete ${event.title}?`)) return;
-    const { error: deleteError } = await supabase.from("news_events").delete().eq("id", event.id).eq("school_id", schoolId);
-    if (deleteError) { setError(deleteError.message); return; }
-    setSelected(null);
-    setRefreshKey((value) => value + 1);
-  }
-
-  return <div className="min-h-screen bg-slate-50 dark:bg-slate-950"><Sidebar /><div className="flex min-h-screen flex-col pt-14 lg:ml-64 lg:pt-0"><div className="hidden lg:block"><TopBar /></div><main className="flex-1 px-3.5 pb-24 pt-5 sm:px-6 lg:px-8 lg:pt-24"><div className="mx-auto max-w-[1500px]">
-    <header className="flex items-start justify-between gap-3"><div><h1 className="text-2xl font-bold text-slate-950 dark:text-white sm:text-3xl">School Calendar</h1><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Events, meetings, holidays and exams from your school.</p></div><button type="button" onClick={() => openForm()} disabled={!schoolId} className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50 sm:text-sm"><Plus className="h-4 w-4" />Add event</button></header>
-    {error && <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">{error}</p>}
-    {loading ? <div className="mt-6 flex items-center gap-2 text-sm text-slate-500"><RefreshCw className="h-4 w-4 animate-spin" />Loading calendar…</div> : <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.8fr)]">
-      <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900" aria-label="Monthly calendar"><div className="flex items-center justify-between border-b border-slate-200 p-3 dark:border-slate-700 sm:p-4"><h2 className="text-base font-bold text-slate-950 dark:text-white">{new Date(Date.UTC(year, monthNumber - 1, 1)).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })}</h2><div className="flex items-center gap-1"><button type="button" onClick={() => setMonth(today.slice(0, 7))} className="min-h-9 rounded-lg px-2 text-xs font-bold text-blue-700 dark:text-blue-300">Today</button><button type="button" onClick={() => setMonth(monthOffset(month, -1))} aria-label="Previous month" className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronLeft className="h-4 w-4" /></button><button type="button" onClick={() => setMonth(monthOffset(month, 1))} aria-label="Next month" className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronRight className="h-4 w-4" /></button></div></div>
-        <div className="grid grid-cols-7 border-b border-slate-200 text-center text-[10px] font-bold uppercase text-slate-500 dark:border-slate-700">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => <span key={day} className="py-2">{day}</span>)}</div><div className="grid grid-cols-7 gap-px bg-slate-200 dark:bg-slate-700">{cells.map((day, index) => {
-          const key = day ? `${month}-${String(day).padStart(2, "0")}` : null;
-          const entries = key ? byDate.get(key) || [] : [];
-          return <div key={index} className="min-h-14 min-w-0 bg-white p-1.5 dark:bg-slate-900 sm:min-h-24 sm:p-2"><span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${key === today ? "bg-blue-600 text-white" : "text-slate-700 dark:text-slate-300"}`}>{day}</span>{entries.length > 0 && <div className="mt-1 space-y-1">{entries.slice(0, 2).map((item) => <button type="button" key={item.id} onClick={() => openItem(item)} title={item.title} className="block w-full truncate rounded bg-blue-50 px-1 py-1 text-left text-[10px] font-semibold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-300"><span className="sm:hidden">●</span><span className="hidden sm:inline">{item.title}</span></button>)}{entries.length > 2 && <span className="block text-[9px] text-slate-500">+{entries.length - 2} more</span>}</div>}</div>;
-        })}</div>
-      </section>
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"><h2 className="text-base font-bold text-slate-950 dark:text-white">Upcoming</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">School events and exam start dates</p>{upcoming.length ? <div className="mt-4 grid gap-2.5">{upcoming.slice(0, 12).map((item) => <UpcomingRow key={item.id} item={item} today={today} onEventClick={openItem} />)}</div> : <div className="mt-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-800"><p className="text-sm font-bold text-slate-900 dark:text-white">No upcoming school events</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-300">Nothing important is scheduled in the next 14 days.</p></div>}</section>
-    </div>}
+  return <div className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white"><Sidebar/><div className="flex min-h-screen flex-col pt-10 lg:ml-64"><TopBar/><main className="flex-1 px-3 pb-24 pt-7 sm:px-6 lg:px-8 lg:pt-24"><div className="mx-auto max-w-6xl">
+    <header className="relative overflow-hidden rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-100 px-3 py-3 dark:border-blue-900 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950 sm:px-6 sm:py-4"><CalendarDays className="pointer-events-none absolute -bottom-5 right-2 h-24 w-24 text-blue-200/50 dark:text-blue-700/20"/><div className="relative flex items-center gap-2.5"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300"><CalendarDays className="h-5 w-5"/></span><div><h1 className="text-xl font-extrabold sm:text-3xl">School Calendar</h1><p className="text-xs text-slate-600 dark:text-slate-300 sm:text-sm">Events, meetings, holidays and exams from your school.</p></div></div></header>
+    <button onClick={()=>openForm()} disabled={!schoolId} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white disabled:opacity-50"><Plus className="h-4 w-4"/>Add Event</button>
+    {error&&<p role="alert" className="mt-2 rounded-xl border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300">{error}</p>}{notice&&<p role="status" className="mt-2 rounded-xl bg-emerald-50 p-2 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">{notice}</p>}
+    <nav aria-label="Calendar filters" className="mt-3 flex gap-1.5 overflow-x-auto pb-1">{types.map(({value,label})=><button key={value} onClick={()=>setFilter(value)} className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold ${filter===value?'border-blue-600 bg-blue-600 text-white':'border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'}`}>{label}</button>)}</nav>
+    {loading?<div className="mt-3 animate-pulse rounded-xl bg-white p-5 text-sm text-slate-500 dark:bg-slate-900">Loading calendar…</div>:<><section className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900" aria-label="Monthly calendar"><div className="flex items-center justify-between px-2 py-2 sm:px-4"><button onClick={()=>setMonth(monthOffset(month,-1))} aria-label="Previous month" className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronLeft className="h-4 w-4"/></button><h2 className="text-sm font-bold sm:text-base">{monthTitle}</h2><div className="flex items-center"><button onClick={()=>{setMonth(today.slice(0,7));setDay(today);}} className="rounded-lg px-2 py-1.5 text-xs font-semibold text-blue-700 dark:text-blue-300">Today</button><button onClick={()=>setMonth(monthOffset(month,1))} aria-label="Next month" className="rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronRight className="h-4 w-4"/></button></div></div><div className="grid grid-cols-7 border-t border-slate-100 text-center text-[10px] font-semibold text-slate-500 dark:border-slate-800">{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(label=><span key={label} className="py-2">{label}</span>)}</div><div className="grid grid-cols-7 gap-px bg-slate-100 dark:bg-slate-800">{cells.map(date=>{const entries=visible.filter(item=>item.start<=date&&item.end>=date);const dots=[...new Set(entries.map(item=>item.type))];return <button key={date} onClick={()=>selectDate(date)} aria-label={`${formatDate(date)}, ${entries.length} events`} aria-pressed={day===date} className={`flex min-h-12 flex-col items-center justify-start bg-white px-0.5 py-1.5 hover:bg-blue-50 dark:bg-slate-900 dark:hover:bg-slate-800 sm:min-h-16 ${date.slice(0,7)!==month?'text-slate-300 dark:text-slate-600':''} ${day===date?'bg-blue-50 dark:bg-blue-950/30':''}`}><span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold ${date===today?'bg-blue-600 text-white':day===date?'ring-1 ring-blue-500 text-blue-700 dark:text-blue-300':''}`}>{Number(date.slice(-2))}</span><span className="mt-1 flex max-w-full flex-wrap justify-center gap-0.5">{dots.slice(0,4).map(type=><span key={type} className={`h-1.5 w-1.5 rounded-full ${color[type].dot}`}/>)}</span></button>;})}</div><div className="flex flex-wrap justify-around gap-2 border-t border-slate-100 px-2 py-2 text-[10px] text-slate-600 dark:border-slate-800 dark:text-slate-300">{(['event','exam','meeting','holiday'] as const).map(type=><span key={type} className="flex items-center gap-1"><i className={`h-2 w-2 rounded-full ${color[type].dot}`}/>{type[0].toUpperCase()+type.slice(1)} {typeCounts[type]}</span>)}</div></section>
+    <section className="mt-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"><h2 className="text-sm font-bold">{day===today?'Today':formatDate(day)}</h2>{selectedDayItems.length?<div className="mt-2 divide-y divide-slate-100 dark:divide-slate-800">{selectedDayItems.map(item=><EventRow key={item.id} item={item} onClick={()=>setSelectedId(item.id)}/>)}</div>:<p className="mt-1 text-xs text-slate-500">No {filter==='all'?'events':filter} on this date.</p>}</section>
+    <section className="mt-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"><div className="flex items-start justify-between gap-2"><div><h2 className="text-base font-bold">Upcoming Events</h2><p className="mt-0.5 text-xs text-slate-500">School events and exam start dates.</p></div>{upcoming.length>3&&<button onClick={()=>setShowAll(value=>!value)} className="shrink-0 text-xs font-semibold text-blue-600">{showAll?'Show less':'View all'}</button>}</div>{upcoming.length?<div className="mt-2 divide-y divide-slate-100 dark:divide-slate-800">{(showAll?upcoming:upcoming.slice(0,3)).map(item=><EventRow key={item.id} item={item} onClick={()=>setSelectedId(item.id)}/>)}</div>:<p className="mt-3 rounded-lg bg-slate-50 p-4 text-center text-xs text-slate-500 dark:bg-slate-800">No upcoming events for this filter.</p>}</section></>}
   </div></main></div>
-    {selected && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) setSelected(null); }}><div role="dialog" aria-modal="true" aria-labelledby="event-title" className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-900"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase text-blue-600">{selected.category || "School event"}</p><h2 id="event-title" className="mt-1 text-lg font-bold text-slate-950 dark:text-white">{selected.title}</h2></div><button type="button" onClick={() => setSelected(null)} aria-label="Close event" className="rounded-lg p-2"><X className="h-5 w-5" /></button></div><p className="mt-4 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><CalendarDays className="h-4 w-4" />{selected.event_date}</p>{selected.event_time && <p className="mt-2 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><Clock3 className="h-4 w-4" />{formatEventTime(selected.event_time)}</p>}{selected.location && <p className="mt-2 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"><MapPin className="h-4 w-4" />{selected.location}</p>}{selected.content && <p className="mt-4 whitespace-pre-wrap border-t border-slate-200 pt-4 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">{selected.content}</p>}<div className="mt-5 flex justify-end gap-3"><button type="button" onClick={() => removeEvent(selected)} className="min-h-10 rounded-lg px-3 text-xs font-bold text-rose-600">Delete</button><button type="button" onClick={() => openForm(selected)} className="min-h-10 rounded-lg bg-blue-600 px-4 text-xs font-bold text-white">Edit event</button></div></div></div>}
-    {formOpen && <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) setFormOpen(false); }}><div role="dialog" aria-modal="true" aria-labelledby="form-title" className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl dark:bg-slate-900"><div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-slate-700"><h2 id="form-title" className="text-lg font-bold text-slate-950 dark:text-white">{editing ? "Edit event" : "Add school event"}</h2><button type="button" onClick={() => setFormOpen(false)} aria-label="Close form" className="rounded-lg p-2"><X className="h-5 w-5" /></button></div><form onSubmit={saveEvent} className="grid gap-3 p-4">{error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-xs text-rose-700 dark:bg-rose-950 dark:text-rose-200">{error}</p>}<label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Title<input required maxLength={160} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={`${inputStyle} mt-1`} /></label><div className="grid grid-cols-2 gap-3"><label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Date<input required type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={`${inputStyle} mt-1`} /></label><label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Time (optional)<input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className={`${inputStyle} mt-1`} /></label></div><label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Type<select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={`${inputStyle} mt-1`}>{["event", "meeting", "holiday", "sports"].map((type) => <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>)}</select></label><label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Location (optional)<input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className={`${inputStyle} mt-1`} /></label><label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Description (optional)<textarea rows={3} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} className={`${inputStyle} mt-1 py-2`} /></label><button type="submit" disabled={saving || !schoolId} className="mt-2 min-h-11 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white disabled:opacity-50">{saving ? "Saving…" : editing ? "Save changes" : "Add event"}</button></form></div></div>}
+  {selected&&<div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 sm:items-center sm:p-4" onMouseDown={e=>{if(e.target===e.currentTarget)setSelectedId(null);}}><div role="dialog" aria-modal="true" aria-label="Event details" className="max-h-[94dvh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-slate-50 p-3 shadow-xl dark:bg-slate-950 sm:rounded-2xl sm:p-4"><div className="flex items-center justify-between px-1 py-1"><span className="w-5"/><h2 className="text-sm font-bold">Event Details</h2><button onClick={()=>setSelectedId(null)} aria-label="Close details"><X className="h-5 w-5"/></button></div><section className="mt-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"><div className="flex gap-3"><DateBox date={selected.start} type={selected.type}/><div className="min-w-0 flex-1"><h3 className="text-base font-bold">{selected.title}</h3><Badge type={selected.type}/><p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500"><Clock3 className="h-3.5 w-3.5"/>{formatDate(selected.start)}{selected.end!==selected.start?` – ${formatDate(selected.end)}`:''} · {timeLabel(selected)}</p><p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500"><UsersRound className="h-3.5 w-3.5"/>{selected.classes.length?selected.classes.map(classLabel).join(', '):selected.audience==='school'?'Whole school':selected.audience==='public'?'Public':'No classes specified'}</p></div></div></section><div className="mt-3 space-y-2">{selected.description&&<Detail icon={FileText} title="Description">{selected.description}</Detail>}{selected.location&&<Detail icon={MapPin} title="Location">{selected.location}</Detail>}<Detail icon={UsersRound} title="Audience / Classes">{selected.classes.length?selected.classes.map(classLabel).join(', '):selected.audience==='school'?'Whole school':selected.audience==='public'?'Public':'Not specified'}</Detail><Detail icon={CalendarDays} title="Created by">{selected.source==='exam'?'Exams & Results':selected.createdBy||'Not recorded'}</Detail></div><div className="mt-3 flex gap-2">{selected.source==='event'?<><button onClick={()=>openForm(events.find(event=>event.id===selected.sourceId))} className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white py-2.5 text-xs font-bold dark:border-slate-700 dark:bg-slate-900"><Pencil className="h-4 w-4"/>Edit Event</button><button onClick={()=>setConfirmDelete(true)} className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-rose-300 bg-white py-2.5 text-xs font-bold text-rose-600 dark:bg-slate-900"><Trash2 className="h-4 w-4"/>Delete Event</button></>:<a href={`/principal/results?exam=${encodeURIComponent(selected.sourceId)}`} className="flex w-full items-center justify-center gap-1 rounded-lg bg-blue-600 py-2.5 text-xs font-bold text-white"><GraduationCap className="h-4 w-4"/>Open Exam</a>}</div>{related.length>0&&<section className="mt-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"><h3 className="text-sm font-bold">Related Events</h3><div className="mt-1 divide-y divide-slate-100 dark:divide-slate-800">{related.map(item=><EventRow key={item.id} item={item} onClick={()=>setSelectedId(item.id)}/>)}</div></section>}</div></div>}
+  {confirmDelete&&selected&&<div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4"><div role="alertdialog" aria-modal="true" className="w-full max-w-sm rounded-xl bg-white p-4 dark:bg-slate-900"><h2 className="font-bold">Delete this event?</h2><p className="mt-2 text-sm text-slate-500">{selected.title} will be removed from the school calendar.</p><div className="mt-4 flex gap-2"><button onClick={()=>setConfirmDelete(false)} disabled={saving} className="flex-1 rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-700">Cancel</button><button onClick={deleteEvent} disabled={saving} className="flex-1 rounded-lg bg-rose-600 p-2 text-sm font-bold text-white disabled:opacity-50">{saving?'Deleting…':'Delete'}</button></div></div></div>}
+  {formOpen&&<div className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/60 sm:items-center sm:p-4"><div role="dialog" aria-modal="true" aria-label={editingId?'Edit Event':'Add Event'} className="flex max-h-[94dvh] w-full max-w-lg flex-col rounded-t-2xl bg-white dark:bg-slate-900 sm:rounded-2xl"><div className="flex items-center justify-between border-b border-slate-200 p-3 dark:border-slate-800"><h2 className="font-bold">{editingId?'Edit Event':'Add Event'}</h2><button onClick={()=>setFormOpen(false)} aria-label="Close form"><X className="h-5 w-5"/></button></div><form id="calendar-form" onSubmit={saveEvent} className="space-y-3 overflow-y-auto p-3 text-xs font-semibold text-slate-700 dark:text-slate-300">{error&&<p role="alert" className="rounded-lg bg-rose-50 p-2 text-rose-700 dark:bg-rose-950 dark:text-rose-300">{error}</p>}<label className="block">Title<input required maxLength={160} value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} className={inputClass}/></label><label className="block">Type<select value={form.type} onChange={e=>setForm(f=>({...f,type:e.target.value as Category}))} className={inputClass}>{(['event','exam','meeting','holiday'] as const).map(type=><option key={type} value={type}>{type[0].toUpperCase()+type.slice(1)}</option>)}</select></label><div className="grid grid-cols-2 gap-2"><label>Start date<input required type="date" value={form.date} onChange={e=>setForm(f=>({...f,date:e.target.value,endDate:f.endDate&&f.endDate>=e.target.value?f.endDate:e.target.value}))} className={inputClass}/></label><label>End date<input required type="date" min={form.date} value={form.endDate} onChange={e=>setForm(f=>({...f,endDate:e.target.value}))} className={inputClass}/></label></div><label className="flex items-center gap-2"><input type="checkbox" checked={form.allDay} onChange={e=>setForm(f=>({...f,allDay:e.target.checked}))}/>All day</label>{!form.allDay&&<div className="grid grid-cols-2 gap-2"><label>Start time<input required type="time" value={form.startTime} onChange={e=>setForm(f=>({...f,startTime:e.target.value}))} className={inputClass}/></label><label>End time<input type="time" value={form.endTime} onChange={e=>setForm(f=>({...f,endTime:e.target.value}))} className={inputClass}/></label></div>}<label className="block">Location<input value={form.location} onChange={e=>setForm(f=>({...f,location:e.target.value}))} className={inputClass}/></label><label className="block">Audience<select value={form.audience} onChange={e=>setForm(f=>({...f,audience:e.target.value as Form['audience']}))} className={inputClass}><option value="public">Public</option><option value="school">Whole school</option><option value="classes">Selected classes</option></select></label>{form.audience==='classes'&&<fieldset><legend>Classes</legend><div className="mt-1 grid max-h-28 grid-cols-2 gap-1 overflow-auto rounded-lg border border-slate-200 p-2 dark:border-slate-700">{availableClasses.map(value=><label key={value} className="flex items-center gap-1"><input type="checkbox" checked={form.classes.includes(value)} onChange={e=>setForm(f=>({...f,classes:e.target.checked?[...f.classes,value]:f.classes.filter(item=>item!==value)}))}/>{classLabel(value)}</label>)}</div></fieldset>}<label className="block">Description<textarea rows={3} value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} className={inputClass}/></label></form><div className="border-t border-slate-200 p-3 dark:border-slate-800"><button form="calendar-form" disabled={saving} className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white disabled:opacity-50">{saving?'Saving…':editingId?'Save changes':'Add Event'}</button></div></div></div>}
   </div>;
 }
+function DateBox({date,type}:{date:string;type:Category}){const {month,day}=dateBox(date);return <span className={`flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg ${color[type].box}`}><span className="text-[10px] font-bold">{month}</span><span className="text-lg font-extrabold leading-tight">{day}</span></span>;}
+function Badge({type}:{type:Category}){return <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${color[type].badge}`}>{type[0].toUpperCase()+type.slice(1)}</span>;}
+function EventRow({item,onClick}:{item:Item;onClick:()=>void}){return <button onClick={onClick} className="flex w-full items-center gap-2.5 py-2.5 text-left hover:bg-slate-50 dark:hover:bg-slate-800"><DateBox date={item.start} type={item.type}/><span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="truncate text-xs sm:text-sm">{item.title}</strong><Badge type={item.type}/></span><span className="mt-0.5 block text-[11px] text-slate-500">{timeLabel(item)}{item.end!==item.start?` · until ${formatDate(item.end)}`:''}</span><span className="block truncate text-[11px] text-slate-500">{item.classes.length?item.classes.map(classLabel).join(', '):item.location||((item.audience==='school'||item.source==='exam')?'Whole school':item.audience==='public'?'Public':'')}</span></span><ChevronRight className="h-4 w-4 shrink-0 text-slate-400"/></button>;}
+function Detail({icon:Icon,title,children}:{icon:React.ElementType;title:string;children:React.ReactNode}){return <section className="flex gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"><span className="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950"><Icon className="h-4 w-4"/></span><div><h3 className="text-xs font-bold">{title}</h3><p className="mt-1 whitespace-pre-wrap text-xs text-slate-600 dark:text-slate-300">{children}</p></div></section>;}
