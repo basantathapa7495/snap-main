@@ -19,7 +19,7 @@ export default function MobileBottomNav() {
     { href: '/principal/students', label: 'Students', icon: UsersRound },
     { href: '/principal', label: 'Home', icon: House },
     { href: '/principal/communication', label: 'Communication', icon: MessageCircle },
-    { href: '/principal/settings', label: 'Account', icon: UserRound },
+    { href: '/principal/account', label: 'Account', icon: UserRound },
   ];
   const navItems = isPrincipal ? principalNavItems : defaultNavItems;
 
