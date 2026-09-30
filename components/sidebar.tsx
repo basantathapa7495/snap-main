@@ -93,9 +93,6 @@ const teacherMenu: MenuSection[] = [
     { href: '/teacher/reports', label: 'Reports', icon: BarChart3 },
     { href: '/teacher/documents', label: 'Shared Documents', icon: Folder },
   ],
-  [
-    { href: '/teacher/help', label: 'Help', icon: HelpCircle },
-  ],
 ];
 
 // =========================================================
