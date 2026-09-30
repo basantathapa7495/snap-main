@@ -65,7 +65,7 @@ export function mergeUpcoming(events: SchoolEvent[], exams: UpcomingExam[], toda
   const entries: UpcomingItem[] = [
     ...events.filter((event) => event.event_date && event.event_date >= today).map((event) => {
       const category = event.category?.toLowerCase();
-      const type = category === "holiday" ? "Holiday" : category === "meeting" ? "Meeting" : category === "sports" ? "Sports" : "Event";
+      const type = category === "holiday" ? "Holiday" : category === "meeting" ? "Meeting" : category === "exam" ? "Exam" : category === "sports" ? "Sports" : "Event";
       return {
         id: `event-${event.id}`, sourceId: event.id, source: "event" as const,
         date: event.event_date!, time: event.event_time, title: event.title,
