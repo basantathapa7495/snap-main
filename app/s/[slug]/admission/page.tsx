@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-type School = { id: string; name: string; municipality: string | null; district: string | null; logo_url: string | null; school_level: string | null };
+type School = { id: string; name: string; municipality: string | null; district: string | null; logo_url: string | null; school_level: string | null; online_admissions_enabled: boolean };
 type AdmissionForm = { student_name: string; class: string; gender: string; dob: string; parent_name: string; parent_phone: string; parent_email: string; address: string; previous_school: string; message: string };
 
 export default function AdmissionPage() {
@@ -20,7 +20,7 @@ export default function AdmissionPage() {
 
   useEffect(() => {
     async function load() {
-      const { data: schoolData, error: schoolError } = await supabase.from('schools').select('id, name, municipality, district, logo_url, school_level').eq('slug', slug).single();
+      const { data: schoolData, error: schoolError } = await supabase.from('schools').select('id, name, municipality, district, logo_url, school_level, online_admissions_enabled').eq('slug', slug).single();
       if (schoolError && schoolError.code !== 'PGRST116') setError('The school website could not be loaded. Please try again.');
       setSchool(schoolData || null);
       setLoading(false);
@@ -77,6 +77,8 @@ export default function AdmissionPage() {
       </main>
     );
   }
+
+  if (!school.online_admissions_enabled) return <main className="flex min-h-screen items-center justify-center bg-gray-50 p-5"><div className="max-w-md rounded-2xl border border-gray-200 bg-white p-7 text-center shadow-sm"><h1 className="text-xl font-bold text-gray-900">Online admissions are closed</h1><p className="mt-2 text-sm text-gray-600">{school.name} is not accepting online applications right now.</p><Link href={`/s/${slug}`} className="mt-5 inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white">Back to school website</Link></div></main>;
 
   return (
     <main className="min-h-screen bg-gray-50">
