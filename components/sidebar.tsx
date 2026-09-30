@@ -83,12 +83,9 @@ const principalMenu: MenuSection[] = [
 const teacherMenu: MenuSection[] = [
   [
     { href: '/teacher', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/teacher/classes', label: 'My Classes', icon: School },
-    { href: '/teacher/attendance', label: 'Attendance', icon: ClipboardList },
     { href: '/teacher/marks', label: 'Marks Entry', icon: PenLine },
     { href: '/teacher/timetable', label: 'Timetable', icon: Calendar },
     { href: '/teacher/assignments', label: 'Assignments', icon: FileText },
-    { href: '/teacher/students', label: 'My Students', icon: Users },
   ],
   [
     { href: '/teacher/communication', label: 'Communication', icon: MessageSquare },
@@ -97,7 +94,6 @@ const teacherMenu: MenuSection[] = [
     { href: '/teacher/documents', label: 'Shared Documents', icon: Folder },
   ],
   [
-    { href: '/teacher/profile', label: 'My Profile', icon: User },
     { href: '/teacher/help', label: 'Help', icon: HelpCircle },
   ],
 ];
