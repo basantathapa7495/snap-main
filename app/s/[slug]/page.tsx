@@ -25,6 +25,7 @@ type School = {
   vision: string | null;
   theme_color: string | null;
   logo_url: string | null;
+  banner_url: string | null;
   phone: string | null;
   email: string | null;
   address: string | null;
@@ -46,46 +47,15 @@ type Testimonial = { id: string; name: string; role: string | null; content: str
 type GalleryImage = { id: string; image_url: string; label: string | null };
 type ExperienceItem = { title: string; desc: string };
 type AchievementStat = { label: string; value: string };
-type DemoTeacher = { name: string; role: string; subject: string; qualification: string };
 
-const DEFAULT_SCHOOL_MOTTO = 'Learning today. Leading tomorrow.';
-const DEFAULT_SCHOOL_DESCRIPTION = 'A welcoming school community dedicated to quality education, strong values, and the confidence every student needs to succeed.';
-const DEFAULT_ABOUT_TEXT = 'Our school is a caring and inclusive learning community where every child is encouraged to grow academically, socially and personally. We work closely with families to provide meaningful learning experiences, strong values and opportunities that prepare students for a successful future.';
-const DEFAULT_MISSION = 'To provide a safe, supportive and engaging learning environment that develops knowledge, confidence, creativity and good character in every student.';
-const DEFAULT_VISION = 'To become a trusted centre of learning where students are inspired to achieve their potential and grow into responsible, capable and compassionate citizens.';
-const DEFAULT_FACILITIES = 'Bright classrooms, a well-stocked library, science and computer learning spaces, safe play areas and supportive resources designed for effective learning.';
-const DEFAULT_ACTIVITIES = 'Sports, arts, cultural programmes, clubs, educational visits and community activities that help students discover talents, build teamwork and develop leadership skills.';
-const DEFAULT_PRINCIPAL_MESSAGE = 'Welcome to our school. We are committed to creating a safe, inspiring and inclusive learning environment where every student can discover their strengths, build strong character and prepare confidently for the future.';
-const DEFAULT_EXPERIENCE: ExperienceItem[] = [
-  { title: 'Quality education', desc: 'Dedicated teachers and thoughtful learning that help every student build strong foundations.' },
-  { title: 'Excellent results', desc: 'Focused academic support and regular progress tracking that encourage students to achieve their best.' },
-  { title: 'Modern learning', desc: 'Practical, creative and technology-supported lessons designed for today’s learners.' },
-  { title: 'Safe environment', desc: 'A caring, inclusive and disciplined community where every student feels respected and supported.' },
-];
-const DEFAULT_ACHIEVEMENTS: AchievementStat[] = [
-  { label: 'Students graduated', value: '500+' },
-  { label: 'Qualified teachers', value: '25+' },
-  { label: 'Awards won', value: '12+' },
-  { label: 'Years of excellence', value: '15+' },
-];
+const DEFAULT_ABOUT_TEXT = '';
+const DEFAULT_MISSION = '';
+const DEFAULT_VISION = '';
+const DEFAULT_FACILITIES = '';
+const DEFAULT_ACTIVITIES = '';
+const DEFAULT_PRINCIPAL_MESSAGE = '';
 const EXPERIENCE_ICONS = [BookOpen, Award, Lightbulb, ShieldCheck];
 const ACHIEVEMENT_ICONS = [GraduationCap, UsersRound, Award, CalendarDays];
-const DEMO_TEACHERS: DemoTeacher[] = [
-  { name: 'Sushila Sharma', role: 'Senior Teacher', subject: 'English', qualification: 'M.Ed.' },
-  { name: 'Ramesh Adhikari', role: 'Department Head', subject: 'Mathematics', qualification: 'M.Sc., B.Ed.' },
-  { name: 'Anita Gurung', role: 'Subject Teacher', subject: 'Science', qualification: 'M.Sc.' },
-  { name: 'Prakash Thapa', role: 'Subject Teacher', subject: 'Social Studies', qualification: 'M.A., B.Ed.' },
-  { name: 'Mina Karki', role: 'Primary Teacher', subject: 'Nepali', qualification: 'B.Ed.' },
-  { name: 'Bikash Poudel', role: 'Subject Teacher', subject: 'Computer Science', qualification: 'B.Sc. CSIT' },
-  { name: 'Sarita Rana', role: 'Primary Teacher', subject: 'General Studies', qualification: 'B.Ed.' },
-  { name: 'Deepak Bhandari', role: 'Sports Teacher', subject: 'Health & Physical Education', qualification: 'B.P.Ed.' },
-];
-const DEMO_NEWS_EVENTS: NewsItem[] = [
-  { id: 'demo-news-1', title: 'Students showcase ideas at the science exhibition', content: 'Young innovators presented practical science models and creative projects to teachers, families and fellow students.', event_date: '2026-09-18', category: 'School news', location: 'School campus', is_event: false },
-  { id: 'demo-news-2', title: 'Inter-house sports programme announced', content: 'Students will compete in team games, athletics and skill-based activities while building confidence and sportsmanship.', event_date: '2026-09-15', category: 'Upcoming event', location: 'School playground', is_event: true },
-  { id: 'demo-news-3', title: 'Parent–teacher meeting for student progress', content: 'Families are invited to meet teachers, review learning progress and discuss the next steps for each student.', event_date: '2026-09-12', category: 'Community', location: 'School campus', is_event: true },
-];
-
 const themes: Record<string, { solid: string; hover: string; soft: string; text: string; border: string }> = {
   blue: { solid: 'bg-blue-600', hover: 'hover:bg-blue-700', soft: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
   emerald: { solid: 'bg-emerald-600', hover: 'hover:bg-emerald-700', soft: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
@@ -143,12 +113,12 @@ export default function PublicSchoolPage() {
   const sectionRadius = template === 'classic' ? 'rounded-none' : template === 'bold' ? 'rounded-[2rem]' : 'rounded-[32px]';
   const whyChooseUs = useMemo(() => normalizeExperience(school?.why_choose_us), [school]);
   const achievementStats = useMemo(() => normalizeAchievements(school?.achievement_stats), [school]);
-  const heroGallery = useMemo(() => gallery.slice(0, 5), [gallery]);
-  const heroMotto = school?.motto?.trim() || DEFAULT_SCHOOL_MOTTO;
-  const heroDescription = school?.short_description?.trim() || DEFAULT_SCHOOL_DESCRIPTION;
+  const heroGallery = useMemo(() => school?.banner_url ? [{id:'hero-banner',image_url:school.banner_url,label:school.name},...gallery.filter(item=>item.image_url!==school.banner_url).slice(0,4)] : gallery.slice(0,5), [gallery,school]);
+  const heroMotto = school?.motto?.trim() || ''; 
+  const heroDescription = school?.short_description?.trim() || '';
   const mapEmbedUrl = buildMapEmbedUrl(school?.map_location, school?.address);
   const directionsUrl = buildDirectionsUrl(school?.map_location, school?.address);
-  const latestNewsEvents = news.length > 0 ? news : DEMO_NEWS_EVENTS;
+  const latestNewsEvents = news;
   const { typedText, typingComplete } = useTypingText(heroMotto);
 
   useEffect(() => {
@@ -436,7 +406,7 @@ export default function PublicSchoolPage() {
             <p className="mt-3 text-base leading-7 text-gray-600">A caring team of educators committed to strong learning, confidence and character.</p>
           </div>
           <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            {DEMO_TEACHERS.map((teacher, index) => <article key={teacher.name} className="group rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg sm:p-5"><div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${theme.soft} ${theme.text}`}><UserRound className="h-6 w-6" strokeWidth={1.8} /></div><h3 className="mt-4 font-bold text-gray-950">{teacher.name}</h3><p className={`mt-1 text-xs font-bold ${theme.text}`}>{teacher.subject}</p><p className="mt-2 text-xs leading-5 text-gray-500">{teacher.role} · {teacher.qualification}</p><span className="mt-4 block h-1 w-8 rounded-full bg-gray-200 transition-all group-hover:w-14 group-hover:bg-blue-500" aria-hidden="true" /><span className="sr-only">Teacher {index + 1} of {DEMO_TEACHERS.length}</span></article>)}
+            <p className="col-span-full rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">Teacher profiles have not been published by this school.</p>
           </div>
         </div>
       </section>
@@ -622,31 +592,13 @@ function normalizeHttpUrl(value: string | null | undefined) {
 }
 
 function normalizeExperience(value: unknown): ExperienceItem[] {
-  if (!Array.isArray(value)) return DEFAULT_EXPERIENCE;
-  return DEFAULT_EXPERIENCE.map((fallback, index) => {
-    const item = value[index];
-    if (!item || typeof item !== 'object') return fallback;
-    const record = item as Record<string, unknown>;
-    return {
-      title: typeof record.title === 'string' && record.title.trim() ? record.title : fallback.title,
-      desc: typeof record.desc === 'string' && record.desc.trim() ? record.desc : typeof record.description === 'string' && record.description.trim() ? record.description : fallback.desc,
-    };
-  });
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object')).map(item => ({title:typeof item.title==='string'?item.title:'',desc:typeof item.desc==='string'?item.desc:typeof item.description==='string'?item.description:''})).filter(item=>item.title && item.desc);
 }
-
 function normalizeAchievements(value: unknown): AchievementStat[] {
-  if (!Array.isArray(value)) return DEFAULT_ACHIEVEMENTS;
-  return DEFAULT_ACHIEVEMENTS.map((fallback, index) => {
-    const item = value[index];
-    if (!item || typeof item !== 'object') return fallback;
-    const record = item as Record<string, unknown>;
-    return {
-      label: typeof record.label === 'string' && record.label.trim() ? record.label : fallback.label,
-      value: typeof record.value === 'string' && record.value.trim() ? record.value : fallback.value,
-    };
-  });
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object')).map(item => ({label:typeof item.label==='string'?item.label:'',value:typeof item.value==='string'?item.value:''})).filter(item=>item.label && item.value);
 }
-
 
 function useTypingText(text: string, speed = 42) {
   const [typedText, setTypedText] = useState('');
