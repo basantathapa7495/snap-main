@@ -71,6 +71,7 @@ const principalMenu: MenuSection[] = [
   ],
   [
     { href: '/principal/edit_website', label: 'Edit Website', icon: TrendingUp },
+    { href: '/principal/settings', label: 'Settings & Preferences', icon: Settings },
   ],
 ];
 
@@ -244,8 +245,6 @@ export default function Sidebar() {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  const principalSettingsActive = pathname.startsWith('/principal/settings');
-
   return (
     <>
       {/* =====================================================
@@ -389,30 +388,6 @@ export default function Sidebar() {
         </nav>
 
 
-        {/* ===================================================
-            BOTTOM ACTIONS
-        =================================================== */}
-        <div className="border-t border-slate-200 p-3 dark:border-slate-700 lg:border-gray-100 lg:p-3 lg:dark:border-gray-100">
-          {isPrincipalPath && (
-            <Link
-              href="/principal/settings"
-              onClick={() => setMobileOpen(false)}
-              className={`flex min-h-11 items-center gap-3.5 rounded-xl px-3.5 py-2 text-sm transition lg:min-h-0 lg:gap-3 lg:rounded-lg lg:px-3 lg:py-2 lg:text-[0.85rem] ${
-                principalSettingsActive
-                  ? 'bg-teal-700 text-white dark:bg-teal-500/20 dark:text-teal-100 lg:bg-blue-600 lg:dark:bg-blue-600 lg:dark:text-white'
-                  : 'text-slate-700 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800 lg:text-gray-700 lg:hover:bg-gray-100 lg:dark:text-gray-700 lg:dark:hover:bg-gray-100'
-              }`}
-            >
-              <Settings
-                className={`h-5 w-5 lg:h-[16px] lg:w-[16px] ${
-                  principalSettingsActive ? 'text-white dark:text-teal-100 lg:dark:text-white' : 'text-slate-500 dark:text-slate-400 lg:text-gray-500 lg:dark:text-gray-500'
-                }`}
-              />
-              <span className="font-medium">Settings</span>
-            </Link>
-          )}
-
-        </div>
       </aside>
       {isPrincipalPath && <PrincipalSearch open={searchOpen} onClose={closeSearch} />}
     </>
