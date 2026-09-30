@@ -362,16 +362,21 @@ export default function TeacherCommunicationPage() {
     setMessageError('');
     try {
       const table = conversation.source === 'student' ? 'teacher_student_messages' : 'direct_messages';
-      const columns = conversation.source === 'student'
-        ? 'id,sender_id,content,read_at,created_at,attachment_path,attachment_name,attachment_mime,attachment_size'
-        : 'id,sender_id,content,read_at,created_at';
-      const result = await supabase
-        .from(table)
-        .select(columns)
-        .eq('school_id', schoolId)
-        .eq('conversation_id', conversation.id)
-        .order('created_at', { ascending: true })
-        .limit(500);
+      const result = conversation.source === 'student'
+        ? await supabase
+          .from('teacher_student_messages')
+          .select('id,sender_id,content,read_at,created_at,attachment_path,attachment_name,attachment_mime,attachment_size')
+          .eq('school_id', schoolId)
+          .eq('conversation_id', conversation.id)
+          .order('created_at', { ascending: true })
+          .limit(500)
+        : await supabase
+          .from('direct_messages')
+          .select('id,sender_id,content,read_at,created_at')
+          .eq('school_id', schoolId)
+          .eq('conversation_id', conversation.id)
+          .order('created_at', { ascending: true })
+          .limit(500);
       if (result.error) throw result.error;
       setMessages((result.data || []) as ChatMessage[]);
       const unread = (result.data || []).filter((item: any) => item.sender_id !== userId && !item.read_at).map((item: any) => item.id);
