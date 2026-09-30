@@ -4,20 +4,24 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
+type School = { id: string; name: string; municipality: string | null; district: string | null; logo_url: string | null; school_level: string | null };
+type AdmissionForm = { student_name: string; class: string; gender: string; dob: string; parent_name: string; parent_phone: string; parent_email: string; address: string; previous_school: string; message: string };
+
 export default function AdmissionPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const [school, setSchool] = useState<any>(null);
+  const [school, setSchool] = useState<School | null>(null);
   const [loading, setLoading] = useState(true);
-  const [admissionForm, setAdmissionForm] = useState<any>({ student_name: '', class: '', gender: '', dob: '', parent_name: '', parent_phone: '', parent_email: '', address: '', previous_school: '', message: '' });
+  const [admissionForm, setAdmissionForm] = useState<AdmissionForm>({ student_name: '', class: '', gender: '', dob: '', parent_name: '', parent_phone: '', parent_email: '', address: '', previous_school: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     async function load() {
-      const { data: schoolData } = await supabase.from('schools').select('*').eq('slug', slug).single();
+      const { data: schoolData, error: schoolError } = await supabase.from('schools').select('id, name, municipality, district, logo_url, school_level').eq('slug', slug).single();
+      if (schoolError && schoolError.code !== 'PGRST116') setError('The school website could not be loaded. Please try again.');
       setSchool(schoolData || null);
       setLoading(false);
     }
@@ -35,17 +39,18 @@ export default function AdmissionPage() {
 
   async function submitAdmission(e: React.FormEvent) {
     e.preventDefault();
+    if (!school) return;
     setSubmitting(true);
     setError('');
     const { error: dbError } = await supabase.from('admission_applications').insert({
       school_id: school.id,
-      student_name: admissionForm.student_name,
+      student_name: admissionForm.student_name.trim(),
       class: admissionForm.class,
       gender: admissionForm.gender || null,
       dob: admissionForm.dob || null,
-      parent_name: admissionForm.parent_name,
-      parent_phone: admissionForm.parent_phone,
-      parent_email: admissionForm.parent_email || null,
+      parent_name: admissionForm.parent_name.trim(),
+      parent_phone: admissionForm.parent_phone.trim(),
+      parent_email: admissionForm.parent_email.trim() || null,
       address: admissionForm.address || null,
       previous_school: admissionForm.previous_school || null,
       message: admissionForm.message || null,
