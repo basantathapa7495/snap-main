@@ -1,11 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ClipboardCheck, GraduationCap, House, Menu, MessageCircle, UserRound, UsersRound, Wallet } from 'lucide-react';
+import { BookOpen, ClipboardCheck, GraduationCap, House, LayoutDashboard, Menu, MessageCircle, UserRound, UsersRound, Wallet } from 'lucide-react';
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const isPrincipal = pathname.startsWith('/principal');
+  const isTeacher = pathname === '/teacher' || pathname.startsWith('/teacher/');
 
   const defaultNavItems = [
     { href: '/principal', label: 'Home', icon: House },
@@ -21,14 +22,29 @@ export default function MobileBottomNav() {
     { href: '/principal/communication', label: 'Communication', icon: MessageCircle },
     { href: '/principal/account', label: 'Account', icon: UserRound },
   ];
-  const navItems = isPrincipal ? principalNavItems : defaultNavItems;
+  const teacherNavItems = [
+    { href: '/teacher/attendance', label: 'Attendance', icon: ClipboardCheck },
+    { href: '/teacher/students', label: 'Students', icon: UsersRound },
+    { href: '/teacher', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/teacher/classes', label: 'My Classes', icon: BookOpen },
+    { href: '/teacher/profile', label: 'My Profile', icon: UserRound },
+  ];
+  const navItems = isPrincipal
+    ? principalNavItems
+    : isTeacher
+      ? teacherNavItems
+      : defaultNavItems;
 
   return (
     <nav aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/80 bg-[#F8FAFC]/95 shadow-[0_-4px_18px_rgba(15,23,42,0.05)] backdrop-blur-md dark:border-slate-700/70 dark:bg-[#111B2B]/95 md:hidden">
       <div className="grid grid-cols-5 items-center px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || (item.href !== '/principal' && pathname.startsWith(`${item.href}/`)) || (item.label === 'Account' && pathname.startsWith('/principal/settings'));
+          const isPortalRoot = ['/principal', '/teacher', '/student'].includes(item.href);
+          const isActive =
+            pathname === item.href ||
+            (!isPortalRoot && pathname.startsWith(`${item.href}/`)) ||
+            (item.label === 'Account' && pathname.startsWith('/principal/settings'));
 
           return (
             <Link
