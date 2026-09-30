@@ -28,7 +28,7 @@ export default function MobileBottomNav() {
       <div className="grid grid-cols-5 items-center px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || (item.href !== '/principal' && pathname.startsWith(`${item.href}/`));
+          const isActive = pathname === item.href || (item.href !== '/principal' && pathname.startsWith(`${item.href}/`)) || (item.label === 'Account' && pathname.startsWith('/principal/settings'));
 
           return (
             <Link
