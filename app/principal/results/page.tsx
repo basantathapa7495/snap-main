@@ -1,317 +1,171 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import {
-  AlertCircle, CalendarDays, Check, CheckCircle, Clock, Download,
-  Edit3, FileText, GraduationCap, Loader2, Plus, RefreshCw,
-  Search, Trash2, Users, X,
-} from 'lucide-react';
+import { AlertCircle, BarChart3, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Download, FileText, GraduationCap, Pencil, Plus, Printer, Search, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
-import { supabase } from '@/lib/supabase';
 
-type Exam = { id: string; name: string; start_date: string | null };
-type ExamState = 'upcoming' | 'today' | 'completed';
-type ExamForm = { name: string; startDate: string };
+type Exam = { id:string; school_id:string; name:string; start_date:string|null; end_date:string|null; academic_year:number|null; published_at:string|null };
+type Subject = { id:string; school_id:string; exam_id:string; class_name:string; section:string; subject_name:string; full_marks:number; pass_marks:number };
+type Mark = { id:string; school_id:string; subject_id:string; student_id:string; marks:number };
+type Student = { id:string; name:string; class:string|null; section:string|null; roll_no:string|null };
+type ClassRow = { id:string; class_number:string|null; class_name:string|null; class:string|null; section_name:string|null; section:string|null; academic_year:number|null; archived_at:string|null };
+type Tab = 'Exams'|'Results'|'Report Cards'|'Analytics';
+type Form = { name:string; start:string; end:string; year:string; classes:string[]; subjects:string; full:string; pass:string };
+const emptyForm:Form = { name:'',start:'',end:'',year:'',classes:[],subjects:'',full:'100',pass:'40' };
+const key = (className:string,section:string) => `${className}::${section}`;
+const splitKey = (value:string) => { const [className, section] = value.split('::'); return { className, section:section || '' }; };
+const classLabel = (className:string,section:string) => `Class ${className}${section ? ` (${section})` : ''}`;
+const nepalToday = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kathmandu',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const dateLabel = (value:string|null) => value ? new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Kathmandu'}).format(new Date(`${value}T00:00:00+05:45`)) : 'Date unset';
+const order = (a:string,b:string) => a.localeCompare(b,undefined,{numeric:true});
+function percent(marks:number,full:number) { return full ? Math.round(marks/full*1000)/10 : 0; }
 
-function todayNepal() {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Kathmandu', year: 'numeric', month: '2-digit', day: '2-digit',
-  }).format(new Date());
-}
-function examState(exam: Exam): ExamState {
-  if (!exam.start_date || exam.start_date > todayNepal()) return 'upcoming';
-  if (exam.start_date === todayNepal()) return 'today';
-  return 'completed';
-}
-function dateLabel(date: string | null) {
-  if (!date) return 'Date not set';
-  return new Date(`${date}T12:00:00Z`).toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  });
-}
+export default function ResultsPage() {
+  const [schoolId,setSchoolId] = useState('');
+  const [exams,setExams] = useState<Exam[]>([]);
+  const [subjects,setSubjects] = useState<Subject[]>([]);
+  const [marks,setMarks] = useState<Mark[]>([]);
+  const [students,setStudents] = useState<Student[]>([]);
+  const [classes,setClasses] = useState<ClassRow[]>([]);
+  const [loading,setLoading] = useState(true);
+  const [error,setError] = useState('');
+  const [notice,setNotice] = useState('');
+  const [tab,setTab] = useState<Tab>('Exams');
+  const [query,setQuery] = useState('');
+  const [year,setYear] = useState('all');
+  const [classFilter,setClassFilter] = useState('all');
+  const [selectedExam,setSelectedExam] = useState<string|null>(null);
+  const [selectedClass,setSelectedClass] = useState('');
+  const [selectedSubject,setSelectedSubject] = useState('');
+  const [studentId,setStudentId] = useState<string|null>(null);
+  const [studentTab,setStudentTab] = useState<'Result'|'Subject-wise'|'Grade'|'Report Card'>('Result');
+  const [searchStudent,setSearchStudent] = useState('');
+  const [statusFilter,setStatusFilter] = useState('all');
+  const [draftMarks,setDraftMarks] = useState<Record<string,string>>({});
+  const [modal,setModal] = useState(false);
+  const [editing,setEditing] = useState<Exam|null>(null);
+  const [form,setForm] = useState<Form>(emptyForm);
+  const [saving,setSaving] = useState(false);
+  const [confirmPublish,setConfirmPublish] = useState(false);
+  const [reload,setReload] = useState(0);
 
-export default function ExamsResultsPage() {
-  const [schoolId, setSchoolId] = useState<string | null>(null);
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [studentCount, setStudentCount] = useState(0);
-  const [classCount, setClassCount] = useState(0);
-  const [filter, setFilter] = useState<'all' | ExamState>('all');
-  const [search, setSearch] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Exam | null>(null);
-  const [form, setForm] = useState<ExamForm>({ name: '', startDate: '' });
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [authenticated, setAuthenticated] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [linkedExamId, setLinkedExamId] = useState<string | null>(null);
+  useEffect(() => { let active=true; async function load() {
+    setLoading(true);setError('');
+    try {
+      const {data:{user}}=await supabase.auth.getUser();
+      if (!user) throw new Error('Sign in as principal to manage exams.');
+      const {data:profile,error:profileError}=await supabase.from('profiles').select('school_id,role').eq('user_id',user.id).single();
+      if (profileError || !profile?.school_id || profile.role!=='admin') throw new Error('Principal school access is required.');
+      const school=profile.school_id;
+      const [e,s,m,st,c]=await Promise.all([
+        supabase.from('exams').select('id,school_id,name,start_date,end_date,academic_year,published_at').eq('school_id',school).order('start_date',{ascending:false}),
+        supabase.from('exam_subjects').select('*').eq('school_id',school),
+        supabase.from('exam_marks').select('*').eq('school_id',school),
+        supabase.from('students').select('id,name,class,section,roll_no').eq('school_id',school),
+        supabase.from('classes').select('id,class_number,class_name,class,section_name,section,academic_year,archived_at').eq('school_id',school).is('archived_at',null),
+      ]);
+      const failure=[e,s,m,st,c].find(result=>result.error)?.error;
+      if (failure) throw failure;
+      if (active) {setSchoolId(school);setExams((e.data||[]) as Exam[]);setSubjects((s.data||[]) as Subject[]);setMarks((m.data||[]) as Mark[]);setStudents((st.data||[]) as Student[]);setClasses((c.data||[]) as ClassRow[]);}
+    } catch (cause) {if(active)setError(cause instanceof Error?cause.message:'Exam data could not be loaded.');}
+    finally {if(active)setLoading(false);}
+  } load();return()=>{active=false;};},[reload]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setRefreshing(true); setError('');
-      try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        if (!user) {
-          if (!cancelled) setAuthenticated(false);
-          return;
-        }
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles').select('school_id').eq('user_id', user.id).single();
-        if (profileError || !profile?.school_id) throw new Error('Your school profile could not be loaded.');
-
-        const [examResult, studentResult, classResult] = await Promise.all([
-          supabase.from('exams').select('id, name, start_date')
-            .eq('school_id', profile.school_id)
-            .order('start_date', { ascending: false }),
-          supabase.from('students').select('id', { count: 'exact', head: true })
-            .eq('school_id', profile.school_id),
-          supabase.from('classes').select('id', { count: 'exact', head: true })
-            .eq('school_id', profile.school_id),
-        ]);
-        if (examResult.error) throw examResult.error;
-        if (studentResult.error) throw studentResult.error;
-        if (classResult.error) throw classResult.error;
-
-        if (!cancelled) {
-          setSchoolId(profile.school_id);
-          setExams((examResult.data || []) as Exam[]);
-          setStudentCount(studentResult.count || 0);
-          setClassCount(classResult.count || 0);
-        }
-      } catch (loadError) {
-        console.error('Exams load error', loadError);
-        if (!cancelled) setError(loadError instanceof Error ? loadError.message : 'Exams could not be loaded.');
-      } finally {
-        if (!cancelled) { setLoading(false); setRefreshing(false); }
+  const availableClasses=useMemo(()=>[...new Set(classes.map(c=>key(c.class_number||c.class||c.class_name||'',c.section_name||c.section||'')).filter(value=>splitKey(value).className))].sort((a,b)=>order(a,b)),[classes]);
+  const selected=exams.find(e=>e.id===selectedExam)||null;
+  const examSubjects=subjects.filter(s=>s.exam_id===selectedExam);
+  const examClasses=[...new Set(examSubjects.map(s=>key(s.class_name,s.section)))].sort((a,b)=>order(a,b));
+  const activeClass=examClasses.includes(selectedClass)?selectedClass:examClasses[0]||'';
+  const classSubjects=examSubjects.filter(s=>key(s.class_name,s.section)===activeClass).sort((a,b)=>order(a.subject_name,b.subject_name));
+  const activeSubject=classSubjects.find(s=>s.id===selectedSubject)||classSubjects[0]||null;
+  const classStudents=students.filter(st=>key(st.class||'',st.section||'')===activeClass).sort((a,b)=>order(a.roll_no||'',b.roll_no||'')||order(a.name,b.name));
+  const markMap=useMemo(()=>new Map(marks.map(m=>[`${m.subject_id}:${m.student_id}`,m])),[marks]);
+  const markFor=(subjectId:string,student:string)=>markMap.get(`${subjectId}:${student}`);
+  const entered=activeSubject?classStudents.filter(st=>Boolean(markFor(activeSubject.id,st.id))).length:0;
+  const average=activeSubject&&entered?percent(classStudents.reduce((sum,st)=>sum+Number(markFor(activeSubject.id,st.id)?.marks||0),0)/entered,Number(activeSubject.full_marks)):null;
+  const examProgress=(exam:Exam)=>{const items=subjects.filter(s=>s.exam_id===exam.id);return {total:items.length,done:items.filter(s=>{const roster=students.filter(st=>st.class===s.class_name&&(st.section||'')===s.section);return roster.length>0&&roster.every(st=>markFor(s.id,st.id));}).length};};
+  const pendingResults=exams.filter(e=>!e.published_at&&examProgress(e).total>0).length;
+  const ongoing=exams.filter(e=>e.start_date&&e.start_date<=nepalToday()&&(!e.end_date||e.end_date>=nepalToday())).length;
+  const completed=exams.filter(e=>e.end_date&&e.end_date<nepalToday()).length;
+  const years=[...new Set(exams.map(e=>e.academic_year).filter((value):value is number=>value!==null))].sort((a,b)=>b-a);
+  const filtered=exams.filter(e=>(year==='all'||String(e.academic_year)===year)&&(classFilter==='all'||subjects.some(s=>s.exam_id===e.id&&key(s.class_name,s.section)===classFilter))&&e.name.toLowerCase().includes(query.toLowerCase()));
+  const selectedStudent=students.find(st=>st.id===studentId)||null;
+  const studentMarks=selectedStudent?classSubjects.map(s=>({subject:s,mark:markFor(s.id,selectedStudent.id)})):[];
+  const studentComplete=studentMarks.length>0&&studentMarks.every(row=>Boolean(row.mark));
+  const totalObtained=studentMarks.reduce((sum,row)=>sum+Number(row.mark?.marks||0),0);
+  const totalFull=studentMarks.reduce((sum,row)=>sum+Number(row.subject.full_marks),0);
+  const passed=studentComplete&&studentMarks.every(row=>Number(row.mark?.marks)>=Number(row.subject.pass_marks));
+  const classScores=classStudents.map(st=>{const rows=classSubjects.map(s=>({s,mark:markFor(s.id,st.id)}));if(!rows.length||rows.some(row=>!row.mark))return null;return percent(rows.reduce((sum,row)=>sum+Number(row.mark?.marks||0),0),rows.reduce((sum,row)=>sum+Number(row.s.full_marks),0));}).filter((value):value is number=>value!==null);
+  const classAverage=classScores.length?Math.round(classScores.reduce((a,b)=>a+b,0)/classScores.length*10)/10:null;
+  const analytics=useMemo(()=>{
+    const results:{percentage:number;passed:boolean}[]=[];
+    for(const exam of exams){
+      const configured=subjects.filter(subject=>subject.exam_id===exam.id);
+      for(const student of students){
+        const assigned=configured.filter(subject=>subject.class_name===student.class&&subject.section===(student.section||''));
+        if(!assigned.length)continue;
+        const rows=assigned.map(subject=>({subject,mark:markMap.get(`${subject.id}:${student.id}`)}));
+        if(rows.some(row=>!row.mark))continue;
+        results.push({percentage:percent(rows.reduce((sum,row)=>sum+Number(row.mark?.marks||0),0),rows.reduce((sum,row)=>sum+Number(row.subject.full_marks),0)),passed:rows.every(row=>Number(row.mark?.marks)>=Number(row.subject.pass_marks))});
       }
     }
-    load();
-    return () => { cancelled = true; };
-  }, [refreshKey]);
+    return {count:results.length,average:results.length?Math.round(results.reduce((sum,row)=>sum+row.percentage,0)/results.length*10)/10:null,passRate:results.length?Math.round(results.filter(row=>row.passed).length/results.length*100):null};
+  },[exams,subjects,students,markMap]);
+  const examStatus=(e:Exam)=>e.published_at?'Published':examProgress(e).total&&!examProgress(e).done?'Incomplete':e.end_date&&e.end_date<nepalToday()?'Pending results':e.start_date&&e.start_date<=nepalToday()?'Ongoing':'Draft';
 
-  const stats = useMemo(() => ({
-    total: exams.length,
-    upcoming: exams.filter((exam) => examState(exam) === 'upcoming').length,
-    today: exams.filter((exam) => examState(exam) === 'today').length,
-    completed: exams.filter((exam) => examState(exam) === 'completed').length,
-  }), [exams]);
-
-  const filtered = useMemo(() => exams.filter((exam) => {
-    const query = search.trim().toLowerCase();
-    return (filter === 'all' || examState(exam) === filter) &&
-      (!query || exam.name.toLowerCase().includes(query));
-  }), [exams, filter, search]);
-
-  useEffect(() => {
-    if (loading) return;
-    const examId = new URLSearchParams(window.location.search).get('exam');
-    if (!examId || !exams.some((exam) => exam.id === examId)) return;
-    const frame = window.requestAnimationFrame(() => {
-      setLinkedExamId(examId);
-      setFilter('all');
-      setSearch('');
-      window.requestAnimationFrame(() => document.getElementById(`exam-${examId}`)?.scrollIntoView({ block: 'center' }));
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [loading, exams]);
-
-  function openCreate() {
-    setEditing(null);
-    setForm({ name: '', startDate: '' });
-    setError(''); setNotice(''); setModalOpen(true);
-  }
-  function openEdit(exam: Exam) {
-    setEditing(exam);
-    setForm({ name: exam.name, startDate: exam.start_date || '' });
-    setError(''); setNotice(''); setModalOpen(true);
-  }
-
-  async function saveExam(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!schoolId || !form.name.trim() || !form.startDate) return;
-    setSaving(true); setError(''); setNotice('');
+  function openExam(e:Exam){setSelectedExam(e.id);setSelectedClass('');setSelectedSubject('');setStudentId(null);setSearchStudent('');setTab('Exams');}
+  function openCreate(){setEditing(null);setForm(emptyForm);setModal(true);setError('');}
+  function openEdit(e:Exam){const associated=subjects.filter(s=>s.exam_id===e.id);const distinct=[...new Set(associated.map(s=>s.subject_name))];setEditing(e);setForm({name:e.name,start:e.start_date||'',end:e.end_date||'',year:String(e.academic_year||''),classes:[...new Set(associated.map(s=>key(s.class_name,s.section)))],subjects:distinct.join(', '),full:String(associated[0]?.full_marks||100),pass:String(associated[0]?.pass_marks||40)});setModal(true);}
+  async function saveExam(event:React.FormEvent){event.preventDefault();if(!schoolId)return;
+    const names=[...new Set(form.subjects.split(',').map(value=>value.trim()).filter(Boolean))];
+    if(!form.name.trim()||!form.start||!form.end||form.end<form.start||!form.classes.length||!names.length||!Number.isFinite(Number(form.full))||Number(form.full)<=0||Number(form.pass)<0||Number(form.pass)>Number(form.full)){setError('Enter valid dates, classes, subjects, and full/pass marks.');return;}
+    setSaving(true);setError('');setNotice('');
     try {
-      const examData = { school_id: schoolId, name: form.name.trim(), start_date: form.startDate };
-      const result = editing
-        ? await supabase.from('exams').update({ name: examData.name, start_date: examData.start_date })
-            .eq('id', editing.id).eq('school_id', schoolId)
-        : await supabase.from('exams').insert(examData);
-      if (result.error) throw result.error;
-      setModalOpen(false);
-      setNotice(editing ? 'Exam updated successfully.' : 'Exam created successfully.');
-      setRefreshKey((value) => value + 1);
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Exam could not be saved.');
-    } finally { setSaving(false); }
+      const payload={school_id:schoolId,name:form.name.trim(),start_date:form.start,end_date:form.end,academic_year:form.year?Number(form.year):null};
+      const {data:exam,error:examError}=editing?await supabase.from('exams').update(payload).eq('id',editing.id).eq('school_id',schoolId).select('id').single():await supabase.from('exams').insert(payload).select('id').single();
+      if(examError||!exam)throw examError||new Error('Exam could not be saved.');
+      const old=subjects.filter(s=>s.exam_id===exam.id);
+      const wanted=form.classes.flatMap(value=>names.map(name=>({...splitKey(value),name})));
+      const removed=old.filter(s=>!wanted.some(w=>w.className===s.class_name&&w.section===s.section&&w.name===s.subject_name));
+      if(removed.some(s=>marks.some(m=>m.subject_id===s.id)))throw new Error('A subject with saved marks cannot be removed.');
+      if(removed.length){const {error}=await supabase.from('exam_subjects').delete().in('id',removed.map(s=>s.id)).eq('school_id',schoolId);if(error)throw error;}
+      const updates=old.filter(s=>wanted.some(w=>w.className===s.class_name&&w.section===s.section&&w.name===s.subject_name));
+      for(const subject of updates){if(Number(subject.full_marks)!==Number(form.full)||Number(subject.pass_marks)!==Number(form.pass)){if(marks.some(m=>m.subject_id===subject.id&&Number(m.marks)>Number(form.full)))throw new Error('Full marks cannot be below an entered mark.');const {error}=await supabase.from('exam_subjects').update({full_marks:Number(form.full),pass_marks:Number(form.pass)}).eq('id',subject.id).eq('school_id',schoolId);if(error)throw error;}}
+      const additions=wanted.filter(w=>!old.some(s=>s.class_name===w.className&&s.section===w.section&&s.subject_name===w.name)).map(w=>({school_id:schoolId,exam_id:exam.id,class_name:w.className,section:w.section,subject_name:w.name,full_marks:Number(form.full),pass_marks:Number(form.pass)}));
+      if(additions.length){const {error}=await supabase.from('exam_subjects').insert(additions);if(error)throw error;}
+      setModal(false);setNotice(editing?'Exam updated.':'Exam created. Enter marks before publishing.');setReload(v=>v+1);
+    }catch(cause){setError(cause instanceof Error?cause.message:'Exam could not be saved.');setReload(v=>v+1);}finally{setSaving(false);}
   }
+  async function saveMarks(){if(!activeSubject||!schoolId)return;setSaving(true);setError('');setNotice('');try{
+    const entries=Object.entries(draftMarks).filter(([student])=>classStudents.some(st=>st.id===student));
+    const payload=entries.filter(([,value])=>value.trim()!=='').map(([student,value])=>({school_id:schoolId,subject_id:activeSubject.id,student_id:student,marks:Number(value)}));
+    if(payload.some(row=>!Number.isFinite(row.marks)||row.marks<0||row.marks>Number(activeSubject.full_marks)))throw new Error(`Marks must be between 0 and ${activeSubject.full_marks}.`);
+    if(payload.length){const {error}=await supabase.from('exam_marks').upsert(payload,{onConflict:'subject_id,student_id'});if(error)throw error;}
+    setDraftMarks({});setNotice('Marks saved.');setReload(v=>v+1);
+  }catch(cause){setError(cause instanceof Error?cause.message:'Marks could not be saved.');setReload(v=>v+1);}finally{setSaving(false);}}
+  async function publish(){if(!selected)return;setSaving(true);setError('');try{const {error}=await supabase.rpc('publish_exam',{p_exam_id:selected.id});if(error)throw error;setConfirmPublish(false);setNotice('Results published.');setReload(v=>v+1);}catch(cause){setError(cause instanceof Error?cause.message:'Results could not be published.');setConfirmPublish(false);}finally{setSaving(false);}}
+  function printCard(){window.print();}
+  function downloadCard(){printCard();}
 
-  async function deleteExam(exam: Exam) {
-    if (!schoolId || !window.confirm(`Delete "${exam.name}"? This cannot be undone.`)) return;
-    setError(''); setNotice('');
-    const { error: deleteError } = await supabase.from('exams')
-      .delete().eq('id', exam.id).eq('school_id', schoolId);
-    if (deleteError) {
-      setError(deleteError.message);
-      return;
-    }
-    setExams((current) => current.filter((item) => item.id !== exam.id));
-    setNotice('Exam deleted.');
-  }
-
-  function exportExams() {
-    if (!filtered.length) {
-      setError('There are no exams to export for this selection.');
-      return;
-    }
-    const rows = [['Exam', 'Start date', 'Status']];
-    filtered.forEach((exam) => rows.push([exam.name, exam.start_date || '', examState(exam)]));
-    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const anchor = document.createElement('a');
-    anchor.href = url; anchor.download = 'exams.csv'; anchor.click();
-    URL.revokeObjectURL(url);
-  }
-
-  if (loading) return <PageSkeleton />;
-  if (!authenticated) return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
-      <div className="max-w-sm rounded-2xl border border-slate-200 bg-white p-7 text-center shadow-sm">
-        <h1 className="text-xl font-bold text-slate-950">Please sign in</h1>
-        <p className="mt-2 text-sm text-slate-500">Sign in as principal to manage exams and results.</p>
-        <Link href="/auth/login?role=principal" className="mt-5 inline-flex rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white">Go to login</Link>
-      </div>
-    </main>
-  );
-
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <Sidebar />
-      <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
-        <TopBar />
-        <main className="flex-1 px-4 pb-24 pt-24 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-[1500px]">
-            <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-blue-600">Academic assessment</p>
-                <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">Exams & results</h1>
-                <p className="mt-2 text-sm text-slate-500">Schedule examinations and keep the result workflow organized.</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => setRefreshKey((value) => value + 1)} disabled={refreshing} className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50">
-                  <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />Refresh
-                </button>
-                <button type="button" onClick={exportExams} className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                  <Download className="h-4 w-4" />Export
-                </button>
-                <button type="button" onClick={openCreate} className="inline-flex h-11 items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700">
-                  <Plus className="h-4 w-4" />Create exam
-                </button>
-              </div>
-            </header>
-
-            {(error || notice) && <div role={error ? 'alert' : 'status'} className={`mt-5 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${error ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
-              {error ? <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> : <Check className="mt-0.5 h-4 w-4 shrink-0" />}{error || notice}
-            </div>}
-
-            <section className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Stat icon={FileText} label="Total exams" value={stats.total} tone="blue" />
-              <Stat icon={Clock} label="Upcoming" value={stats.upcoming} tone="violet" />
-              <Stat icon={CalendarDays} label="Scheduled today" value={stats.today} tone="amber" />
-              <Stat icon={CheckCircle} label="Past exams" value={stats.completed} tone="emerald" />
-            </section>
-
-            <section className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(320px,0.5fr)]">
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-center">
-                  <div className="flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1">
-                    {(['all', 'upcoming', 'today', 'completed'] as const).map((value) => <button key={value} type="button" onClick={() => setFilter(value)} className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold capitalize transition ${filter === value ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>{value === 'completed' ? 'Past' : value}</button>)}
-                  </div>
-                  <label className="relative lg:ml-auto">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search exams" className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-sm outline-none focus:border-blue-500 sm:w-60" />
-                  </label>
-                </div>
-
-                {!filtered.length ? <Empty filtered={Boolean(search || filter !== 'all')} onCreate={openCreate} /> : <div className="divide-y divide-slate-100">
-                  {filtered.map((exam) => {
-                    const state = examState(exam);
-                    return <article key={exam.id} id={`exam-${exam.id}`} className={`scroll-mt-24 p-5 transition hover:bg-slate-50/60 ${linkedExamId === exam.id ? 'bg-blue-50 ring-2 ring-inset ring-blue-300' : ''}`}>
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><GraduationCap className="h-5 w-5" /></span>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2"><h2 className="font-bold text-slate-950">{exam.name}</h2><StateBadge state={state} /></div>
-                          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-500"><CalendarDays className="h-3.5 w-3.5" />{dateLabel(exam.start_date)}</p>
-                        </div>
-                        <div className="flex gap-1">
-                          <button type="button" onClick={() => openEdit(exam)} className="rounded-lg p-2.5 text-slate-400 hover:bg-blue-50 hover:text-blue-600" aria-label={`Edit ${exam.name}`}><Edit3 className="h-4 w-4" /></button>
-                          <button type="button" onClick={() => deleteExam(exam)} className="rounded-lg p-2.5 text-slate-400 hover:bg-red-50 hover:text-red-600" aria-label={`Delete ${exam.name}`}><Trash2 className="h-4 w-4" /></button>
-                        </div>
-                      </div>
-                    </article>;
-                  })}
-                </div>}
-              </div>
-
-              <aside className="space-y-6">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h2 className="font-bold text-slate-950">Result readiness</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-500">NEPSOM currently has exam scheduling data, but no connected result records in this repository. Fake pass rates and topper lists have been removed.</p>
-                  <div className="mt-5 space-y-3">
-                    <Readiness icon={Users} label="Students available" value={studentCount} ready={studentCount > 0} />
-                    <Readiness icon={GraduationCap} label="Classes available" value={classCount} ready={classCount > 0} />
-                    <Readiness icon={FileText} label="Exams created" value={exams.length} ready={exams.length > 0} />
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
-                  <h2 className="font-bold text-slate-950">Results need one data structure</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">Subjects, maximum marks, pass marks, student scores and publish status must be stored before trustworthy report cards can be generated.</p>
-                </div>
-              </aside>
-            </section>
-          </div>
-        </main>
-      </div>
-
-      {modalOpen && <Modal title={editing ? 'Edit exam' : 'Create exam'} onClose={() => setModalOpen(false)}>
-        <form onSubmit={saveExam}>
-          <div className="space-y-4 p-6">
-            <Field label="Exam name" value={form.name} onChange={(name) => setForm((current) => ({ ...current, name }))} placeholder="For example: First Terminal Examination" required />
-            <Field label="Start date" type="date" value={form.startDate} onChange={(startDate) => setForm((current) => ({ ...current, startDate }))} required />
-          </div>
-          <div className="flex justify-end gap-2 border-t border-slate-100 px-6 py-4"><button type="button" onClick={() => setModalOpen(false)} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100">Cancel</button><button disabled={saving || !form.name.trim() || !form.startDate} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving && <Loader2 className="h-4 w-4 animate-spin" />}{saving ? 'Saving…' : editing ? 'Save changes' : 'Create exam'}</button></div>
-        </form>
-      </Modal>}
-    </div>
-  );
+  if(loading)return <div className="min-h-screen bg-slate-50 dark:bg-slate-950"><Sidebar/><div className="pt-10 lg:ml-64"><TopBar/><main className="mx-auto max-w-6xl animate-pulse px-3 pt-7 lg:pt-24"><div className="h-24 rounded-xl bg-blue-50 dark:bg-slate-900"/><div className="mt-2 grid grid-cols-4 gap-1.5">{[0,1,2,3].map(n=><div key={n} className="h-16 rounded-xl bg-white dark:bg-slate-900"/>)}</div></main></div></div>;
+  return <div className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white"><style jsx global>{`@media print { body * { visibility: hidden !important; } .print-card, .print-card * { visibility: visible !important; } .print-card { position: absolute; inset: 0; width: 100%; padding: 20px; background: white; color: black; } .print-card button { display: none !important; } }`}</style><Sidebar/><div className="flex min-h-screen flex-col pt-10 lg:ml-64"><TopBar/><main className="flex-1 px-3 pb-24 pt-7 sm:px-6 lg:px-8 lg:pt-24"><div className="mx-auto max-w-6xl">
+    {!selected&&<><header className="relative overflow-hidden rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-100 px-3 py-3 dark:border-blue-900 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950 sm:px-6 sm:py-4"><GraduationCap className="absolute -bottom-6 -right-1 h-28 w-28 text-blue-200/40 dark:text-blue-700/20"/><div className="relative flex items-center gap-2.5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-950"><GraduationCap className="h-5 w-5"/></span><div><h1 className="text-xl font-extrabold sm:text-3xl">Exams & Results</h1><p className="text-xs text-slate-600 dark:text-slate-300 sm:text-sm">Manage exams, enter marks and publish results.</p></div></div></header><section aria-label="Exam overview" className="mt-2 grid grid-cols-4 gap-1.5 sm:gap-3"><Stat icon={FileText} label="Total Exams" value={exams.length} tone="blue"/><Stat icon={CalendarDays} label="Ongoing" value={ongoing} tone="amber"/><Stat icon={CheckCircle2} label="Completed" value={completed} tone="emerald"/><Stat icon={AlertCircle} label="Pending Results" value={pendingResults} tone="red"/></section><button onClick={openCreate} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white"><Plus className="h-4 w-4"/>Create Exam</button></>}
+    {selected&&!studentId&&<header className="flex items-center gap-2 py-1"><button onClick={()=>{setSelectedExam(null);setTab('Exams');}} aria-label="Back to exams" className="rounded-lg p-2"><ChevronLeft className="h-5 w-5"/></button><div className="min-w-0 flex-1"><h1 className="truncate text-base font-bold">{selected.name}</h1><p className="text-xs text-slate-500">{activeClass?classLabel(splitKey(activeClass).className,splitKey(activeClass).section):'Select a class'} · {classStudents.length} students</p></div>{!selected.published_at&&<button onClick={()=>openEdit(selected)} aria-label="Edit exam" className="rounded-lg p-2"><Pencil className="h-4 w-4"/></button>}</header>}
+    {error&&<p role="alert" className="mt-2 rounded-lg border border-red-200 bg-red-50 p-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{error}</p>}{notice&&<p role="status" className="mt-2 rounded-lg bg-emerald-50 p-2 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">{notice}</p>}
+    {selectedStudent&&selected?<div className="print-card"><header className="flex items-center gap-2 py-2 print:hidden"><button onClick={()=>setStudentId(null)} aria-label="Back to marks"><ChevronLeft className="h-5 w-5"/></button><h2 className="font-bold">{selectedStudent.name}</h2></header><section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"><p className="text-xs text-slate-500">{selected.name}</p><h2 className="mt-1 text-lg font-bold">{selectedStudent.name}</h2><p className="text-xs text-slate-500">{classLabel(selectedStudent.class||'',selectedStudent.section||'')} · Roll {selectedStudent.roll_no||'—'}</p><Badge label={studentComplete?(passed?'Passed':'Failed'):'Incomplete'} tone={studentComplete?(passed?'emerald':'red'):'amber'}/></section><nav className="mt-3 grid grid-cols-4 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 print:hidden">{(['Result','Subject-wise','Grade','Report Card'] as const).map(t=><button key={t} onClick={()=>setStudentTab(t)} className={`border-b-2 py-2 text-[11px] font-semibold ${studentTab===t?'border-blue-600 text-blue-600':'border-transparent text-slate-500'}`}>{t}</button>)}</nav>
+      {(studentTab==='Result'||studentTab==='Report Card')&&<section className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900"><Value label="Total marks" value={studentComplete?`${totalObtained} / ${totalFull}`:'Incomplete'}/><Value label="Percentage" value={studentComplete?`${percent(totalObtained,totalFull)}%`:'—'}/><Value label="Result" value={studentComplete?(passed?'Passed':'Failed'):'Incomplete'}/><Value label="Class average" value={classAverage===null?'—':`${classAverage}%`}/></section>}
+      {(studentTab==='Subject-wise'||studentTab==='Report Card')&&<section className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"><h3 className="p-3 text-sm font-bold">Subject-wise Marks</h3><div className="divide-y divide-slate-100 dark:divide-slate-800">{studentMarks.map(({subject,mark})=><div key={subject.id} className="grid grid-cols-[1fr_auto_auto] gap-3 px-3 py-2 text-xs"><span>{subject.subject_name}</span><span>{mark?mark.marks:'—'} / {subject.full_marks}</span><span className={mark&&mark.marks>=subject.pass_marks?'text-emerald-600':'text-red-600'}>{mark?mark.marks>=subject.pass_marks?'Pass':'Fail':'Pending'}</span></div>)}</div></section>}
+      {studentTab==='Grade'&&<section className="mt-3 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900">This school has no grading scale configured. Percentage and pass/fail use the saved subject settings; grades and GPA are not estimated.</section>}
+      {studentTab==='Report Card'&&<div className="mt-3 flex gap-2 print:hidden"><button onClick={downloadCard} className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-xs dark:border-slate-700"><Download className="h-4 w-4"/>Save PDF</button><button onClick={printCard} className="flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-xs dark:border-slate-700"><Printer className="h-4 w-4"/>Print</button></div>}
+    </div>:selected?<><div className="flex gap-1 overflow-x-auto rounded-xl border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900">{examClasses.map(c=><button key={c} onClick={()=>{setSelectedClass(c);setSelectedSubject('');setDraftMarks({});}} className={`shrink-0 rounded-lg px-3 py-2 text-xs font-semibold ${activeClass===c?'bg-blue-600 text-white':'text-slate-500'}`}>{classLabel(splitKey(c).className,splitKey(c).section)}</button>)}</div>{activeClass?<><nav className="mt-2 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-800">{classSubjects.map(s=><button key={s.id} onClick={()=>{setSelectedSubject(s.id);setDraftMarks({});}} className={`shrink-0 border-b-2 px-3 py-2 text-xs font-semibold ${activeSubject?.id===s.id?'border-blue-600 text-blue-600':'border-transparent text-slate-500'}`}>{s.subject_name}</button>)}</nav><div className="mt-2 grid grid-cols-4 gap-1.5"><Stat icon={GraduationCap} label="Total" value={classStudents.length} tone="emerald"/><Stat icon={Pencil} label="Entered" value={entered} tone="amber"/><Stat icon={AlertCircle} label="Pending" value={classStudents.length-entered} tone="red"/><Stat icon={BarChart3} label="Average" value={average===null?'—':`${average}%`} tone="violet"/></div><div className="mt-3 rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900"><label className="relative block"><Search className="absolute left-3 top-3 h-4 w-4 text-slate-400"/><input aria-label="Search students" value={searchStudent} onChange={e=>setSearchStudent(e.target.value)} placeholder="Search student..." className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 text-sm dark:border-slate-700 dark:bg-slate-800"/></label><select aria-label="Marks status" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)} className="mt-2 rounded-lg border border-slate-200 bg-white p-2 text-xs dark:border-slate-700 dark:bg-slate-800"><option value="all">All status</option><option value="entered">Entered</option><option value="pending">Pending</option></select><div className="mt-2 divide-y divide-slate-100 dark:divide-slate-800">{classStudents.filter(st=>st.name.toLowerCase().includes(searchStudent.toLowerCase())&&(statusFilter==='all'||(statusFilter==='entered')===Boolean(activeSubject&&markFor(activeSubject.id,st.id)))).map(st=>{const mark=activeSubject?markFor(activeSubject.id,st.id):undefined;return <div key={st.id} className="flex items-center gap-2 py-2"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">{st.name.split(' ').map(p=>p[0]).slice(0,2).join('')}</span><button onClick={()=>{setStudentId(st.id);setStudentTab('Result');}} className="min-w-0 flex-1 text-left"><p className="truncate text-xs font-bold">{st.name}</p><p className="text-[10px] text-slate-500">Roll {st.roll_no||'—'}</p></button>{activeSubject&&<input aria-label={`Marks for ${st.name}`} type="number" min="0" max={activeSubject.full_marks} step="0.01" disabled={Boolean(selected.published_at)} value={draftMarks[st.id]??(mark?String(mark.marks):'')} onChange={e=>setDraftMarks(current=>({...current,[st.id]:e.target.value}))} className="w-16 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-700 dark:bg-slate-800"/>}<Badge label={mark?'Entered':'Pending'} tone={mark?'emerald':'amber'}/><button onClick={()=>{setStudentId(st.id);setStudentTab('Result');}} aria-label={`View ${st.name}`}><ChevronRight className="h-4 w-4 text-slate-400"/></button></div>;})}</div>{!classStudents.length&&<p className="p-4 text-center text-xs text-slate-500">No students in this class and section.</p>}</div><div className="mt-3 flex gap-2">{!selected.published_at&&<button onClick={saveMarks} disabled={saving||!activeSubject||!Object.keys(draftMarks).length} className="flex-1 rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white disabled:opacity-50">{saving?'Saving…':'Save marks'}</button>}<button onClick={()=>setConfirmPublish(true)} disabled={Boolean(selected.published_at)} className="flex-1 rounded-xl border border-emerald-500 py-2.5 text-sm font-bold text-emerald-600 disabled:opacity-50">{selected.published_at?'Published':'Publish results'}</button></div></>:<p className="mt-3 rounded-xl bg-white p-5 text-sm text-slate-500 dark:bg-slate-900">No classes and subjects configured. Edit the exam to add them.</p>}</>:<><nav className="mt-3 grid grid-cols-4 rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">{(['Exams','Results','Report Cards','Analytics'] as const).map(value=><button key={value} onClick={()=>setTab(value)} className={`border-b-2 px-1 py-2.5 text-[11px] font-semibold sm:text-sm ${tab===value?'border-blue-600 text-blue-600':'border-transparent text-slate-500'}`}>{value}</button>)}</nav>{tab==='Analytics'&&<section aria-label="Saved results analytics" className="mt-3 grid grid-cols-3 gap-1.5"><Stat icon={GraduationCap} label="Complete" value={analytics.count} tone="blue"/><Stat icon={BarChart3} label="Average" value={analytics.average===null?'—':`${analytics.average}%`} tone="violet"/><Stat icon={CheckCircle2} label="Pass rate" value={analytics.passRate===null?'—':`${analytics.passRate}%`} tone="emerald"/></section>}<section className="mt-3 rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900"><div className="flex gap-2"><label className="relative flex-1"><Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search exams..." aria-label="Search exams" className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 text-xs dark:border-slate-700 dark:bg-slate-800"/></label><select aria-label="Academic year" value={year} onChange={e=>setYear(e.target.value)} className="max-w-36 rounded-lg border border-slate-200 bg-white px-1 text-xs dark:border-slate-700 dark:bg-slate-800"><option value="all">All years</option>{years.map(v=><option key={v} value={v}>{v}</option>)}</select></div><select aria-label="Class" value={classFilter} onChange={e=>setClassFilter(e.target.value)} className="mt-2 rounded-lg border border-slate-200 bg-white p-2 text-xs dark:border-slate-700 dark:bg-slate-800"><option value="all">All classes</option>{availableClasses.map(v=><option key={v} value={v}>{classLabel(splitKey(v).className,splitKey(v).section)}</option>)}</select>{filtered.length?<div className="mt-2 divide-y divide-slate-100 dark:divide-slate-800">{filtered.filter(e=>tab==='Exams'||tab==='Analytics'||(tab==='Results'&&examProgress(e).total>0)||(tab==='Report Cards'&&e.published_at)).map(e=>{const progress=examProgress(e);return <button key={e.id} onClick={()=>openExam(e)} className="flex w-full items-center gap-2.5 px-1 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800"><span className="rounded-xl bg-violet-100 p-2 text-violet-600 dark:bg-violet-950"><FileText className="h-5 w-5"/></span><span className="min-w-0 flex-1"><span className="flex items-center gap-2"><strong className="truncate text-xs sm:text-sm">{e.name}</strong><Badge label={examStatus(e)} tone={e.published_at?'emerald':examStatus(e)==='Ongoing'?'blue':'amber'}/></span><span className="block truncate text-[11px] text-slate-500">{[...new Set(subjects.filter(s=>s.exam_id===e.id).map(s=>classLabel(s.class_name,s.section)))].join(', ')||'No classes'}</span><span className="block text-[11px] text-slate-500">{dateLabel(e.start_date)} – {dateLabel(e.end_date)} · {progress.done}/{progress.total} subjects</span></span><ChevronRight className="h-4 w-4 text-slate-400"/></button>;})}</div>:<p className="p-7 text-center text-sm text-slate-500">No matching exams. Create an exam to begin.</p>}{tab==='Analytics'&&<p className="border-t border-slate-100 p-3 text-xs text-slate-500 dark:border-slate-800">Analytics use saved marks only. Open an exam to see subject and class averages.</p>}</section></>}
+  </div></main></div>
+  {modal&&<div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 sm:items-center sm:p-4"><div role="dialog" aria-modal="true" aria-label={editing?'Edit exam':'Create exam'} className="flex max-h-[94dvh] w-full max-w-lg flex-col rounded-t-2xl bg-white shadow-xl dark:bg-slate-900 sm:rounded-2xl"><div className="flex items-center justify-between border-b border-slate-200 p-3 dark:border-slate-800"><h2 className="font-bold">{editing?'Edit exam':'Create exam'}</h2><button onClick={()=>setModal(false)} aria-label="Close"><X className="h-5 w-5"/></button></div><form id="exam-form" onSubmit={saveExam} className="space-y-3 overflow-y-auto p-3 text-sm"><Field label="Exam name" value={form.name} onChange={value=>setForm(f=>({...f,name:value}))}/><div className="grid grid-cols-2 gap-2"><Field label="Start date" type="date" value={form.start} onChange={value=>setForm(f=>({...f,start:value}))}/><Field label="End date" type="date" value={form.end} onChange={value=>setForm(f=>({...f,end:value}))}/></div><Field label="Academic year (optional)" type="number" value={form.year} onChange={value=>setForm(f=>({...f,year:value}))}/><fieldset><legend className="mb-1 text-xs font-semibold">Classes and sections</legend><div className="grid max-h-28 grid-cols-2 gap-1 overflow-auto rounded-lg border border-slate-200 p-2 dark:border-slate-700">{availableClasses.map(value=><label key={value} className="flex items-center gap-1 text-xs"><input type="checkbox" checked={form.classes.includes(value)} onChange={e=>setForm(f=>({...f,classes:e.target.checked?[...f.classes,value]:f.classes.filter(v=>v!==value)}))}/>{classLabel(splitKey(value).className,splitKey(value).section)}</label>)}</div>{!availableClasses.length&&<p className="mt-1 text-xs text-amber-600">Create a class in Classes first.</p>}</fieldset><Field label="Subjects (comma separated)" value={form.subjects} onChange={value=>setForm(f=>({...f,subjects:value}))} placeholder="English, Nepali, Mathematics"/><div className="grid grid-cols-2 gap-2"><Field label="Full marks per subject" type="number" value={form.full} onChange={value=>setForm(f=>({...f,full:value}))}/><Field label="Pass marks per subject" type="number" value={form.pass} onChange={value=>setForm(f=>({...f,pass:value}))}/></div>{error&&<p role="alert" className="text-xs text-red-600">{error}</p>}</form><div className="border-t border-slate-200 p-3 dark:border-slate-800"><button form="exam-form" disabled={saving} className="w-full rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white disabled:opacity-50">{saving?'Saving…':editing?'Save changes':'Create exam'}</button></div></div></div>}
+  {confirmPublish&&selected&&<div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4"><div role="alertdialog" aria-modal="true" className="w-full max-w-sm rounded-xl bg-white p-4 dark:bg-slate-900"><h2 className="font-bold">Publish results?</h2><p className="mt-2 text-sm text-slate-500">This makes complete results available for report cards. Every student and subject must have a mark.</p><div className="mt-4 flex gap-2"><button onClick={()=>setConfirmPublish(false)} className="flex-1 rounded-lg border border-slate-200 p-2 text-sm dark:border-slate-700">Cancel</button><button onClick={publish} disabled={saving} className="flex-1 rounded-lg bg-emerald-600 p-2 text-sm font-bold text-white disabled:opacity-50">Publish</button></div></div></div>}
+  </div>;
 }
-
-function StateBadge({ state }: { state: ExamState }) {
-  const style = state === 'completed' ? 'bg-emerald-50 text-emerald-700' : state === 'today' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700';
-  return <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold capitalize ${style}`}>{state === 'completed' ? 'Past' : state}</span>;
-}
-function Stat({ icon: Icon, label, value, tone }: { icon: React.ElementType; label: string; value: number; tone: 'blue' | 'violet' | 'amber' | 'emerald' }) {
-  const colors = { blue: 'bg-blue-50 text-blue-600', violet: 'bg-violet-50 text-violet-600', amber: 'bg-amber-50 text-amber-600', emerald: 'bg-emerald-50 text-emerald-600' };
-  return <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"><div className="flex items-center gap-3"><span className={`flex h-10 w-10 items-center justify-center rounded-xl ${colors[tone]}`}><Icon className="h-5 w-5" /></span><div><p className="text-xs font-medium text-slate-500">{label}</p><p className="mt-0.5 text-2xl font-bold text-slate-950">{value}</p></div></div></div>;
-}
-function Readiness({ icon: Icon, label, value, ready }: { icon: React.ElementType; label: string; value: number; ready: boolean }) {
-  return <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3"><span className={`flex h-8 w-8 items-center justify-center rounded-lg ${ready ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1 text-xs font-medium text-slate-600">{label}</span><span className="font-bold text-slate-950">{value}</span></div>;
-}
-function Empty({ filtered, onCreate }: { filtered: boolean; onCreate: () => void }) {
-  return <div className="px-6 py-16 text-center"><FileText className="mx-auto h-9 w-9 text-slate-300" /><h2 className="mt-4 font-bold text-slate-900">{filtered ? 'No matching exams' : 'No exams created yet'}</h2><p className="mt-1 text-sm text-slate-500">{filtered ? 'Try changing the search or filter.' : 'Create the first exam for your school.'}</p>{!filtered && <button type="button" onClick={onCreate} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"><Plus className="h-4 w-4" />Create exam</button>}</div>;
-}
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><div role="dialog" aria-modal="true" className="w-full max-w-md rounded-2xl bg-white shadow-2xl"><div className="flex items-center justify-between border-b border-slate-100 p-6"><div><h2 className="text-xl font-bold text-slate-950">{title}</h2><p className="mt-1 text-sm text-slate-500">Add the examination name and schedule.</p></div><button type="button" onClick={onClose} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100" aria-label="Close"><X className="h-5 w-5" /></button></div>{children}</div></div>;
-}
-function Field({ label, value, onChange, type = 'text', placeholder, required }: { label: string; value: string; onChange: (value: string) => void; type?: string; placeholder?: string; required?: boolean }) {
-  return <label className="block"><span className="mb-1.5 block text-sm font-medium text-slate-700">{label}{required && <span className="text-red-500"> *</span>}</span><input type={type} required={required} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" /></label>;
-}
-function PageSkeleton() {
-  return <div className="min-h-screen bg-slate-50"><Sidebar /><div className="pt-10 lg:ml-64"><TopBar /><main className="px-4 pb-24 pt-24 sm:px-6 lg:px-8"><div className="mx-auto max-w-[1500px] animate-pulse"><div className="h-24 border-b border-slate-200" /><div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-24 rounded-2xl bg-white" />)}</div><div className="mt-6 h-96 rounded-2xl bg-white" /></div></main></div></div>;
-}
+function Stat({icon:Icon,label,value,tone}:{icon:React.ElementType;label:string;value:string|number;tone:string}){const colors:Record<string,string>={blue:'bg-blue-50 text-blue-600 dark:bg-blue-950',amber:'bg-amber-50 text-amber-600 dark:bg-amber-950',emerald:'bg-emerald-50 text-emerald-600 dark:bg-emerald-950',red:'bg-red-50 text-red-600 dark:bg-red-950',violet:'bg-violet-50 text-violet-600 dark:bg-violet-950'};return <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-1 py-1.5 text-center dark:border-slate-800 dark:bg-slate-900 sm:p-3"><span className={`mx-auto flex h-6 w-6 items-center justify-center rounded-md ${colors[tone]}`}><Icon className="h-3.5 w-3.5"/></span><p className="mt-0.5 text-base font-extrabold leading-tight sm:text-xl">{value}</p><p className="text-[10px] leading-tight text-slate-500 sm:text-xs">{label}</p></div>;}
+function Badge({label,tone}:{label:string;tone:string}){return <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${tone==='emerald'?'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300':tone==='red'?'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300':tone==='blue'?'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300':'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300'}`}>{label}</span>;}
+function Field({label,value,onChange,type='text',placeholder}:{label:string;value:string;onChange:(value:string)=>void;type?:string;placeholder?:string}){return <label className="block text-xs font-semibold">{label}<input required={label!=='Academic year (optional)'} type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="mt-1 block w-full rounded-lg border border-slate-200 bg-white p-2 text-sm font-normal dark:border-slate-700 dark:bg-slate-800"/></label>;}
+function Value({label,value}:{label:string;value:string}){return <div><p className="text-xs text-slate-500">{label}</p><p className="mt-1 font-bold">{value}</p></div>;}
