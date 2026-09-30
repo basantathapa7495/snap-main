@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import PrincipalSearch from './PrincipalSearch';
+import TeacherSearch from './TeacherSearch';
 import {
   LayoutDashboard,
   Users,
@@ -144,7 +145,11 @@ export default function Sidebar() {
   useEffect(() => {
     const open = () => setSearchOpen(true);
     window.addEventListener('principal-search:open', open);
-    return () => window.removeEventListener('principal-search:open', open);
+    window.addEventListener('teacher-search:open', open);
+    return () => {
+      window.removeEventListener('principal-search:open', open);
+      window.removeEventListener('teacher-search:open', open);
+    };
   }, []);
 
   const isTeacherPath =
@@ -275,12 +280,12 @@ export default function Sidebar() {
           />
         </Link>
 
-        {isPrincipalPath && (
+        {(isPrincipalPath || isTeacherPath) && (
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
             className="ml-auto flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-            aria-label="Search school records"
+            aria-label={isTeacherPath ? 'Search students and classes' : 'Search school records'}
           >
             <Search className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -390,6 +395,7 @@ export default function Sidebar() {
 
       </aside>
       {isPrincipalPath && <PrincipalSearch open={searchOpen} onClose={closeSearch} />}
+      {isTeacherPath && <TeacherSearch open={searchOpen} onClose={closeSearch} />}
     </>
   );
 }
