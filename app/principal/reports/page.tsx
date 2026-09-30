@@ -1,180 +1,176 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  FileText, FileSpreadsheet, Eye, Download, Users, Wallet, 
-  GraduationCap, BookOpen, TrendingUp, Calendar, CheckCircle, 
-  AlertCircle, Clock, BarChart3, PieChart, Activity
-} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { AlertCircle, BarChart3, BookOpen, CalendarDays, ChevronLeft, ChevronRight, Clock3, Download, Eye, FileSpreadsheet, FileText, GraduationCap, Printer, TrendingUp, UsersRound, Wallet } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
+import { supabase } from '@/lib/supabase';
+import { nepalDay } from '@/lib/upcoming';
 
-// --- Report Categories & Items ---
-const reportSections = [
-  {
-    id: 'student',
-    title: 'Student Reports',
-    icon: Users,
-    color: 'text-blue-600 bg-blue-50',
-    reports: [
-      { id: 's1', name: 'Student List', desc: 'Complete directory of all enrolled students', icon: Users },
-      { id: 's2', name: 'Enrollment Trends', desc: 'Monthly new admissions and dropouts', icon: TrendingUp },
-      { id: 's3', name: 'Attendance Report', desc: 'Daily, monthly, and yearly attendance logs', icon: Calendar },
-      { id: 's4', name: 'Student Performance', desc: 'Academic grades and GPA analysis', icon: BarChart3 },
-    ]
-  },
-  {
-    id: 'finance',
-    title: 'Finance Reports',
-    icon: Wallet,
-    color: 'text-emerald-600 bg-emerald-50',
-    reports: [
-      { id: 'f1', name: 'Fee Collection', desc: 'Total fees collected this month/year', icon: CheckCircle },
-      { id: 'f2', name: 'Pending Fees', desc: 'Students with upcoming fee deadlines', icon: Clock },
-      { id: 'f3', name: 'Overdue Fees', desc: 'List of students with unpaid past dues', icon: AlertCircle },
-    ]
-  },
-  {
-    id: 'teacher',
-    title: 'Teacher Reports',
-    icon: GraduationCap,
-    color: 'text-purple-600 bg-purple-50',
-    reports: [
-      { id: 't1', name: 'Teacher Attendance', desc: 'Staff presence and leave records', icon: Calendar },
-      { id: 't2', name: 'Teacher Performance', desc: 'Class results and evaluation metrics', icon: Activity },
-    ]
-  },
-  {
-    id: 'academic',
-    title: 'Academic & School',
-    icon: BookOpen,
-    color: 'text-amber-600 bg-amber-50',
-    reports: [
-      { id: 'a1', name: 'Exam Results', desc: 'Detailed breakdown of all examinations', icon: FileText },
-      { id: 'a2', name: 'Class Performance', desc: 'Average scores per class and section', icon: PieChart },
-      { id: 'a3', name: 'Pass Rate Analysis', desc: 'Subject-wise and overall pass percentages', icon: TrendingUp },
-      { id: 'a4', name: 'Overall School Performance', desc: 'Comprehensive annual school health report', icon: BarChart3 },
-    ]
-  }
+type Category = 'student'|'finance'|'teacher'|'academic';
+type ReportId = 'student-list'|'enrollment'|'attendance'|'student-performance'|'fee-collection'|'pending-fees'|'overdue-fees'|'payment-history'|'teacher-directory'|'teacher-attendance'|'teacher-leave'|'teacher-assignments'|'exam-results'|'class-performance'|'pass-rate'|'school-performance';
+type Report = {id:ReportId;name:string;description:string;category:Category;icon:React.ElementType;tone:string};
+type Student = {id:string;name:string;class:string|null;section:string|null;roll_no:string|null;parent_name:string|null;parent_phone:string|null;email:string|null;created_at:string|null};
+type Teacher = {id:string;name:string;subject:string|null;department:string|null;email:string|null;phone:string|null;joining_date:string|null;employment_status:string|null;left_at:string|null};
+type Attendance = {student_id:string|null;class_name:string|null;section:string|null;attendance_date:string;status:string};
+type TeacherAttendance = {teacher_id:string;attendance_date:string;status:string};
+type FeeType = {id:string;name:string;amount:number|null;due_day:number|null};
+type Payment = {id:string;student_id:string|null;student_name:string|null;fee_name:string|null;amount:number;payment_date:string;receipt_number:string|null};
+type Leave = {id:string;teacher_id:string;leave_type:string;start_date:string;end_date:string;status:string};
+type Assignment = {id:string;teacher_id:string;class_name:string|null;subject:string|null;active:boolean|null;academic_year:string|null};
+type Exam = {id:string;name:string;start_date:string|null;academic_year:number|null;published_at:string|null};
+type Subject = {id:string;exam_id:string;class_name:string;section:string;subject_name:string;full_marks:number;pass_marks:number};
+type Mark = {subject_id:string;student_id:string;marks:number};
+type Data = {students:Student[];teachers:Teacher[];attendance:Attendance[];teacherAttendance:TeacherAttendance[];feeTypes:FeeType[];payments:Payment[];leave:Leave[];assignments:Assignment[];exams:Exam[];subjects:Subject[];marks:Mark[]};
+type View = {kpis:{label:string;value:string}[];headers:string[];rows:string[][];chart?:{label:string;value:number;expected?:number}[];chartTitle?:string;note?:string;recentPayments?:string[][]};
+type Recent = {id:ReportId;name:string;format:'PDF'|'Excel (CSV)';at:string};
+const emptyData:Data={students:[],teachers:[],attendance:[],teacherAttendance:[],feeTypes:[],payments:[],leave:[],assignments:[],exams:[],subjects:[],marks:[]};
+const reports:Report[]=[
+  {id:'student-list',name:'Student List',description:'Enrolled students with class, roll and guardian details.',category:'student',icon:UsersRound,tone:'blue'},
+  {id:'enrollment',name:'Enrollment Trends',description:'Monthly additions to the student directory.',category:'student',icon:TrendingUp,tone:'violet'},
+  {id:'attendance',name:'Attendance Report',description:'Recorded student attendance by date and class.',category:'student',icon:CalendarDays,tone:'blue'},
+  {id:'student-performance',name:'Student Performance',description:'Published exam results by student.',category:'student',icon:BarChart3,tone:'violet'},
+  {id:'fee-collection',name:'Fee Collection',description:'Payments, current fee expectations and class totals.',category:'finance',icon:Wallet,tone:'emerald'},
+  {id:'pending-fees',name:'Pending Fees',description:'Current monthly balances by student.',category:'finance',icon:Clock3,tone:'amber'},
+  {id:'overdue-fees',name:'Overdue Fees',description:'Balances past configured monthly due days.',category:'finance',icon:AlertCircle,tone:'rose'},
+  {id:'payment-history',name:'Payment History',description:'Recorded payments and receipt references.',category:'finance',icon:FileText,tone:'emerald'},
+  {id:'teacher-directory',name:'Teacher Directory',description:'Staff, departments and contact details.',category:'teacher',icon:GraduationCap,tone:'violet'},
+  {id:'teacher-attendance',name:'Teacher Attendance',description:'Recorded staff presence and absence.',category:'teacher',icon:CalendarDays,tone:'blue'},
+  {id:'teacher-leave',name:'Teacher Leave',description:'Leave requests and approval status.',category:'teacher',icon:Clock3,tone:'amber'},
+  {id:'teacher-assignments',name:'Teacher Assignments',description:'Active classes and subjects assigned to staff.',category:'teacher',icon:BookOpen,tone:'violet'},
+  {id:'exam-results',name:'Exam Results',description:'Published student marks and pass status.',category:'academic',icon:FileText,tone:'amber'},
+  {id:'class-performance',name:'Class Performance',description:'Average published scores by class and section.',category:'academic',icon:BarChart3,tone:'violet'},
+  {id:'pass-rate',name:'Pass Rate Analysis',description:'Subject pass rates from published marks.',category:'academic',icon:TrendingUp,tone:'emerald'},
+  {id:'school-performance',name:'Overall School Performance',description:'School-wide operational indicators.',category:'academic',icon:BarChart3,tone:'blue'},
 ];
+const categoryLabel:Record<Category,string>={student:'Student',finance:'Finance',teacher:'Teacher',academic:'Academic & School'};
+const categoryIcon:Record<Category,React.ElementType>={student:UsersRound,finance:Wallet,teacher:GraduationCap,academic:BookOpen};
+const toneClass:Record<string,string>={blue:'bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-300',violet:'bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-300',emerald:'bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300',amber:'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-300',rose:'bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-300'};
+const money=(value:number)=>'Rs. '+Math.round(value).toLocaleString('en-US');
+const pct=(numerator:number,denominator:number)=>denominator?Math.round(numerator/denominator*1000)/10:null;
+const displayPct=(value:number|null)=>value===null?'—':`${value}%`;
+const classKey=(name:string|null,section:string|null)=>`${name||''}::${section||''}`;
+const classLabel=(value:string)=>{const [name,section]=value.split('::');return `Class ${name||'Unassigned'}${section?` (${section})`:''}`;};
+const monthName=(value:string)=>new Intl.DateTimeFormat('en-US',{month:'short',timeZone:'UTC'}).format(new Date(`${value}-01T00:00:00Z`));
+const currentMonth=()=>nepalDay().slice(0,7);
+const dueDate=(month:string,day:number)=>{const [year,m]=month.split('-').map(Number);const last=new Date(Date.UTC(year,m,0)).getUTCDate();return `${month}-${String(Math.min(day,last)).padStart(2,'0')}`;};
+async function allRows<T>(table:string,columns:string,schoolId:string):Promise<T[]>{const rows:T[]=[];for(let offset=0;;offset+=1000){const {data,error}=await supabase.from(table).select(columns).eq('school_id',schoolId).range(offset,offset+999);if(error)throw error;const page=(data||[]) as T[];rows.push(...page);if(page.length<1000)return rows;}}
+function range(period:string,start:string,end:string){const today=nepalDay();if(period==='month')return {start:today.slice(0,7)+'-01',end:today};if(period==='year')return {start:today.slice(0,4)+'-01-01',end:today};if(period==='last30'){const date=new Date(`${today}T00:00:00Z`);date.setUTCDate(date.getUTCDate()-29);return {start:date.toISOString().slice(0,10),end:today};}return {start:start||today,end:end||today};}
+function csvCell(value:string){let safe=value.replace(/\r?\n/g,' ');if(/^[\s]*[=+@\-]/.test(safe))safe="'"+safe;return `"${safe.replace(/"/g,'""')}"`;}
+function download(name:string,mime:string,content:string){const url=URL.createObjectURL(new Blob([content],{type:mime}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 
-export default function ReportsPage() {
-  const [activeSection, setActiveSection] = useState('all');
-
-  const filteredSections = activeSection === 'all' 
-    ? reportSections 
-    : reportSections.filter(s => s.id === activeSection);
-
-  const handleAction = (reportName: string, type: string) => {
-    alert(`Generating ${type} for: ${reportName}\n\n(In a real app, this would trigger a server-side PDF/Excel generation or open a preview modal.)`);
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="lg:ml-64 pt-10 flex flex-col min-h-screen">
-        <TopBar />
-        
-        <main className="flex-1 pt-24 p-4 sm:p-6 lg:p-8 pb-24">
-          
-          {/* Header */}
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Reports & Analytics</h1>
-              <p className="mt-1.5 text-sm text-gray-500">Generate, view, and export comprehensive school data.</p>
-            </div>
-            <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
-              <Download className="h-4 w-4" /> Export All Data
-            </button>
-          </div>
-
-          {/* Category Filters */}
-          <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-gray-200 pb-3">
-            <button
-              onClick={() => setActiveSection('all')}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-                activeSection === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-              }`}
-            >
-              All Reports
-            </button>
-            {reportSections.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
-                  activeSection === section.id ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-                }`}
-              >
-                <section.icon className="h-4 w-4" />
-                {section.title}
-              </button>
-            ))}
-          </div>
-
-          {/* Reports Grid */}
-          <div className="space-y-8">
-            {filteredSections.map((section) => (
-              <div key={section.id} className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-                
-                {/* Section Header */}
-                <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50/50 px-6 py-4">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${section.color}`}>
-                    <section.icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">{section.title}</h2>
-                    <p className="text-xs text-gray-500">{section.reports.length} reports available</p>
-                  </div>
-                </div>
-
-                {/* Reports List */}
-                <div className="divide-y divide-gray-100">
-                  {section.reports.map((report) => (
-                    <div key={report.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50/50 transition-colors">
-                      
-                      {/* Report Info */}
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100 text-gray-500 flex-shrink-0">
-                          <report.icon className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-bold text-gray-900">{report.name}</h3>
-                          <p className="text-xs text-gray-500 mt-0.5">{report.desc}</p>
-                        </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 sm:ml-4">
-                        <button 
-                          onClick={() => handleAction(report.name, 'View')}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all"
-                        >
-                          <Eye className="h-3.5 w-3.5" /> View
-                        </button>
-                        <button 
-                          onClick={() => handleAction(report.name, 'PDF')}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition-all"
-                        >
-                          <FileText className="h-3.5 w-3.5" /> PDF
-                        </button>
-                        <button 
-                          onClick={() => handleAction(report.name, 'Excel')}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition-all"
-                        >
-                          <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
-                        </button>
-                      </div>
-
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-        </main>
-      </div>
-    </div>
-  );
+function buildView(id:ReportId,data:Data,period:string,start:string,end:string,selectedClass:string,year:string):View{
+  const {students,teachers,attendance,teacherAttendance,feeTypes,payments,leave,assignments,exams,subjects,marks}=data;
+  const {start:from,end:to}=range(period,start,end);
+  const classStudents=students.filter(student=>selectedClass==='all'||classKey(student.class,student.section)===selectedClass);
+  const studentIds=new Set(classStudents.map(student=>student.id));
+  const studentById=new Map(students.map(student=>[student.id,student]));
+  const teacherById=new Map(teachers.map(teacher=>[teacher.id,teacher]));
+  const subjectById=new Map(subjects.map(subject=>[subject.id,subject]));
+  const inRange=(date:string|null)=>Boolean(date&&date>=from&&date<=to);
+  const inYear=(exam:Exam)=>year==='all'||String(exam.academic_year)===year;
+  const paymentRows=payments.filter(payment=>inRange(payment.payment_date)&&(selectedClass==='all'||Boolean(payment.student_id&&studentIds.has(payment.student_id))));
+  const attendanceRows=attendance.filter(row=>inRange(row.attendance_date)&&(selectedClass==='all'||classKey(row.class_name,row.section)===selectedClass));
+  const staffRows=teacherAttendance.filter(row=>inRange(row.attendance_date));
+  const currentPayments=payments.filter(payment=>payment.payment_date.slice(0,7)===currentMonth());
+  const perStudent=feeTypes.reduce((sum,fee)=>sum+Number(fee.amount||0),0);
+  const duePerStudent=feeTypes.filter(fee=>fee.due_day&&dueDate(currentMonth(),fee.due_day)<nepalDay()).reduce((sum,fee)=>sum+Number(fee.amount||0),0);
+  const balances=classStudents.map(student=>{const paid=currentPayments.filter(payment=>payment.student_id===student.id).reduce((sum,payment)=>sum+Number(payment.amount||0),0);return {student,paid,due:Math.max(0,perStudent-paid),overdue:Math.max(0,duePerStudent-paid)};});
+  const received=paymentRows.reduce((sum,payment)=>sum+Number(payment.amount||0),0);
+  const estimate=perStudent*classStudents.length;
+  const currentReceived=balances.reduce((sum,balance)=>sum+balance.paid,0);
+  const overdue=balances.reduce((sum,balance)=>sum+balance.overdue,0);
+  const monthChart=Array.from({length:period==='year'?Number(to.slice(5,7)):6},(_,index)=>{const anchor=new Date(`${to.slice(0,7)}-01T00:00:00Z`);anchor.setUTCMonth(anchor.getUTCMonth()-(period==='year'?Number(to.slice(5,7))-1-index:5-index));const month=anchor.toISOString().slice(0,7);return {label:monthName(month),value:payments.filter(payment=>payment.payment_date.slice(0,7)===month&&(selectedClass==='all'||Boolean(payment.student_id&&studentIds.has(payment.student_id)))).reduce((sum,payment)=>sum+Number(payment.amount||0),0),...(month===currentMonth()?{expected:estimate}:{})};});
+  const attendanceRate=pct(attendanceRows.filter(row=>['present','late'].includes(row.status.toLowerCase())).length,attendanceRows.length);
+  const published=exams.filter(exam=>exam.published_at&&inYear(exam)&&inRange(exam.start_date));
+  const publishedIds=new Set(published.map(exam=>exam.id));
+  const subjectRows=subjects.filter(subject=>publishedIds.has(subject.exam_id)&&(selectedClass==='all'||classKey(subject.class_name,subject.section)===selectedClass));
+  const subjectIds=new Set(subjectRows.map(subject=>subject.id));
+  const markRows=marks.filter(mark=>subjectIds.has(mark.subject_id)&&(selectedClass==='all'||studentIds.has(mark.student_id)));
+  const resultRows=new Map<string,{student:Student;exam:Exam;total:number;full:number;passed:boolean;count:number;required:number}>();
+  for(const student of classStudents)for(const exam of published){const relevant=subjectRows.filter(subject=>subject.exam_id===exam.id&&classKey(subject.class_name,subject.section)===classKey(student.class,student.section));if(!relevant.length)continue;const entered=relevant.map(subject=>({subject,mark:markRows.find(mark=>mark.subject_id===subject.id&&mark.student_id===student.id)}));if(entered.some(row=>!row.mark))continue;resultRows.set(`${exam.id}:${student.id}`,{student,exam,total:entered.reduce((sum,row)=>sum+Number(row.mark?.marks||0),0),full:entered.reduce((sum,row)=>sum+Number(row.subject.full_marks),0),passed:entered.every(row=>Number(row.mark?.marks||0)>=Number(row.subject.pass_marks)),count:entered.length,required:relevant.length});}
+  const results=[...resultRows.values()];
+  const k=(label:string,value:string)=>({label,value});
+  if(id==='student-list')return {kpis:[k('Students',String(classStudents.length)),k('Classes',String(new Set(classStudents.map(st=>classKey(st.class,st.section))).size)),k('With roll number',String(classStudents.filter(st=>st.roll_no).length)),k('New in period',String(classStudents.filter(st=>st.created_at&&inRange(st.created_at.slice(0,10))).length))],headers:['Student','Class','Roll','Guardian','Phone'],rows:classStudents.sort((a,b)=>a.name.localeCompare(b.name)).map(st=>[st.name,classLabel(classKey(st.class,st.section)),st.roll_no||'—',st.parent_name||'—',st.parent_phone||'—'])};
+  if(id==='enrollment'){const joined=classStudents.filter(st=>st.created_at&&inRange(st.created_at.slice(0,10)));const groups=new Map<string,number>();joined.forEach(st=>{const month=st.created_at!.slice(0,7);groups.set(month,(groups.get(month)||0)+1);});return {kpis:[k('New records',String(joined.length)),k('Total students',String(classStudents.length)),k('Months with additions',String(groups.size))],headers:['Month','Added students'],rows:[...groups].sort(([a],[b])=>a.localeCompare(b)).map(([month,count])=>[month,String(count)]),chart:[...groups].sort(([a],[b])=>a.localeCompare(b)).map(([month,value])=>({label:monthName(month),value})),chartTitle:'New student records',note:'Transfers and dropouts are not tracked in the current student records.'};}
+  if(id==='attendance'){const present=attendanceRows.filter(row=>row.status.toLowerCase()==='present').length;const late=attendanceRows.filter(row=>row.status.toLowerCase()==='late').length;const absent=attendanceRows.filter(row=>row.status.toLowerCase()==='absent').length;const dates=new Map<string,{present:number;marked:number}>();attendanceRows.forEach(row=>{const value=dates.get(row.attendance_date)||{present:0,marked:0};value.marked++;if(['present','late'].includes(row.status.toLowerCase()))value.present++;dates.set(row.attendance_date,value);});return {kpis:[k('Present',String(present)),k('Absent',String(absent)),k('Late',String(late)),k('Rate (marked)',displayPct(attendanceRate))],headers:['Date','Class','Student','Status'],rows:attendanceRows.map(row=>[row.attendance_date,classLabel(classKey(row.class_name,row.section)),row.student_id?studentById.get(row.student_id)?.name||'Unknown':'Unknown',row.status]),chart:[...dates].sort(([a],[b])=>a.localeCompare(b)).map(([date,value])=>({label:date.slice(5),value:pct(value.present,value.marked)||0})),chartTitle:'Daily attendance %',note:'Only marked attendance records are used; dates without records have no rate.'};}
+  if(id==='student-performance'||id==='exam-results'){const avg=results.length?pct(results.reduce((sum,row)=>sum+row.total,0),results.reduce((sum,row)=>sum+row.full,0)):null;return {kpis:[k('Complete results',String(results.length)),k('Published exams',String(published.length)),k('Average',displayPct(avg)),k('Pass rate',displayPct(pct(results.filter(row=>row.passed).length,results.length)))],headers:['Exam','Student','Class','Marks','Percentage','Result'],rows:results.map(row=>[row.exam.name,row.student.name,classLabel(classKey(row.student.class,row.student.section)),`${row.total}/${row.full}`,displayPct(pct(row.total,row.full)),row.passed?'Pass':'Fail']),note:'Only published exams with complete saved marks are included.'};}
+  if(id==='fee-collection'){const classGroups=[...new Set(classStudents.map(st=>classKey(st.class,st.section)))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));return {kpis:[k('Collected',money(received)),k('Expected (current month)',money(estimate)),k('Overdue (current)',feeTypes.some(fee=>fee.due_day)?money(overdue):'—'),k('Collection rate (current)',displayPct(pct(currentReceived,estimate)))],headers:['Class','Collected in period','Pending this month','Current rate'],rows:classGroups.map(group=>{const members=balances.filter(balance=>classKey(balance.student.class,balance.student.section)===group);const ids=new Set(members.map(member=>member.student.id));const collected=paymentRows.filter(payment=>payment.student_id&&ids.has(payment.student_id)).reduce((sum,payment)=>sum+Number(payment.amount||0),0);return [classLabel(group),money(collected),money(members.reduce((sum,member)=>sum+member.due,0)),displayPct(pct(members.reduce((sum,member)=>sum+member.paid,0),perStudent*members.length))];}),chart:monthChart,chartTitle:'Monthly Fee Collection',recentPayments:paymentRows.slice().sort((a,b)=>b.payment_date.localeCompare(a.payment_date)).slice(0,5).map(payment=>[payment.payment_date,studentById.get(payment.student_id||'')?.name||payment.student_name||'Student',money(Number(payment.amount||0))]),note:'Expected and overdue use current enrollment and fee structure; historic expected balances are not reconstructed.'};}
+  if(id==='pending-fees'||id==='overdue-fees'){const target=balances.filter(balance=>id==='pending-fees'?balance.due>0:balance.overdue>0);return {kpis:[k('Students',String(target.length)),k(id==='pending-fees'?'Pending':'Overdue',money(target.reduce((sum,balance)=>sum+(id==='pending-fees'?balance.due:balance.overdue),0))),k('Current fees / student',money(perStudent))],headers:['Student','Class','Paid this month',id==='pending-fees'?'Remaining':'Overdue'],rows:target.map(balance=>[balance.student.name,classLabel(classKey(balance.student.class,balance.student.section)),money(balance.paid),money(id==='pending-fees'?balance.due:balance.overdue)]),note:id==='overdue-fees'?'Overdue uses monthly due days configured for current fee types.':'Balances use current month payments and current fee structure.'};}
+  if(id==='payment-history')return {kpis:[k('Payments',String(paymentRows.length)),k('Collected',money(received))],headers:['Date','Student','Fee','Amount','Receipt'],rows:paymentRows.sort((a,b)=>b.payment_date.localeCompare(a.payment_date)).map(payment=>[payment.payment_date,studentById.get(payment.student_id||'')?.name||payment.student_name||'Student',payment.fee_name||'Fee payment',money(Number(payment.amount||0)),payment.receipt_number||payment.id])};
+  if(id==='teacher-directory')return {kpis:[k('Teachers',String(teachers.length)),k('Active',String(teachers.filter(teacher=>!teacher.left_at&&teacher.employment_status?.toLowerCase()!=='inactive').length)),k('Departments',String(new Set(teachers.map(teacher=>teacher.department).filter(Boolean)).size))],headers:['Teacher','Department','Subject','Phone','Status'],rows:teachers.map(teacher=>[teacher.name,teacher.department||'—',teacher.subject||'—',teacher.phone||'—',teacher.left_at?'Left':teacher.employment_status||'Active'])};
+  if(id==='teacher-attendance'){const present=staffRows.filter(row=>row.status.toLowerCase()==='present').length;const absent=staffRows.filter(row=>row.status.toLowerCase()==='absent').length;const onLeave=staffRows.filter(row=>row.status.toLowerCase()==='leave').length;return {kpis:[k('Present',String(present)),k('Absent',String(absent)),k('Leave',String(onLeave)),k('Rate (marked)',displayPct(pct(present,staffRows.length)))],headers:['Date','Teacher','Status'],rows:staffRows.map(row=>[row.attendance_date,teacherById.get(row.teacher_id)?.name||'Unknown',row.status]),note:'Rate uses only recorded teacher attendance.'};}
+  if(id==='teacher-leave'){const requests=leave.filter(row=>row.start_date<=to&&row.end_date>=from);return {kpis:[k('Requests',String(requests.length)),k('Pending',String(requests.filter(row=>row.status.toLowerCase()==='pending').length)),k('Approved',String(requests.filter(row=>row.status.toLowerCase()==='approved').length))],headers:['Teacher','Type','From','To','Status'],rows:requests.map(row=>[teacherById.get(row.teacher_id)?.name||'Unknown',row.leave_type,row.start_date,row.end_date,row.status])};}
+  if(id==='teacher-assignments'){const active=assignments.filter(row=>row.active!==false&&(year==='all'||row.academic_year===year));return {kpis:[k('Assignments',String(active.length)),k('Teachers assigned',String(new Set(active.map(row=>row.teacher_id)).size)),k('Subjects',String(new Set(active.map(row=>row.subject).filter(Boolean)).size))],headers:['Teacher','Class','Subject','Academic year'],rows:active.map(row=>[teacherById.get(row.teacher_id)?.name||'Unknown',row.class_name||'—',row.subject||'—',row.academic_year||'—'])};}
+  if(id==='class-performance'){const groups=new Map<string,{obtained:number;full:number;students:Set<string>}>();results.forEach(row=>{const group=classKey(row.student.class,row.student.section);const value=groups.get(group)||{obtained:0,full:0,students:new Set<string>()};value.obtained+=row.total;value.full+=row.full;value.students.add(row.student.id);groups.set(group,value);});return {kpis:[k('Classes',String(groups.size)),k('Complete results',String(results.length)),k('School average',displayPct(pct(results.reduce((sum,row)=>sum+row.total,0),results.reduce((sum,row)=>sum+row.full,0))))],headers:['Class','Students','Average'],rows:[...groups].map(([group,value])=>[classLabel(group),String(value.students.size),displayPct(pct(value.obtained,value.full))]),chart:[...groups].map(([group,value])=>({label:classLabel(group),value:pct(value.obtained,value.full)||0})),chartTitle:'Class Average %'};}
+  if(id==='pass-rate'){const groups=new Map<string,{passed:number;marked:number}>();markRows.forEach(mark=>{const subject=subjectById.get(mark.subject_id);if(!subject)return;const name=subject.subject_name;const group=groups.get(name)||{passed:0,marked:0};group.marked++;if(Number(mark.marks)>=Number(subject.pass_marks))group.passed++;groups.set(name,group);});return {kpis:[k('Marked subjects',String(markRows.length)),k('Subjects',String(groups.size)),k('Pass rate',displayPct(pct([...groups.values()].reduce((sum,row)=>sum+row.passed,0),markRows.length)))],headers:['Subject','Passed','Marked','Pass rate'],rows:[...groups].map(([name,value])=>[name,String(value.passed),String(value.marked),displayPct(pct(value.passed,value.marked))]),chart:[...groups].map(([label,value])=>({label,value:pct(value.passed,value.marked)||0})),chartTitle:'Pass Rate by Subject %',note:'Only published exam marks are included.'};}
+  return {kpis:[k('Students',String(classStudents.length)),k('Teachers',String(teachers.length)),k('Attendance (marked)',displayPct(attendanceRate)),k('Published exams',String(published.length))],headers:['Metric','Value'],rows:[['Students',String(classStudents.length)],['Teachers',String(teachers.length)],['Fees collected in period',money(received)],['Student attendance (marked)',displayPct(attendanceRate)],['Published exams in period',String(published.length)],['Complete student results',String(results.length)]],note:'Indicators come from the selected period and current school records. No missing values are estimated.'};
 }
+
+export default function ReportsPage(){
+  const [schoolId,setSchoolId]=useState('');
+  const [data,setData]=useState<Data>(emptyData);
+  const [loading,setLoading]=useState(true);
+  const [error,setError]=useState('');
+  const [category,setCategory]=useState<'all'|Category>('all');
+  const [reportId,setReportId]=useState<ReportId|null>(null);
+  const [showAll,setShowAll]=useState(false);
+  const [showRecent,setShowRecent]=useState(false);
+  const [period,setPeriod]=useState('month');
+  const [start,setStart]=useState(nepalDay().slice(0,7)+'-01');
+  const [end,setEnd]=useState(nepalDay());
+  const [selectedClass,setSelectedClass]=useState('all');
+  const [year,setYear]=useState('all');
+  const [recent,setRecent]=useState<Recent[]>([]);
+  useEffect(()=>{let active=true;async function load(){setLoading(true);setError('');try{
+    const {data:{user},error:authError}=await supabase.auth.getUser();if(authError)throw authError;if(!user)throw new Error('Sign in as principal to view reports.');
+    const {data:profile,error:profileError}=await supabase.from('profiles').select('school_id,role').eq('user_id',user.id).single();
+    if(profileError||!profile?.school_id||!['admin','principal','school_admin'].includes(profile.role))throw new Error('Your principal school profile could not be loaded.');
+    const school=profile.school_id;
+    const [students,teachers,attendance,teacherAttendance,feeTypes,payments,leave,assignments,exams,subjects,marks]=await Promise.all([
+      allRows<Student>('students','id,name,class,section,roll_no,parent_name,parent_phone,email,created_at',school),
+      allRows<Teacher>('teachers','id,name,subject,department,email,phone,joining_date,employment_status,left_at',school),
+      allRows<Attendance>('attendance','student_id,class_name,section,attendance_date,status',school),
+      allRows<TeacherAttendance>('teacher_attendance','teacher_id,attendance_date,status',school),
+      allRows<FeeType>('fee_types','id,name,amount,due_day',school),
+      allRows<Payment>('fee_records','id,student_id,student_name,fee_name,amount,payment_date,receipt_number',school),
+      allRows<Leave>('teacher_leave_requests','id,teacher_id,leave_type,start_date,end_date,status',school),
+      allRows<Assignment>('teacher_assignments','id,teacher_id,class_name,subject,active,academic_year',school),
+      allRows<Exam>('exams','id,name,start_date,academic_year,published_at',school),
+      allRows<Subject>('exam_subjects','id,exam_id,class_name,section,subject_name,full_marks,pass_marks',school),
+      allRows<Mark>('exam_marks','subject_id,student_id,marks',school),
+    ]);
+    if(active){setSchoolId(school);setData({students,teachers,attendance,teacherAttendance,feeTypes,payments,leave,assignments,exams,subjects,marks});try{const saved=JSON.parse(localStorage.getItem(`nepsom-reports:${school}`)||'[]');setRecent(Array.isArray(saved)?saved.slice(0,20):[]);}catch{setRecent([]);}}
+  }catch(cause){if(active)setError(cause instanceof Error?cause.message:'Reports could not be loaded.');}finally{if(active)setLoading(false);}}load();return()=>{active=false;};},[]);
+  const classes=useMemo(()=>[...new Set(data.students.map(st=>classKey(st.class,st.section)))].filter(value=>value.split('::')[0]).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true})),[data.students]);
+  const years=useMemo(()=>[...new Set(data.exams.map(exam=>exam.academic_year).filter((value):value is number=>value!==null))].sort((a,b)=>b-a),[data.exams]);
+  const report=reports.find(item=>item.id===reportId)||null;
+  const view=useMemo(()=>reportId?buildView(reportId,data,period,start,end,selectedClass,year):null,[reportId,data,period,start,end,selectedClass,year]);
+  const today=nepalDay();
+  const todayRows=data.attendance.filter(row=>row.attendance_date===today);
+  const attendanceRate=pct(todayRows.filter(row=>['present','late'].includes(row.status.toLowerCase())).length,todayRows.length);
+  const monthPayments=data.payments.filter(payment=>payment.payment_date.slice(0,7)===currentMonth());
+  const monthlyCollected=monthPayments.reduce((sum,payment)=>sum+Number(payment.amount||0),0);
+  const categoryReports=category==='all'?reports:reports.filter(item=>item.category===category);
+  function logExport(id:ReportId,format:Recent['format']){const item=reports.find(report=>report.id===id)!;const next=[{id,name:item.name,format,at:new Date().toISOString()},...recent].slice(0,20);setRecent(next);if(schoolId)localStorage.setItem(`nepsom-reports:${schoolId}`,JSON.stringify(next));}
+  function exportCsv(id:ReportId){const report=reports.find(item=>item.id===id)!;const result=buildView(id,data,period,start,end,selectedClass,year);const rows=[result.headers,...result.rows];const content='\ufeff'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');download(`${report.name.toLowerCase().replace(/[^a-z0-9]+/g,'-')}-${today}.csv`,'text/csv;charset=utf-8',content);logExport(id,'Excel (CSV)');}
+  function exportPdf(id:ReportId){setReportId(id);logExport(id,'PDF');setTimeout(()=>window.print(),200);}
+  async function exportAll(){if(!schoolId)return;setError('');try{
+    const [admissions,classes,calendar,notices,documents,categories,conversations,messages]=await Promise.all([
+      allRows<unknown>('admission_applications','*',schoolId),allRows<unknown>('classes','*',schoolId),
+      allRows<unknown>('news_events','*',schoolId),allRows<unknown>('notices','*',schoolId),
+      allRows<unknown>('documents','*',schoolId),allRows<unknown>('document_categories','*',schoolId),
+      allRows<unknown>('direct_conversations','*',schoolId),allRows<unknown>('direct_messages','*',schoolId),
+    ]);
+    const payload={school_id:schoolId,exported_at:new Date().toISOString(),students:data.students,teachers:data.teachers,student_attendance:data.attendance,teacher_attendance:data.teacherAttendance,fee_types:data.feeTypes,fee_records:data.payments,teacher_leave_requests:data.leave,teacher_assignments:data.assignments,exams:data.exams,exam_subjects:data.subjects,exam_marks:data.marks,admission_applications:admissions,classes,news_events:calendar,notices,documents,document_categories:categories,direct_conversations:conversations,direct_messages:messages};
+    download(`nepsom-school-data-${today}.json`,'application/json',JSON.stringify(payload,null,2));
+  }catch(cause){setError(cause instanceof Error?cause.message:'School data export failed.');}}
+  function openReport(id:ReportId){setReportId(id);setError('');}
+
+  return <div className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white"><style jsx global>{`@media print { body * { visibility: hidden !important; } .print-report, .print-report * { visibility: visible !important; } .print-report { position: absolute; inset: 0; width: 100%; padding: 18px; background: white; color: black; } .print-report button, .print-report select, .print-report input, .print-report .print-hide { display: none !important; } }`}</style><Sidebar/><div className="flex min-h-screen flex-col pt-10 lg:ml-64"><TopBar/><main className="flex-1 px-3 pb-24 pt-7 sm:px-6 lg:px-8 lg:pt-24"><div className="mx-auto max-w-6xl">
+    {report?<div className="print-report"><header className="flex items-center gap-2 print-hide"><button onClick={()=>setReportId(null)} aria-label="Back to reports" className="rounded-lg p-1.5"><ChevronLeft className="h-5 w-5"/></button><div><h1 className="text-lg font-bold">{report.name} Report</h1><p className="text-xs text-slate-500">{report.description}</p></div></header><h2 className="hidden text-xl font-bold print:block">{report.name} Report</h2><p className="hidden text-xs print:block">{range(period,start,end).start} to {range(period,start,end).end} · {selectedClass==='all'?'All classes':classLabel(selectedClass)} · {year==='all'?'All academic years':year}</p><section className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-4 print-hide"><label className="text-[10px] text-slate-500">Period<select aria-label="Report period" value={period} onChange={e=>setPeriod(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"><option value="month">This month</option><option value="year">This year</option><option value="last30">Last 30 days</option><option value="custom">Custom</option></select></label><label className="text-[10px] text-slate-500">Class<select aria-label="Report class" value={selectedClass} onChange={e=>setSelectedClass(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"><option value="all">All classes</option>{classes.map(value=><option key={value} value={value}>{classLabel(value)}</option>)}</select></label><label className="text-[10px] text-slate-500">Academic year<select aria-label="Academic year" value={year} onChange={e=>setYear(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"><option value="all">All years</option>{years.map(value=><option key={value} value={value}>{value}</option>)}</select></label><div className="flex items-end gap-1.5"><button onClick={()=>exportPdf(report.id)} className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg border border-rose-200 text-xs font-semibold text-rose-700"><Printer className="h-3.5 w-3.5"/>PDF</button><button onClick={()=>exportCsv(report.id)} className="flex h-9 flex-1 items-center justify-center gap-1 rounded-lg border border-emerald-200 text-xs font-semibold text-emerald-700"><FileSpreadsheet className="h-3.5 w-3.5"/>Excel</button></div>{period==='custom'&&<div className="col-span-2 flex gap-2"><input aria-label="From date" type="date" value={start} onChange={e=>setStart(e.target.value)} className="w-1/2 rounded-lg border border-slate-200 bg-white p-2 text-xs dark:border-slate-700 dark:bg-slate-800"/><input aria-label="To date" type="date" value={end} onChange={e=>setEnd(e.target.value)} className="w-1/2 rounded-lg border border-slate-200 bg-white p-2 text-xs dark:border-slate-700 dark:bg-slate-800"/></div>}</section>{view&&<><div className="mt-3 grid grid-cols-4 gap-1.5 sm:gap-3">{view.kpis.map(item=><div key={item.label} className="min-w-0 rounded-xl border border-slate-200 bg-white px-1 py-2 text-center dark:border-slate-800 dark:bg-slate-900 sm:p-3"><strong className="block truncate text-xs font-extrabold sm:text-xl">{item.value}</strong><span className="block text-[9px] leading-tight text-slate-500 sm:text-xs">{item.label}</span></div>)}</div>{view.chart&&view.chart.length>0&&<section className="mt-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"><h2 className="text-sm font-bold">{view.chartTitle}</h2><div className="mt-2 h-48 sm:h-56"><ResponsiveContainer width="100%" height="100%"><BarChart data={view.chart} margin={{top:5,right:5,bottom:0,left:-20}}><CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#cbd5e1" opacity={0.5}/><XAxis dataKey="label" tick={{fontSize:10}} axisLine={false} tickLine={false}/><YAxis tick={{fontSize:9}} axisLine={false} tickLine={false}/><Tooltip/><Bar dataKey="value" name="Recorded" fill="#10b981" radius={[3,3,0,0]}/><Bar dataKey="expected" name="Expected (current)" fill="#bfdbfe" radius={[3,3,0,0]}/></BarChart></ResponsiveContainer></div></section>}{view.note&&<p className="mt-3 rounded-lg bg-blue-50 p-2 text-xs text-slate-600 dark:bg-slate-900 dark:text-slate-300">{view.note}</p>}{view.recentPayments&&<section className="mt-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"><h2 className="text-sm font-bold">Recent Payments</h2>{view.recentPayments.length?<div className="mt-2 divide-y divide-slate-100 text-xs dark:divide-slate-800">{view.recentPayments.map((row,index)=><div key={index} className="flex justify-between gap-2 py-2"><span>{row[1]}<small className="block text-slate-500">{row[0]}</small></span><strong className="text-emerald-600">{row[2]}</strong></div>)}</div>:<p className="py-3 text-xs text-slate-500">No payments in this period.</p>}</section>}<section className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"><h2 className="p-3 text-sm font-bold">Details · {view.rows.length}</h2><div className="overflow-x-auto"><table className="min-w-full text-left text-xs"><thead className="bg-slate-50 text-slate-500 dark:bg-slate-800"><tr>{view.headers.map(header=><th key={header} className="whitespace-nowrap px-3 py-2 font-semibold">{header}</th>)}</tr></thead><tbody className="divide-y divide-slate-100 dark:divide-slate-800">{view.rows.map((row,index)=><tr key={index}>{row.map((cell,column)=><td key={column} className="whitespace-nowrap px-3 py-2">{cell}</td>)}</tr>)}</tbody></table></div>{!view.rows.length&&<p className="p-6 text-center text-xs text-slate-500">No records match these filters.</p>}</section></>}</div>:<><header className="relative overflow-hidden rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-100 px-3 py-3 dark:border-blue-900 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950 sm:px-6 sm:py-4"><FileText className="pointer-events-none absolute -bottom-5 right-2 h-24 w-24 text-blue-200/50 dark:text-blue-700/20"/><div className="relative flex items-center gap-2.5"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-600 dark:bg-violet-950 dark:text-violet-300"><BarChart3 className="h-5 w-5"/></span><div><h1 className="text-xl font-extrabold sm:text-3xl">Reports & Analytics</h1><p className="text-xs text-slate-600 dark:text-slate-300 sm:text-sm">Generate, view and export comprehensive school data.</p></div></div></header>{error&&<p role="alert" className="mt-2 rounded-lg bg-rose-50 p-2 text-xs text-rose-700 dark:bg-rose-950 dark:text-rose-300">{error}</p>}{loading?<div className="mt-3 animate-pulse rounded-xl bg-white p-6 text-xs text-slate-500 dark:bg-slate-900">Loading reports…</div>:<><section aria-label="School overview" className="mt-2 grid grid-cols-4 gap-1.5 sm:gap-3"><Kpi icon={UsersRound} label="Students" value={String(data.students.length)} tone="emerald"/><Kpi icon={GraduationCap} label="Teachers" value={String(data.teachers.length)} tone="blue"/><Kpi icon={Wallet} label="Fees Collected" value={money(monthlyCollected)} tone="rose"/><Kpi icon={BarChart3} label="Attendance" value={displayPct(attendanceRate)} tone="violet"/></section><button onClick={exportAll} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-bold text-blue-600 dark:border-slate-800 dark:bg-slate-900"><Download className="h-4 w-4"/>Export All Data</button><nav aria-label="Report categories" className="mt-3 grid grid-cols-3 gap-1.5 sm:grid-cols-5">{([{id:'all',label:'All Reports',icon:BarChart3},...(['student','finance','teacher','academic'] as const).map(id=>({id,label:categoryLabel[id],icon:categoryIcon[id]}))] as const).map(item=><button key={item.id} onClick={()=>{setCategory(item.id);setShowAll(false);}} className={`flex min-h-9 items-center justify-center gap-1 rounded-lg border px-1 text-[10px] font-semibold sm:text-xs ${category===item.id?'border-blue-600 bg-blue-600 text-white':'border-slate-200 bg-white text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'}`}><item.icon className="h-3.5 w-3.5 shrink-0"/>{item.label}</button>)}</nav>{category==='all'?<><section className="mt-4"><div className="flex items-center justify-between"><h2 className="text-base font-bold">Popular Reports</h2><button onClick={()=>setShowAll(value=>!value)} className="text-xs font-semibold text-blue-600">{showAll?'Show less':'View all'}</button></div><div className="mt-2 grid grid-cols-2 gap-2">{(showAll?reports:reports.filter(item=>['student-list','fee-collection','exam-results','class-performance'].includes(item.id))).map(item=><button key={item.id} onClick={()=>openReport(item.id)} className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 text-left dark:border-slate-800 dark:bg-slate-900"><span className={`rounded-lg p-2 ${toneClass[item.tone]}`}><item.icon className="h-4 w-4"/></span><span className="min-w-0 flex-1"><strong className="block truncate text-[11px]">{item.name}</strong><small className="block text-[10px] text-slate-500">{item.description}</small></span><ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400"/></button>)}</div></section><section className="mt-4 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"><div className="flex items-center justify-between"><h2 className="text-base font-bold">Recent Reports</h2>{recent.length>3&&<button onClick={()=>setShowRecent(value=>!value)} className="text-xs font-semibold text-blue-600">{showRecent?'Show less':'View all'}</button>}</div>{recent.length?<div className="mt-2 divide-y divide-slate-100 dark:divide-slate-800">{(showRecent?recent:recent.slice(0,3)).map((entry,index)=><button key={entry.at+index} onClick={()=>openReport(entry.id)} className="flex w-full items-center gap-2 py-2 text-left"><FileText className="h-4 w-4 text-blue-600"/><span className="min-w-0 flex-1"><strong className="block truncate text-xs">{entry.name}</strong><small className="text-[10px] text-slate-500">Generated {new Intl.DateTimeFormat('en-GB',{dateStyle:'medium',timeZone:'Asia/Kathmandu'}).format(new Date(entry.at))}</small></span><span className="text-[10px] font-semibold text-emerald-600">{entry.format}</span><ChevronRight className="h-4 w-4 text-slate-400"/></button>)}</div>:<p className="py-6 text-center text-xs text-slate-500">No reports exported on this device yet.</p>}</section></>:<><div className="mt-4 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-white p-4 dark:border-blue-900 dark:from-slate-900 dark:to-slate-900"><h2 className="text-lg font-bold">{categoryLabel[category]} Reports</h2><p className="mt-1 text-xs text-slate-500">{categoryReports.length} reports available · select a report to view filtered school data.</p></div><div className="mt-3 space-y-2">{categoryReports.map(item=><ReportCard key={item.id} item={item} onView={()=>openReport(item.id)} onPdf={()=>exportPdf(item.id)} onExcel={()=>exportCsv(item.id)}/>)}</div></>}</>}</>}
+  </div></main></div></div>;
+}
+function Kpi({icon:Icon,label,value,tone}:{icon:React.ElementType;label:string;value:string;tone:string}){return <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-1 py-2 text-center dark:border-slate-800 dark:bg-slate-900 sm:p-3"><span className={`mx-auto flex h-6 w-6 items-center justify-center rounded-md ${toneClass[tone]}`}><Icon className="h-3.5 w-3.5"/></span><strong className="mt-0.5 block truncate text-xs font-extrabold sm:text-xl">{value}</strong><span className="block text-[10px] leading-tight text-slate-500">{label}</span></div>;}
+function ReportCard({item,onView,onPdf,onExcel}:{item:Report;onView:()=>void;onPdf:()=>void;onExcel:()=>void}){return <article className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"><button onClick={onView} className="flex w-full items-start gap-3 text-left"><span className={`rounded-lg p-2 ${toneClass[item.tone]}`}><item.icon className="h-5 w-5"/></span><span className="min-w-0 flex-1"><strong className="block text-sm">{item.name}</strong><span className="mt-0.5 block text-xs text-slate-500">{item.description}</span></span><ChevronRight className="h-4 w-4 text-slate-400"/></button><div className="mt-2 flex gap-2 pl-11"><button onClick={onView} className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1.5 text-xs dark:border-slate-700"><Eye className="h-3.5 w-3.5"/>View</button><button onClick={onPdf} className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5 text-xs text-rose-700 dark:bg-rose-950"><FileText className="h-3.5 w-3.5"/>PDF</button><button onClick={onExcel} title="Downloads an Excel-compatible CSV" className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-xs text-emerald-700 dark:bg-emerald-950"><FileSpreadsheet className="h-3.5 w-3.5"/>Excel</button></div></article>;}
