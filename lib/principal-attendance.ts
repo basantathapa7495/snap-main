@@ -1,4 +1,5 @@
 export type Mark = { attendance_date: string; status: string; student_id?: string; teacher_id?: string };
+export type AttendanceHoliday = { event_date: string | null; end_date: string | null };
 
 export function nepalToday() {
   const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kathmandu', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
@@ -29,7 +30,7 @@ export function attendanceCounts(rows: Mark[], kind: 'student' | 'teacher') {
     percentage: values.length ? Math.round(((present + late) / values.length) * 100) : null };
 }
 
-export function dailyRates(rows: Mark[], end: string, days: 7 | 14 | 30, kind: 'student' | 'teacher') {
+export function dailyRates(rows: Mark[], end: string, days: 7 | 14 | 30, kind: 'student' | 'teacher', holidays: AttendanceHoliday[] = []) {
   const byDate = new Map<string, Mark[]>();
   for (const row of rows) {
     if (row.attendance_date < daysBefore(end, days - 1) || row.attendance_date > end) continue;
@@ -40,8 +41,14 @@ export function dailyRates(rows: Mark[], end: string, days: 7 | 14 | 30, kind: '
   const points = Array.from({ length: days }, (_, index) => {
     const date = daysBefore(end, days - index - 1);
     const counts = attendanceCounts(byDate.get(date) || [], kind);
+    const holiday = holidays.some((event) => event.event_date && event.event_date <= date
+      && date <= (event.end_date && event.end_date >= event.event_date ? event.end_date : event.event_date));
+    // Nepal's weekly closure is Saturday. Retain Saturdays with actual workday
+    // marks, so special school days are not silently removed.
+    const closedSaturday = new Date(`${date}T12:00:00Z`).getUTCDay() === 6 && counts.marked === 0;
+    if (holiday || closedSaturday) return null;
     return { date, label: new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }), rate: counts.percentage };
-  });
+  }).filter((point) => point !== null);
   const recorded = points.filter((point) => point.rate !== null);
   const average = recorded.length ? Math.round(recorded.reduce((sum, point) => sum + point.rate!, 0) / recorded.length * 10) / 10 : null;
   return { points, average, recordedDays: recorded.length };
