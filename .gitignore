@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local demo plans, bootstrap capabilities and generated credentials
+/.demo-runtime/
+/supabase/.temp/
