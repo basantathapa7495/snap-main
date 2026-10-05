@@ -63,10 +63,10 @@ import {
 } from "@/lib/teacher-classes";
 
 const panel =
-  "rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900";
+  "rounded-[18px] border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] dark:border-slate-800 dark:bg-slate-900";
 const muted = "text-slate-500 dark:text-slate-400";
 const field =
-  "h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 dark:border-slate-700 dark:bg-slate-900";
+  "h-12 w-full rounded-[14px] border border-slate-200 bg-slate-50/80 px-3 text-sm outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/15 dark:border-slate-700 dark:bg-slate-900";
 const tones = [
   "bg-blue-50 text-blue-700 dark:bg-blue-400/10 dark:text-blue-300",
   "bg-emerald-50 text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300",
@@ -160,9 +160,7 @@ function ScheduleList({
   if (!slots.length)
     return <Empty>No periods scheduled{today ? " for today" : ""}.</Empty>;
   return (
-    <div
-      className={`${panel} divide-y divide-slate-100 overflow-hidden dark:divide-slate-800`}
-    >
+    <div className={`${panel} divide-y divide-slate-100 overflow-hidden dark:divide-slate-800`}>
       {slots.map((slot) => {
         const status = today ? slotStatus(slot, clock) : weekdays[slot.weekday];
         const tone =
@@ -175,8 +173,9 @@ function ScheduleList({
           <Link
             key={slot.id}
             href={`/teacher/classes/${slot.classId}`}
-            className="flex items-center gap-3 p-3 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-500 dark:hover:bg-slate-800 sm:p-4"
+            className={`relative flex items-center gap-3 p-3.5 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-500 dark:hover:bg-slate-800 sm:p-4 ${today ? "pl-4" : ""}`}
           >
+            {today && <span className={`absolute inset-y-0 left-0 w-1 ${status === "Completed" ? "bg-emerald-400" : status === "Now" ? "bg-blue-500" : "bg-slate-300 dark:bg-slate-600"}`} />}
             <div className="w-20 shrink-0 text-xs">
               <p className="font-bold">{timeLabel(slot.start)}</p>
               <p className={`mt-1 ${muted}`}>
@@ -217,15 +216,12 @@ function Metrics({
   return (
     <div className="grid grid-cols-4 gap-2 sm:gap-3">
       {items.map((item, i) => (
-        <div
-          key={item.label}
-          className={`min-w-0 rounded-2xl p-2.5 text-center sm:p-4 ${item.tone || tones[i]}`}
-        >
-          <item.icon className="mx-auto mb-2 h-5 w-5" />
-          <p className="text-xl font-bold tabular-nums sm:text-2xl">
+        <div key={item.label} className={`min-w-0 rounded-[16px] border border-white/70 p-2.5 text-center shadow-[0_1px_3px_rgba(15,23,42,0.04)] dark:border-white/5 sm:p-4 ${item.tone || tones[i]}`}>
+          <item.icon className="mx-auto mb-1.5 h-5 w-5" strokeWidth={2.1} />
+          <p className="text-xl font-extrabold tabular-nums sm:text-2xl">
             {item.value}
           </p>
-          <p className="mt-0.5 text-[10px] text-slate-600 dark:text-slate-300 sm:text-xs">
+          <p className="mt-0.5 truncate text-[10px] font-medium text-slate-600 dark:text-slate-300 sm:text-xs">
             {item.label}
           </p>
         </div>
@@ -749,12 +745,12 @@ export default function MyClasses({
       </div>
     );
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div className="min-h-screen bg-[#f7f8fb] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <Sidebar />
       <div className="flex min-h-screen flex-col pt-10 lg:ml-64">
         <TopBar />
-        <main className="flex-1 px-4 pb-28 pt-24 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-5xl space-y-5">
+        <main className="flex-1 px-3.5 pb-28 pt-20 sm:px-6 sm:pt-24 lg:px-8">
+          <div className="mx-auto max-w-5xl space-y-4 sm:space-y-5">
             {(classId || weekly) && (
               <Link
                 href="/teacher/classes"
@@ -796,10 +792,10 @@ export default function MyClasses({
               <>
                 {!classId && (
                   <header>
-                    <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                    <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.035em] sm:text-3xl">
                       {weekly ? "My Class Timetable" : "My Classes"}
                     </h1>
-                    <p className={`mt-1 text-sm ${muted}`}>
+                    <p className={`mt-1 max-w-xl text-sm leading-5 ${muted}`}>
                       {weekly
                         ? "Your assigned teaching periods · Nepal time"
                         : "View your assigned classes, students, schedule and activities."}
@@ -825,15 +821,15 @@ export default function MyClasses({
                   </div>
                 ) : !classId ? (
                   <>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 pt-1">
                       <label className="relative min-w-0 flex-1">
                         <Search
                           size={18}
-                          className={`absolute left-3 top-3 ${muted}`}
+                          className={`absolute left-3.5 top-3.5 ${muted}`}
                         />
                         <input
                           aria-label="Search classes or subjects"
-                          className={`${field} pl-10`}
+                          className={`${field} pl-10.5`}
                           placeholder="Search classes or subjects…"
                           value={query}
                           onChange={(e) => setQuery(e.target.value)}
@@ -844,7 +840,7 @@ export default function MyClasses({
                         aria-expanded={filters}
                         aria-controls="class-filters"
                         onClick={() => setFilters((v) => !v)}
-                        className={`${panel} flex h-11 w-11 shrink-0 items-center justify-center ${subject ? "text-blue-600" : muted}`}
+                        className={`${panel} flex h-12 w-12 shrink-0 items-center justify-center ${subject ? "border-blue-200 bg-blue-50 text-blue-600 dark:bg-blue-400/10" : muted}`}
                       >
                         <SlidersHorizontal size={19} />
                       </button>
@@ -876,7 +872,7 @@ export default function MyClasses({
                       </p>
                     )}
                     <Section title="Assigned Classes">
-                      <div className="grid gap-3 md:grid-cols-2">
+                      <div className="grid gap-2.5 md:grid-cols-2">
                         {visibleClasses.map((row, i) => {
                           const own =
                             data?.assignments.filter(
@@ -886,10 +882,10 @@ export default function MyClasses({
                             <Link
                               key={row.id}
                               href={`/teacher/classes/${row.id}`}
-                              className={`${panel} flex items-center gap-3 p-3 transition hover:border-blue-300 focus-visible:outline-2 focus-visible:outline-blue-500 sm:p-4`}
+                              className={`${panel} group flex min-h-[112px] items-center gap-3 p-3 transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-blue-500 sm:p-4`}
                             >
                               <div
-                                className={`flex h-20 w-16 shrink-0 flex-col items-center justify-center rounded-xl ${tones[i % tones.length]}`}
+                                className={`flex h-[86px] w-[68px] shrink-0 flex-col items-center justify-center rounded-[15px] ${tones[i % tones.length]}`}
                               >
                                 <span className="text-xs">Grade</span>
                                 <span className="text-2xl font-bold">
@@ -897,7 +893,7 @@ export default function MyClasses({
                                 </span>
                               </div>
                               <div className="min-w-0 flex-1">
-                                <h3 className="text-base font-bold">
+                                <h3 className="text-[16px] font-extrabold tracking-tight">
                                   {classLabel(row)}
                                 </h3>
                                 <p
@@ -939,7 +935,7 @@ export default function MyClasses({
                               </div>
                               <ChevronRight
                                 size={19}
-                                className={`shrink-0 ${muted}`}
+                                className={`shrink-0 transition group-hover:translate-x-0.5 group-hover:text-blue-600 ${muted}`}
                               />
                             </Link>
                           );
@@ -971,8 +967,14 @@ export default function MyClasses({
                 ) : (
                   selected && (
                     <>
-                      <div className="rounded-2xl bg-blue-50 p-5 dark:bg-blue-400/10">
-                        <h1 className="text-2xl font-bold tracking-tight">
+                      <div className="relative overflow-hidden rounded-[20px] border border-blue-100 bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 p-5 shadow-[0_8px_30px_-22px_rgba(37,99,235,0.65)] dark:border-blue-900/50 dark:from-blue-950/60 dark:via-slate-900 dark:to-indigo-950/50">
+                        <div aria-hidden="true" className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-blue-200/45 blur-2xl dark:bg-blue-500/10" />
+                        <div aria-hidden="true" className="absolute bottom-3 right-4 flex items-end gap-1.5 text-blue-200/70 dark:text-blue-700/30">
+                          <GraduationCap className="h-10 w-10" strokeWidth={1.5} />
+                          <Users className="h-14 w-14" strokeWidth={1.4} />
+                        </div>
+                        <div className="relative max-w-[78%]">
+                        <h1 className="text-2xl font-extrabold tracking-tight text-[#10245f] dark:text-blue-100">
                           {classLabel(selected)}
                         </h1>
                         <div
@@ -994,11 +996,12 @@ export default function MyClasses({
                           <CalendarDays size={17} />
                           {selected.academic_year} Academic Year (BS)
                         </p>
+                        </div>
                       </div>
                       <div
                         role="tablist"
                         aria-label="Class details"
-                        className="flex overflow-x-auto border-b border-slate-200 dark:border-slate-800"
+                        className="-mx-3.5 flex overflow-x-auto border-b border-slate-200 bg-white px-3.5 dark:border-slate-800 dark:bg-slate-950 sm:mx-0 sm:px-0"
                       >
                         {tabs.map((t) => (
                           <button
@@ -1034,7 +1037,7 @@ export default function MyClasses({
                               setQuery("");
                               setActionError("");
                             }}
-                            className={`min-h-11 shrink-0 border-b-2 px-3 text-xs font-medium sm:px-5 sm:text-sm ${tab === t ? "border-blue-600 text-blue-600 dark:text-blue-300" : `border-transparent ${muted}`}`}
+                            className={`min-h-12 shrink-0 border-b-2 px-3 text-xs font-semibold sm:flex-1 sm:px-5 sm:text-sm ${tab === t ? "border-blue-600 text-blue-600 dark:text-blue-300" : `border-transparent ${muted}`}`}
                           >
                             {t}
                           </button>
