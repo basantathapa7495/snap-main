@@ -48,6 +48,7 @@ function formatSchoolName(name?: string | null) {
 export default function TopBar() {
   const router = useRouter();
   const pathname = usePathname();
+  const isTeacherArea = pathname.startsWith('/teacher');
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [school, setSchool] = useState<School | null>(null);
@@ -204,7 +205,7 @@ export default function TopBar() {
             <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-lg bg-white py-1 shadow-xl z-50">
               
               <Link
-                href="/principal/account/profile"
+                href={isTeacherArea ? "/teacher/profile" : "/principal/account/profile"}
                 onClick={() => setIsDropdownOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
@@ -213,7 +214,7 @@ export default function TopBar() {
               </Link>
               
               <Link
-                href="/principal/settings"
+                href={isTeacherArea ? "/teacher/profile/preferences" : "/principal/settings"}
                 onClick={() => setIsDropdownOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
@@ -222,7 +223,7 @@ export default function TopBar() {
               </Link>
               
               <Link
-                href="/principal/account/security"
+                href={isTeacherArea ? "/teacher/profile/security" : "/principal/account/security"}
                 onClick={() => setIsDropdownOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
