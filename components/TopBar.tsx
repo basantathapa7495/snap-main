@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import HelpModal from "./HelpModal";
-import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
-import { supabase } from "@/lib/supabase";
-import {
-  Search,
-  Bell,
-  HelpCircle,
-  ChevronDown,
-  User,
-  Settings,
-  Shield,
+import { useState, useEffect, useRef } from 'react';
+import HelpModal from './HelpModal';
+import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { 
+  Search, 
+  Bell, 
+  HelpCircle, 
+  ChevronDown, 
+  User, 
+  Settings, 
+  Shield, 
   LogOut,
-  Loader2,
-} from "lucide-react";
+  Loader2
+} from 'lucide-react';
 
 // --- Types ---
 interface Profile {
@@ -36,11 +36,11 @@ interface School {
 
 function formatSchoolName(name?: string | null) {
   const shortenedName = name
-    ?.replace(/\b(?:primary|secondary)\s+school\b/gi, "")
-    .replace(/\s{2,}/g, " ")
+    ?.replace(/\b(?:primary|secondary)\s+school\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
     .trim();
 
-  if (!shortenedName) return "School Name";
+  if (!shortenedName) return 'School Name';
 
   return shortenedName.charAt(0).toUpperCase() + shortenedName.slice(1);
 }
@@ -48,7 +48,7 @@ function formatSchoolName(name?: string | null) {
 export default function TopBar() {
   const router = useRouter();
   const pathname = usePathname();
-  const isTeacherArea = pathname.startsWith("/teacher");
+  const isTeacherArea = pathname.startsWith('/teacher');
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [school, setSchool] = useState<School | null>(null);
@@ -60,110 +60,88 @@ export default function TopBar() {
   useEffect(() => {
     async function fetchTopBarData() {
       try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError || !user) {
           setIsLoading(false);
           return;
         }
 
         const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("id, user_id, full_name, role, school_id")
-          .eq("user_id", user.id)
+          .from('profiles')
+          .select('id, user_id, full_name, role, school_id')
+          .eq('user_id', user.id)
           .single();
-
-        if (profileError) console.error("Profile fetch error", profileError);
+        
+        if (profileError) console.error('Profile fetch error', profileError);
         else {
           setProfile(profileData);
 
           if (profileData?.school_id) {
             const { data: schoolData, error: schoolError } = await supabase
-              .from("schools")
-              .select("id, name, municipality, district")
-              .eq("id", profileData.school_id)
+              .from('schools')
+              .select('id, name, municipality, district')
+              .eq('id', profileData.school_id)
               .single();
-
-            if (schoolError) console.error("School fetch error", schoolError);
+            
+            if (schoolError) console.error('School fetch error', schoolError);
             else setSchool(schoolData);
           }
         }
       } catch (error) {
-        console.error("TopBar: Unexpected error", error);
+        console.error('TopBar: Unexpected error', error);
       } finally {
         setIsLoading(false);
       }
     }
-
+    
     fetchTopBarData();
   }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   async function handleLogout() {
     setIsDropdownOpen(false);
     await supabase.auth.signOut();
-    router.push("/auth/login");
+    router.push('/auth/login');
     router.refresh();
   }
 
-  const userInitial = profile?.full_name?.charAt(0).toUpperCase() || "U";
+  const userInitial = profile?.full_name?.charAt(0).toUpperCase() || 'U';
 
   return (
     <header className="fixed top-0 left-0 right-0 lg:left-64 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
+      
       {/* Left: School Info */}
       <div className="flex flex-col shrink-0 max-w-[250px]">
         <h2 className="text-lg font-bold text-gray-900 leading-tight truncate">
-          {isLoading ? "Loading..." : formatSchoolName(school?.name)}
+          {isLoading ? 'Loading...' : formatSchoolName(school?.name)}
         </h2>
         <p className="text-xs text-gray-500 leading-tight truncate">
-          {isLoading
-            ? ""
-            : `${school?.municipality || "City"}, ${school?.district || "District"}`}
+          {isLoading ? '' : (`${school?.municipality || 'City'}, ${school?.district || 'District'}`)}
         </p>
       </div>
 
       {/* Center: Search Bar */}
-      {(pathname.startsWith("/principal") ||
-        pathname.startsWith("/teacher")) && (
+      {(pathname.startsWith('/principal') || pathname.startsWith('/teacher')) && (
         <div className="hidden min-w-0 max-w-md flex-1 px-4 md:block">
           <button
             type="button"
-            onClick={() =>
-              window.dispatchEvent(
-                new Event(
-                  pathname.startsWith("/teacher")
-                    ? "teacher-search:open"
-                    : "principal-search:open",
-                ),
-              )
-            }
-            aria-label={
-              pathname.startsWith("/teacher")
-                ? "Search students and classes"
-                : "Search school records"
-            }
+            onClick={() => window.dispatchEvent(new Event(pathname.startsWith('/teacher') ? 'teacher-search:open' : 'principal-search:open'))}
+            aria-label={pathname.startsWith('/teacher') ? 'Search students and classes' : 'Search school records'}
             className="flex h-10 w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
             <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span className="truncate">
-              {pathname.startsWith("/teacher")
-                ? "Search students and classes..."
-                : "Search students, teachers, fees..."}
+              {pathname.startsWith('/teacher') ? 'Search students and classes...' : 'Search students, teachers, fees...'}
             </span>
           </button>
         </div>
@@ -171,6 +149,7 @@ export default function TopBar() {
 
       {/* Right: Badge, Actions & Profile */}
       <div className="flex items-center gap-4 shrink-0">
+        
         {/* Academic Year Badge */}
         <span className="hidden sm:inline-flex rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 border border-blue-100 whitespace-nowrap">
           Academic Year 2083
@@ -178,19 +157,16 @@ export default function TopBar() {
 
         {/* Action Icons */}
         <div className="flex items-center gap-1">
-          <button
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-            aria-label="Notifications"
-          >
+          <button className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors" aria-label="Notifications">
             <Bell className="h-5 w-5" />
           </button>
-          <button
+          <button 
             onClick={() => setIsHelpModalOpen(true)}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-            aria-label="Help"
+          className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+          aria-label="Help"
           >
-            <HelpCircle className="h-5 w-5" />
-          </button>
+        <HelpCircle className="h-5 w-5" />
+      </button>
         </div>
 
         {/* Divider */}
@@ -213,52 +189,41 @@ export default function TopBar() {
             )}
             <div className="hidden text-left md:block">
               <p className="text-sm font-medium text-gray-900 leading-tight">
-                {isLoading ? "Loading..." : profile?.full_name || "User"}
+                {isLoading ? 'Loading...' : (profile?.full_name || 'User')}
               </p>
               <p className="text-[11px] text-gray-500 capitalize leading-tight">
-                {isLoading ? "" : profile?.role || "Admin"}
+                {isLoading ? '' : (profile?.role || 'Admin')}
               </p>
             </div>
-            <ChevronDown
-              className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+            <ChevronDown 
+              className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
             />
           </button>
 
           {/* ✅ THE DROPDOWN MENU */}
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-lg bg-white py-1 shadow-xl z-50">
+              
               <Link
-                href={
-                  isTeacherArea
-                    ? "/teacher/profile"
-                    : "/principal/account/profile"
-                }
+                href={isTeacherArea ? "/teacher/profile" : "/principal/account/profile"}
                 onClick={() => setIsDropdownOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <User className="h-4 w-4 text-gray-500" />
                 My Profile
               </Link>
-
+              
               <Link
-                href={
-                  isTeacherArea
-                    ? "/teacher/profile/preferences"
-                    : "/principal/settings"
-                }
+                href={isTeacherArea ? "/teacher/profile/preferences" : "/principal/settings"}
                 onClick={() => setIsDropdownOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Settings className="h-4 w-4 text-gray-500" />
                 Account Settings
               </Link>
-
+              
               <Link
-                href={
-                  isTeacherArea
-                    ? "/teacher/profile/security"
-                    : "/principal/account/security"
-                }
+                href={isTeacherArea ? "/teacher/profile/security" : "/principal/account/security"}
                 onClick={() => setIsDropdownOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
@@ -281,10 +246,8 @@ export default function TopBar() {
           )}
         </div>
       </div>
-      <HelpModal
-        isOpen={isHelpModalOpen}
-        onClose={() => setIsHelpModalOpen(false)}
-      />
+      <HelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
     </header>
+    
   );
 }
