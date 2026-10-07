@@ -1,0 +1,10 @@
+create index assignment_files_assignment_idx on public.assignment_files(assignment_id);
+create index assignment_files_school_idx on public.assignment_files(school_id);
+create index assignment_submission_files_submission_idx on public.assignment_submission_files(submission_id);
+create index assignment_submission_files_school_idx on public.assignment_submission_files(school_id);
+create index assignment_submissions_student_idx on public.assignment_submissions(student_id);
+create index assignment_submissions_school_idx on public.assignment_submissions(school_id);
+create index assignment_submissions_feedback_by_idx on public.assignment_submissions(feedback_by) where feedback_by is not null;
+create index assignment_targets_school_idx on public.assignment_targets(school_id);
+create index assignments_school_idx on public.assignments(school_id);
+create index assignments_created_by_idx on public.assignments(created_by);
