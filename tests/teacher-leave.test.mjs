@@ -1,0 +1,4 @@
+import assert from'node:assert/strict';import test from'node:test';import ts from'typescript';import fs from'node:fs';
+const source=fs.readFileSync(new URL('../lib/teacher-leave.ts',import.meta.url),'utf8'),js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText,mod=await import(`data:text/javascript,${encodeURIComponent(js)}`);
+test('validates leave attachments',()=>{assert.equal(mod.validateLeaveFile({type:'application/pdf',size:1000}),'');assert.match(mod.validateLeaveFile({type:'video/mp4',size:1000}),/PDF/);assert.match(mod.validateLeaveFile({type:'image/png',size:11*1024*1024}),/10 MB/)});
+test('validates inclusive date ranges',()=>{assert.equal(mod.calendarDays('2026-10-07','2026-10-07'),1);assert.equal(mod.calendarDays('2026-10-07','2026-10-09'),3);assert.equal(mod.calendarDays('2026-10-09','2026-10-07'),0)});
