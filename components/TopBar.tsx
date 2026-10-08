@@ -139,7 +139,7 @@ export default function TopBar() {
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event('student-sidebar:open'))}
-            className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="group flex h-10 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label="Open navigation menu"
           >
             <span className="flex w-[22px] flex-col gap-[5px]" aria-hidden="true">
@@ -151,7 +151,7 @@ export default function TopBar() {
 
           <Link
             href="/student"
-            className="min-w-0 max-w-[88px] shrink-0 text-[13px] font-bold leading-[1.15] text-slate-900"
+            className="min-w-0 max-w-[104px] shrink-0 text-[15px] font-extrabold leading-[1.12] tracking-[-0.01em] text-slate-900"
             aria-label="Go to student home"
           >
             <span className="line-clamp-2">
@@ -162,7 +162,7 @@ export default function TopBar() {
           <button
             type="button"
             aria-label="Search the student portal"
-            className="ml-auto flex h-9 w-[84px] shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-left text-xs text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 min-[380px]:w-[96px]"
+            className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span className="truncate">Search</span>
