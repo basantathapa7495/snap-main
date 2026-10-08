@@ -136,12 +136,15 @@ export default function Sidebar() {
     pathname === '/principal' || pathname.startsWith('/principal/');
 
   useEffect(() => {
-    const open = () => setSearchOpen(true);
-    window.addEventListener('principal-search:open', open);
-    window.addEventListener('teacher-search:open', open);
+    const openSearch = () => setSearchOpen(true);
+    const openStudentSidebar = () => setMobileOpen(true);
+    window.addEventListener('principal-search:open', openSearch);
+    window.addEventListener('teacher-search:open', openSearch);
+    window.addEventListener('student-sidebar:open', openStudentSidebar);
     return () => {
-      window.removeEventListener('principal-search:open', open);
-      window.removeEventListener('teacher-search:open', open);
+      window.removeEventListener('principal-search:open', openSearch);
+      window.removeEventListener('teacher-search:open', openSearch);
+      window.removeEventListener('student-sidebar:open', openStudentSidebar);
     };
   }, []);
 
@@ -248,7 +251,7 @@ export default function Sidebar() {
       {/* =====================================================
           MOBILE TOP BAR
       ===================================================== */}
-      <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center border-b border-gray-200 bg-white px-4 lg:hidden">
+      {!isStudentPath && <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center border-b border-gray-200 bg-white px-4 lg:hidden">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
@@ -283,7 +286,7 @@ export default function Sidebar() {
             <Search className="h-5 w-5" aria-hidden="true" />
           </button>
         )}
-      </div>
+      </div>}
 
       {/* =====================================================
           MOBILE OVERLAY
