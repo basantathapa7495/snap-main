@@ -302,32 +302,32 @@ export default function Sidebar() {
           }`}
           aria-label="Student navigation"
         >
-          <div className="flex items-center justify-between px-4 pb-3 pt-4">
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 pb-3 pt-3">
             <div className="flex min-w-0 items-center gap-2.5">
               <Image
                 src="/logo1.png"
                 alt="NEPSOM logo"
-                width={58}
-                height={58}
+                width={46}
+                height={46}
                 priority
-                className="h-[58px] w-[58px] shrink-0 object-contain"
+                className="h-[46px] w-[46px] shrink-0 object-contain"
               />
               <div className="min-w-0">
-                <p className="text-[22px] font-extrabold leading-none tracking-[-0.04em] text-[#0A1D59]">NEPSOM -</p>
-                <p className="mt-1 whitespace-nowrap text-[10px] font-semibold leading-none text-slate-500">School Nepal Platform</p>
+                <p className="text-[18px] font-bold leading-none tracking-[-0.03em] text-slate-900">NEPSOM</p>
+                <p className="mt-1 whitespace-nowrap text-[9px] font-medium leading-none text-slate-500">School Nepal Platform</p>
               </div>
             </div>
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
-              className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 text-slate-800 shadow-[0_5px_12px_rgba(15,23,42,0.10)] transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               aria-label="Close navigation menu"
             >
-              <X className="h-6 w-6 stroke-[2.25]" />
+              <X className="h-5 w-5 stroke-[2.25]" />
             </button>
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-3.5 pb-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <nav className="flex-1 overflow-y-auto px-3.5 pb-5 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {studentMenu.slice(0, 2).map((section, sectionIndex) => (
               <div key={sectionIndex}>
                 <ul className="space-y-1">
@@ -340,21 +340,19 @@ export default function Sidebar() {
                         <Link
                           href={item.href}
                           onClick={() => setMobileOpen(false)}
-                          className={`flex min-h-[54px] items-center gap-3 rounded-[18px] px-3 py-1.5 transition-colors ${
+                          className={`flex min-h-[52px] items-center gap-3 rounded-lg px-3 py-1.5 transition-colors ${
                             isActive
-                              ? 'bg-gradient-to-r from-blue-600 to-sky-400 text-white shadow-[0_7px_16px_rgba(37,99,235,0.22)]'
-                              : 'text-[#0A1D59] hover:bg-slate-50'
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-slate-700 hover:bg-slate-50'
                           }`}
                         >
-                          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                            isActive ? 'bg-white/10' : 'bg-blue-50'
-                          }`}>
-                            <Icon className={`h-[19px] w-[19px] stroke-[2.25] ${isActive ? 'text-white' : 'text-blue-700'}`} />
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center">
+                            <Icon className={`h-[19px] w-[19px] stroke-[2.25] ${isActive ? 'text-blue-700' : 'text-slate-500'}`} />
                           </span>
                           <span className="min-w-0 flex-1 text-[15px] font-bold tracking-[-0.02em]">
                             {item.label}
                           </span>
-                          <ChevronRight className={`h-5 w-5 shrink-0 stroke-[2.5] ${isActive ? 'text-white' : 'text-[#7C8FB8]'}`} />
+                          <ChevronRight className={`h-5 w-5 shrink-0 stroke-[2.5] ${isActive ? 'text-blue-700' : 'text-slate-400'}`} />
                         </Link>
                       </li>
                     );
