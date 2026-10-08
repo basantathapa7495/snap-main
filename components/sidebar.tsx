@@ -306,15 +306,21 @@ export default function Sidebar() {
           }`}
           aria-label="Student navigation"
         >
-          <div className="flex items-start justify-between px-4 pb-2 pt-3">
-            <Image
-              src="/logo2.png"
-              alt="NEPSOM School Nepal Platform"
-              width={164}
-              height={72}
-              priority
-              className="h-[72px] w-[164px] object-contain object-left"
-            />
+          <div className="flex items-center justify-between px-4 pb-3 pt-4">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Image
+                src="/logo1.png"
+                alt="NEPSOM logo"
+                width={58}
+                height={58}
+                priority
+                className="h-[58px] w-[58px] shrink-0 object-contain"
+              />
+              <div className="min-w-0">
+                <p className="text-[22px] font-extrabold leading-none tracking-[-0.04em] text-[#0A1D59]">NEPSOM</p>
+                <p className="mt-1 whitespace-nowrap text-[10px] font-semibold leading-none text-slate-500">School Nepal Platform</p>
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
