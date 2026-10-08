@@ -102,19 +102,15 @@ const teacherMenu: MenuSection[] = [
 
 const studentMenu: MenuSection[] = [
   [
-    { href: '/student', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/student/subjects', label: 'My Subjects', icon: BookOpen },
     { href: '/student/attendance', label: 'Attendance', icon: ClipboardList },
     { href: '/student/grades', label: 'Grades & Results', icon: Award },
-    { href: '/student/timetable', label: 'Timetable', icon: Calendar },
     { href: '/student/assignments', label: 'Assignments', icon: FileText },
     { href: '/student/exams', label: 'Exams', icon: CheckSquare },
   ],
   [
     { href: '/student/fees', label: 'Fees', icon: DollarSign },
-    { href: '/student/notices', label: 'Notices', icon: MessageSquare },
     { href: '/student/calendar', label: 'Calendar', icon: Calendar },
-    { href: '/student/documents', label: 'Documents', icon: Folder },
   ],
   [
     { href: '/student/profile', label: 'My Profile', icon: User },
@@ -301,7 +297,7 @@ export default function Sidebar() {
 
       {isStudentPath && (
         <aside
-          className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-[min(288px,76vw)] flex-col overflow-hidden bg-white shadow-2xl transition-transform duration-300 lg:hidden ${
+          className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-[min(288px,70vw)] flex-col overflow-hidden bg-white shadow-2xl transition-transform duration-300 lg:hidden ${
             mobileOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
           aria-label="Student navigation"
@@ -317,7 +313,7 @@ export default function Sidebar() {
                 className="h-[58px] w-[58px] shrink-0 object-contain"
               />
               <div className="min-w-0">
-                <p className="text-[22px] font-extrabold leading-none tracking-[-0.04em] text-[#0A1D59]">NEPSOM</p>
+                <p className="text-[22px] font-extrabold leading-none tracking-[-0.04em] text-[#0A1D59]">NEPSOM -</p>
                 <p className="mt-1 whitespace-nowrap text-[10px] font-semibold leading-none text-slate-500">School Nepal Platform</p>
               </div>
             </div>
