@@ -135,23 +135,23 @@ export default function TopBar() {
   return (
     <>
       {isStudentArea && (
-        <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-2 border-b border-slate-200 bg-white px-3 lg:hidden">
+        <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 border-b border-slate-100 bg-white px-4 lg:hidden">
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event('student-sidebar:open'))}
-            className="group flex h-10 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="group flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label="Open navigation menu"
           >
-            <span className="flex w-[22px] flex-col gap-[5px]" aria-hidden="true">
-              <span className="h-0.5 w-[22px] rounded-full bg-slate-800 transition group-hover:bg-blue-700" />
-              <span className="h-0.5 w-4 rounded-full bg-slate-800 transition group-hover:w-[22px] group-hover:bg-blue-700" />
-              <span className="h-0.5 w-[22px] rounded-full bg-slate-800 transition group-hover:bg-blue-700" />
+            <span className="flex w-5 flex-col gap-1" aria-hidden="true">
+              <span className="h-0.5 w-5 rounded-full bg-current" />
+              <span className="h-0.5 w-5 rounded-full bg-current" />
+              <span className="h-0.5 w-5 rounded-full bg-current" />
             </span>
           </button>
 
           <Link
             href="/student"
-            className="min-w-0 max-w-[104px] shrink-0 text-[15px] font-extrabold leading-[1.12] tracking-[-0.01em] text-slate-900"
+            className="min-w-0 max-w-[108px] shrink-0 text-[15px] font-bold leading-[1.15] tracking-[-0.01em] text-slate-900"
             aria-label="Go to student home"
           >
             <span className="line-clamp-2">
@@ -162,7 +162,7 @@ export default function TopBar() {
           <button
             type="button"
             aria-label="Search the student portal"
-            className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span className="truncate">Search</span>
@@ -170,7 +170,7 @@ export default function TopBar() {
 
           <Link
             href="/student/profile"
-            className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-indigo-200 bg-gradient-to-br from-indigo-100 via-sky-100 to-cyan-100 text-xs font-extrabold tracking-wide text-indigo-700 shadow-[0_3px_10px_rgba(79,70,229,0.14)] ring-2 ring-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+            className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-xs font-bold tracking-wide text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             aria-label="Open my profile"
           >
             {avatarUrl ? (
