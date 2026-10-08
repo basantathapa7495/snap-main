@@ -297,7 +297,7 @@ export default function Sidebar() {
 
       {isStudentPath && (
         <aside
-          className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-1/2 min-w-[200px] max-w-[240px] flex-col overflow-hidden bg-white shadow-2xl transition-transform duration-300 lg:hidden ${
+          className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-[62vw] min-w-[240px] max-w-[288px] flex-col overflow-hidden bg-white shadow-2xl transition-transform duration-300 lg:hidden ${
             mobileOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
           aria-label="Student navigation"
