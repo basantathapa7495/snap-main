@@ -34,6 +34,7 @@ import {
   DollarSign,
   CheckSquare,
   Award,
+  ChevronRight,
 } from 'lucide-react';
 
 type MenuItem = {
@@ -298,11 +299,78 @@ export default function Sidebar() {
         />
       )}
 
+      {isStudentPath && (
+        <aside
+          className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-full flex-col overflow-hidden bg-white transition-transform duration-300 lg:hidden ${
+            mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+          aria-label="Student navigation"
+        >
+          <div className="flex items-start justify-between px-6 pb-5 pt-5">
+            <Image
+              src="/logo2.png"
+              alt="NEPSOM School Nepal Platform"
+              width={248}
+              height={108}
+              priority
+              className="h-[108px] w-[248px] object-contain object-left"
+            />
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              className="mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-50 text-slate-800 shadow-[0_8px_20px_rgba(15,23,42,0.10)] transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="Close navigation menu"
+            >
+              <X className="h-8 w-8 stroke-[2.25]" />
+            </button>
+          </div>
+
+          <nav className="flex-1 overflow-y-auto px-5 pb-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {studentMenu.slice(0, 2).map((section, sectionIndex) => (
+              <div key={sectionIndex}>
+                <ul className="space-y-3">
+                  {section.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = isMenuItemActive(item.href);
+
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={() => setMobileOpen(false)}
+                          className={`flex min-h-[72px] items-center gap-5 rounded-[26px] px-4 py-2.5 transition-colors ${
+                            isActive
+                              ? 'bg-gradient-to-r from-blue-600 to-sky-400 text-white shadow-[0_12px_28px_rgba(37,99,235,0.25)]'
+                              : 'text-[#0A1D59] hover:bg-slate-50'
+                          }`}
+                        >
+                          <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] ${
+                            isActive ? 'bg-white/10' : 'bg-blue-50'
+                          }`}>
+                            <Icon className={`h-7 w-7 stroke-[2.25] ${isActive ? 'text-white' : 'text-blue-700'}`} />
+                          </span>
+                          <span className="min-w-0 flex-1 text-[20px] font-bold tracking-[-0.02em]">
+                            {item.label}
+                          </span>
+                          <ChevronRight className={`h-8 w-8 shrink-0 stroke-[2.5] ${isActive ? 'text-white' : 'text-[#7C8FB8]'}`} />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                {sectionIndex === 0 && <div className="my-5 h-px bg-blue-100" />}
+              </div>
+            ))}
+          </nav>
+        </aside>
+      )}
+
       {/* =====================================================
           SIDEBAR
       ===================================================== */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-screen w-[min(300px,86vw)] flex-col border-r border-slate-200 bg-[#F8FAFC] shadow-2xl transition-transform duration-300 dark:border-slate-700 dark:bg-[#111B2B] lg:w-[260px] lg:border-gray-200 lg:bg-white lg:shadow-none lg:dark:border-gray-200 lg:dark:bg-white lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-50 flex h-screen w-[min(300px,86vw)] flex-col border-r border-slate-200 bg-[#F8FAFC] shadow-2xl transition-transform duration-300 dark:border-slate-700 dark:bg-[#111B2B] lg:w-[260px] lg:border-gray-200 lg:bg-white lg:shadow-none lg:dark:border-gray-200 lg:dark:bg-white lg:translate-x-0 ${isStudentPath ? 'hidden lg:flex' : ''} ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
