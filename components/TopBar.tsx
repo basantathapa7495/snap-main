@@ -6,7 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { 
-  Search, 
+  Search,
+  Menu, 
   Bell, 
   HelpCircle, 
   ChevronDown, 
@@ -49,6 +50,8 @@ export default function TopBar() {
   const router = useRouter();
   const pathname = usePathname();
   const isTeacherArea = pathname.startsWith('/teacher');
+  const isStudentArea = pathname.startsWith('/student');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [school, setSchool] = useState<School | null>(null);
@@ -65,6 +68,12 @@ export default function TopBar() {
           setIsLoading(false);
           return;
         }
+
+        setAvatarUrl(
+          user.user_metadata?.avatar_url ||
+          user.user_metadata?.picture ||
+          null
+        );
 
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
@@ -115,10 +124,66 @@ export default function TopBar() {
     router.refresh();
   }
 
-  const userInitial = profile?.full_name?.charAt(0).toUpperCase() || 'U';
+  const nameParts = profile?.full_name?.trim().split(/\s+/).filter(Boolean) || [];
+  const userInitials = nameParts.length > 1
+    ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase()
+    : nameParts[0]?.slice(0, 2).toUpperCase() || 'ST';
+  const compactSchoolName = formatSchoolName(school?.name)
+    .split(/\s+/)
+    .slice(0, 2)
+    .join(' ');
 
   return (
-    <header className="fixed top-0 left-0 right-0 lg:left-64 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
+    <>
+      {isStudentArea && (
+        <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-2 border-b border-slate-200 bg-white px-3 lg:hidden">
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event('student-sidebar:open'))}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          </button>
+
+          <Link
+            href="/student"
+            className="min-w-0 max-w-[88px] shrink-0 text-[13px] font-bold leading-[1.15] text-slate-900"
+            aria-label="Go to student home"
+          >
+            <span className="line-clamp-2">
+              {isLoading ? 'School' : compactSchoolName}
+            </span>
+          </Link>
+
+          <button
+            type="button"
+            aria-label="Search the student portal"
+            className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+          >
+            <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">Search</span>
+          </button>
+
+          <Link
+            href="/student/profile"
+            className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-xs font-bold text-white shadow-sm ring-2 ring-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            aria-label="Open my profile"
+          >
+            {avatarUrl ? (
+              <span
+                className="h-full w-full bg-cover bg-center"
+                style={{ backgroundImage: `url("${avatarUrl.replace(/"/g, '%22')}")` }}
+                aria-hidden="true"
+              />
+            ) : (
+              userInitials
+            )}
+          </Link>
+        </header>
+      )}
+
+      <header className={`fixed top-0 left-0 right-0 lg:left-64 z-30 h-16 items-center justify-between border-b border-gray-200 bg-white px-6 ${isStudentArea ? 'hidden lg:flex' : 'flex'}`}>
       
       {/* Left: School Info */}
       <div className="flex flex-col shrink-0 max-w-[250px]">
@@ -184,7 +249,7 @@ export default function TopBar() {
               <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
             ) : (
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white shadow-sm">
-                {userInitial}
+                {userInitials}
               </div>
             )}
             <div className="hidden text-left md:block">
@@ -205,7 +270,7 @@ export default function TopBar() {
             <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-lg bg-white py-1 shadow-xl z-50">
               
               <Link
-                href={isTeacherArea ? "/teacher/profile" : "/principal/account/profile"}
+                href={isStudentArea ? "/student/profile" : isTeacherArea ? "/teacher/profile" : "/principal/account/profile"}
                 onClick={() => setIsDropdownOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
@@ -214,7 +279,7 @@ export default function TopBar() {
               </Link>
               
               <Link
-                href={isTeacherArea ? "/teacher/profile/preferences" : "/principal/settings"}
+                href={isStudentArea ? "/student/profile" : isTeacherArea ? "/teacher/profile/preferences" : "/principal/settings"}
                 onClick={() => setIsDropdownOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
@@ -223,7 +288,7 @@ export default function TopBar() {
               </Link>
               
               <Link
-                href={isTeacherArea ? "/teacher/profile/security" : "/principal/account/security"}
+                href={isStudentArea ? "/student/profile" : isTeacherArea ? "/teacher/profile/security" : "/principal/account/security"}
                 onClick={() => setIsDropdownOpen(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
@@ -247,7 +312,7 @@ export default function TopBar() {
         </div>
       </div>
       <HelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
-    </header>
-    
+      </header>
+    </>
   );
 }
