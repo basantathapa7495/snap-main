@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { 
   Search,
-  Menu, 
   Bell, 
   HelpCircle, 
   ChevronDown, 
@@ -140,10 +139,14 @@ export default function TopBar() {
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event('student-sidebar:open'))}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label="Open navigation menu"
           >
-            <Menu className="h-5 w-5" aria-hidden="true" />
+            <span className="flex w-[22px] flex-col gap-[5px]" aria-hidden="true">
+              <span className="h-0.5 w-[22px] rounded-full bg-slate-800 transition group-hover:bg-blue-700" />
+              <span className="h-0.5 w-4 rounded-full bg-slate-800 transition group-hover:w-[22px] group-hover:bg-blue-700" />
+              <span className="h-0.5 w-[22px] rounded-full bg-slate-800 transition group-hover:bg-blue-700" />
+            </span>
           </button>
 
           <Link
@@ -159,7 +162,7 @@ export default function TopBar() {
           <button
             type="button"
             aria-label="Search the student portal"
-            className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="ml-auto flex h-9 w-[84px] shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-left text-xs text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 min-[380px]:w-[96px]"
           >
             <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span className="truncate">Search</span>
@@ -167,7 +170,7 @@ export default function TopBar() {
 
           <Link
             href="/student/profile"
-            className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-600 text-xs font-bold text-white shadow-sm ring-2 ring-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-indigo-200 bg-gradient-to-br from-indigo-100 via-sky-100 to-cyan-100 text-xs font-extrabold tracking-wide text-indigo-700 shadow-[0_3px_10px_rgba(79,70,229,0.14)] ring-2 ring-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
             aria-label="Open my profile"
           >
             {avatarUrl ? (
