@@ -238,8 +238,13 @@ export default function StudentProfileSheet({
 
         <div className="mt-3 space-y-1.5">
           {items.map(({ href, label, icon: Icon }, index) => index === 0 ? (
-            <button key={label} type="button" onClick={() => setViewProfileOpen(true)} className="flex min-h-[43px] w-full items-center gap-2.5 rounded-xl border border-blue-100 bg-blue-50 px-2.5 text-left text-[13px] font-bold text-slate-950 transition-colors hover:bg-blue-100">
-              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${index === 0 ? 'bg-blue-100 text-blue-700' : 'bg-slate-50 text-slate-950'}`}><Icon className="h-[17px] w-[17px]" /></span>
+            <button
+              key={label}
+              type="button"
+              onClick={() => setViewProfileOpen(true)}
+              className={`flex min-h-[43px] w-full items-center gap-2.5 rounded-xl border px-2.5 text-left text-[13px] font-bold text-slate-950 transition-colors ${viewProfileOpen ? 'border-blue-100 bg-blue-50 hover:bg-blue-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+            >
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${viewProfileOpen ? 'bg-blue-100 text-blue-700' : 'bg-slate-50 text-slate-950'}`}><Icon className="h-[17px] w-[17px]" /></span>
               <span className="flex-1">{label}</span>
               <ChevronRight className="h-5 w-5 text-slate-400" />
             </button>
