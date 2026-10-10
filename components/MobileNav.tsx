@@ -1,12 +1,13 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, ClipboardCheck, GraduationCap, House, LayoutDashboard, Menu, MessageCircle, UserRound, UsersRound, Wallet } from 'lucide-react';
+import { BookOpen, CalendarDays, ClipboardCheck, FileText, Folder, GraduationCap, House, LayoutDashboard, Menu, MessageCircle, UserRound, UsersRound, Wallet } from 'lucide-react';
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const isPrincipal = pathname.startsWith('/principal');
   const isTeacher = pathname === '/teacher' || pathname.startsWith('/teacher/');
+  const isStudent = pathname === '/student' || pathname.startsWith('/student/');
 
   const defaultNavItems = [
     { href: '/principal', label: 'Home', icon: House },
@@ -29,11 +30,20 @@ export default function MobileBottomNav() {
     { href: '/teacher/classes', label: 'My Classes', icon: BookOpen },
     { href: '/teacher/profile', label: 'My Profile', icon: UserRound },
   ];
+  const studentNavItems = [
+    { href: '/student', label: 'Home', icon: House },
+    { href: '/student/timetable', label: 'Timetable', icon: CalendarDays },
+    { href: '/student/subjects', label: 'Students', icon: UsersRound },
+    { href: '/student/notices', label: 'Notice', icon: FileText },
+    { href: '/student/documents', label: 'Documents', icon: Folder },
+  ];
   const navItems = isPrincipal
     ? principalNavItems
     : isTeacher
       ? teacherNavItems
-      : defaultNavItems;
+      : isStudent
+        ? studentNavItems
+        : defaultNavItems;
 
   return (
     <nav aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/80 bg-[#F8FAFC]/95 shadow-[0_-4px_18px_rgba(15,23,42,0.05)] backdrop-blur-md dark:border-slate-700/70 dark:bg-[#111B2B]/95 md:hidden">
