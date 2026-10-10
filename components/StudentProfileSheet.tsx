@@ -7,12 +7,9 @@ import {
   Bell,
   ChevronRight,
   CircleHelp,
-  Contact,
-  GraduationCap,
   Loader2,
   LockKeyhole,
   LogOut,
-  Pencil,
   Settings,
   UserRound,
   X,
@@ -204,10 +201,6 @@ export default function StudentProfileSheet({
   }
 
   const name = student?.name || fullName || 'Student';
-  const grade = student?.class
-    ? `Grade ${student.class}${student.section ? ` · Section ${student.section}` : ''}`
-    : 'Student';
-  const studentId = student?.roll_no ? `Roll No: ${student.roll_no}` : 'Student account';
   const shownAvatar = preview || avatarUrl;
 
   return (
@@ -219,20 +212,11 @@ export default function StudentProfileSheet({
         </button>
 
         <div className="flex items-center gap-3 pr-7">
-          <div className="relative h-14 w-14 shrink-0">
-            <button type="button" onClick={() => fileRef.current?.click()} className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-base font-bold text-blue-700 ring-[3px] ring-white shadow-md" aria-label="Preview or change profile photo">
-              {shownAvatar ? <span className="block h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${shownAvatar.replace(/"/g, '%22')}")` }} /> : initials(name)}
-            </button>
-            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-white bg-slate-200 text-slate-950 shadow-md hover:bg-slate-300 disabled:cursor-wait" aria-label="Edit profile photo">
-              {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Pencil className="h-3.5 w-3.5" />}
-            </button>
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-base font-bold text-blue-700 ring-[3px] ring-white shadow-md">
+            {shownAvatar ? <span className="block h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${shownAvatar.replace(/"/g, '%22')}")` }} /> : initials(name)}
           </div>
           <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={uploadPhoto} />
-          <div className="min-w-0">
-            <h2 className="truncate text-base font-extrabold text-slate-950">{name}</h2>
-            <p className="mt-0.5 flex w-fit items-center gap-1.5 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-900"><GraduationCap className="h-3.5 w-3.5" />{grade}</p>
-            <p className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] font-medium text-slate-600"><Contact className="h-3.5 w-3.5" />{studentId}</p>
-          </div>
+          <h2 className="min-w-0 truncate text-base font-extrabold text-slate-950">{name}</h2>
         </div>
         {error && <p role="alert" className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>}
 
