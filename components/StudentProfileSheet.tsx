@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Bell,
-  Camera,
   ChevronRight,
   CircleHelp,
   Loader2,
   LockKeyhole,
   LogOut,
+  Pencil,
   Settings,
   UserRound,
   X,
@@ -153,12 +153,14 @@ export default function StudentProfileSheet({
         </button>
 
         <div className="flex items-center gap-3 pr-7">
-          <button type="button" onClick={() => fileRef.current?.click()} className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-blue-100 text-base font-bold text-blue-700 ring-2 ring-white" aria-label="Add or change profile photo">
-            {shownAvatar ? <span className="block h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${shownAvatar.replace(/"/g, '%22')}")` }} /> : initials(name)}
-            <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white">
-              {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
-            </span>
-          </button>
+          <div className="relative h-14 w-14 shrink-0">
+            <button type="button" onClick={() => fileRef.current?.click()} className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-base font-bold text-blue-700 ring-2 ring-white" aria-label="Preview or change profile photo">
+              {shownAvatar ? <span className="block h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${shownAvatar.replace(/"/g, '%22')}")` }} /> : initials(name)}
+            </button>
+            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-sm disabled:cursor-wait" aria-label="Edit profile photo">
+              {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Pencil className="h-3 w-3" />}
+            </button>
+          </div>
           <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={uploadPhoto} />
           <div className="min-w-0">
             <h2 className="truncate text-base font-bold text-slate-950">{name}</h2>
