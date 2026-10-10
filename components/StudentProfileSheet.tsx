@@ -292,6 +292,9 @@ export default function StudentProfileSheet({
         }}
         userId={userId}
         avatarUrl={shownAvatar}
+        onEditPhoto={() => fileRef.current?.click()}
+        uploadingPhoto={uploading}
+        photoError={error}
       />
     </div>
   );
