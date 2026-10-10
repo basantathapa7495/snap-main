@@ -97,6 +97,7 @@ export default function StudentProfileSheet({
     setUploading(true);
     setError('');
     let uploadedPath = '';
+    let profileUpdated = false;
 
     try {
       const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
@@ -111,6 +112,10 @@ export default function StudentProfileSheet({
       });
       if (updated.error) throw updated.error;
 
+      profileUpdated = true;
+      setCurrentPath(uploadedPath);
+      onAvatarChange(localPreview, uploadedPath);
+
       const signed = await supabase.storage
         .from('student-avatars')
         .createSignedUrl(uploadedPath, 3600);
@@ -119,13 +124,16 @@ export default function StudentProfileSheet({
       if (currentPath && currentPath !== uploadedPath) {
         await supabase.storage.from('student-avatars').remove([currentPath]);
       }
-      setCurrentPath(uploadedPath);
       setPreview(null);
       onAvatarChange(signed.data.signedUrl, uploadedPath);
     } catch (cause) {
-      if (uploadedPath) await supabase.storage.from('student-avatars').remove([uploadedPath]);
-      setPreview(null);
-      setError(cause instanceof Error ? cause.message : 'Could not upload the profile photo.');
+      if (!profileUpdated) {
+        if (uploadedPath) await supabase.storage.from('student-avatars').remove([uploadedPath]);
+        setPreview(null);
+        setError(cause instanceof Error ? cause.message : 'Could not upload the profile photo.');
+      } else {
+        setError('Your photo was saved. Its preview may take a moment to refresh.');
+      }
     } finally {
       setUploading(false);
     }
