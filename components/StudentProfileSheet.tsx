@@ -3,6 +3,7 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
+  AlertTriangle,
   Bell,
   ChevronRight,
   CircleHelp,
@@ -93,12 +94,16 @@ export default function StudentProfileSheet({
   const [currentPath, setCurrentPath] = useState(avatarPath);
   const [uploading, setUploading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => setCurrentPath(avatarPath), [avatarPath]);
 
   useEffect(() => {
-    if (!open) setError('');
+    if (!open) {
+      setError('');
+      setConfirmLogout(false);
+    }
   }, [open]);
 
   useEffect(() => () => {
@@ -231,13 +236,32 @@ export default function StudentProfileSheet({
         </div>
 
         <div className="mt-2.5 border-t border-slate-200 pt-2.5">
-          <button type="button" onClick={logout} disabled={loggingOut} className="flex min-h-[44px] w-full items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-3 text-left text-[13px] font-bold text-red-600 hover:bg-red-100 disabled:cursor-wait disabled:opacity-70">
+          <button type="button" onClick={() => setConfirmLogout(true)} disabled={loggingOut} className="flex min-h-[44px] w-full items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-3 text-left text-[13px] font-bold text-red-600 hover:bg-red-100 disabled:cursor-wait disabled:opacity-70">
             {loggingOut ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogOut className="h-5 w-5" />}
             <span className="flex-1">{loggingOut ? 'Logging out…' : 'Logout'}</span>
             <ChevronRight className="h-5 w-5 text-red-400" />
           </button>
         </div>
       </section>
+
+      {confirmLogout && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/25 px-6" role="alertdialog" aria-modal="true" aria-labelledby="logout-title" aria-describedby="logout-description">
+          <div className="w-full max-w-[290px] rounded-2xl bg-white p-5 text-center shadow-[0_22px_60px_rgba(15,23,42,0.28)]">
+            <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+            </span>
+            <h3 id="logout-title" className="mt-3 text-base font-extrabold text-slate-950">Logout from NEPSOM?</h3>
+            <p id="logout-description" className="mt-1.5 text-xs leading-5 text-slate-500">You will need to sign in again to access the student portal.</p>
+            <div className="mt-5 grid grid-cols-2 gap-2.5">
+              <button type="button" onClick={() => setConfirmLogout(false)} disabled={loggingOut} className="min-h-10 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60">No</button>
+              <button type="button" onClick={logout} disabled={loggingOut} className="flex min-h-10 items-center justify-center gap-2 rounded-xl bg-red-600 px-3 text-sm font-bold text-white hover:bg-red-700 disabled:cursor-wait disabled:opacity-70">
+                {loggingOut && <Loader2 className="h-4 w-4 animate-spin" />}
+                {loggingOut ? 'Logging out…' : 'Yes, Logout'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
