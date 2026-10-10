@@ -14,6 +14,7 @@ import {
   Mail,
   MapPin,
   Phone,
+  Pencil,
   UserRound,
   UsersRound,
 } from 'lucide-react';
@@ -54,6 +55,9 @@ type Props = {
   onClose: () => void;
   userId: string;
   avatarUrl: string | null;
+  onEditPhoto: () => void;
+  uploadingPhoto: boolean;
+  photoError: string;
 };
 
 function normalizeClass(value?: string | null) {
@@ -93,7 +97,7 @@ function Section({ icon: Icon, title, children }: { icon: typeof UserRound; titl
   );
 }
 
-export default function StudentProfileView({ open, onClose, userId, avatarUrl }: Props) {
+export default function StudentProfileView({ open, onClose, userId, avatarUrl, onEditPhoto, uploadingPhoto, photoError }: Props) {
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -161,7 +165,6 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl }:
   const student = data?.student;
   const name = student?.name || data?.profile?.full_name || 'Student';
   const grade = student?.class ? `Grade ${student.class}` : 'Grade not added';
-  const section = student?.section ? `Section ${student.section}` : 'Section not added';
   const birthday = student?.date_of_birth || student?.dob;
   const studentId = student?.id || null;
 
@@ -183,15 +186,20 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl }:
           ) : student && data ? (
             <div className="space-y-1.5">
               <section className="flex items-center gap-2.5 rounded-xl bg-white p-2 shadow-sm">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-base font-bold text-blue-700 ring-[3px] ring-white shadow-md">
-                  {avatarUrl ? <span className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${avatarUrl.replace(/"/g, '%22')}")` }} /> : initials(name)}
+                <div className="relative h-16 w-16 shrink-0">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-base font-bold text-blue-700 ring-[3px] ring-white shadow-md">
+                    {avatarUrl ? <span className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${avatarUrl.replace(/"/g, '%22')}")` }} /> : initials(name)}
+                  </div>
+                  <button type="button" onClick={onEditPhoto} disabled={uploadingPhoto} className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-white bg-slate-200 text-black shadow-md hover:bg-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-wait" aria-label="Add or change profile photo" aria-busy={uploadingPhoto}>
+                    {uploadingPhoto ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Pencil className="h-3.5 w-3.5" aria-hidden="true" />}
+                  </button>
                 </div>
                 <div className="min-w-0">
                   <h3 className="truncate text-base font-bold text-slate-950">{name}</h3>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-[11px] font-normal text-slate-600"><GraduationCap className="h-3.5 w-3.5 text-blue-900" />{grade} <span>•</span> {section}</p>
-                  <p className="flex items-center gap-1.5 text-[11px] font-normal text-slate-600"><Contact className="h-3.5 w-3.5" />Roll Number: {student.roll_no || '—'}</p>
                 </div>
               </section>
+
+              {photoError && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{photoError}</p>}
 
               <Section icon={UserRound} title="Personal Information">
                 <InfoRow icon={UserRound} label="Full Name" value={name} />
