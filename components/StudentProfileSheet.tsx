@@ -36,7 +36,7 @@ type Props = {
 };
 
 const items = [
-  { href: '/student/profile', label: 'View Profile', icon: UserRound, active: true },
+  { href: '/student/profile', label: 'View Profile', icon: UserRound },
   { href: '/student/profile', label: 'Account Settings', icon: Settings },
   { href: '/auth/change-password', label: 'Change Password', icon: LockKeyhole },
   { href: '/student/notices', label: 'Notification Settings', icon: Bell },
@@ -157,7 +157,7 @@ export default function StudentProfileSheet({
             <button type="button" onClick={() => fileRef.current?.click()} className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-base font-bold text-blue-700 ring-2 ring-white" aria-label="Preview or change profile photo">
               {shownAvatar ? <span className="block h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${shownAvatar.replace(/"/g, '%22')}")` }} /> : initials(name)}
             </button>
-            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-blue-600 text-white shadow-sm disabled:cursor-wait" aria-label="Edit profile photo">
+            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-slate-200 text-slate-950 shadow-sm hover:bg-slate-300 disabled:cursor-wait" aria-label="Edit profile photo">
               {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Pencil className="h-3 w-3" />}
             </button>
           </div>
@@ -171,8 +171,8 @@ export default function StudentProfileSheet({
         {error && <p role="alert" className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>}
 
         <div className="mt-4 space-y-0.5">
-          {items.map(({ href, label, icon: Icon, active }) => (
-            <Link key={label} href={href} onClick={onClose} className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-[13px] font-semibold ${active ? 'bg-blue-50 text-blue-700' : 'text-slate-800 hover:bg-slate-50'}`}>
+          {items.map(({ href, label, icon: Icon }) => (
+            <Link key={label} href={href} onClick={onClose} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-[13px] font-semibold text-slate-800 hover:bg-slate-50">
               <Icon className="h-[18px] w-[18px] shrink-0" />
               <span className="flex-1">{label}</span>
               <ChevronRight className="h-4 w-4 text-slate-400" />
