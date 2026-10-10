@@ -13,9 +13,7 @@ import {
   Loader2,
   Mail,
   MapPin,
-  Pencil,
   Phone,
-  Trophy,
   UserRound,
   UsersRound,
 } from 'lucide-react';
@@ -47,7 +45,6 @@ type Profile = {
 type ProfileData = {
   student: Student;
   profile: Profile | null;
-  attendance: number | null;
   subjects: string[];
   academicYear: number | null;
 };
@@ -82,17 +79,12 @@ function InfoRow({ icon: Icon, label, value }: { icon: typeof UserRound; label: 
   );
 }
 
-function Section({ icon: Icon, title, editable = false, children }: { icon: typeof UserRound; title: string; editable?: boolean; children: React.ReactNode }) {
+function Section({ icon: Icon, title, children }: { icon: typeof UserRound; title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white px-3.5 pb-1 shadow-sm">
       <div className="flex min-h-12 items-center gap-2">
         <Icon className="h-5 w-5 text-blue-900" aria-hidden="true" />
         <h3 className="flex-1 text-sm font-extrabold text-slate-950">{title}</h3>
-        {editable && (
-          <button type="button" disabled className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs font-bold text-blue-600 disabled:opacity-70" title="Profile editing will be available from Account Settings">
-            <Pencil className="h-3.5 w-3.5" /> Edit
-          </button>
-        )}
       </div>
       {children}
     </section>
@@ -119,11 +111,11 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl }:
         if (studentResult.error || !studentResult.data) throw studentResult.error || new Error('Student record not found.');
 
         const student = studentResult.data as Student;
-        const [attendanceResult, classesResult] = await Promise.all([
-          supabase.from('attendance').select('status').eq('student_id', student.id),
-          supabase.from('classes').select('id,class_name,class,name,class_number,section,section_name,academic_year,archived_at').eq('school_id', student.school_id).is('archived_at', null),
-        ]);
-        if (attendanceResult.error) throw attendanceResult.error;
+        const classesResult = await supabase
+          .from('classes')
+          .select('id,class_name,class,name,class_number,section,section_name,academic_year,archived_at')
+          .eq('school_id', student.school_id)
+          .is('archived_at', null);
         if (classesResult.error) throw classesResult.error;
 
         const classRecord = (classesResult.data || []).find((item) =>
@@ -143,15 +135,10 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl }:
           }
         }
 
-        const rows = attendanceResult.data || [];
-        const present = rows.filter((row) => row.status?.toLowerCase() === 'present').length;
-        const attendance = rows.length ? Math.round((present / rows.length) * 100) : null;
-
         if (active) {
           setData({
             student,
             profile: profileResult.data as Profile | null,
-            attendance,
             subjects,
             academicYear: classRecord?.academic_year || null,
           });
@@ -184,9 +171,6 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl }:
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h2 className="ml-2 flex-1 text-lg font-extrabold text-slate-950">View Profile</h2>
-          <button type="button" disabled className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-blue-50 px-3 text-sm font-bold text-blue-600 disabled:opacity-70" title="Profile editing will be available from Account Settings">
-            <Pencil className="h-4 w-4" /> Edit
-          </button>
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-3.5">
@@ -202,28 +186,12 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl }:
                 </div>
                 <div className="min-w-0">
                   <h3 className="truncate text-xl font-extrabold text-slate-950">{name}</h3>
-                  <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-600"><UserRound className="h-3.5 w-3.5" />Active Student</span>
                   <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-600"><GraduationCap className="h-4 w-4 text-blue-900" />{grade} <span>•</span> {section}</p>
                   <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-600"><Contact className="h-4 w-4" />Roll Number: {student.roll_no || '—'}</p>
                 </div>
               </section>
 
-              <section className="grid grid-cols-4 gap-2">
-                {[
-                  { label: 'Attendance', value: data.attendance === null ? '—' : `${data.attendance}%`, icon: CalendarDays, tone: 'bg-sky-50 text-sky-600' },
-                  { label: 'Total Subjects', value: data.subjects.length || '—', icon: BookOpen, tone: 'bg-emerald-50 text-emerald-600' },
-                  { label: 'Current GPA', value: '—', icon: GraduationCap, tone: 'bg-violet-50 text-violet-600' },
-                  { label: 'Position', value: '—', icon: Trophy, tone: 'bg-amber-50 text-amber-500' },
-                ].map(({ label, value, icon: Icon, tone }) => (
-                  <div key={label} className={`rounded-xl px-1.5 py-3 text-center ${tone}`}>
-                    <Icon className="mx-auto h-5 w-5" />
-                    <p className="mt-1.5 text-[10px] font-medium leading-3 text-slate-500">{label}</p>
-                    <strong className="mt-1 block text-base text-slate-950">{value}</strong>
-                  </div>
-                ))}
-              </section>
-
-              <Section icon={UserRound} title="Personal Information" editable>
+              <Section icon={UserRound} title="Personal Information">
                 <InfoRow icon={UserRound} label="Full Name" value={name} />
                 <InfoRow icon={CalendarDays} label="Date of Birth" value={birthday} />
                 <InfoRow icon={UserRound} label="Gender" value={student.gender} />
@@ -239,13 +207,13 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl }:
                 <InfoRow icon={BookOpen} label="Subjects" value={data.subjects.length ? data.subjects.join(', ') : null} />
               </Section>
 
-              <Section icon={UsersRound} title="Parent/Guardian Information" editable>
+              <Section icon={UsersRound} title="Parent/Guardian Information">
                 <InfoRow icon={UserRound} label="Guardian Name" value={student.parent_name} />
                 <InfoRow icon={Phone} label="Contact Number" value={student.parent_phone} />
                 <InfoRow icon={Mail} label="Student Email" value={student.email} />
               </Section>
 
-              <Section icon={MapPin} title="Address Information" editable>
+              <Section icon={MapPin} title="Address Information">
                 <InfoRow icon={Home} label="Permanent Address" value={student.address || data.profile?.address} />
                 <InfoRow icon={MapPin} label="Temporary Address" value={null} />
               </Section>
