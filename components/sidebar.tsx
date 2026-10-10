@@ -118,14 +118,6 @@ const studentMenu: MenuSection[] = [
   ],
 ];
 
-const studentBottomMenu: MenuItem[] = [
-  { href: '/student', label: 'Home', icon: LayoutDashboard },
-  { href: '/student/timetable', label: 'Timetable', icon: Calendar },
-  { href: '/student/subjects', label: 'Students', icon: Users },
-  { href: '/student/notices', label: 'Notices', icon: MessageSquare },
-  { href: '/student/documents', label: 'Documents', icon: Folder },
-];
-
 export default function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -466,35 +458,6 @@ export default function Sidebar() {
 
 
       </aside>
-      {isStudentPath && (
-        <nav
-          className="fixed inset-x-0 bottom-[max(env(safe-area-inset-bottom),1.25rem)] z-30 border-t border-slate-200 bg-slate-50 px-1 py-2 lg:hidden"
-          aria-label="Student bottom navigation"
-        >
-          <div className="mx-auto flex max-w-lg items-stretch justify-around">
-            {studentBottomMenu.map((item) => {
-              const Icon = item.icon;
-              const isActive = isMenuItemActive(item.href);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-1 text-[11px] font-semibold transition-colors ${
-                    isActive ? 'text-slate-800' : 'text-slate-500 hover:text-slate-700'
-                  }`}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <span className="flex h-8 w-9 items-center justify-center">
-                    <Icon className="h-6 w-6 stroke-[2]" aria-hidden="true" />
-                  </span>
-                  <span className="max-w-full truncate">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
-      )}
       {isPrincipalPath && <PrincipalSearch open={searchOpen} onClose={closeSearch} />}
       {isTeacherPath && <TeacherSearch open={searchOpen} onClose={closeSearch} />}
     </>
