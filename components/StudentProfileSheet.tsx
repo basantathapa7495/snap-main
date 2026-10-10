@@ -2,7 +2,6 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   Bell,
   ChevronRight,
@@ -60,11 +59,11 @@ export default function StudentProfileSheet({
   student,
   onAvatarChange,
 }: Props) {
-  const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [currentPath, setCurrentPath] = useState(avatarPath);
   const [uploading, setUploading] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => setCurrentPath(avatarPath), [avatarPath]);
@@ -133,10 +132,19 @@ export default function StudentProfileSheet({
   }
 
   async function logout() {
-    await supabase.auth.signOut();
+    if (loggingOut) return;
+    setLoggingOut(true);
+    setError('');
+
+    const { error: signOutError } = await supabase.auth.signOut();
+    if (signOutError) {
+      setError(signOutError.message || 'Could not log out. Please try again.');
+      setLoggingOut(false);
+      return;
+    }
+
     onClose();
-    router.push('/auth/login');
-    router.refresh();
+    window.location.replace('/auth/login?role=student');
   }
 
   const name = student?.name || fullName || 'Student';
@@ -183,9 +191,9 @@ export default function StudentProfileSheet({
         </div>
 
         <div className="mt-2.5 border-t border-slate-200 pt-2.5">
-          <button type="button" onClick={logout} className="flex min-h-[44px] w-full items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-3 text-left text-[13px] font-bold text-red-600 hover:bg-red-100">
-            <LogOut className="h-5 w-5" />
-            <span className="flex-1">Logout</span>
+          <button type="button" onClick={logout} disabled={loggingOut} className="flex min-h-[44px] w-full items-center gap-3 rounded-xl border border-red-100 bg-red-50 px-3 text-left text-[13px] font-bold text-red-600 hover:bg-red-100 disabled:cursor-wait disabled:opacity-70">
+            {loggingOut ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogOut className="h-5 w-5" />}
+            <span className="flex-1">{loggingOut ? 'Logging out…' : 'Logout'}</span>
             <ChevronRight className="h-5 w-5 text-red-400" />
           </button>
         </div>
