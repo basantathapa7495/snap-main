@@ -94,33 +94,41 @@ export default function TopBar() {
         else {
           setProfile(profileData);
 
-          if (isStudentArea) {
-            const { data: studentData, error: studentError } = await supabase
-              .from('students')
-              .select('name, class, section, roll_no')
-              .eq('user_id', user.id)
-              .maybeSingle();
-            if (studentError) console.error('Student fetch error', studentError);
-            else setStudent(studentData);
+          const schoolRequest = profileData.school_id
+            ? supabase
+                .from('schools')
+                .select('id, name, municipality, district')
+                .eq('id', profileData.school_id)
+                .single()
+                .then(({ data, error }) => {
+                  if (error) console.error('School fetch error', error);
+                  else setSchool(data);
+                })
+            : Promise.resolve();
 
-            if (profileData.avatar_path) {
-              const signed = await supabase.storage
+          const studentRequest = isStudentArea
+            ? supabase
+                .from('students')
+                .select('name, class, section, roll_no')
+                .eq('user_id', user.id)
+                .maybeSingle()
+                .then(({ data, error }) => {
+                  if (error) console.error('Student fetch error', error);
+                  else setStudent(data);
+                })
+            : Promise.resolve();
+
+          const avatarRequest = isStudentArea && profileData.avatar_path
+            ? supabase.storage
                 .from('student-avatars')
-                .createSignedUrl(profileData.avatar_path, 3600);
-              if (signed.data) setAvatarUrl(signed.data.signedUrl);
-            }
-          }
+                .createSignedUrl(profileData.avatar_path, 3600)
+                .then(({ data, error }) => {
+                  if (error) console.error('Avatar URL error', error);
+                  else if (data) setAvatarUrl(data.signedUrl);
+                })
+            : Promise.resolve();
 
-          if (profileData?.school_id) {
-            const { data: schoolData, error: schoolError } = await supabase
-              .from('schools')
-              .select('id, name, municipality, district')
-              .eq('id', profileData.school_id)
-              .single();
-            
-            if (schoolError) console.error('School fetch error', schoolError);
-            else setSchool(schoolData);
-          }
+          await Promise.allSettled([schoolRequest, studentRequest, avatarRequest]);
         }
       } catch (error) {
         console.error('TopBar: Unexpected error', error);
@@ -182,7 +190,7 @@ export default function TopBar() {
             aria-label="Go to student home"
           >
             <span className="line-clamp-2">
-              {isLoading ? 'School' : compactSchoolName}
+              {school?.name ? compactSchoolName : 'School'}
             </span>
           </Link>
 
