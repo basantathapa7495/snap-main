@@ -216,8 +216,8 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl }:
               </Section>
 
               <Section icon={MapPin} title="Address Information">
-                <InfoRow icon={Home} label="Permanent Address" value={student.address || data.profile?.address} />
-                <InfoRow icon={MapPin} label="Temporary Address" value={null} />
+                <InfoRow icon={Home} label="Permanent" value={student.address || data.profile?.address} />
+                <InfoRow icon={MapPin} label="Temporary" value={null} />
               </Section>
             </div>
           ) : null}
