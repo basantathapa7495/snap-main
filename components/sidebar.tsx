@@ -468,7 +468,7 @@ export default function Sidebar() {
       </aside>
       {isStudentPath && (
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-slate-50 px-1 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 lg:hidden"
+          className="fixed inset-x-0 bottom-[max(env(safe-area-inset-bottom),1.25rem)] z-30 border-t border-slate-200 bg-slate-50 px-1 py-2 lg:hidden"
           aria-label="Student bottom navigation"
         >
           <div className="mx-auto flex max-w-lg items-stretch justify-around">
