@@ -5,6 +5,7 @@ import HelpModal from './HelpModal';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import StudentProfileSheet from './StudentProfileSheet';
 import { 
   Search,
   Bell, 
@@ -24,7 +25,14 @@ interface Profile {
   full_name: string | null;
   role: string | null;
   school_id: string | null;
-  avatar_url?: string | null;
+  avatar_path: string | null;
+}
+
+interface StudentSummary {
+  name: string;
+  class: string | null;
+  section: string | null;
+  roll_no: string | null;
 }
 
 interface School {
@@ -53,9 +61,11 @@ export default function TopBar() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [student, setStudent] = useState<StudentSummary | null>(null);
   const [school, setSchool] = useState<School | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isStudentProfileOpen, setIsStudentProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch Data
@@ -76,13 +86,30 @@ export default function TopBar() {
 
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id, user_id, full_name, role, school_id')
+          .select('id, user_id, full_name, role, school_id, avatar_path')
           .eq('user_id', user.id)
           .single();
         
         if (profileError) console.error('Profile fetch error', profileError);
         else {
           setProfile(profileData);
+
+          if (isStudentArea) {
+            const { data: studentData, error: studentError } = await supabase
+              .from('students')
+              .select('name, class, section, roll_no')
+              .eq('user_id', user.id)
+              .maybeSingle();
+            if (studentError) console.error('Student fetch error', studentError);
+            else setStudent(studentData);
+
+            if (profileData.avatar_path) {
+              const signed = await supabase.storage
+                .from('student-avatars')
+                .createSignedUrl(profileData.avatar_path, 3600);
+              if (signed.data) setAvatarUrl(signed.data.signedUrl);
+            }
+          }
 
           if (profileData?.school_id) {
             const { data: schoolData, error: schoolError } = await supabase
@@ -103,7 +130,7 @@ export default function TopBar() {
     }
     
     fetchTopBarData();
-  }, []);
+  }, [isStudentArea]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -168,10 +195,11 @@ export default function TopBar() {
             <span className="truncate">Search</span>
           </button>
 
-          <Link
-            href="/student/profile"
+          <button
+            type="button"
+            onClick={() => setIsStudentProfileOpen(true)}
             className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-xs font-bold tracking-wide text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            aria-label="Open my profile"
+            aria-label="Open profile menu"
           >
             {avatarUrl ? (
               <span
@@ -182,7 +210,7 @@ export default function TopBar() {
             ) : (
               userInitials
             )}
-          </Link>
+          </button>
         </header>
       )}
 
@@ -316,6 +344,21 @@ export default function TopBar() {
       </div>
       <HelpModal isOpen={isHelpModalOpen} onClose={() => setIsHelpModalOpen(false)} />
       </header>
+      {isStudentArea && profile && (
+        <StudentProfileSheet
+          open={isStudentProfileOpen}
+          onClose={() => setIsStudentProfileOpen(false)}
+          userId={profile.user_id}
+          fullName={profile.full_name || ''}
+          avatarPath={profile.avatar_path}
+          avatarUrl={avatarUrl}
+          student={student}
+          onAvatarChange={(url, path) => {
+            setAvatarUrl(url);
+            setProfile((current) => current ? { ...current, avatar_path: path } : current);
+          }}
+        />
+      )}
     </>
   );
 }
