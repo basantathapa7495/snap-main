@@ -109,6 +109,14 @@ export default function StudentProfileSheet({
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!viewProfileOpen) return;
+    const handleBack = () => setViewProfileOpen(false);
+    window.history.pushState({ ...window.history.state, studentProfileView: true }, '');
+    window.addEventListener('popstate', handleBack);
+    return () => window.removeEventListener('popstate', handleBack);
+  }, [viewProfileOpen]);
+
   useEffect(() => () => {
     if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview);
   }, [preview]);
@@ -271,7 +279,15 @@ export default function StudentProfileSheet({
           </div>
         </div>
       )}
-      <StudentProfileView open={viewProfileOpen} onClose={() => setViewProfileOpen(false)} userId={userId} avatarUrl={shownAvatar} />
+      <StudentProfileView
+        open={viewProfileOpen}
+        onClose={() => {
+          if (window.history.state?.studentProfileView) window.history.back();
+          else setViewProfileOpen(false);
+        }}
+        userId={userId}
+        avatarUrl={shownAvatar}
+      />
     </div>
   );
 }
