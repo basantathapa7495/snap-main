@@ -49,6 +49,35 @@ function initials(name: string) {
   return (parts.length > 1 ? `${parts[0][0]}${parts.at(-1)?.[0]}` : parts[0]?.slice(0, 2) || 'ST').toUpperCase();
 }
 
+async function optimizeAvatar(file: File) {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const maxSize = 512;
+    const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext('2d');
+
+    if (!context) {
+      bitmap.close();
+      return file;
+    }
+
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/webp', 0.78);
+    });
+
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], 'avatar.webp', { type: 'image/webp' });
+  } catch {
+    return file;
+  }
+}
+
 export default function StudentProfileSheet({
   open,
   onClose,
@@ -100,11 +129,14 @@ export default function StudentProfileSheet({
     let profileUpdated = false;
 
     try {
-      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const uploadFile = await optimizeAvatar(file);
+      const extension = uploadFile.type === 'image/webp'
+        ? 'webp'
+        : uploadFile.type === 'image/png' ? 'png' : 'jpg';
       uploadedPath = `${userId}/${crypto.randomUUID()}.${extension}`;
       const uploaded = await supabase.storage
         .from('student-avatars')
-        .upload(uploadedPath, file, { contentType: file.type, upsert: false });
+        .upload(uploadedPath, uploadFile, { contentType: uploadFile.type, cacheControl: '3600', upsert: false });
       if (uploaded.error) throw uploaded.error;
 
       const updated = await supabase.rpc('update_my_student_avatar', {
