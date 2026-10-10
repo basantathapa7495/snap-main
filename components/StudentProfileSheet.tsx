@@ -148,7 +148,7 @@ export default function StudentProfileSheet({
 
   return (
     <div className="fixed inset-0 z-[70] lg:hidden" role="dialog" aria-modal="true" aria-label="Student profile menu">
-      <button type="button" className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]" onClick={onClose} aria-label="Close profile menu" />
+      <button type="button" className="absolute inset-0 bg-slate-900/25" onClick={onClose} aria-label="Close profile menu" />
       <section className="absolute right-3 top-[4.25rem] max-h-[calc(100dvh-5.25rem)] w-[min(300px,calc(100vw-24px))] overflow-y-auto rounded-[22px] border border-white/80 bg-white px-3.5 pb-3 pt-3.5 shadow-[0_22px_60px_rgba(15,23,42,0.24)]">
         <button type="button" onClick={onClose} className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200" aria-label="Close profile menu">
           <X className="h-5 w-5" />
