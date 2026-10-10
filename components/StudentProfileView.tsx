@@ -71,20 +71,22 @@ function valueOrFallback(value?: string | number | null) {
 
 function InfoRow({ icon: Icon, label, value }: { icon: typeof UserRound; label: string; value?: string | number | null }) {
   return (
-    <div className="grid grid-cols-[18px_96px_1fr] items-start gap-1.5 border-t border-slate-100 py-1.5 first:border-t-0">
-      <Icon className="mt-0.5 h-4 w-4 text-slate-500" aria-hidden="true" />
-      <span className="text-[11px] text-slate-500">{label}</span>
-      <span className="break-words text-[11px] font-normal text-slate-800">{valueOrFallback(value)}</span>
+    <div className="grid grid-cols-[18px_1fr] items-start gap-1.5">
+      <Icon className="mt-1.5 h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
+      <div className="grid grid-cols-[92px_1fr] gap-1.5 border-t border-slate-200/80 py-1">
+        <span className="text-[11px] leading-4 text-slate-500">{label}</span>
+        <span className="break-words text-[11px] font-normal leading-4 text-slate-800">{valueOrFallback(value)}</span>
+      </div>
     </div>
   );
 }
 
 function Section({ icon: Icon, title, children }: { icon: typeof UserRound; title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white px-3 pb-0.5 shadow-sm">
-      <div className="flex min-h-10 items-center gap-2">
-        <Icon className="h-[18px] w-[18px] text-blue-900" aria-hidden="true" />
-        <h3 className="flex-1 text-[13px] font-bold text-slate-950">{title}</h3>
+    <section className="rounded-xl border border-slate-200 bg-white px-2.5 pb-0.5 shadow-sm">
+      <div className="flex min-h-9 items-center gap-2">
+        <Icon className="h-4 w-4 text-blue-900" aria-hidden="true" />
+        <h3 className="flex-1 text-xs font-bold text-slate-950">{title}</h3>
       </div>
       {children}
     </section>
@@ -173,21 +175,21 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl }:
           <h2 className="ml-2 flex-1 text-base font-bold text-slate-950">View Profile</h2>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
+        <div className="min-h-0 flex-1 overflow-y-auto p-2">
           {loading ? (
             <div className="flex min-h-[55vh] flex-col items-center justify-center gap-3 text-sm text-slate-500"><Loader2 className="h-7 w-7 animate-spin text-blue-600" />Loading profile…</div>
           ) : error ? (
             <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</div>
           ) : student && data ? (
-            <div className="space-y-2">
-              <section className="flex items-center gap-3 rounded-xl bg-white p-2.5 shadow-sm">
-                <div className="flex h-[70px] w-[70px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-lg font-bold text-blue-700 ring-[3px] ring-white shadow-md">
+            <div className="space-y-1.5">
+              <section className="flex items-center gap-2.5 rounded-xl bg-white p-2 shadow-sm">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-base font-bold text-blue-700 ring-[3px] ring-white shadow-md">
                   {avatarUrl ? <span className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${avatarUrl.replace(/"/g, '%22')}")` }} /> : initials(name)}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="truncate text-lg font-bold text-slate-950">{name}</h3>
-                  <p className="mt-1 flex items-center gap-1.5 text-xs font-normal text-slate-600"><GraduationCap className="h-4 w-4 text-blue-900" />{grade} <span>•</span> {section}</p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-xs font-normal text-slate-600"><Contact className="h-4 w-4" />Roll Number: {student.roll_no || '—'}</p>
+                  <h3 className="truncate text-base font-bold text-slate-950">{name}</h3>
+                  <p className="mt-0.5 flex items-center gap-1.5 text-[11px] font-normal text-slate-600"><GraduationCap className="h-3.5 w-3.5 text-blue-900" />{grade} <span>•</span> {section}</p>
+                  <p className="flex items-center gap-1.5 text-[11px] font-normal text-slate-600"><Contact className="h-3.5 w-3.5" />Roll Number: {student.roll_no || '—'}</p>
                 </div>
               </section>
 
