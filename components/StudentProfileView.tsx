@@ -71,20 +71,20 @@ function valueOrFallback(value?: string | number | null) {
 
 function InfoRow({ icon: Icon, label, value }: { icon: typeof UserRound; label: string; value?: string | number | null }) {
   return (
-    <div className="grid grid-cols-[20px_104px_1fr] items-start gap-2 border-t border-slate-100 py-2 first:border-t-0">
+    <div className="grid grid-cols-[18px_96px_1fr] items-start gap-1.5 border-t border-slate-100 py-1.5 first:border-t-0">
       <Icon className="mt-0.5 h-4 w-4 text-slate-500" aria-hidden="true" />
-      <span className="text-xs text-slate-500">{label}</span>
-      <span className="break-words text-xs font-semibold text-slate-900">{valueOrFallback(value)}</span>
+      <span className="text-[11px] text-slate-500">{label}</span>
+      <span className="break-words text-[11px] font-normal text-slate-800">{valueOrFallback(value)}</span>
     </div>
   );
 }
 
 function Section({ icon: Icon, title, children }: { icon: typeof UserRound; title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white px-3.5 pb-1 shadow-sm">
-      <div className="flex min-h-12 items-center gap-2">
-        <Icon className="h-5 w-5 text-blue-900" aria-hidden="true" />
-        <h3 className="flex-1 text-sm font-extrabold text-slate-950">{title}</h3>
+    <section className="rounded-xl border border-slate-200 bg-white px-3 pb-0.5 shadow-sm">
+      <div className="flex min-h-10 items-center gap-2">
+        <Icon className="h-[18px] w-[18px] text-blue-900" aria-hidden="true" />
+        <h3 className="flex-1 text-[13px] font-bold text-slate-950">{title}</h3>
       </div>
       {children}
     </section>
@@ -164,30 +164,30 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl }:
   const studentId = student?.id || null;
 
   return (
-    <div className="fixed inset-0 z-[90] bg-slate-950/25 px-3 py-3 lg:hidden" role="dialog" aria-modal="true" aria-label="View student profile">
-      <article className="mx-auto flex h-full w-full max-w-[430px] flex-col overflow-hidden rounded-[26px] bg-slate-50 shadow-[0_24px_70px_rgba(15,23,42,0.30)]">
-        <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center border-b border-slate-200 bg-white px-3">
-          <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 text-slate-800" aria-label="Back to profile menu">
+    <div className="fixed inset-0 z-[90] flex items-center bg-slate-950/25 px-3 py-4 lg:hidden" role="dialog" aria-modal="true" aria-label="View student profile">
+      <article className="mx-auto flex max-h-[calc(100dvh-32px)] w-full max-w-[430px] flex-col overflow-hidden rounded-[22px] bg-slate-50 shadow-[0_24px_70px_rgba(15,23,42,0.30)]">
+        <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center border-b border-slate-200 bg-white px-2.5">
+          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-800" aria-label="Back to profile menu">
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h2 className="ml-2 flex-1 text-lg font-extrabold text-slate-950">View Profile</h2>
+          <h2 className="ml-2 flex-1 text-base font-bold text-slate-950">View Profile</h2>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-3.5">
+        <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
           {loading ? (
             <div className="flex min-h-[55vh] flex-col items-center justify-center gap-3 text-sm text-slate-500"><Loader2 className="h-7 w-7 animate-spin text-blue-600" />Loading profile…</div>
           ) : error ? (
             <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</div>
           ) : student && data ? (
-            <div className="space-y-3">
-              <section className="flex items-center gap-4 rounded-2xl bg-white p-3 shadow-sm">
-                <div className="flex h-[88px] w-[88px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-xl font-extrabold text-blue-700 ring-4 ring-white shadow-md">
+            <div className="space-y-2">
+              <section className="flex items-center gap-3 rounded-xl bg-white p-2.5 shadow-sm">
+                <div className="flex h-[70px] w-[70px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-lg font-bold text-blue-700 ring-[3px] ring-white shadow-md">
                   {avatarUrl ? <span className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${avatarUrl.replace(/"/g, '%22')}")` }} /> : initials(name)}
                 </div>
                 <div className="min-w-0">
-                  <h3 className="truncate text-xl font-extrabold text-slate-950">{name}</h3>
-                  <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-slate-600"><GraduationCap className="h-4 w-4 text-blue-900" />{grade} <span>•</span> {section}</p>
-                  <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-slate-600"><Contact className="h-4 w-4" />Roll Number: {student.roll_no || '—'}</p>
+                  <h3 className="truncate text-lg font-bold text-slate-950">{name}</h3>
+                  <p className="mt-1 flex items-center gap-1.5 text-xs font-normal text-slate-600"><GraduationCap className="h-4 w-4 text-blue-900" />{grade} <span>•</span> {section}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 text-xs font-normal text-slate-600"><Contact className="h-4 w-4" />Roll Number: {student.roll_no || '—'}</p>
                 </div>
               </section>
 
