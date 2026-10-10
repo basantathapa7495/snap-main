@@ -118,6 +118,14 @@ const studentMenu: MenuSection[] = [
   ],
 ];
 
+const studentBottomMenu: MenuItem[] = [
+  { href: '/student', label: 'Home', icon: LayoutDashboard },
+  { href: '/student/timetable', label: 'Timetable', icon: Calendar },
+  { href: '/student/subjects', label: 'Students', icon: Users },
+  { href: '/student/notices', label: 'Notices', icon: MessageSquare },
+  { href: '/student/documents', label: 'Documents', icon: Folder },
+];
+
 export default function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -458,6 +466,37 @@ export default function Sidebar() {
 
 
       </aside>
+      {isStudentPath && (
+        <nav
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white px-1 pb-[max(env(safe-area-inset-bottom),0.35rem)] pt-1 shadow-[0_-6px_18px_rgba(15,23,42,0.06)] lg:hidden"
+          aria-label="Student bottom navigation"
+        >
+          <div className="mx-auto flex max-w-lg items-stretch justify-around">
+            {studentBottomMenu.map((item) => {
+              const Icon = item.icon;
+              const isActive = isMenuItemActive(item.href);
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-[10px] font-medium transition-colors ${
+                    isActive ? 'text-blue-700' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <span className={`flex h-7 w-9 items-center justify-center rounded-lg ${
+                    isActive ? 'bg-blue-50' : ''
+                  }`}>
+                    <Icon className="h-[18px] w-[18px] stroke-[2.15]" aria-hidden="true" />
+                  </span>
+                  <span className="max-w-full truncate">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
       {isPrincipalPath && <PrincipalSearch open={searchOpen} onClose={closeSearch} />}
       {isTeacherPath && <TeacherSearch open={searchOpen} onClose={closeSearch} />}
     </>
