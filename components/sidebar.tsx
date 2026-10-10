@@ -468,7 +468,7 @@ export default function Sidebar() {
       </aside>
       {isStudentPath && (
         <nav
-          className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white px-1 pb-[max(env(safe-area-inset-bottom),0.35rem)] pt-1 shadow-[0_-6px_18px_rgba(15,23,42,0.06)] lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-slate-50 px-1 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 lg:hidden"
           aria-label="Student bottom navigation"
         >
           <div className="mx-auto flex max-w-lg items-stretch justify-around">
@@ -480,15 +480,13 @@ export default function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1 text-[10px] font-medium transition-colors ${
-                    isActive ? 'text-blue-700' : 'text-slate-500 hover:text-slate-700'
+                  className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-1 py-1 text-[11px] font-semibold transition-colors ${
+                    isActive ? 'text-slate-800' : 'text-slate-500 hover:text-slate-700'
                   }`}
                   aria-current={isActive ? 'page' : undefined}
                 >
-                  <span className={`flex h-7 w-9 items-center justify-center rounded-lg ${
-                    isActive ? 'bg-blue-50' : ''
-                  }`}>
-                    <Icon className="h-[18px] w-[18px] stroke-[2.15]" aria-hidden="true" />
+                  <span className="flex h-8 w-9 items-center justify-center">
+                    <Icon className="h-6 w-6 stroke-[2]" aria-hidden="true" />
                   </span>
                   <span className="max-w-full truncate">{item.label}</span>
                 </Link>
