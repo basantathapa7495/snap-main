@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import StudentProfileView from './StudentProfileView';
 
 type StudentSummary = {
   name: string;
@@ -95,6 +96,7 @@ export default function StudentProfileSheet({
   const [uploading, setUploading] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const [viewProfileOpen, setViewProfileOpen] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => setCurrentPath(avatarPath), [avatarPath]);
@@ -103,6 +105,7 @@ export default function StudentProfileSheet({
     if (!open) {
       setError('');
       setConfirmLogout(false);
+      setViewProfileOpen(false);
     }
   }, [open]);
 
@@ -226,9 +229,15 @@ export default function StudentProfileSheet({
         {error && <p role="alert" className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>}
 
         <div className="mt-3 space-y-1.5">
-          {items.map(({ href, label, icon: Icon }, index) => (
-            <Link key={label} href={href} onClick={onClose} className={`flex min-h-[43px] items-center gap-2.5 rounded-xl border px-2.5 text-[13px] font-bold text-slate-950 transition-colors ${index === 0 ? 'border-blue-100 bg-blue-50 hover:bg-blue-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+          {items.map(({ href, label, icon: Icon }, index) => index === 0 ? (
+            <button key={label} type="button" onClick={() => setViewProfileOpen(true)} className="flex min-h-[43px] w-full items-center gap-2.5 rounded-xl border border-blue-100 bg-blue-50 px-2.5 text-left text-[13px] font-bold text-slate-950 transition-colors hover:bg-blue-100">
               <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${index === 0 ? 'bg-blue-100 text-blue-700' : 'bg-slate-50 text-slate-950'}`}><Icon className="h-[17px] w-[17px]" /></span>
+              <span className="flex-1">{label}</span>
+              <ChevronRight className="h-5 w-5 text-slate-400" />
+            </button>
+          ) : (
+            <Link key={label} href={href} onClick={onClose} className="flex min-h-[43px] items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-2.5 text-[13px] font-bold text-slate-950 transition-colors hover:bg-slate-50">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-950"><Icon className="h-[17px] w-[17px]" /></span>
               <span className="flex-1">{label}</span>
               <ChevronRight className="h-5 w-5 text-slate-400" />
             </Link>
@@ -262,6 +271,7 @@ export default function StudentProfileSheet({
           </div>
         </div>
       )}
+      <StudentProfileView open={viewProfileOpen} onClose={() => setViewProfileOpen(false)} userId={userId} avatarUrl={shownAvatar} />
     </div>
   );
 }
