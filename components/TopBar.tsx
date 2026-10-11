@@ -203,21 +203,33 @@ export default function TopBar() {
             <span className="truncate">Search</span>
           </button>
 
+          <Link
+            href="/student/notices"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-50 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            aria-label="Open notifications"
+          >
+            <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
+          </Link>
+
           <button
             type="button"
-            onClick={() => setIsStudentProfileOpen(true)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-xs font-bold tracking-wide text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-            aria-label="Open profile menu"
+            onClick={() => setIsStudentProfileOpen((value) => !value)}
+            className="flex h-10 shrink-0 items-center gap-1 rounded-lg px-0.5 text-slate-600 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            aria-label={isStudentProfileOpen ? 'Close profile menu' : 'Open profile menu'}
+            aria-expanded={isStudentProfileOpen}
           >
-            {avatarUrl ? (
-              <span
-                className="h-full w-full bg-cover bg-center"
-                style={{ backgroundImage: `url("${avatarUrl.replace(/"/g, '%22')}")` }}
-                aria-hidden="true"
-              />
-            ) : (
-              userInitials
-            )}
+            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-xs font-bold tracking-wide text-blue-700">
+              {avatarUrl ? (
+                <span
+                  className="h-full w-full bg-cover bg-center"
+                  style={{ backgroundImage: `url("${avatarUrl.replace(/"/g, '%22')}")` }}
+                  aria-hidden="true"
+                />
+              ) : (
+                userInitials
+              )}
+            </span>
+            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isStudentProfileOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
           </button>
         </header>
       )}
