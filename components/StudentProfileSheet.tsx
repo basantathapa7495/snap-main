@@ -11,7 +11,6 @@ import {
   Loader2,
   LockKeyhole,
   LogOut,
-  Settings,
   UserRound,
   X,
 } from 'lucide-react';
@@ -38,7 +37,6 @@ type Props = {
 
 const items = [
   { href: '/student/profile', label: 'View Profile', icon: UserRound },
-  { href: '/student/profile', label: 'Account Settings', icon: Settings },
   { href: '/auth/change-password', label: 'Change Password', icon: LockKeyhole },
   { href: '/student/notices', label: 'Notification Settings', icon: Bell },
   { href: '/student/help', label: 'Help & Support', icon: CircleHelp },
