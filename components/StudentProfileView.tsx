@@ -193,7 +193,7 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl, o
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center bg-slate-950/25 px-3 py-4 lg:hidden" role="dialog" aria-modal="true" aria-label="View student profile">
-      <article className="mx-auto flex max-h-[calc(100dvh-32px)] w-full max-w-[430px] flex-col overflow-hidden rounded-[22px] bg-slate-50 shadow-[0_24px_70px_rgba(15,23,42,0.30)]">
+      <article className="mx-auto flex h-[calc(100dvh-32px)] w-full max-w-[430px] flex-col overflow-hidden rounded-[22px] bg-slate-50 shadow-[0_24px_70px_rgba(15,23,42,0.30)]">
         <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center border-b border-slate-200 bg-white px-2.5">
           <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-800" aria-label="Back to profile menu">
             <ArrowLeft className="h-5 w-5" />
@@ -203,7 +203,7 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl, o
 
         <div className="min-h-0 flex-1 overflow-y-auto p-2">
           {loading ? (
-            <div className="flex min-h-[55vh] flex-col items-center justify-center gap-3 text-sm text-slate-500"><Loader2 className="h-7 w-7 animate-spin text-blue-600" />Loading profile…</div>
+            <div className="flex h-full min-h-[55vh] flex-col items-center justify-center gap-3 text-sm text-slate-500"><Loader2 className="h-7 w-7 animate-spin text-blue-600" />Loading profile…</div>
           ) : error ? (
             <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">{error}</div>
           ) : student && data ? (
