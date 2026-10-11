@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import StudentChangePasswordView from './StudentChangePasswordView';
 import StudentProfileView from './StudentProfileView';
 
 type StudentSummary = {
@@ -94,6 +95,7 @@ export default function StudentProfileSheet({
   const [loggingOut, setLoggingOut] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [viewProfileOpen, setViewProfileOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => setCurrentPath(avatarPath), [avatarPath]);
@@ -103,6 +105,7 @@ export default function StudentProfileSheet({
       setError('');
       setConfirmLogout(false);
       setViewProfileOpen(false);
+      setChangePasswordOpen(false);
     }
   }, [open]);
 
@@ -113,6 +116,14 @@ export default function StudentProfileSheet({
     window.addEventListener('popstate', handleBack);
     return () => window.removeEventListener('popstate', handleBack);
   }, [viewProfileOpen]);
+
+  useEffect(() => {
+    if (!changePasswordOpen) return;
+    const handleBack = () => setChangePasswordOpen(false);
+    window.history.pushState({ ...window.history.state, studentChangePassword: true }, '');
+    window.addEventListener('popstate', handleBack);
+    return () => window.removeEventListener('popstate', handleBack);
+  }, [changePasswordOpen]);
 
   useEffect(() => () => {
     if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview);
@@ -266,6 +277,12 @@ export default function StudentProfileSheet({
               <span className="flex-1">{label}</span>
               <ChevronRight className="h-5 w-5 text-slate-400" />
             </button>
+          ) : label === 'Change Password' ? (
+            <button key={label} type="button" onClick={() => setChangePasswordOpen(true)} className={`flex min-h-[43px] w-full items-center gap-2.5 rounded-xl border px-2.5 text-left text-[13px] font-bold text-slate-950 transition-colors ${changePasswordOpen ? 'border-blue-100 bg-blue-50 hover:bg-blue-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}>
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${changePasswordOpen ? 'bg-blue-100 text-blue-700' : 'bg-slate-50 text-slate-950'}`}><Icon className="h-[17px] w-[17px]" /></span>
+              <span className="flex-1">{label}</span>
+              <ChevronRight className="h-5 w-5 text-slate-400" />
+            </button>
           ) : (
             <Link key={label} href={href} onClick={onClose} className="flex min-h-[43px] items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-2.5 text-[13px] font-bold text-slate-950 transition-colors hover:bg-slate-50">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-950"><Icon className="h-[17px] w-[17px]" /></span>
@@ -316,6 +333,13 @@ export default function StudentProfileSheet({
         removingPhoto={removingPhoto}
         hasPhoto={Boolean(shownAvatar && currentPath)}
         photoError={error}
+      />
+      <StudentChangePasswordView
+        open={changePasswordOpen}
+        onClose={() => {
+          if (window.history.state?.studentChangePassword) window.history.back();
+          else setChangePasswordOpen(false);
+        }}
       />
     </div>
   );
