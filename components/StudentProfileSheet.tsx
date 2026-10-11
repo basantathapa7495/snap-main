@@ -33,7 +33,7 @@ type Props = {
   avatarPath: string | null;
   avatarUrl: string | null;
   student: StudentSummary | null;
-  onAvatarChange: (url: string, path: string) => void;
+  onAvatarChange: (url: string | null, path: string | null) => void;
 };
 
 const items = [
@@ -92,6 +92,7 @@ export default function StudentProfileSheet({
   const [preview, setPreview] = useState<string | null>(null);
   const [currentPath, setCurrentPath] = useState(avatarPath);
   const [uploading, setUploading] = useState(false);
+  const [removingPhoto, setRemovingPhoto] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const [viewProfileOpen, setViewProfileOpen] = useState(false);
@@ -182,6 +183,32 @@ export default function StudentProfileSheet({
       }
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function removePhoto() {
+    if (removingPhoto || !currentPath) return;
+    setRemovingPhoto(true);
+    setError('');
+
+    try {
+      const updated = await supabase.rpc('update_my_student_avatar', {
+        p_avatar_path: null,
+      });
+      if (updated.error) throw updated.error;
+
+      const pathToRemove = currentPath;
+      setCurrentPath(null);
+      setPreview(null);
+      onAvatarChange(null, null);
+
+      const removed = await supabase.storage.from('student-avatars').remove([pathToRemove]);
+      if (removed.error) setError('Photo removed. The old file could not be cleaned up yet.');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not remove the profile photo.');
+      throw cause;
+    } finally {
+      setRemovingPhoto(false);
     }
   }
 
@@ -286,7 +313,10 @@ export default function StudentProfileSheet({
         userId={userId}
         avatarUrl={shownAvatar}
         onEditPhoto={() => fileRef.current?.click()}
+        onRemovePhoto={removePhoto}
         uploadingPhoto={uploading}
+        removingPhoto={removingPhoto}
+        hasPhoto={Boolean(shownAvatar && currentPath)}
         photoError={error}
       />
     </div>
