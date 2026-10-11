@@ -44,8 +44,8 @@ const initialPreferences: Preferences = {
 
 function Switch({ checked, label, onChange }: { checked: boolean; label: string; onChange: () => void }) {
   return (
-    <button type="button" role="switch" aria-checked={checked} aria-label={`${label}: ${checked ? 'on' : 'off'}`} onClick={onChange} className={`relative h-6 w-11 shrink-0 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${checked ? 'bg-blue-600' : 'bg-slate-300'}`}>
-      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />
+    <button type="button" role="switch" aria-checked={checked} aria-label={`${label}: ${checked ? 'on' : 'off'}`} onClick={onChange} className={`relative h-6 w-11 shrink-0 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${checked ? 'border-blue-600 bg-blue-600' : 'border-slate-300 bg-slate-200'}`}>
+      <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-[0_1px_3px_rgba(15,23,42,0.25)] transition-transform duration-200 ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
     </button>
   );
 }
