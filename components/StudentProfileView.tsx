@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import {
   ArrowLeft,
+  AlertTriangle,
   BookOpen,
+  Camera,
   CalendarDays,
   Contact,
   Droplets,
@@ -14,9 +16,10 @@ import {
   Mail,
   MapPin,
   Phone,
-  Pencil,
+  Trash2,
   UserRound,
   UsersRound,
+  X,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -56,7 +59,10 @@ type Props = {
   userId: string;
   avatarUrl: string | null;
   onEditPhoto: () => void;
+  onRemovePhoto: () => Promise<void>;
   uploadingPhoto: boolean;
+  removingPhoto: boolean;
+  hasPhoto: boolean;
   photoError: string;
 };
 
@@ -97,10 +103,12 @@ function Section({ icon: Icon, title, children }: { icon: typeof UserRound; titl
   );
 }
 
-export default function StudentProfileView({ open, onClose, userId, avatarUrl, onEditPhoto, uploadingPhoto, photoError }: Props) {
+export default function StudentProfileView({ open, onClose, userId, avatarUrl, onEditPhoto, onRemovePhoto, uploadingPhoto, removingPhoto, hasPhoto, photoError }: Props) {
   const [data, setData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -162,6 +170,16 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl, o
 
   if (!open) return null;
 
+  async function confirmPhotoRemoval() {
+    try {
+      await onRemovePhoto();
+      setConfirmRemove(false);
+      setPreviewOpen(false);
+    } catch {
+      // The parent displays the upload/removal error in this view.
+    }
+  }
+
   const student = data?.student;
   const name = student?.name || data?.profile?.full_name || 'Student';
   const grade = student?.class ? `Grade ${student.class}` : 'Grade not added';
@@ -191,17 +209,22 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl, o
           ) : student && data ? (
             <div className="space-y-1.5">
               <section className="flex items-center gap-2.5 rounded-xl bg-white p-2 shadow-sm">
-                <div className="relative h-16 w-16 shrink-0">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-base font-bold text-blue-700 ring-[3px] ring-white shadow-md">
+                <button type="button" onClick={() => avatarUrl && setPreviewOpen(true)} disabled={!avatarUrl} className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-base font-bold text-blue-700 ring-[3px] ring-white shadow-md disabled:cursor-default" aria-label={avatarUrl ? 'Preview profile photo' : 'No profile photo to preview'}>
                     {avatarUrl ? <span className="h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${avatarUrl.replace(/"/g, '%22')}")` }} /> : initials(name)}
-                  </div>
-                  <button type="button" onClick={onEditPhoto} disabled={uploadingPhoto} className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-white bg-slate-200 text-black shadow-md hover:bg-slate-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-wait" aria-label="Add or change profile photo" aria-busy={uploadingPhoto}>
-                    {uploadingPhoto ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Pencil className="h-3.5 w-3.5" aria-hidden="true" />}
-                  </button>
-                </div>
-                <div className="min-w-0">
+                </button>
+                <div className="min-w-0 flex-1">
                   <h3 className="truncate text-base font-bold text-slate-950">{name}</h3>
                   {academicSummary && <p className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] font-normal text-slate-600"><GraduationCap className="h-3.5 w-3.5 shrink-0 text-blue-900" aria-hidden="true" />{academicSummary}</p>}
+                  <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-1.5">
+                    <button type="button" onClick={onEditPhoto} disabled={uploadingPhoto || removingPhoto} className="flex min-h-8 items-center justify-center gap-1.5 rounded-lg bg-blue-50 px-2 text-[11px] font-bold text-blue-700 hover:bg-blue-100 disabled:cursor-wait disabled:opacity-60" aria-busy={uploadingPhoto}>
+                      {uploadingPhoto ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Camera className="h-3.5 w-3.5" aria-hidden="true" />}
+                      {uploadingPhoto ? 'Changing…' : 'Change Photo'}
+                    </button>
+                    <button type="button" onClick={() => setConfirmRemove(true)} disabled={!hasPhoto || uploadingPhoto || removingPhoto} className="flex min-h-8 items-center justify-center gap-1.5 rounded-lg bg-red-50 px-2.5 text-[11px] font-bold text-red-600 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-45">
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </section>
 
@@ -237,6 +260,30 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl, o
           ) : null}
         </div>
       </article>
+
+      {previewOpen && avatarUrl && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/85 p-5" role="dialog" aria-modal="true" aria-label="Profile photo preview" onClick={() => setPreviewOpen(false)}>
+          <button type="button" onClick={() => setPreviewOpen(false)} className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white" aria-label="Close photo preview"><X className="h-6 w-6" /></button>
+          <div className="aspect-square w-full max-w-[360px] rounded-2xl bg-slate-900 bg-contain bg-center bg-no-repeat shadow-2xl" style={{ backgroundImage: `url("${avatarUrl.replace(/"/g, '%22')}")` }} onClick={(event) => event.stopPropagation()} />
+        </div>
+      )}
+
+      {confirmRemove && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/35 px-6" role="alertdialog" aria-modal="true" aria-labelledby="remove-photo-title" aria-describedby="remove-photo-description">
+          <div className="w-full max-w-[290px] rounded-2xl bg-white p-5 text-center shadow-[0_22px_60px_rgba(15,23,42,0.28)]">
+            <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600"><AlertTriangle className="h-5 w-5" aria-hidden="true" /></span>
+            <h3 id="remove-photo-title" className="mt-3 text-base font-extrabold text-slate-950">Remove profile photo?</h3>
+            <p id="remove-photo-description" className="mt-1.5 text-xs leading-5 text-slate-500">Your current photo will be removed from your student profile.</p>
+            <div className="mt-5 grid grid-cols-2 gap-2.5">
+              <button type="button" onClick={() => setConfirmRemove(false)} disabled={removingPhoto} className="min-h-10 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60">No</button>
+              <button type="button" onClick={confirmPhotoRemoval} disabled={removingPhoto} className="flex min-h-10 items-center justify-center gap-2 rounded-xl bg-red-600 px-3 text-sm font-bold text-white hover:bg-red-700 disabled:cursor-wait disabled:opacity-70">
+                {removingPhoto && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                {removingPhoto ? 'Removing…' : 'Yes, Remove'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
