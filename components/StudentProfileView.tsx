@@ -165,6 +165,11 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl, o
   const student = data?.student;
   const name = student?.name || data?.profile?.full_name || 'Student';
   const grade = student?.class ? `Grade ${student.class}` : 'Grade not added';
+  const academicSummary = student?.class
+    ? student.section
+      ? `Grade ${student.class} · Section ${student.section}`
+      : `Grade ${student.class}${student.roll_no ? ` · Roll No: ${student.roll_no}` : ''}`
+    : null;
   const birthday = student?.date_of_birth || student?.dob;
   const studentId = student?.id || null;
 
@@ -196,6 +201,7 @@ export default function StudentProfileView({ open, onClose, userId, avatarUrl, o
                 </div>
                 <div className="min-w-0">
                   <h3 className="truncate text-base font-bold text-slate-950">{name}</h3>
+                  {academicSummary && <p className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] font-normal text-slate-600"><GraduationCap className="h-3.5 w-3.5 shrink-0 text-blue-900" aria-hidden="true" />{academicSummary}</p>}
                 </div>
               </section>
 
