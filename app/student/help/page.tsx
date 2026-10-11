@@ -1,206 +1,118 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, BookOpenText, Building2, CalendarDays, ChevronDown, ChevronRight, CircleHelp, Clock3, FileText, Globe2, GraduationCap, ImagePlus, Info, Loader2, Mail, MapPin, MessageCircleMore, Phone, Search, Send, UserRound, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import Sidebar from '@/components/sidebar';
-import TopBar from '@/components/TopBar';
-import { 
-  FileText, Award, Wallet, Calendar, MessageSquare, 
-  ChevronDown, LifeBuoy, Mail, Phone, School, 
-  BookOpen, Send
-} from 'lucide-react';
 
-// --- Mock Data (Based on your reference HTML) ---
-const quickGuides = [
-  { 
-    id: 1, 
-    title: 'How to submit an assignment', 
-    description: 'Learn how to upload files and submit your homework before the deadline.', 
-    icon: FileText, 
-    color: 'bg-blue-50 text-blue-600' 
-  },
-  { 
-    id: 2, 
-    title: 'How to view report cards', 
-    description: 'Access your terminal report cards and download them as PDF.', 
-    icon: Award, 
-    color: 'bg-purple-50 text-purple-600' 
-  },
-  { 
-    id: 3, 
-    title: 'Checking fee status', 
-    description: 'View your monthly fee structure, payment history, and download receipts.', 
-    icon: Wallet, 
-    color: 'bg-emerald-50 text-emerald-600' 
-  },
-  { 
-    id: 4, 
-    title: 'Understanding your timetable', 
-    description: 'How to read your weekly schedule and find your classroom locations.', 
-    icon: Calendar, 
-    color: 'bg-amber-50 text-amber-600' 
-  },
+type Screen = 'home' | 'faq' | 'contact' | 'report' | 'about';
+type SchoolDetails = { id: string; name: string | null; phone: string | null; email: string | null; address: string | null; municipality: string | null; district: string | null; map_location: string | null; office_hours: string | null };
+
+const faqGroups = [
+  { title: 'Account & Login', subtitle: 'Password, login issues, profile, etc.', icon: UserRound, answer: 'Use Change Password from your profile menu to update your password. If you cannot sign in, contact your school so they can verify your account.' },
+  { title: 'Profile & Information', subtitle: 'View and update your information.', icon: Info, answer: 'Open your profile menu and choose View Profile. Your school manages official academic details; contact the school if any information is incorrect.' },
+  { title: 'Timetable', subtitle: 'Class schedule and periods.', icon: CalendarDays, answer: 'Open Timetable from the bottom navigation. The latest schedule published by your school appears there.' },
+  { title: 'Assignments', subtitle: 'How to view and submit assignments.', icon: FileText, answer: 'Open Assignments, select an item, attach the requested work, and submit it before the due date. Late work is available only when the teacher allows it.' },
+  { title: 'Exams & Results', subtitle: 'View exam schedule and results.', icon: GraduationCap, answer: 'Published exam schedules and results appear in the academic sections of your student portal.' },
+  { title: 'Documents', subtitle: 'Access shared documents.', icon: BookOpenText, answer: 'Open Documents from the bottom navigation to view or download files shared with you by your school.' },
+  { title: 'Notices', subtitle: 'School notices and announcements.', icon: MessageCircleMore, answer: 'Open Notices to read announcements. You can choose which alerts you receive from Notification Settings.' },
+  { title: 'Other', subtitle: 'General questions.', icon: CircleHelp, answer: 'For anything not covered here, use Contact Your School or submit a report with a short description of the issue.' },
 ];
 
-const faqs = [
-  { 
-    id: 1, 
-    question: 'How do I reset my password?', 
-    answer: 'Go to the login page and click on "Forgot Password". Enter your registered email or student ID, and follow the instructions sent to your email.' 
-  },
-  { 
-    id: 2, 
-    question: 'Can I submit an assignment after the due date?', 
-    answer: 'Late submissions are only allowed if your teacher has enabled the "Allow Late Submissions" option. Otherwise, the submit button will be disabled after the deadline.' 
-  },
-  { 
-    id: 3, 
-    question: 'How do I pay my school fees online?', 
-    answer: 'Navigate to the "Fees" section, click on "Pay Now" next to the pending installment, and choose your preferred payment method (eSewa, Khalti, or Bank Transfer).' 
-  },
-  { 
-    id: 4, 
-    question: 'Who do I contact for academic issues?', 
-    answer: 'For subject-related doubts, please contact your respective subject teacher. For general academic or administrative issues, reach out to your class teacher or the school admin.' 
-  },
+const menuItems = [
+  { screen: 'faq' as Screen, title: 'Frequently Asked Questions', detail: 'Find answers to common questions about using the student portal.', icon: BookOpenText },
+  { screen: 'contact' as Screen, title: 'Contact Your School', detail: 'Get in touch with your school for academic or account related support.', icon: Phone },
+  { screen: 'report' as Screen, title: 'Report a Problem', detail: "Let us know if something isn't working correctly.", icon: MessageCircleMore },
+  { screen: 'about' as Screen, title: 'About NEPSOM', detail: 'Learn more about NEPSOM and important information.', icon: Info },
 ];
+
+const inputClass = 'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-950 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100';
+
+function PageHeader({ title, onBack }: { title: string; onBack: () => void }) {
+  return <header className="sticky top-0 z-20 flex min-h-[72px] items-center gap-3 border-b border-slate-100 bg-white/95 px-4 backdrop-blur sm:px-6"><button type="button" onClick={onBack} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-50 text-slate-900 transition hover:bg-slate-100" aria-label="Go back"><ArrowLeft className="h-6 w-6" /></button><h1 className="min-w-0 truncate text-xl font-extrabold tracking-tight text-slate-950 sm:text-2xl">{title}</h1></header>;
+}
+
+function HelpIllustration() {
+  return <div className="relative mx-auto h-40 w-56" aria-hidden="true"><div className="absolute right-3 top-4 grid h-16 w-16 place-items-center rounded-[24px_24px_24px_5px] bg-blue-100 text-4xl font-black text-blue-600">?</div><div className="absolute bottom-2 left-12 h-20 w-24 rounded-t-[48px] bg-blue-100" /><div className="absolute left-[75px] top-11 h-16 w-14 rounded-[45%] bg-orange-200" /><div className="absolute left-[69px] top-6 h-9 w-[68px] -rotate-6 rounded-[55%_55%_35%_35%] bg-slate-800" /><div className="absolute bottom-1 left-[105px] h-14 w-28 -skew-x-6 rounded-md bg-slate-800 shadow-lg"><span className="absolute right-8 top-5 h-2.5 w-2.5 rounded-full bg-slate-400" /></div><span className="absolute left-5 top-16 h-1.5 w-8 rotate-45 rounded-full bg-blue-200" /><span className="absolute left-3 top-24 h-1.5 w-7 rounded-full bg-blue-200" /></div>;
+}
 
 export default function StudentHelpPage() {
-  const [user, setUser] = useState<any>(null);
-  const [school, setSchool] = useState<any>(null);
+  const router = useRouter();
+  const screenshotRef = useRef<HTMLInputElement>(null);
+  const [screen, setScreen] = useState<Screen>('home');
+  const [school, setSchool] = useState<SchoolDetails | null>(null);
+  const [userId, setUserId] = useState('');
+  const [schoolId, setSchoolId] = useState('');
   const [loading, setLoading] = useState(true);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [loadError, setLoadError] = useState('');
+  const [search, setSearch] = useState('');
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
+  const [category, setCategory] = useState('');
+  const [subject, setSubject] = useState('');
+  const [description, setDescription] = useState('');
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [reportError, setReportError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    async function getData() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (!user) { setLoading(false); return; }
-
-      const { data: profileData } = await supabase.from('profiles').select('school_id').eq('user_id', user.id).single();
-      if (profileData?.school_id) {
-        const { data: schoolData } = await supabase.from('schools').select('name').eq('id', profileData.school_id).single();
-        setSchool(schoolData);
-      }
+    let active = true;
+    async function load() {
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (!active) return;
+      if (authError || !auth.user) { setLoadError('Please sign in to open Help & Support.'); setLoading(false); return; }
+      setUserId(auth.user.id);
+      const profile = await supabase.from('profiles').select('school_id').eq('user_id', auth.user.id).maybeSingle();
+      if (!active) return;
+      if (profile.error || !profile.data?.school_id) { setLoadError('Your school details are not available yet.'); setLoading(false); return; }
+      setSchoolId(profile.data.school_id);
+      const result = await supabase.from('schools').select('id,name,phone,email,address,municipality,district,map_location,office_hours').eq('id', profile.data.school_id).maybeSingle();
+      if (!active) return;
+      if (result.error) setLoadError('Could not load your school contact details.'); else setSchool(result.data as SchoolDetails | null);
       setLoading(false);
     }
-    getData();
+    load(); return () => { active = false; };
   }, []);
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-gray-50"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div></div>;
-  if (!user) return <div className="flex h-screen items-center justify-center bg-gray-50"><p className="text-gray-500">Please log in.</p></div>;
+  useEffect(() => { const onPopState = () => setScreen('home'); window.addEventListener('popstate', onPopState); return () => window.removeEventListener('popstate', onPopState); }, []);
+  const filteredFaqs = useMemo(() => { const needle = search.trim().toLowerCase(); return needle ? faqGroups.filter(item => `${item.title} ${item.subtitle} ${item.answer}`.toLowerCase().includes(needle)) : faqGroups; }, [search]);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="lg:ml-64 pt-10 flex flex-col min-h-screen">
-        <TopBar />
-        <main className="flex-1 pt-24 p-4 sm:p-6 lg:p-8 pb-24">
-          
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Help & Support</h1>
-            <p className="mt-1.5 text-sm text-gray-500">Guides and resources for students using NEPSOM.</p>
-          </div>
+  function openScreen(next: Screen) { if (next === 'home') return; window.history.pushState({ ...window.history.state, studentHelpScreen: next }, ''); setScreen(next); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  function goBack() { if (screen !== 'home') { if (window.history.state?.studentHelpScreen) window.history.back(); else setScreen('home'); return; } router.push('/student'); }
+  function chooseScreenshot(event: ChangeEvent<HTMLInputElement>) { const file = event.target.files?.[0] || null; event.target.value = ''; setReportError(''); if (!file) return; if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return setReportError('Choose a JPG, PNG, or WebP image.'); if (file.size > 5 * 1024 * 1024) return setReportError('Screenshot must be 5 MB or smaller.'); setScreenshot(file); }
 
-          {/* Quick Guides Grid */}
-          <div className="mb-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-blue-600" /> Quick Guides
-            </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {quickGuides.map((guide) => {
-                const Icon = guide.icon;
-                return (
-                  <div 
-                    key={guide.id} 
-                    className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-1 cursor-pointer"
-                  >
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-xl mb-4 ${guide.color}`}>
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-sm font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                      {guide.title}
-                    </h3>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      {guide.description}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+  async function submitReport(event: FormEvent) {
+    event.preventDefault();
+    if (!category || !subject.trim() || !description.trim()) return setReportError('Choose a category and complete the subject and description.');
+    if (!userId || !schoolId) return setReportError('Your student account could not be verified.');
+    setSubmitting(true); setReportError(''); let uploadedPath = '';
+    try {
+      const reportId = crypto.randomUUID();
+      if (screenshot) {
+        const extension = screenshot.type === 'image/png' ? 'png' : screenshot.type === 'image/webp' ? 'webp' : 'jpg';
+        uploadedPath = `${userId}/${reportId}/screenshot.${extension}`;
+        const upload = await supabase.storage.from('student-support-screenshots').upload(uploadedPath, screenshot, { contentType: screenshot.type, upsert: false });
+        if (upload.error) throw upload.error;
+      }
+      const created = await supabase.from('student_support_reports').insert({ id: reportId, school_id: schoolId, created_by: userId, category, subject: subject.trim(), description: description.trim(), screenshot_path: uploadedPath || null });
+      if (created.error) throw created.error;
+      setSubmitted(true); setCategory(''); setSubject(''); setDescription(''); setScreenshot(null);
+    } catch (cause) { if (uploadedPath) await supabase.storage.from('student-support-screenshots').remove([uploadedPath]); setReportError(cause instanceof Error ? cause.message : 'Could not submit the report. Please try again.'); } finally { setSubmitting(false); }
+  }
 
-          {/* FAQs & Contact Support Layout */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            
-            {/* FAQ Accordion (2/3 width) */}
-            <div className="lg:col-span-2 rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-              <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4">
-                <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-blue-600" /> Frequently Asked Questions
-                </h3>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {faqs.map((faq) => (
-                  <div key={faq.id} className="p-6">
-                    <button 
-                      onClick={() => setOpenFaq(openFaq === faq.id ? null : faq.id)}
-                      className="flex w-full items-center justify-between text-left"
-                    >
-                      <span className="text-sm font-semibold text-gray-900 pr-4">{faq.question}</span>
-                      <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform duration-200 flex-shrink-0 ${openFaq === faq.id ? 'rotate-180' : ''}`} />
-                    </button>
-                    {openFaq === faq.id && (
-                      <p className="mt-3 text-sm text-gray-600 leading-relaxed animate-in fade-in slide-in-from-top-2 duration-200">
-                        {faq.answer}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+  const location = school?.address || [school?.municipality, school?.district].filter(Boolean).join(', ') || 'Address not provided';
+  if (loading) return <div className="grid min-h-screen place-items-center bg-white"><Loader2 className="h-8 w-8 animate-spin text-blue-600" /></div>;
+  const title = screen === 'home' ? 'Help & Support' : screen === 'faq' ? 'Frequently Asked Questions' : screen === 'contact' ? 'Contact Your School' : screen === 'report' ? 'Report a Problem' : 'About NEPSOM';
 
-            {/* Contact Support Card (1/3 width) */}
-            <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm flex flex-col">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white mb-4">
-                <LifeBuoy className="h-6 w-6" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Need help?</h3>
-              <p className="text-sm text-gray-600 mb-6 flex-1">
-                Contact your class teacher or school admin for immediate assistance.
-              </p>
-
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-3 text-sm text-gray-700">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-gray-200 text-blue-600">
-                    <School className="h-4 w-4" />
-                  </div>
-                  <span className="font-medium truncate">{school?.name || 'School Admin'}</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-700">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-gray-200 text-blue-600">
-                    <Mail className="h-4 w-4" />
-                  </div>
-                  <span className="font-medium truncate">admin@school.edu.np</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-gray-700">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-gray-200 text-blue-600">
-                    <Phone className="h-4 w-4" />
-                  </div>
-                  <span className="font-medium truncate">+977-9800000000</span>
-                </div>
-              </div>
-
-              <button className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors">
-                <Send className="h-4 w-4" /> Contact Support
-              </button>
-            </div>
-
-          </div>
-
-        </main>
-      </div>
-    </div>
-  );
+  return <main className="min-h-screen bg-slate-50 text-slate-950"><div className="mx-auto min-h-screen max-w-3xl bg-white shadow-sm"><PageHeader title={title} onBack={goBack} />
+    {loadError && <p role="alert" className="mx-5 mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-800">{loadError}</p>}
+    {screen === 'home' && <section className="px-5 pb-10 pt-5 sm:px-8"><HelpIllustration /><div className="text-center"><h2 className="text-2xl font-extrabold tracking-tight">How can we help you?</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">Find answers, get support or contact your school.</p></div><div className="mt-7 space-y-3">{menuItems.map(({ screen: itemScreen, title: itemTitle, detail, icon: Icon }) => <button key={itemScreen} type="button" onClick={() => openScreen(itemScreen)} className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50/30"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-blue-50 text-blue-700"><Icon className="h-6 w-6" /></span><span className="min-w-0 flex-1"><strong className="block text-[15px]">{itemTitle}</strong><span className="mt-1 block text-xs leading-5 text-slate-500">{detail}</span></span><ChevronRight className="h-5 w-5 shrink-0 text-slate-500" /></button>)}</div></section>}
+    {screen === 'faq' && <section className="px-5 pb-10 pt-5 sm:px-8"><label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 shadow-sm focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-100"><Search className="h-5 w-5 text-slate-500" /><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search questions..." className="min-w-0 flex-1 bg-transparent text-sm outline-none" />{search && <button type="button" onClick={() => setSearch('')} aria-label="Clear search"><X className="h-4 w-4 text-slate-400" /></button>}</label><div className="mt-5 space-y-3">{filteredFaqs.map(item => { const Icon = item.icon; const open = openFaq === item.title; return <article key={item.title} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><button type="button" onClick={() => setOpenFaq(open ? null : item.title)} className="flex w-full items-center gap-3 p-4 text-left" aria-expanded={open}><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-50 text-blue-700"><Icon className="h-5 w-5" /></span><span className="min-w-0 flex-1"><strong className="block text-[15px]">{item.title}</strong><span className="mt-0.5 block text-xs text-slate-500">{item.subtitle}</span></span><ChevronDown className={`h-5 w-5 shrink-0 text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`} /></button>{open && <p className="border-t border-slate-100 bg-slate-50/60 px-4 py-3 text-sm leading-6 text-slate-600">{item.answer}</p>}</article>; })}{!filteredFaqs.length && <p className="py-10 text-center text-sm text-slate-500">No matching questions found.</p>}</div></section>}
+    {screen === 'contact' && <section className="px-5 pb-10 pt-6 sm:px-8"><p className="text-sm leading-6 text-slate-600">Get in touch with your school for academic or account related support.</p><div className="mt-6 flex items-center gap-4 rounded-2xl border border-slate-200 p-4 shadow-sm"><span className="grid h-14 w-14 place-items-center rounded-full bg-blue-50 text-blue-700"><Building2 className="h-7 w-7" /></span><div><h2 className="font-extrabold">{school?.name || 'Your School'}</h2><p className="mt-1 text-sm text-slate-500">{[school?.municipality, school?.district].filter(Boolean).join(', ') || location}</p></div></div><div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 shadow-sm"><ContactRow icon={Phone} title="Phone" value={school?.phone || 'Not provided'} action={school?.phone ? <a href={`tel:${school.phone}`} className="rounded-xl bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">Call</a> : null} /><ContactRow icon={Mail} title="Email" value={school?.email || 'Not provided'} action={school?.email ? <a href={`mailto:${school.email}`} className="rounded-xl bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">Email</a> : null} /><ContactRow icon={MapPin} title="Address" value={location} action={school?.map_location ? <a href={school.map_location} target="_blank" rel="noreferrer" className="rounded-xl bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">View</a> : null} /><ContactRow icon={Clock3} title="Office Hours" value={school?.office_hours || 'Contact the school for office hours'} /></div><div className="mt-5 rounded-2xl bg-blue-50 p-5"><div className="flex gap-3"><Info className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" /><div><h3 className="font-bold">Need help with?</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-600"><li>Your profile or account information</li><li>Timetable or class related queries</li><li>Assignments, exams or results</li><li>Any other school related support</li></ul></div></div></div></section>}
+    {screen === 'report' && <section className="px-5 pb-10 pt-6 sm:px-8">{submitted ? <div className="flex min-h-[65vh] flex-col items-center justify-center text-center"><span className="grid h-28 w-28 place-items-center rounded-full bg-emerald-50 text-emerald-600"><Send className="h-12 w-12" /></span><h2 className="mt-6 text-2xl font-extrabold">Report Submitted!</h2><p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">Your report has been sent securely. Your school can follow up if more details are needed.</p><button type="button" onClick={() => { setSubmitted(false); setScreen('home'); }} className="mt-8 w-full rounded-2xl bg-blue-600 px-5 py-3.5 font-bold text-white">Back to Help & Support</button></div> : <form onSubmit={submitReport}><p className="text-sm leading-6 text-slate-600">Tell us about the issue you&apos;re facing. We&apos;ll try to help as soon as possible.</p><label className="mt-6 block text-sm font-bold">Issue Category<select value={category} onChange={event => setCategory(event.target.value)} className={`${inputClass} mt-2`} required><option value="">Select a category</option>{faqGroups.map(item => <option key={item.title} value={item.title === 'Other' ? 'other' : item.title.toLowerCase().replaceAll(' & ', '_').replaceAll(' ', '_')}>{item.title}</option>)}</select></label><label className="mt-5 block text-sm font-bold">Subject<input value={subject} onChange={event => setSubject(event.target.value.slice(0, 120))} className={`${inputClass} mt-2`} placeholder="Brief title of the issue" required /></label><label className="mt-5 block text-sm font-bold">Description<textarea value={description} onChange={event => setDescription(event.target.value.slice(0, 500))} className={`${inputClass} mt-2 min-h-36 resize-none`} placeholder="Describe the problem in detail..." required /><span className="mt-1 block text-right text-xs font-normal text-slate-500">{description.length}/500</span></label><div className="mt-5"><p className="text-sm font-bold">Screenshot (Optional)</p><input ref={screenshotRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={chooseScreenshot} /><button type="button" onClick={() => screenshotRef.current?.click()} className="mt-2 flex min-h-40 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 px-4 text-center transition hover:border-blue-400 hover:bg-blue-50"><ImagePlus className="h-8 w-8 text-blue-700" /><strong className="mt-3 text-sm">{screenshot ? screenshot.name : 'Tap to upload image'}</strong><span className="mt-1 text-xs text-slate-500">JPG, PNG or WebP (Max 5MB)</span></button></div>{reportError && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{reportError}</p>}<button disabled={submitting} className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-4 font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:opacity-60">{submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}{submitting ? 'Submitting…' : 'Submit Report'}</button></form>}</section>}
+    {screen === 'about' && <section className="px-5 pb-10 pt-10 text-center sm:px-8"><span className="mx-auto grid h-28 w-28 place-items-center rounded-[28px] bg-blue-50 text-blue-700"><GraduationCap className="h-14 w-14" /></span><h2 className="mt-5 text-3xl font-black">NEPSOM</h2><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">Nepal Education Platform for School Operations and Management</p><div className="mt-8 overflow-hidden rounded-2xl border border-slate-200 text-left shadow-sm"><InfoRow icon={FileText} label="Version" value="0.1.0" /><InfoRow icon={Globe2} label="Website" value={<a href="https://nepsom.xyz" target="_blank" rel="noreferrer" className="font-bold text-blue-600">nepsom.xyz</a>} /></div><div className="mt-6 rounded-2xl bg-slate-50 p-6 text-left"><h3 className="font-extrabold">Our Mission</h3><p className="mt-3 text-sm leading-6 text-slate-600">NEPSOM helps schools in Nepal manage their daily operations easily with simple, modern and accessible technology.</p><div className="mx-auto my-5 h-px w-20 bg-slate-200" /><p className="text-center text-sm text-slate-500">Built with <span aria-label="love">❤️</span> for schools in Nepal.</p></div></section>}
+  </div></main>;
 }
+
+function ContactRow({ icon: Icon, title, value, action }: { icon: typeof Phone; title: string; value: string; action?: React.ReactNode }) { return <div className="flex min-h-24 items-center gap-3 border-b border-slate-100 p-4 last:border-0"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-slate-50 text-blue-700"><Icon className="h-5 w-5" /></span><div className="min-w-0 flex-1"><strong className="block text-sm">{title}</strong><span className="mt-1 whitespace-pre-line break-words text-sm leading-5 text-slate-500">{value}</span></div>{action}</div>; }
+function InfoRow({ icon: Icon, label, value }: { icon: typeof Info; label: string; value: React.ReactNode }) { return <div className="flex min-h-20 items-center gap-3 border-b border-slate-100 px-4 last:border-0"><Icon className="h-5 w-5 text-blue-700" /><span className="flex-1 text-sm font-bold">{label}</span><span className="text-sm text-slate-500">{value}</span></div>; }
