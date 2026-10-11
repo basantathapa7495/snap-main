@@ -7,6 +7,7 @@ import {
   Bell,
   ChevronRight,
   CircleHelp,
+  GraduationCap,
   Loader2,
   LockKeyhole,
   LogOut,
@@ -201,6 +202,11 @@ export default function StudentProfileSheet({
   }
 
   const name = student?.name || fullName || 'Student';
+  const academicSummary = student?.class
+    ? student.section
+      ? `Grade ${student.class} · Section ${student.section}`
+      : `Grade ${student.class}${student.roll_no ? ` · Roll No: ${student.roll_no}` : ''}`
+    : null;
   const shownAvatar = preview || avatarUrl;
 
   return (
@@ -216,7 +222,10 @@ export default function StudentProfileSheet({
             {shownAvatar ? <span className="block h-full w-full bg-cover bg-center" style={{ backgroundImage: `url("${shownAvatar.replace(/"/g, '%22')}")` }} /> : initials(name)}
           </div>
           <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={uploadPhoto} />
-          <h2 className="min-w-0 truncate text-base font-extrabold text-slate-950">{name}</h2>
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-extrabold text-slate-950">{name}</h2>
+            {academicSummary && <p className="mt-0.5 flex items-center gap-1.5 truncate text-[11px] font-medium text-slate-600"><GraduationCap className="h-3.5 w-3.5 shrink-0 text-blue-900" aria-hidden="true" />{academicSummary}</p>}
+          </div>
         </div>
         {error && <p role="alert" className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>}
 
