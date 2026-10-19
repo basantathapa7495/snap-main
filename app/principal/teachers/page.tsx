@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   UserCheck,
   UserMinus,
+  UserPlus,
   UserRound,
   UsersRound,
   LayoutDashboard,
@@ -786,7 +787,7 @@ export default function TeachersPage() {
         </main>
       </div>
 
-      {!selectedTeacher && <nav aria-label="Principal mobile navigation" className="fixed inset-x-0 bottom-0 z-30 flex h-[68px] items-center justify-around border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-950 lg:hidden">
+      {!selectedTeacher && !formOpen && !loginTeacher && <nav aria-label="Principal mobile navigation" className="fixed inset-x-0 bottom-0 z-30 flex h-[68px] items-center justify-around border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-800 dark:bg-slate-950 lg:hidden">
         {([{ href: "/principal", label: "Dashboard", Icon: LayoutDashboard }, { href: "/principal/students", label: "Students", Icon: UsersRound }, { href: "/principal/teachers", label: "Teachers", Icon: UserRound }, { href: "/principal/classes", label: "Classes", Icon: School }] as const).map(({ href, label, Icon }) => <Link key={href} href={href} aria-current={label === "Teachers" ? "page" : undefined} className={`flex min-w-0 flex-col items-center gap-0.5 text-[10px] ${label === "Teachers" ? "font-bold text-blue-700 dark:text-blue-300" : "text-slate-600 dark:text-slate-300"}`}><Icon className="h-5 w-5" aria-hidden="true" />{label}</Link>)}
         <button type="button" onClick={() => document.querySelector<HTMLButtonElement>('button[aria-label="Open sidebar"]')?.click()} className="flex flex-col items-center gap-0.5 text-[10px] text-slate-600 dark:text-slate-300"><MoreHorizontal className="h-5 w-5" aria-hidden="true" />More</button>
       </nav>}
@@ -989,20 +990,25 @@ function TeacherFormModal({
   const field = (key: keyof TeacherForm, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
   return (
-    <Modal onClose={onClose} width="max-w-2xl">
-      <form onSubmit={onSubmit}>
-        <div className="flex items-center justify-between border-b border-slate-100 p-6">
-          <div>
-            <h2 className="text-xl font-bold text-slate-950">
+    <Modal onClose={onClose} width="max-w-2xl" scroll={false}>
+      <form onSubmit={onSubmit} className="flex max-h-[94dvh] flex-col overflow-hidden">
+        <div className="flex shrink-0 items-center justify-between border-b border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-50 px-4 py-4 sm:p-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200"><UserPlus className="h-5 w-5" /></span>
+            <div className="min-w-0">
+            <h2 className="text-lg font-extrabold text-slate-950 sm:text-xl">
               {editing ? "Edit teacher" : "Add teacher"}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-0.5 truncate text-xs text-slate-500 sm:text-sm">
               Keep staff information accurate and complete.
             </p>
+            </div>
           </div>
           <Close onClick={onClose} />
         </div>
-        <div className="grid gap-4 p-6 sm:grid-cols-2">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/70 px-4 py-4 sm:grid sm:grid-cols-2 sm:gap-4 sm:p-6">
+          <div className="mb-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-800 sm:col-span-2 sm:mb-0">Add the teacher’s basic employment details now. You can create their portal login separately after saving.</div>
+          <div className="grid gap-3.5 sm:contents">
           <Field
             label="Full name"
             value={form.name}
@@ -1076,18 +1082,19 @@ function TeacherFormModal({
           {error && (
             <p className="sm:col-span-2 text-sm text-red-600">{error}</p>
           )}
+          </div>
         </div>
-        <div className="flex justify-end gap-2 border-t border-slate-100 px-6 py-4">
+        <div className="grid shrink-0 grid-cols-2 gap-2.5 border-t border-slate-200 bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:flex sm:justify-end sm:px-6 sm:py-4">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600"
+            className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
           >
             Cancel
           </button>
           <button
             disabled={saving || !form.name.trim()}
-            className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="min-h-11 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 disabled:opacity-50"
           >
             {saving ? "Saving…" : editing ? "Save changes" : "Add teacher"}
           </button>
@@ -1270,14 +1277,16 @@ function Modal({
   children,
   onClose,
   width,
+  scroll = true,
 }: {
   children: React.ReactNode;
   onClose: () => void;
   width: string;
+  scroll?: boolean;
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -1285,7 +1294,7 @@ function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className={`max-h-[90vh] w-full overflow-y-auto rounded-2xl bg-white text-slate-900 shadow-2xl [color-scheme:light] ${width}`}
+        className={`max-h-[94dvh] w-full rounded-t-[28px] bg-white text-slate-900 shadow-2xl [color-scheme:light] sm:max-h-[90vh] sm:rounded-2xl ${scroll ? "overflow-y-auto" : "overflow-hidden"} ${width}`}
       >
         {children}
       </div>
