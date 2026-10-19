@@ -5,11 +5,13 @@ import Link from "next/link";
 import {
   AlertCircle,
   ArrowRight,
+  BriefcaseBusiness,
   CalendarDays,
   Check,
   ChevronRight,
   ChevronDown,
   Copy,
+  ContactRound,
   Edit3,
   Eye,
   EyeOff,
@@ -997,7 +999,7 @@ function TeacherFormModal({
     setForm((current) => ({ ...current, [key]: value }));
   return (
     <Modal onClose={onClose} width="max-w-2xl" scroll={false}>
-      <form onSubmit={onSubmit} className="flex h-[94dvh] flex-col overflow-hidden sm:h-auto sm:max-h-[90vh]">
+      <form onSubmit={onSubmit} className="flex h-dvh flex-col overflow-hidden sm:h-auto sm:max-h-[90vh]">
         <div className="flex shrink-0 items-center justify-between border-b border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-50 px-4 py-4 sm:p-6">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200"><UserPlus className="h-5 w-5" /></span>
@@ -1012,83 +1014,31 @@ function TeacherFormModal({
           </div>
           <Close onClick={onClose} />
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/70 px-4 py-4 sm:grid sm:grid-cols-2 sm:gap-4 sm:p-6">
-          <div className="mb-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-800 sm:col-span-2 sm:mb-0">Add the teacher’s basic employment details now. You can create their portal login separately after saving.</div>
-          <div className="grid gap-3.5 sm:contents">
-          <Field
-            label="Full name"
-            value={form.name}
-            onChange={(value) => field("name", value)}
-            required
-          />
-          <Field
-            label="Subject"
-            value={form.subject}
-            onChange={(value) => field("subject", value)}
-          />
-          <Field
-            label="Department"
-            value={form.department}
-            onChange={(value) => field("department", value)}
-          />
-          <Field
-            label="Employee ID (optional)"
-            value={form.employee_id}
-            onChange={(value) => field("employee_id", value)}
-          />
-          <Field
-            label="Phone"
-            value={form.phone}
-            onChange={(value) => field("phone", value)}
-          />
-          <Field
-            label="Email"
-            type="email"
-            value={form.email}
-            onChange={(value) => field("email", value)}
-          />
-          <Field
-            label="Qualification"
-            value={form.qualification}
-            onChange={(value) => field("qualification", value)}
-          />
-          <Field
-            label="Monthly salary"
-            type="number"
-            value={form.salary}
-            onChange={(value) => field("salary", value)}
-          />
-          <Field
-            label="Joining date"
-            type="date"
-            value={form.joining_date}
-            onChange={(value) => field("joining_date", value)}
-          />
-          <Field
-            label="Date of birth"
-            type="date"
-            value={form.date_of_birth}
-            onChange={(value) => field("date_of_birth", value)}
-          />
-          <label className="text-sm font-semibold text-slate-700">
-            Employment status
-            <select value={form.employment_status} onChange={(event) => field("employment_status", event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="on_leave">On leave</option>
-            </select>
-          </label>
-          <div className="sm:col-span-2">
-            <Field
-              label="Address"
-              value={form.address}
-              onChange={(value) => field("address", value)}
-            />
-          </div>
-          {error && (
-            <p className="sm:col-span-2 text-sm text-red-600">{error}</p>
-          )}
-          </div>
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#f6f8fc] px-3.5 py-4 sm:p-6">
+          <p className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs leading-5 text-blue-800">Save the staff record first. Portal login access can be created separately from the teacher’s profile.</p>
+
+          <TeacherFormSection icon={UserRound} title="Basic information" description="Identity details used in the staff directory.">
+            <Field label="Full name" value={form.name} onChange={(value) => field("name", value)} placeholder="Enter teacher's full name" required />
+            <Field label="Employee ID" value={form.employee_id} onChange={(value) => field("employee_id", value)} placeholder="Optional staff ID" />
+            <Field label="Date of birth" type="date" value={form.date_of_birth} onChange={(value) => field("date_of_birth", value)} />
+          </TeacherFormSection>
+
+          <TeacherFormSection icon={BriefcaseBusiness} title="Employment details" description="Teaching role, department and joining information.">
+            <Field label="Subject" value={form.subject} onChange={(value) => field("subject", value)} placeholder="e.g. Mathematics" />
+            <Field label="Department" value={form.department} onChange={(value) => field("department", value)} placeholder="e.g. Science" />
+            <Field label="Qualification" value={form.qualification} onChange={(value) => field("qualification", value)} placeholder="Highest qualification" />
+            <Field label="Monthly salary" type="number" value={form.salary} onChange={(value) => field("salary", value)} placeholder="Amount in NPR" />
+            <Field label="Joining date" type="date" value={form.joining_date} onChange={(value) => field("joining_date", value)} />
+            <label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-700">Employment status</span><select value={form.employment_status} onChange={(event) => field("employment_status", event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"><option value="active">Active</option><option value="inactive">Inactive</option><option value="on_leave">On leave</option></select></label>
+          </TeacherFormSection>
+
+          <TeacherFormSection icon={ContactRound} title="Contact details" description="How the school can reach this teacher.">
+            <Field label="Phone number" type="tel" value={form.phone} onChange={(value) => field("phone", value)} placeholder="e.g. 98XXXXXXXX" />
+            <Field label="Email address" type="email" value={form.email} onChange={(value) => field("email", value)} placeholder="teacher@example.com" />
+            <div className="sm:col-span-2"><Field label="Address" value={form.address} onChange={(value) => field("address", value)} placeholder="Current address" /></div>
+          </TeacherFormSection>
+
+          {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</p>}
         </div>
         <div className="sticky bottom-0 z-20 grid shrink-0 grid-cols-2 gap-2.5 border-t border-slate-200 bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] sm:static sm:flex sm:justify-end sm:px-6 sm:py-4 sm:shadow-none">
           <button
@@ -1115,16 +1065,18 @@ function Field({
   onChange,
   type = "text",
   required = false,
+  placeholder,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   type?: string;
   required?: boolean;
+  placeholder?: string;
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-slate-700">
+      <span className="mb-1.5 block text-xs font-bold text-slate-700">
         {label}
         {required && <span className="text-red-500"> *</span>}
       </span>
@@ -1133,11 +1085,16 @@ function Field({
         type={type}
         min={type === "number" ? "0" : undefined}
         value={value}
+        placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 caret-blue-600 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 [color-scheme:light]"
+        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 caret-blue-600 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 [color-scheme:light]"
       />
     </label>
   );
+}
+
+function TeacherFormSection({ icon: Icon, title, description, children }: { icon: React.ElementType; title: string; description: string; children: React.ReactNode }) {
+  return <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm sm:p-4"><div className="mb-3 flex items-center gap-2.5"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><Icon className="h-4.5 w-4.5" /></span><div className="min-w-0"><h3 className="text-sm font-extrabold text-slate-950">{title}</h3><p className="mt-0.5 text-[11px] leading-4 text-slate-500">{description}</p></div></div><div className="grid gap-3.5 sm:grid-cols-2">{children}</div></section>;
 }
 
 function LoginModal({
@@ -1300,7 +1257,7 @@ function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className={`h-[94dvh] w-full rounded-t-[28px] bg-white text-slate-900 shadow-2xl [color-scheme:light] sm:h-auto sm:max-h-[90vh] sm:rounded-2xl ${scroll ? "overflow-y-auto" : "overflow-hidden"} ${width}`}
+        className={`${scroll ? "max-h-[94dvh] overflow-y-auto" : "h-dvh overflow-hidden sm:h-auto"} w-full bg-white text-slate-900 shadow-2xl [color-scheme:light] sm:max-h-[90vh] sm:rounded-2xl ${width}`}
       >
         {children}
       </div>
