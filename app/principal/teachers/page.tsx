@@ -1015,27 +1015,20 @@ function TeacherFormModal({
           <Close onClick={onClose} />
         </div>
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#f6f8fc] px-3.5 py-4 sm:p-6">
-          <p className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs leading-5 text-blue-800">Save the staff record first. Portal login access can be created separately from the teacher’s profile.</p>
+          <p className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs leading-5 text-blue-800">Only essential staff information is needed. Portal login access can be created separately after saving.</p>
 
           <TeacherFormSection icon={UserRound} title="Basic information" description="Identity details used in the staff directory.">
             <Field label="Full name" value={form.name} onChange={(value) => field("name", value)} placeholder="Enter teacher's full name" required />
-            <Field label="Employee ID" value={form.employee_id} onChange={(value) => field("employee_id", value)} placeholder="Optional staff ID" />
-            <Field label="Date of birth" type="date" value={form.date_of_birth} onChange={(value) => field("date_of_birth", value)} />
-          </TeacherFormSection>
-
-          <TeacherFormSection icon={BriefcaseBusiness} title="Employment details" description="Teaching role, department and joining information.">
-            <Field label="Subject" value={form.subject} onChange={(value) => field("subject", value)} placeholder="e.g. Mathematics" />
-            <Field label="Department" value={form.department} onChange={(value) => field("department", value)} placeholder="e.g. Science" />
-            <Field label="Qualification" value={form.qualification} onChange={(value) => field("qualification", value)} placeholder="Highest qualification" />
-            <Field label="Monthly salary" type="number" value={form.salary} onChange={(value) => field("salary", value)} placeholder="Amount in NPR" />
-            <Field label="Joining date" type="date" value={form.joining_date} onChange={(value) => field("joining_date", value)} />
-            <label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-700">Employment status</span><select value={form.employment_status} onChange={(event) => field("employment_status", event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"><option value="active">Active</option><option value="inactive">Inactive</option><option value="on_leave">On leave</option></select></label>
           </TeacherFormSection>
 
           <TeacherFormSection icon={ContactRound} title="Contact details" description="How the school can reach this teacher.">
             <Field label="Phone number" type="tel" value={form.phone} onChange={(value) => field("phone", value)} placeholder="e.g. 98XXXXXXXX" />
             <Field label="Email address" type="email" value={form.email} onChange={(value) => field("email", value)} placeholder="teacher@example.com" />
             <div className="sm:col-span-2"><Field label="Address" value={form.address} onChange={(value) => field("address", value)} placeholder="Current address" /></div>
+          </TeacherFormSection>
+
+          <TeacherFormSection icon={BriefcaseBusiness} title="Employment" description="Current working status at the school.">
+            <label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-700">Employment status</span><select value={form.employment_status} onChange={(event) => field("employment_status", event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"><option value="active">Active</option><option value="inactive">Inactive</option><option value="on_leave">On leave</option></select></label>
           </TeacherFormSection>
 
           {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</p>}
