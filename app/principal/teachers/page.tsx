@@ -991,7 +991,7 @@ function TeacherFormModal({
     setForm((current) => ({ ...current, [key]: value }));
   return (
     <Modal onClose={onClose} width="max-w-2xl" scroll={false}>
-      <form onSubmit={onSubmit} className="flex max-h-[94dvh] flex-col overflow-hidden">
+      <form onSubmit={onSubmit} className="flex h-[94dvh] flex-col overflow-hidden sm:h-auto sm:max-h-[90vh]">
         <div className="flex shrink-0 items-center justify-between border-b border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-50 px-4 py-4 sm:p-6">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200"><UserPlus className="h-5 w-5" /></span>
@@ -1084,7 +1084,7 @@ function TeacherFormModal({
           )}
           </div>
         </div>
-        <div className="grid shrink-0 grid-cols-2 gap-2.5 border-t border-slate-200 bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:flex sm:justify-end sm:px-6 sm:py-4">
+        <div className="sticky bottom-0 z-20 grid shrink-0 grid-cols-2 gap-2.5 border-t border-slate-200 bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] sm:static sm:flex sm:justify-end sm:px-6 sm:py-4 sm:shadow-none">
           <button
             type="button"
             onClick={onClose}
@@ -1286,7 +1286,7 @@ function Modal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -1294,7 +1294,7 @@ function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className={`max-h-[94dvh] w-full rounded-t-[28px] bg-white text-slate-900 shadow-2xl [color-scheme:light] sm:max-h-[90vh] sm:rounded-2xl ${scroll ? "overflow-y-auto" : "overflow-hidden"} ${width}`}
+        className={`h-[94dvh] w-full rounded-t-[28px] bg-white text-slate-900 shadow-2xl [color-scheme:light] sm:h-auto sm:max-h-[90vh] sm:rounded-2xl ${scroll ? "overflow-y-auto" : "overflow-hidden"} ${width}`}
       >
         {children}
       </div>
