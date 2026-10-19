@@ -117,7 +117,7 @@ export async function POST(request: Request) {
 
   let { data: teacher, error: teacherError } = await admin
     .from("teachers")
-    .select("id, name, phone, user_id")
+    .select("id, name, phone, user_id, avatar_path")
     .eq("id", teacherId)
     .eq("school_id", profile.school_id)
     .maybeSingle();
@@ -125,7 +125,7 @@ export async function POST(request: Request) {
   if (teacherError || !teacher) {
     const fallback = await authenticated
       .from("teachers")
-      .select("id, name, phone, user_id")
+      .select("id, name, phone, user_id, avatar_path")
       .eq("id", teacherId)
       .eq("school_id", profile.school_id)
       .maybeSingle();
@@ -176,6 +176,7 @@ export async function POST(request: Request) {
     role: "teacher",
     full_name: teacher.name,
     phone: teacher.phone || null,
+    avatar_path: teacher.avatar_path || null,
   };
 
   let { error: profileCreateError } = await admin

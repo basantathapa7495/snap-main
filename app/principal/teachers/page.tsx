@@ -6,6 +6,7 @@ import {
   AlertCircle,
   ArrowRight,
   BriefcaseBusiness,
+  Camera,
   CalendarDays,
   Check,
   ChevronRight,
@@ -31,6 +32,7 @@ import {
   MoreHorizontal,
   SlidersHorizontal,
   TriangleAlert,
+  Trash2,
   X,
 } from "lucide-react";
 import Sidebar from "@/components/sidebar";
@@ -59,6 +61,7 @@ type Teacher = {
   employment_status: string | null;
   employee_id: string | null;
   left_at: string | null;
+  avatar_path?: string | null;
 };
 
 type TemporaryCredential = {
@@ -179,6 +182,9 @@ export default function TeachersPage() {
   const [showAllMobileTeachers, setShowAllMobileTeachers] = useState(false);
   const [showAllAttention, setShowAllAttention] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [teacherPhoto, setTeacherPhoto] = useState<File | null>(null);
+  const [teacherPhotoPreview, setTeacherPhotoPreview] = useState("");
+  const [removeTeacherPhoto, setRemoveTeacherPhoto] = useState(false);
 
   useEffect(() => {
     const requestedTab = new URLSearchParams(window.location.search).get("tab");
@@ -220,7 +226,7 @@ export default function TeachersPage() {
         const { data, error: teachersError } = await supabase
           .from("teachers")
           .select(
-            "id, school_id, name, subject, phone, email, qualification, address, salary, created_at, user_id, department, joining_date, date_of_birth, employment_status, employee_id, left_at",
+            "id, school_id, name, subject, phone, email, qualification, address, salary, created_at, user_id, department, joining_date, date_of_birth, employment_status, employee_id, left_at, avatar_path",
           )
           .eq("school_id", profile.school_id)
           .order("created_at", { ascending: false });
@@ -333,10 +339,13 @@ export default function TeachersPage() {
     setEditingTeacher(null);
     setForm(emptyForm);
     setError("");
+    setTeacherPhoto(null);
+    setTeacherPhotoPreview("");
+    setRemoveTeacherPhoto(false);
     setFormOpen(true);
   }
 
-  function openEditForm(teacher: Teacher) {
+  async function openEditForm(teacher: Teacher) {
     setEditingTeacher(teacher);
     setForm({
       name: teacher.name || "",
@@ -354,7 +363,31 @@ export default function TeachersPage() {
     });
     setSelectedTeacher(null);
     setError("");
+    setTeacherPhoto(null);
+    setTeacherPhotoPreview("");
+    setRemoveTeacherPhoto(false);
     setFormOpen(true);
+    if (teacher.avatar_path) {
+      const signed = await supabase.storage.from("teacher-avatars").createSignedUrl(teacher.avatar_path, 3600);
+      if (signed.data?.signedUrl) setTeacherPhotoPreview(signed.data.signedUrl);
+    }
+  }
+
+  function chooseTeacherPhoto(file: File | null) {
+    setError("");
+    if (!file) return;
+    if (!new Set(["image/jpeg", "image/png", "image/webp"]).has(file.type)) {
+      setError("Choose a JPG, PNG or WebP image.");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError("Profile picture must be 2 MB or smaller.");
+      return;
+    }
+    if (teacherPhotoPreview) URL.revokeObjectURL(teacherPhotoPreview);
+    setTeacherPhoto(file);
+    setTeacherPhotoPreview(URL.createObjectURL(file));
+    setRemoveTeacherPhoto(false);
   }
 
   async function saveTeacher(event: React.FormEvent<HTMLFormElement>) {
@@ -362,6 +395,9 @@ export default function TeachersPage() {
     if (!schoolId || !form.name.trim()) return;
     setSaving(true);
     setError("");
+    const teacherId = editingTeacher?.id || crypto.randomUUID();
+    let uploadedPath = "";
+    let avatarPath = removeTeacherPhoto ? null : editingTeacher?.avatar_path || null;
     const teacherData = {
       school_id: schoolId,
       name: titleCase(form.name),
@@ -376,16 +412,33 @@ export default function TeachersPage() {
       date_of_birth: form.date_of_birth || null,
       employment_status: form.employment_status,
       employee_id: form.employee_id.trim() || null,
+      avatar_path: avatarPath,
     };
     try {
+      if (teacherPhoto) {
+        const extension = teacherPhoto.type === "image/png" ? "png" : teacherPhoto.type === "image/webp" ? "webp" : "jpg";
+        uploadedPath = `${schoolId}/${teacherId}/${crypto.randomUUID()}.${extension}`;
+        const upload = await supabase.storage.from("teacher-avatars").upload(uploadedPath, teacherPhoto, {
+          contentType: teacherPhoto.type,
+          cacheControl: "3600",
+          upsert: false,
+        });
+        if (upload.error) throw upload.error;
+        avatarPath = uploadedPath;
+        teacherData.avatar_path = uploadedPath;
+      }
       const result = editingTeacher
         ? await supabase
             .from("teachers")
             .update(teacherData)
             .eq("id", editingTeacher.id)
             .eq("school_id", schoolId)
-        : await supabase.from("teachers").insert(teacherData);
+        : await supabase.from("teachers").insert({ id: teacherId, ...teacherData });
       if (result.error) throw result.error;
+      if (editingTeacher?.avatar_path && editingTeacher.avatar_path !== avatarPath) {
+        const removed = await supabase.storage.from("teacher-avatars").remove([editingTeacher.avatar_path]);
+        if (removed.error) console.error("Old teacher avatar cleanup failed", removed.error);
+      }
       setFormOpen(false);
       setNotice(
         editingTeacher
@@ -394,6 +447,7 @@ export default function TeachersPage() {
       );
       setRefreshKey((value) => value + 1);
     } catch (saveError) {
+      if (uploadedPath) await supabase.storage.from("teacher-avatars").remove([uploadedPath]);
       console.error("Teacher save error", saveError);
       setError(
         saveError instanceof Error
@@ -818,6 +872,16 @@ export default function TeachersPage() {
           editing={Boolean(editingTeacher)}
           saving={saving}
           error={error}
+          photoPreview={teacherPhotoPreview}
+          hasExistingPhoto={Boolean(editingTeacher?.avatar_path)}
+          removePhoto={removeTeacherPhoto}
+          onPhotoChange={chooseTeacherPhoto}
+          onRemovePhoto={() => {
+            if (teacherPhotoPreview) URL.revokeObjectURL(teacherPhotoPreview);
+            setTeacherPhoto(null);
+            setTeacherPhotoPreview("");
+            setRemoveTeacherPhoto(true);
+          }}
           onClose={() => setFormOpen(false)}
           onSubmit={saveTeacher}
         />
@@ -984,6 +1048,11 @@ function TeacherFormModal({
   editing,
   saving,
   error,
+  photoPreview,
+  hasExistingPhoto,
+  removePhoto,
+  onPhotoChange,
+  onRemovePhoto,
   onClose,
   onSubmit,
 }: {
@@ -992,6 +1061,11 @@ function TeacherFormModal({
   editing: boolean;
   saving: boolean;
   error: string;
+  photoPreview: string;
+  hasExistingPhoto: boolean;
+  removePhoto: boolean;
+  onPhotoChange: (file: File | null) => void;
+  onRemovePhoto: () => void;
   onClose: () => void;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
@@ -1018,6 +1092,25 @@ function TeacherFormModal({
           <p className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2.5 text-xs leading-5 text-blue-800">Only essential staff information is needed. Portal login access can be created separately after saving.</p>
 
           <TeacherFormSection icon={UserRound} title="Basic information" description="Identity details used in the staff directory.">
+            <div className="sm:col-span-2">
+              <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <span role={photoPreview && !removePhoto ? "img" : undefined} aria-label={photoPreview && !removePhoto ? "Teacher profile preview" : undefined} style={photoPreview && !removePhoto ? { backgroundImage: `url(${photoPreview})` } : undefined} className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white bg-cover bg-center text-slate-400 ${photoPreview && !removePhoto ? "" : "bg-none"}`}>
+                  {(!photoPreview || removePhoto) && <UserRound className="h-7 w-7" aria-hidden="true" />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-800">Profile picture <span className="font-medium text-slate-400">(optional)</span></p>
+                  <p className="mt-0.5 text-[11px] leading-4 text-slate-500">JPG, PNG or WebP, up to 2 MB.</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <label className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700">
+                      <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                      {photoPreview && !removePhoto ? "Change photo" : "Upload photo"}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => { onPhotoChange(event.target.files?.[0] || null); event.target.value = ""; }} />
+                    </label>
+                    {(photoPreview || hasExistingPhoto) && !removePhoto && <button type="button" onClick={onRemovePhoto} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"><Trash2 className="h-3.5 w-3.5" aria-hidden="true" />Remove</button>}
+                  </div>
+                </div>
+              </div>
+            </div>
             <Field label="Full name" value={form.name} onChange={(value) => field("name", value)} placeholder="Enter teacher's full name" required />
           </TeacherFormSection>
 
