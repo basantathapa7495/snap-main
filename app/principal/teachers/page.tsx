@@ -188,6 +188,12 @@ export default function TeachersPage() {
   }, []);
 
   useEffect(() => {
+    const dialogOpen = formOpen || Boolean(loginTeacher);
+    document.body.classList.toggle("teacher-dialog-open", dialogOpen);
+    return () => document.body.classList.remove("teacher-dialog-open");
+  }, [formOpen, loginTeacher]);
+
+  useEffect(() => {
     let cancelled = false;
     async function loadTeachers() {
       setRefreshing(true);
