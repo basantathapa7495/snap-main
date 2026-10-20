@@ -33,25 +33,9 @@ export const teacherAvatarCache = createTeacherAvatarCache({
   sign: async (paths, signal) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session || signal.aborted) throw new Error("Sign in to load teacher photos.");
-    // The Storage SDK's batch signing method has no AbortSignal option. This is
-    // the same Storage endpoint, bearer token and RLS, with real cancellation.
-    let response: Response | null = null;
-    try {
-      response = await fetch(`${storageUrl}/object/sign/teacher-avatars`, {
-        method: "POST",
-        headers: headers(session.access_token),
-        body: JSON.stringify({ paths, expiresIn: AVATAR_URL_SECONDS }),
-        signal,
-      });
-    } catch (error) {
-      if (signal.aborted) throw error;
-    }
-    if (response?.ok) {
-      const data: { path: string | null; signedURL: string | null }[] = await response.json();
-      return data.map((item) => ({ path: item.path, signedUrl: item.signedURL ? encodeURI(`${storageUrl}${item.signedURL}`) : null }));
-    }
-    // A multi-object Storage query can time out while individual RLS-checked
-    // requests still succeed. Limit fallback concurrency to two connections.
+    // The project's multi-object signing endpoint can hang until the browser
+    // aborts it. Sign only visible objects and keep concurrency low. Each call
+    // still uses the user's bearer token and the existing Storage RLS policy.
     const results: { path: string; signedUrl: string | null }[] = [];
     for (let index = 0; index < paths.length; index += 2) {
       results.push(...await Promise.all(paths.slice(index, index + 2).map((path) =>

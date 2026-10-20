@@ -200,6 +200,13 @@ test('teacher page no longer waits for any Storage signing request', () => {
   assert.match(page, /uploadTeacherPhotoWithRetry/);
 });
 
+test('private avatar client avoids the hanging bulk signing endpoint', () => {
+  const client = fs.readFileSync(new URL('../lib/teacher-avatars.ts', import.meta.url), 'utf8');
+  assert.doesNotMatch(client, /fetch\(`\$\{storageUrl\}\/object\/sign\/teacher-avatars`,/);
+  assert.match(client, /object\/sign\/teacher-avatars\/\$\{path\}/);
+  assert.match(client, /Authorization: `Bearer \$\{token\}`/);
+});
+
 test('cleanup retries a timeout, preserves active photos, and never deletes for another user', async () => {
   const saved = new Map();
   globalThis.sessionStorage = { getItem: (key) => saved.get(key), setItem: (key, value) => saved.set(key, value) };
