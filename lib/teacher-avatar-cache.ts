@@ -96,7 +96,7 @@ export function createTeacherAvatarCache(deps: Dependencies) {
     try {
       let signed: Signed[];
       try {
-        signed = await signWithTimeout(batch.map(([path]) => path), deps.timeoutMs ?? 3000);
+        signed = await signWithTimeout(batch.map(([path]) => path), deps.timeoutMs ?? 6500);
       } catch {
         // One bounded background retry; no page loading state depends on this.
         if (generation !== startedGeneration) return;

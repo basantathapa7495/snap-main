@@ -44,6 +44,7 @@ import TeacherAvatar from "@/components/TeacherAvatar";
 import { activateTeacherAvatarCache } from "@/lib/teacher-avatars";
 import { cleanupTeacherAvatar, resumeTeacherAvatarCleanup } from "@/lib/teacher-avatar-cleanup";
 import { prepareTeacherPhoto } from "@/lib/teacher-photo";
+import { uploadTeacherPhotoWithRetry } from "@/lib/teacher-photo-upload";
 import AccountRequestsPanel from "@/components/AccountRequestsPanel";
 import { supabase } from "@/lib/supabase";
 
@@ -419,12 +420,11 @@ export default function TeachersPage() {
       if (teacherPhoto) {
         const extension = teacherPhoto.type === "image/png" ? "png" : teacherPhoto.type === "image/webp" ? "webp" : "jpg";
         uploadedPath = `${schoolId}/${teacherId}/${crypto.randomUUID()}.${extension}`;
-        const upload = await supabase.storage.from("teacher-avatars").upload(uploadedPath, teacherPhoto, {
+        await uploadTeacherPhotoWithRetry(() => supabase.storage.from("teacher-avatars").upload(uploadedPath, teacherPhoto, {
           contentType: teacherPhoto.type,
           cacheControl: "3600",
           upsert: false,
-        });
-        if (upload.error) throw upload.error;
+        }));
         avatarPath = uploadedPath;
         teacherData.avatar_path = uploadedPath;
       }
