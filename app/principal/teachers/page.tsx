@@ -422,7 +422,7 @@ export default function TeachersPage() {
         uploadedPath = `${schoolId}/${teacherId}/${crypto.randomUUID()}.${extension}`;
         await uploadTeacherPhotoWithRetry(() => supabase.storage.from("teacher-avatars").upload(uploadedPath, teacherPhoto, {
           contentType: teacherPhoto.type,
-          cacheControl: "3600",
+          cacheControl: "31536000",
           upsert: false,
         }));
         avatarPath = uploadedPath;

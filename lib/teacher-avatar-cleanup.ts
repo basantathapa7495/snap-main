@@ -1,7 +1,6 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
-import { teacherAvatarCache } from "./teacher-avatars";
 
 type Job = { teacherId: string; path: string };
 const running = new Map<string, Promise<boolean>>();
@@ -44,7 +43,6 @@ export function cleanupTeacherAvatar(scope: string, job: Job): Promise<boolean> 
       }
       const removed = await supabase.storage.from("teacher-avatars").remove([job.path]);
       if (!removed.error) {
-        teacherAvatarCache.invalidate(job.path);
         remember(scope, job, true);
         return true;
       }

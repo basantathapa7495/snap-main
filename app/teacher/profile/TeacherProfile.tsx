@@ -26,6 +26,7 @@ import {
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
 import { supabase } from "@/lib/supabase";
+import { teacherAvatarUrl } from "@/lib/teacher-avatars";
 import {
   classLabel,
   matchesStudent,
@@ -246,13 +247,7 @@ export default function TeacherProfile({ section }: { section: Section }) {
               .eq("id", profile.school_id)
               .single(),
           ]);
-        let avatar = "";
-        if (profile.avatar_path) {
-          const signed = await supabase.storage
-            .from("teacher-avatars")
-            .createSignedUrl(profile.avatar_path, 3600);
-          if (signed.data) avatar = signed.data.signedUrl;
-        }
+        const avatar = teacherAvatarUrl(profile.avatar_path);
         const next = {
           teacher: teacher as Teacher,
           profile: profile as Profile,
@@ -392,7 +387,7 @@ export default function TeacherProfile({ section }: { section: Section }) {
         uploaded = `${currentData.teacher.user_id}/${crypto.randomUUID()}.${extension}`;
         const result = await supabase.storage
           .from("teacher-avatars")
-          .upload(uploaded, photo, { contentType: photo.type, upsert: false });
+          .upload(uploaded, photo, { contentType: photo.type, cacheControl: "31536000", upsert: false });
         if (result.error) throw result.error;
         path = uploaded;
       }
