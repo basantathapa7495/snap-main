@@ -10,6 +10,7 @@ async function load(path, rewrite = (source) => source) {
 }
 const { createTeacherAvatarCache } = await load('../lib/teacher-avatar-cache.ts');
 const { validateTeacherPhoto, avatarDimensions, prepareTeacherPhoto } = await load('../lib/teacher-photo.ts');
+const { uploadTeacherPhotoWithRetry } = await load('../lib/teacher-photo-upload.ts');
 const url = (path) => `https://example.test/sign/${path}?token=private`;
 const signed = (paths) => paths.map((path) => ({ path, signedUrl: url(path) }));
 function setup(options = {}) {
@@ -129,6 +130,36 @@ test('upload validation and thumbnail dimensions preserve aspect ratio without u
   assert.deepEqual(avatarDimensions(64, 64), { width: 64, height: 64 });
 });
 
+test('photo upload retries network and Storage timeout failures', async () => {
+  let calls = 0;
+  await uploadTeacherPhotoWithRetry(async () => {
+    calls++;
+    if (calls === 1) throw new TypeError('Failed to fetch');
+    if (calls === 2) return { error: { statusCode: 544, message: 'Database timeout' } };
+    return { error: null };
+  }, async () => {});
+  assert.equal(calls, 3);
+});
+
+test('photo upload treats a retry conflict as a committed first request', async () => {
+  let calls = 0;
+  await uploadTeacherPhotoWithRetry(async () => {
+    calls++;
+    if (calls === 1) throw new TypeError('Failed to fetch');
+    return { error: { statusCode: 409, message: 'Already exists' } };
+  }, async () => {});
+  assert.equal(calls, 2);
+});
+
+test('photo upload does not retry permission failures', async () => {
+  let calls = 0;
+  await assert.rejects(uploadTeacherPhotoWithRetry(async () => {
+    calls++;
+    return { error: { statusCode: 403, message: 'Forbidden' } };
+  }, async () => {}), (error) => error.statusCode === 403);
+  assert.equal(calls, 1);
+});
+
 test('upload preparation writes a small WebP and always releases its temporary object URL', async () => {
   const original = { Image: globalThis.Image, document: globalThis.document, create: URL.createObjectURL, revoke: URL.revokeObjectURL };
   let revoked = 0, quality, drawn;
@@ -166,6 +197,7 @@ test('teacher page no longer waits for any Storage signing request', () => {
   assert.match(page, /TeacherAvatar/);
   assert.match(page, /select\("id"\)\.single\(\)/);
   assert.match(page, /check\.data\?\.avatar_path !== uploadedPath/);
+  assert.match(page, /uploadTeacherPhotoWithRetry/);
 });
 
 test('cleanup retries a timeout, preserves active photos, and never deletes for another user', async () => {
