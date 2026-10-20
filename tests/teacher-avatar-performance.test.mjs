@@ -3,6 +3,8 @@ import test from 'node:test';
 import fs from 'node:fs';
 import ts from 'typescript';
 
+process.env.NEXT_PUBLIC_SUPABASE_URL ||= 'https://project.test';
+
 async function load(path, rewrite = (source) => source) {
   const source = rewrite(fs.readFileSync(new URL(path, import.meta.url), 'utf8'));
   const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 } }).outputText;
@@ -11,6 +13,7 @@ async function load(path, rewrite = (source) => source) {
 const { createTeacherAvatarCache } = await load('../lib/teacher-avatar-cache.ts');
 const { validateTeacherPhoto, avatarDimensions, prepareTeacherPhoto } = await load('../lib/teacher-photo.ts');
 const { uploadTeacherPhotoWithRetry } = await load('../lib/teacher-photo-upload.ts');
+const { teacherAvatarUrl } = await load('../lib/teacher-avatars.ts');
 const url = (path) => `https://example.test/sign/${path}?token=private`;
 const signed = (paths) => paths.map((path) => ({ path, signedUrl: url(path) }));
 function setup(options = {}) {
@@ -200,11 +203,12 @@ test('teacher page no longer waits for any Storage signing request', () => {
   assert.match(page, /uploadTeacherPhotoWithRetry/);
 });
 
-test('private avatar client avoids the hanging bulk signing endpoint', () => {
+test('teacher avatars use the direct CDN URL without signing requests', () => {
   const client = fs.readFileSync(new URL('../lib/teacher-avatars.ts', import.meta.url), 'utf8');
-  assert.doesNotMatch(client, /fetch\(`\$\{storageUrl\}\/object\/sign\/teacher-avatars`,/);
-  assert.match(client, /object\/sign\/teacher-avatars\/\$\{path\}/);
-  assert.match(client, /Authorization: `Bearer \$\{token\}`/);
+  assert.doesNotMatch(client, /fetch\(|createSignedUrl|Authorization/);
+  assert.equal(teacherAvatarUrl('school/teacher/photo.webp'), 'https://project.test/storage/v1/object/public/teacher-avatars/school/teacher/photo.webp');
+  assert.equal(teacherAvatarUrl('school/photo name.webp'), 'https://project.test/storage/v1/object/public/teacher-avatars/school/photo%20name.webp');
+  assert.equal(teacherAvatarUrl(null), '');
 });
 
 test('cleanup retries a timeout, preserves active photos, and never deletes for another user', async () => {
@@ -213,7 +217,6 @@ test('cleanup retries a timeout, preserves active photos, and never deletes for 
   let signedIn = 'user', activePath = 'new', linkedPath = 'new', failures = 1;
   const deleted = [];
   globalThis.__avatarCleanupTest = {
-    teacherAvatarCache: { invalidate() {} },
     supabase: {
       auth: { getSession: async () => ({ data: { session: { user: { id: signedIn } } } }) },
       from: (table) => ({ select() { return this; }, eq() { return this; }, maybeSingle: async () => ({ error: null, data: table === 'teachers' ? { id: 'teacher', avatar_path: activePath, user_id: 'linked' } : { avatar_path: linkedPath } }) }),
@@ -222,7 +225,7 @@ test('cleanup retries a timeout, preserves active photos, and never deletes for 
   };
   const { cleanupTeacherAvatar } = await load('../lib/teacher-avatar-cleanup.ts', (source) => source
     .replace(/import .* from .*;\n/g, '')
-    .replace('type Job', 'const { supabase, teacherAvatarCache } = globalThis.__avatarCleanupTest;\ntype Job'));
+    .replace('type Job', 'const { supabase } = globalThis.__avatarCleanupTest;\ntype Job'));
   assert.equal(await cleanupTeacherAvatar('user:school', { teacherId: 'teacher', path: 'old' }), true);
   assert.deepEqual(deleted, ['old', 'old']);
   assert.equal(await cleanupTeacherAvatar('user:school', { teacherId: 'teacher', path: 'new' }), false);
