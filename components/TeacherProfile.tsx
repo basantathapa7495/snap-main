@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, ChevronDown, Edit3, KeyRound, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import TeacherAvatar from "@/components/TeacherAvatar";
 
 export type ProfileTeacher = {
   id: string; school_id: string | null; name: string; subject: string | null;
@@ -12,6 +13,7 @@ export type ProfileTeacher = {
   qualification: string | null; joining_date: string | null;
   employment_status: string | null; user_id: string | null;
   salary: number | string | null; created_at: string | null; date_of_birth: string | null;
+  avatar_path?: string | null;
 };
 
 type Attendance = { id: string; attendance_date: string; status: string; check_in: string | null; check_out: string | null };
@@ -28,9 +30,9 @@ function Detail({ title, value }: { title: string; value?: string | null }) {
   return <div className="min-w-0 border-b border-slate-100 py-2.5 dark:border-slate-800"><dt className="text-xs text-slate-500 dark:text-slate-400">{title}</dt><dd className="mt-1 break-words text-sm font-semibold text-slate-900 dark:text-slate-100">{value || "Not added"}</dd></div>;
 }
 
-export default function TeacherProfile({ teacher, avatarUrl, onClose, onEdit, onToggleStatus, onMarkLeft, onLogin, onReassign }: {
+export default function TeacherProfile({ teacher, avatarScope, onClose, onEdit, onToggleStatus, onMarkLeft, onLogin, onReassign }: {
   teacher: ProfileTeacher; onClose: () => void; onEdit: (teacher: ProfileTeacher) => void;
-  avatarUrl?: string;
+  avatarScope: string;
   onToggleStatus: (teacher: ProfileTeacher) => void; onMarkLeft: (teacher: ProfileTeacher) => void;
   onLogin: (teacher: ProfileTeacher) => void; onReassign: () => void;
 }) {
@@ -137,7 +139,7 @@ export default function TeacherProfile({ teacher, avatarUrl, onClose, onEdit, on
       </div>
       <div className="shrink-0 border-b border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-4 dark:border-slate-800 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 sm:p-6">
         <div className="flex items-start gap-3">
-          <span role="img" style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : undefined} className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-cover bg-center text-xl font-extrabold ${avatarUrl ? "bg-slate-100" : "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200"}`} aria-label={`${teacher.name} profile picture`}>{avatarUrl ? null : teacher.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</span>
+          <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className="h-14 w-14 rounded-2xl bg-blue-100 text-xl font-extrabold text-blue-700 dark:bg-blue-900 dark:text-blue-200" />
           <div className="min-w-0 flex-1"><h2 id="teacher-profile-title" className="truncate text-xl font-bold sm:text-2xl">{teacher.name}</h2><p className="text-sm text-slate-600 dark:text-slate-300">{teacher.subject ? `${teacher.subject} Teacher` : "Teacher"}{teacher.department ? ` · ${teacher.department}` : ""}</p>
             <div className="mt-2 flex flex-wrap gap-1.5"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${teacher.left_at || teacher.employment_status === "inactive" ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200" : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"}`}>{teacher.left_at ? "Left school" : label(teacher.employment_status || "active")}</span><span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-900 dark:text-blue-100">Today: {loading ? "Loading…" : label(todayStatus)}</span></div>
           </div>

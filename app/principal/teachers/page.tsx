@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -40,6 +40,10 @@ import TopBar from "@/components/TopBar";
 import TeacherOperationsPanel from "@/components/TeacherOperationsPanel";
 import SchoolJoiningControls from "@/components/SchoolJoiningControls";
 import TeacherProfile from "@/components/TeacherProfile";
+import TeacherAvatar from "@/components/TeacherAvatar";
+import { activateTeacherAvatarCache } from "@/lib/teacher-avatars";
+import { cleanupTeacherAvatar, resumeTeacherAvatarCleanup } from "@/lib/teacher-avatar-cleanup";
+import { prepareTeacherPhoto } from "@/lib/teacher-photo";
 import AccountRequestsPanel from "@/components/AccountRequestsPanel";
 import { supabase } from "@/lib/supabase";
 
@@ -116,16 +120,6 @@ function todayInNepal() {
   }).format(new Date());
 }
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
 function titleCase(value: string) {
   return value
     .replace(/\s+/g, " ")
@@ -185,7 +179,11 @@ export default function TeachersPage() {
   const [teacherPhoto, setTeacherPhoto] = useState<File | null>(null);
   const [teacherPhotoPreview, setTeacherPhotoPreview] = useState("");
   const [removeTeacherPhoto, setRemoveTeacherPhoto] = useState(false);
-  const [teacherAvatarUrls, setTeacherAvatarUrls] = useState<Record<string, string>>({});
+  const [avatarScope, setAvatarScope] = useState("");
+  const [preparingPhoto, setPreparingPhoto] = useState(false);
+  const photoSelection = useRef(0);
+
+  useEffect(() => () => { if (teacherPhotoPreview.startsWith("blob:")) URL.revokeObjectURL(teacherPhotoPreview); }, [teacherPhotoPreview]);
 
   useEffect(() => {
     const requestedTab = new URLSearchParams(window.location.search).get("tab");
@@ -234,20 +232,10 @@ export default function TeachersPage() {
         if (teachersError) throw teachersError;
         if (!cancelled) {
           setSchoolId(profile.school_id);
+          const scope = activateTeacherAvatarCache(user.id, profile.school_id);
+          setAvatarScope(scope);
+          resumeTeacherAvatarCleanup(scope);
           setTeachers((data || []) as Teacher[]);
-          const teachersWithPhotos = (data || []).filter((teacher) => teacher.avatar_path);
-          if (teachersWithPhotos.length) {
-            const signed = await supabase.storage
-              .from("teacher-avatars")
-              .createSignedUrls(teachersWithPhotos.map((teacher) => teacher.avatar_path as string), 3600);
-            if (!cancelled && signed.data) {
-              setTeacherAvatarUrls(Object.fromEntries(
-                signed.data.flatMap((item, index) => item.signedUrl ? [[teachersWithPhotos[index].id, item.signedUrl]] : []),
-              ));
-            }
-          } else {
-            setTeacherAvatarUrls({});
-          }
           const selectedId = new URLSearchParams(window.location.search).get('teacher');
           const match = (data || []).find((item) => item.id === selectedId);
           if (match) {
@@ -350,6 +338,8 @@ export default function TeachersPage() {
   }, [account, search, subject, teachers]);
 
   function openCreateForm() {
+    photoSelection.current++;
+    setPreparingPhoto(false);
     setEditingTeacher(null);
     setForm(emptyForm);
     setError("");
@@ -359,7 +349,9 @@ export default function TeachersPage() {
     setFormOpen(true);
   }
 
-  async function openEditForm(teacher: Teacher) {
+  function openEditForm(teacher: Teacher) {
+    photoSelection.current++;
+    setPreparingPhoto(false);
     setEditingTeacher(teacher);
     setForm({
       name: teacher.name || "",
@@ -381,32 +373,27 @@ export default function TeachersPage() {
     setTeacherPhotoPreview("");
     setRemoveTeacherPhoto(false);
     setFormOpen(true);
-    if (teacher.avatar_path) {
-      const signed = await supabase.storage.from("teacher-avatars").createSignedUrl(teacher.avatar_path, 3600);
-      if (signed.data?.signedUrl) setTeacherPhotoPreview(signed.data.signedUrl);
-    }
   }
 
-  function chooseTeacherPhoto(file: File | null) {
+  async function chooseTeacherPhoto(file: File | null) {
     setError("");
     if (!file) return;
-    if (!new Set(["image/jpeg", "image/png", "image/webp"]).has(file.type)) {
-      setError("Choose a JPG, PNG or WebP image.");
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      setError("Profile picture must be 2 MB or smaller.");
-      return;
-    }
-    if (teacherPhotoPreview) URL.revokeObjectURL(teacherPhotoPreview);
-    setTeacherPhoto(file);
-    setTeacherPhotoPreview(URL.createObjectURL(file));
-    setRemoveTeacherPhoto(false);
+    const selection = ++photoSelection.current;
+    setPreparingPhoto(true);
+    try {
+      const prepared = await prepareTeacherPhoto(file);
+      if (selection !== photoSelection.current) return;
+      setTeacherPhoto(prepared);
+      setTeacherPhotoPreview(URL.createObjectURL(prepared));
+      setRemoveTeacherPhoto(false);
+    } catch (cause) {
+      if (selection === photoSelection.current) setError(cause instanceof Error ? cause.message : "Could not prepare profile picture.");
+    } finally { if (selection === photoSelection.current) setPreparingPhoto(false); }
   }
 
   async function saveTeacher(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!schoolId || !form.name.trim()) return;
+    if (!schoolId || !form.name.trim() || saving || preparingPhoto) return;
     setSaving(true);
     setError("");
     const teacherId = editingTeacher?.id || crypto.randomUUID();
@@ -447,12 +434,13 @@ export default function TeachersPage() {
             .update(teacherData)
             .eq("id", editingTeacher.id)
             .eq("school_id", schoolId)
-        : await supabase.from("teachers").insert({ id: teacherId, ...teacherData });
+            .select("id").single()
+        : await supabase.from("teachers").insert({ id: teacherId, ...teacherData }).select("id").single();
       if (result.error) throw result.error;
       if (editingTeacher?.avatar_path && editingTeacher.avatar_path !== avatarPath) {
-        const removed = await supabase.storage.from("teacher-avatars").remove([editingTeacher.avatar_path]);
-        if (removed.error) console.error("Old teacher avatar cleanup failed", removed.error);
+        void cleanupTeacherAvatar(avatarScope, { teacherId, path: editingTeacher.avatar_path });
       }
+      photoSelection.current++;
       setFormOpen(false);
       setNotice(
         editingTeacher
@@ -461,7 +449,18 @@ export default function TeachersPage() {
       );
       setRefreshKey((value) => value + 1);
     } catch (saveError) {
-      if (uploadedPath) await supabase.storage.from("teacher-avatars").remove([uploadedPath]);
+      // A network error may occur after the row committed. Read it back before
+      // deleting an upload, so a saved photo never becomes a broken reference.
+      if (uploadedPath) {
+        const check = await supabase.from("teachers").select("avatar_path").eq("id", teacherId).eq("school_id", schoolId).maybeSingle();
+        if (!check.error && check.data?.avatar_path !== uploadedPath) {
+          if (check.data) void cleanupTeacherAvatar(avatarScope, { teacherId, path: uploadedPath });
+          else {
+            const removed = await supabase.storage.from("teacher-avatars").remove([uploadedPath]);
+            if (removed.error) console.warn("Uncommitted teacher photo cleanup failed.");
+          }
+        }
+      }
       console.error("Teacher save error", saveError);
       setError(
         saveError instanceof Error
@@ -805,7 +804,7 @@ export default function TeachersPage() {
               </div>
               {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={subject} onChange={setSubject} label="Department" options={subjects} /><Select value={account} onChange={(value) => setAccount(value as typeof account)} label="Account" options={["All", "Active", "Not created"]} /></div>}
               {filteredTeachers.length ? <div className="mt-2 grid grid-cols-2 gap-2">
-                {(showAllMobileTeachers || search || subject !== "All" || account !== "All" ? filteredTeachers : filteredTeachers.slice(0, 6)).map((teacher, index) => <MobileTeacherCard key={teacher.id} teacher={teacher} avatarUrl={teacherAvatarUrls[teacher.id]} index={index} status={overview?.statuses[teacher.id] || ""} onClick={() => setSelectedTeacher(teacher)} />)}
+                {(showAllMobileTeachers || search || subject !== "All" || account !== "All" ? filteredTeachers : filteredTeachers.slice(0, 6)).map((teacher, index) => <MobileTeacherCard key={teacher.id} teacher={teacher} avatarScope={avatarScope} index={index} status={overview?.statuses[teacher.id] || ""} onClick={() => setSelectedTeacher(teacher)} />)}
               </div> : <p className="py-5 text-sm text-slate-500">No teachers match your search.</p>}
               <button type="button" onClick={openCreateForm} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add teacher</button>
             </section>}
@@ -857,7 +856,7 @@ export default function TeachersPage() {
                   )}
                   onAdd={openCreateForm}
                 />
-              ) : <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">{filteredTeachers.map((teacher, index) => <TeacherProfileCard key={teacher.id} teacher={teacher} avatarUrl={teacherAvatarUrls[teacher.id]} index={index} onView={setSelectedTeacher} onEdit={openEditForm} onLogin={openLogin} />)}</div>}
+              ) : <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-3">{filteredTeachers.map((teacher, index) => <TeacherProfileCard key={teacher.id} teacher={teacher} avatarScope={avatarScope} index={index} onView={setSelectedTeacher} onEdit={openEditForm} onLogin={openLogin} />)}</div>}
             </section>}
           </div>
         </main>
@@ -871,7 +870,7 @@ export default function TeachersPage() {
       {selectedTeacher && (
         <TeacherProfile
           teacher={selectedTeacher}
-          avatarUrl={teacherAvatarUrls[selectedTeacher.id]}
+          avatarScope={avatarScope}
           onClose={() => setSelectedTeacher(null)}
           onEdit={openEditForm}
           onToggleStatus={toggleTeacherStatus}
@@ -888,16 +887,27 @@ export default function TeachersPage() {
           saving={saving}
           error={error}
           photoPreview={teacherPhotoPreview}
+          existingPhotoPath={editingTeacher?.avatar_path}
+          avatarScope={avatarScope}
+          preparingPhoto={preparingPhoto}
           hasExistingPhoto={Boolean(editingTeacher?.avatar_path)}
           removePhoto={removeTeacherPhoto}
           onPhotoChange={chooseTeacherPhoto}
           onRemovePhoto={() => {
-            if (teacherPhotoPreview) URL.revokeObjectURL(teacherPhotoPreview);
+            photoSelection.current++;
+            setPreparingPhoto(false);
             setTeacherPhoto(null);
             setTeacherPhotoPreview("");
             setRemoveTeacherPhoto(true);
           }}
-          onClose={() => setFormOpen(false)}
+          onClose={() => {
+            if (saving) return;
+            photoSelection.current++;
+            setPreparingPhoto(false);
+            setTeacherPhoto(null);
+            setTeacherPhotoPreview("");
+            setFormOpen(false);
+          }}
           onSubmit={saveTeacher}
         />
       )}
@@ -987,11 +997,11 @@ function AttentionRow({ icon: Icon, tone, title, detail, onClick }: { icon: Reac
   </button>;
 }
 
-function MobileTeacherCard({ teacher, avatarUrl, index, status, onClick }: { teacher: Teacher; avatarUrl?: string; index: number; status: string; onClick: () => void }) {
+function MobileTeacherCard({ teacher, avatarScope, index, status, onClick }: { teacher: Teacher; avatarScope: string; index: number; status: string; onClick: () => void }) {
   const displayStatus = teacher.employment_status === "inactive" ? "Inactive" : status === "present" ? "Present" : status === "late" ? "Late" : status === "absent" ? "Absent" : status === "leave" ? "On leave" : "Not marked";
   const badgeTone = displayStatus === "Present" ? "bg-emerald-100 text-emerald-800" : displayStatus === "Late" ? "bg-amber-100 text-amber-800" : displayStatus === "Absent" || displayStatus === "Inactive" ? "bg-rose-100 text-rose-800" : displayStatus === "On leave" ? "bg-violet-100 text-violet-800" : "bg-slate-100 text-slate-600";
   return <button type="button" onClick={onClick} className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-300 bg-white p-2 text-left dark:border-slate-700 dark:bg-slate-900">
-    <span role={avatarUrl ? "img" : undefined} aria-label={avatarUrl ? `${teacher.name} profile picture` : undefined} style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : undefined} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cover bg-center text-xs font-bold text-white ${avatarUrl ? "bg-slate-100" : `bg-gradient-to-br ${teacherTones[index % teacherTones.length]}`}`}>{avatarUrl ? null : initials(teacher.name || "Teacher")}</span>
+    <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className={`h-10 w-10 rounded-xl bg-gradient-to-br text-xs font-bold text-white ${teacherTones[index % teacherTones.length]}`} />
     <span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold text-slate-950 dark:text-white">{teacher.name}</span><span className="block truncate text-[11px] text-slate-600 dark:text-slate-300">{teacher.subject || "Subject not assigned"}</span><span className={`mt-0.5 inline-block max-w-full truncate rounded-full px-1.5 py-0.5 text-[10px] font-medium ${badgeTone}`}>{displayStatus}</span></span>
   </button>;
 }
@@ -1005,8 +1015,8 @@ const teacherTones = [
   "from-cyan-500 to-blue-600",
 ];
 
-function TeacherProfileCard({ teacher, avatarUrl, index, onView, onEdit, onLogin }: TeacherActions & { avatarUrl?: string; index: number; onEdit: (teacher: Teacher) => void }) {
-  return <article className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/10"><div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${teacherTones[index % teacherTones.length]}`} aria-hidden="true" /><div className="flex items-start gap-3"><button type="button" onClick={() => onView(teacher)} style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : undefined} className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cover bg-center text-sm font-extrabold text-white shadow-md ${avatarUrl ? "bg-slate-100" : `bg-gradient-to-br ${teacherTones[index % teacherTones.length]}`}`} aria-label={`View ${teacher.name}`}>{avatarUrl ? null : initials(teacher.name || "Teacher")}</button><div className="min-w-0 flex-1"><button type="button" onClick={() => onView(teacher)} className="block max-w-full truncate text-left font-bold text-slate-950 transition hover:text-blue-700">{teacher.name}</button><p className="mt-1 truncate text-xs font-semibold text-slate-500">{teacher.subject || "Subject not assigned"}</p></div><AccountBadge active={Boolean(teacher.user_id)} /></div><div className="mt-4 grid grid-cols-2 gap-2 text-xs"><div className="rounded-xl bg-slate-50 p-2.5"><p className="text-slate-400">Qualification</p><p className="mt-1 truncate font-semibold text-slate-700">{teacher.qualification || "Not added"}</p></div><div className="rounded-xl bg-slate-50 p-2.5"><p className="text-slate-400">Contact</p><p className="mt-1 truncate font-semibold text-slate-700">{teacher.phone || teacher.email || "Not added"}</p></div></div><div className="mt-4 flex gap-2 border-t border-slate-100 pt-3"><button type="button" onClick={() => onEdit(teacher)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"><Edit3 className="h-3.5 w-3.5" /> Edit</button><button type="button" onClick={() => onLogin(teacher)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-blue-700"><KeyRound className="h-3.5 w-3.5" />{teacher.user_id ? "Reset" : "Access"}</button></div></article>;
+function TeacherProfileCard({ teacher, avatarScope, index, onView, onEdit, onLogin }: TeacherActions & { avatarScope: string; index: number; onEdit: (teacher: Teacher) => void }) {
+  return <article className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/10"><div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${teacherTones[index % teacherTones.length]}`} aria-hidden="true" /><div className="flex items-start gap-3"><button type="button" onClick={() => onView(teacher)} className="shrink-0 rounded-2xl" aria-label={`View ${teacher.name}`}><TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className={`h-12 w-12 rounded-2xl bg-gradient-to-br text-sm font-extrabold text-white shadow-md ${teacherTones[index % teacherTones.length]}`} /></button><div className="min-w-0 flex-1"><button type="button" onClick={() => onView(teacher)} className="block max-w-full truncate text-left font-bold text-slate-950 transition hover:text-blue-700">{teacher.name}</button><p className="mt-1 truncate text-xs font-semibold text-slate-500">{teacher.subject || "Subject not assigned"}</p></div><AccountBadge active={Boolean(teacher.user_id)} /></div><div className="mt-4 grid grid-cols-2 gap-2 text-xs"><div className="rounded-xl bg-slate-50 p-2.5"><p className="text-slate-400">Qualification</p><p className="mt-1 truncate font-semibold text-slate-700">{teacher.qualification || "Not added"}</p></div><div className="rounded-xl bg-slate-50 p-2.5"><p className="text-slate-400">Contact</p><p className="mt-1 truncate font-semibold text-slate-700">{teacher.phone || teacher.email || "Not added"}</p></div></div><div className="mt-4 flex gap-2 border-t border-slate-100 pt-3"><button type="button" onClick={() => onEdit(teacher)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"><Edit3 className="h-3.5 w-3.5" /> Edit</button><button type="button" onClick={() => onLogin(teacher)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-blue-700"><KeyRound className="h-3.5 w-3.5" />{teacher.user_id ? "Reset" : "Access"}</button></div></article>;
 }
 
 function Select({
@@ -1064,6 +1074,9 @@ function TeacherFormModal({
   saving,
   error,
   photoPreview,
+  existingPhotoPath,
+  avatarScope,
+  preparingPhoto,
   hasExistingPhoto,
   removePhoto,
   onPhotoChange,
@@ -1077,6 +1090,9 @@ function TeacherFormModal({
   saving: boolean;
   error: string;
   photoPreview: string;
+  existingPhotoPath?: string | null;
+  avatarScope: string;
+  preparingPhoto: boolean;
   hasExistingPhoto: boolean;
   removePhoto: boolean;
   onPhotoChange: (file: File | null) => void;
@@ -1109,17 +1125,17 @@ function TeacherFormModal({
           <TeacherFormSection icon={UserRound} title="Basic information" description="Identity details used in the staff directory.">
             <div className="sm:col-span-2">
               <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <span role={photoPreview && !removePhoto ? "img" : undefined} aria-label={photoPreview && !removePhoto ? "Teacher profile preview" : undefined} style={photoPreview && !removePhoto ? { backgroundImage: `url(${photoPreview})` } : undefined} className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white bg-cover bg-center text-slate-400 ${photoPreview && !removePhoto ? "" : "bg-none"}`}>
+                {existingPhotoPath && !photoPreview && !removePhoto ? <TeacherAvatar name={form.name || "Teacher"} path={existingPhotoPath} scope={avatarScope} className="h-16 w-16 rounded-2xl border border-slate-200 bg-white text-slate-500" /> : <span role={photoPreview && !removePhoto ? "img" : undefined} aria-label={photoPreview && !removePhoto ? "Teacher profile preview" : undefined} style={photoPreview && !removePhoto ? { backgroundImage: `url(${photoPreview})` } : undefined} className={`flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white bg-cover bg-center text-slate-400 ${photoPreview && !removePhoto ? "" : "bg-none"}`}>
                   {(!photoPreview || removePhoto) && <UserRound className="h-7 w-7" aria-hidden="true" />}
-                </span>
+                </span>}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-slate-800">Profile picture <span className="font-medium text-slate-400">(optional)</span></p>
-                  <p className="mt-0.5 text-[11px] leading-4 text-slate-500">JPG, PNG or WebP, up to 2 MB.</p>
+                  <p role="status" className="mt-0.5 text-[11px] leading-4 text-slate-500">{preparingPhoto ? "Optimizing picture…" : "JPG, PNG or WebP, up to 2 MB. Optimized automatically."}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <label className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700">
                       <Camera className="h-3.5 w-3.5" aria-hidden="true" />
-                      {photoPreview && !removePhoto ? "Change photo" : "Upload photo"}
-                      <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => { onPhotoChange(event.target.files?.[0] || null); event.target.value = ""; }} />
+                      {(photoPreview || hasExistingPhoto) && !removePhoto ? "Change photo" : "Upload photo"}
+                      <input disabled={saving} aria-label="Upload teacher profile picture" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => { onPhotoChange(event.target.files?.[0] || null); event.target.value = ""; }} />
                     </label>
                     {(photoPreview || hasExistingPhoto) && !removePhoto && <button type="button" onClick={onRemovePhoto} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"><Trash2 className="h-3.5 w-3.5" aria-hidden="true" />Remove</button>}
                   </div>
@@ -1150,7 +1166,7 @@ function TeacherFormModal({
             Cancel
           </button>
           <button
-            disabled={saving || !form.name.trim()}
+            disabled={saving || preparingPhoto || !form.name.trim()}
             className="min-h-11 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-200 hover:bg-blue-700 disabled:opacity-50"
           >
             {saving ? "Saving…" : editing ? "Save changes" : "Add teacher"}
