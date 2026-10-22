@@ -41,7 +41,7 @@ import TeacherOperationsPanel from "@/components/TeacherOperationsPanel";
 import SchoolJoiningControls from "@/components/SchoolJoiningControls";
 import TeacherProfile from "@/components/TeacherProfile";
 import TeacherAvatar from "@/components/TeacherAvatar";
-import { activateTeacherAvatarCache } from "@/lib/teacher-avatars";
+import { activateTeacherAvatarCache, removeTeacherAvatar, uploadTeacherAvatar } from "@/lib/teacher-avatars";
 import { cleanupTeacherAvatar, resumeTeacherAvatarCleanup } from "@/lib/teacher-avatar-cleanup";
 import { prepareTeacherPhoto } from "@/lib/teacher-photo";
 import { uploadTeacherPhotoWithRetry } from "@/lib/teacher-photo-upload";
@@ -399,6 +399,7 @@ export default function TeachersPage() {
     setError("");
     const teacherId = editingTeacher?.id || crypto.randomUUID();
     let uploadedPath = "";
+    let createdTeacher = false;
     let avatarPath = removeTeacherPhoto ? null : editingTeacher?.avatar_path || null;
     const teacherData = {
       school_id: schoolId,
@@ -417,25 +418,28 @@ export default function TeachersPage() {
       avatar_path: avatarPath,
     };
     try {
+      if (!editingTeacher) {
+        const created = await supabase.from("teachers").insert({ id: teacherId, ...teacherData }).select("id").single();
+        if (created.error) throw created.error;
+        createdTeacher = true;
+      }
       if (teacherPhoto) {
-        const extension = teacherPhoto.type === "image/png" ? "png" : teacherPhoto.type === "image/webp" ? "webp" : "jpg";
-        uploadedPath = `${schoolId}/${teacherId}/${crypto.randomUUID()}.${extension}`;
-        await uploadTeacherPhotoWithRetry(() => supabase.storage.from("teacher-avatars").upload(uploadedPath, teacherPhoto, {
-          contentType: teacherPhoto.type,
-          cacheControl: "31536000",
-          upsert: false,
-        }));
+        uploadedPath = `${schoolId}/${teacherId}/${crypto.randomUUID()}.webp`;
+        await uploadTeacherPhotoWithRetry(async () => {
+          await uploadTeacherAvatar(uploadedPath, teacherPhoto);
+          return { error: null };
+        });
         avatarPath = uploadedPath;
         teacherData.avatar_path = uploadedPath;
       }
-      const result = editingTeacher
+      const result = editingTeacher || teacherPhoto
         ? await supabase
             .from("teachers")
             .update(teacherData)
-            .eq("id", editingTeacher.id)
+            .eq("id", teacherId)
             .eq("school_id", schoolId)
             .select("id").single()
-        : await supabase.from("teachers").insert({ id: teacherId, ...teacherData }).select("id").single();
+        : { error: null };
       if (result.error) throw result.error;
       if (editingTeacher?.avatar_path && editingTeacher.avatar_path !== avatarPath) {
         void cleanupTeacherAvatar(avatarScope, { teacherId, path: editingTeacher.avatar_path });
@@ -456,15 +460,16 @@ export default function TeachersPage() {
         if (!check.error && check.data?.avatar_path !== uploadedPath) {
           if (check.data) void cleanupTeacherAvatar(avatarScope, { teacherId, path: uploadedPath });
           else {
-            const removed = await supabase.storage.from("teacher-avatars").remove([uploadedPath]);
-            if (removed.error) console.warn("Uncommitted teacher photo cleanup failed.");
+            try { await removeTeacherAvatar(uploadedPath); }
+            catch { console.warn("Uncommitted teacher photo cleanup failed."); }
           }
         }
       }
+      if (createdTeacher) setRefreshKey((value) => value + 1);
       console.error("Teacher save error", saveError);
       setError(
         saveError instanceof Error
-          ? saveError.message
+          ? `${createdTeacher ? "Teacher was added, but the photo or remaining changes could not be saved. Edit this teacher to retry. " : ""}${saveError.message}`
           : "Teacher could not be saved.",
       );
     } finally {

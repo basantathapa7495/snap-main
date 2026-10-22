@@ -29,8 +29,8 @@ export async function prepareTeacherPhoto(file: File): Promise<File> {
     const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(
       (result) => result ? resolve(result) : reject(new Error("Could not prepare profile picture.")), "image/webp", 0.82,
     ));
-    const extension = blob.type === "image/webp" ? "webp" : "png";
-    return new File([blob], `profile.${extension}`, { type: blob.type });
+    if (blob.type !== "image/webp") throw new Error("This browser cannot prepare a WebP profile picture. Please update your browser.");
+    return new File([blob], "profile.webp", { type: blob.type });
   } catch (cause) {
     throw new Error(cause instanceof Error ? cause.message : "This image could not be opened. Please choose another picture.");
   } finally { URL.revokeObjectURL(url); }

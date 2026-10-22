@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   BookOpen,
@@ -20,13 +21,15 @@ import {
   Mail,
   MonitorCog,
   ShieldCheck,
+  Trash2,
   UserRound,
   Users,
 } from "lucide-react";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
 import { supabase } from "@/lib/supabase";
-import { teacherAvatarUrl } from "@/lib/teacher-avatars";
+import { activateTeacherAvatarCache, removeTeacherAvatar, teacherAvatarUrl, uploadTeacherAvatar } from "@/lib/teacher-avatars";
+import { prepareTeacherPhoto } from "@/lib/teacher-photo";
 import {
   classLabel,
   matchesStudent,
@@ -88,7 +91,6 @@ const panel =
 const field =
   "h-12 w-full rounded-[13px] border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 dark:border-slate-700 dark:bg-slate-900";
 const muted = "text-slate-500 dark:text-slate-400";
-const types = new Set(["image/jpeg", "image/png", "image/webp"]);
 async function allRows<T>(
   request: (
     from: number,
@@ -107,13 +109,15 @@ async function allRows<T>(
   }
 }
 function Initials({ name, avatar }: { name: string; avatar: string }) {
+  const [brokenUrl, setBrokenUrl] = useState("");
+  const showPhoto = Boolean(avatar && brokenUrl !== avatar);
   return (
     <span
       aria-label={`${name} profile photo`}
-      style={avatar ? { backgroundImage: `url(${avatar})` } : undefined}
-      className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-100 to-blue-200 bg-cover bg-center text-2xl font-extrabold text-blue-700 dark:from-blue-950 dark:to-indigo-900 dark:text-blue-200`}
+      className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-sky-100 to-blue-200 text-2xl font-extrabold text-blue-700 dark:from-blue-950 dark:to-indigo-900 dark:text-blue-200"
     >
-      {avatar
+      {showPhoto && <Image unoptimized src={avatar} alt="" fill sizes="96px" className="object-cover" onError={() => setBrokenUrl(avatar)} />}
+      {showPhoto
         ? null
         : name
             .split(/\s+/)
@@ -172,10 +176,13 @@ export default function TeacherProfile({ section }: { section: Section }) {
     [gender, setGender] = useState(""),
     [photo, setPhoto] = useState<File | null>(null),
     [preview, setPreview] = useState(""),
+    [removePhoto, setRemovePhoto] = useState(false),
+    [preparingPhoto, setPreparingPhoto] = useState(false),
     [currentPassword, setCurrentPassword] = useState(""),
     [newPassword, setNewPassword] = useState(""),
     [confirmPassword, setConfirmPassword] = useState(""),
     [showPassword, setShowPassword] = useState(false);
+  const photoSelection = useRef(0);
   useEffect(() => {
     let active = true;
     async function load() {
@@ -247,7 +254,7 @@ export default function TeacherProfile({ section }: { section: Section }) {
               .eq("id", profile.school_id)
               .single(),
           ]);
-        const avatar = teacherAvatarUrl(profile.avatar_path);
+        const scope = activateTeacherAvatarCache(auth.user.id, profile.school_id);
         const next = {
           teacher: teacher as Teacher,
           profile: profile as Profile,
@@ -258,7 +265,7 @@ export default function TeacherProfile({ section }: { section: Section }) {
           classes,
           students,
           attendance,
-          avatar,
+          avatar: "",
         };
         if (active) {
           setData(next);
@@ -268,6 +275,9 @@ export default function TeacherProfile({ section }: { section: Section }) {
           setAddress(teacher.address || profile.address || "");
           setDob(teacher.date_of_birth || "");
           setGender(teacher.gender || "");
+          if (profile.avatar_path) void teacherAvatarUrl(scope, profile.avatar_path).then((avatar) => {
+            if (active && avatar) setData((current) => current ? { ...current, avatar } : current);
+          });
         }
       } catch (cause) {
         if (active)
@@ -347,26 +357,27 @@ export default function TeacherProfile({ section }: { section: Section }) {
           .filter(Boolean),
       ),
     ];
-  function choosePhoto(file: File | null) {
+  async function choosePhoto(file: File | null) {
     setError("");
+    const selection = ++photoSelection.current;
     if (!file) {
       setPhoto(null);
-      setPreview("");
       return;
     }
-    if (!types.has(file.type)) {
-      setError("Choose a JPG, JPEG, PNG or WebP image.");
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      setError("Profile photo must be 2 MB or smaller.");
-      return;
-    }
-    setPhoto(file);
-    setPreview(URL.createObjectURL(file));
+    setPreparingPhoto(true);
+    try {
+      const prepared = await prepareTeacherPhoto(file);
+      if (selection !== photoSelection.current) return;
+      setPhoto(prepared);
+      setPreview(URL.createObjectURL(prepared));
+      setRemovePhoto(false);
+    } catch (cause) {
+      if (selection === photoSelection.current) setError(cause instanceof Error ? cause.message : "Could not prepare photo.");
+    } finally { if (selection === photoSelection.current) setPreparingPhoto(false); }
   }
   async function saveProfile(event: FormEvent) {
     event.preventDefault();
+    if (preparingPhoto || saving) return;
     setError("");
     setSuccess("");
     if (name.trim().length < 2) {
@@ -376,19 +387,10 @@ export default function TeacherProfile({ section }: { section: Section }) {
     setSaving(true);
     let uploaded = "";
     try {
-      let path = currentData.profile.avatar_path || "";
+      let path = removePhoto ? "" : currentData.profile.avatar_path || "";
       if (photo) {
-        const extension =
-          photo.type === "image/png"
-            ? "png"
-            : photo.type === "image/webp"
-              ? "webp"
-              : "jpg";
-        uploaded = `${currentData.teacher.user_id}/${crypto.randomUUID()}.${extension}`;
-        const result = await supabase.storage
-          .from("teacher-avatars")
-          .upload(uploaded, photo, { contentType: photo.type, cacheControl: "31536000", upsert: false });
-        if (result.error) throw result.error;
+        uploaded = `${currentData.teacher.user_id}/${crypto.randomUUID()}.webp`;
+        await uploadTeacherAvatar(uploaded, photo);
         path = uploaded;
       }
       const updated = await supabase.rpc("update_my_teacher_profile", {
@@ -406,12 +408,13 @@ export default function TeacherProfile({ section }: { section: Section }) {
         });
         if (changed.error) throw changed.error;
       }
-      if (uploaded && currentData.profile.avatar_path)
-        await supabase.storage
-          .from("teacher-avatars")
-          .remove([currentData.profile.avatar_path]);
+      if (currentData.profile.avatar_path && currentData.profile.avatar_path !== path) {
+        try { await removeTeacherAvatar(currentData.profile.avatar_path); }
+        catch { console.warn("Superseded teacher profile photo cleanup will need retry."); }
+      }
       setPhoto(null);
       setPreview("");
+      setRemovePhoto(false);
       setSuccess(
         email.trim().toLowerCase() !== currentData.email.toLowerCase()
           ? "Profile saved. Confirm the new email from your inbox."
@@ -419,8 +422,13 @@ export default function TeacherProfile({ section }: { section: Section }) {
       );
       setRetry((value) => value + 1);
     } catch (cause) {
-      if (uploaded)
-        await supabase.storage.from("teacher-avatars").remove([uploaded]);
+      if (uploaded) {
+        const check = await supabase.from("teachers").select("avatar_path")
+          .eq("id", currentData.teacher.id).maybeSingle();
+        if (!check.error && check.data?.avatar_path !== uploaded) {
+          try { await removeTeacherAvatar(uploaded); } catch { /* Preserve the original save error. */ }
+        }
+      }
       setError(
         cause instanceof Error ? cause.message : "Profile could not be saved.",
       );
@@ -471,7 +479,7 @@ export default function TeacherProfile({ section }: { section: Section }) {
     await supabase.auth.signOut();
     router.replace("/auth/login");
   }
-  const avatar = preview || currentData.avatar;
+  const avatar = removePhoto ? "" : preview || currentData.avatar;
   return (
     <Shell>
       {section !== "home" && (
@@ -572,8 +580,9 @@ export default function TeacherProfile({ section }: { section: Section }) {
           gender={gender}
           setGender={setGender}
           choosePhoto={choosePhoto}
+          removePhoto={() => { photoSelection.current++; setPreparingPhoto(false); setPhoto(null); setPreview(""); setRemovePhoto(true); }}
           save={saveProfile}
-          saving={saving}
+          saving={saving || preparingPhoto}
         />
       ) : section === "professional" ? (
         <Professional data={data} assigned={assigned} subjects={subjects} />
@@ -704,6 +713,7 @@ function Personal({
   gender,
   setGender,
   choosePhoto,
+  removePhoto,
   save,
   saving,
 }: {
@@ -722,6 +732,7 @@ function Personal({
   gender: string;
   setGender: (v: string) => void;
   choosePhoto: (v: File | null) => void;
+  removePhoto: () => void;
   save: (e: FormEvent) => void;
   saving: boolean;
 }) {
@@ -746,6 +757,7 @@ function Personal({
             <p className={`mt-1 text-xs ${muted}`}>
               JPG, PNG or WebP · maximum 2 MB
             </p>
+            {avatar && <button type="button" onClick={removePhoto} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-rose-600"><Trash2 size={13} /> Remove photo</button>}
           </div>
         </div>
       </div>

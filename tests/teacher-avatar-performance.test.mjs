@@ -13,7 +13,6 @@ async function load(path, rewrite = (source) => source) {
 const { createTeacherAvatarCache } = await load('../lib/teacher-avatar-cache.ts');
 const { validateTeacherPhoto, avatarDimensions, prepareTeacherPhoto } = await load('../lib/teacher-photo.ts');
 const { uploadTeacherPhotoWithRetry } = await load('../lib/teacher-photo-upload.ts');
-const { teacherAvatarUrl } = await load('../lib/teacher-avatars.ts');
 const url = (path) => `https://example.test/sign/${path}?token=private`;
 const signed = (paths) => paths.map((path) => ({ path, signedUrl: url(path) }));
 function setup(options = {}) {
@@ -203,12 +202,11 @@ test('teacher page no longer waits for any Storage signing request', () => {
   assert.match(page, /uploadTeacherPhotoWithRetry/);
 });
 
-test('teacher avatars use the direct CDN URL without signing requests', () => {
+test('teacher avatars use only the private R2 gateway', () => {
   const client = fs.readFileSync(new URL('../lib/teacher-avatars.ts', import.meta.url), 'utf8');
-  assert.doesNotMatch(client, /fetch\(|createSignedUrl|Authorization/);
-  assert.equal(teacherAvatarUrl('school/teacher/photo.webp'), 'https://project.test/storage/v1/object/public/teacher-avatars/school/teacher/photo.webp');
-  assert.equal(teacherAvatarUrl('school/photo name.webp'), 'https://project.test/storage/v1/object/public/teacher-avatars/school/photo%20name.webp');
-  assert.equal(teacherAvatarUrl(null), '');
+  assert.match(client, /\/sign/);
+  assert.match(client, /Bearer/);
+  assert.doesNotMatch(client, /\/object\/public\/teacher-avatars|createSignedUrl/);
 });
 
 test('cleanup retries a timeout, preserves active photos, and never deletes for another user', async () => {
@@ -217,15 +215,15 @@ test('cleanup retries a timeout, preserves active photos, and never deletes for 
   let signedIn = 'user', activePath = 'new', linkedPath = 'new', failures = 1;
   const deleted = [];
   globalThis.__avatarCleanupTest = {
+    removeTeacherAvatar: async (path) => { deleted.push(path); if (failures-- > 0) throw new Error('timeout'); },
     supabase: {
       auth: { getSession: async () => ({ data: { session: { user: { id: signedIn } } } }) },
       from: (table) => ({ select() { return this; }, eq() { return this; }, maybeSingle: async () => ({ error: null, data: table === 'teachers' ? { id: 'teacher', avatar_path: activePath, user_id: 'linked' } : { avatar_path: linkedPath } }) }),
-      storage: { from: () => ({ remove: async ([path]) => { deleted.push(path); return { error: failures-- > 0 ? new Error('timeout') : null }; } }) },
     },
   };
   const { cleanupTeacherAvatar } = await load('../lib/teacher-avatar-cleanup.ts', (source) => source
     .replace(/import .* from .*;\n/g, '')
-    .replace('type Job', 'const { supabase } = globalThis.__avatarCleanupTest;\ntype Job'));
+    .replace('type Job', 'const { supabase, removeTeacherAvatar } = globalThis.__avatarCleanupTest;\ntype Job'));
   assert.equal(await cleanupTeacherAvatar('user:school', { teacherId: 'teacher', path: 'old' }), true);
   assert.deepEqual(deleted, ['old', 'old']);
   assert.equal(await cleanupTeacherAvatar('user:school', { teacherId: 'teacher', path: 'new' }), false);

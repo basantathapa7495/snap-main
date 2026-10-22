@@ -1,6 +1,7 @@
 "use client";
 
 import { supabase } from "@/lib/supabase";
+import { removeTeacherAvatar } from "@/lib/teacher-avatars";
 
 type Job = { teacherId: string; path: string };
 const running = new Map<string, Promise<boolean>>();
@@ -41,11 +42,11 @@ export function cleanupTeacherAvatar(scope: string, job: Job): Promise<boolean> 
         if (linked.error) continue;
         if (linked.data?.avatar_path === job.path) { remember(scope, job, true); return false; }
       }
-      const removed = await supabase.storage.from("teacher-avatars").remove([job.path]);
-      if (!removed.error) {
+      try {
+        await removeTeacherAvatar(job.path);
         remember(scope, job, true);
         return true;
-      }
+      } catch { /* Retry only the superseded object. */ }
     }
     console.warn("Previous teacher photo cleanup is pending; it will retry on the next Teachers visit.");
     return false;
