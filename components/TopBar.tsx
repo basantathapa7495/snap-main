@@ -150,6 +150,15 @@ export default function TopBar() {
     return () => { active = false; };
   }, [isStudentArea]);
 
+  useEffect(() => {
+    const updateAvatar = (event: Event) => {
+      const detail = (event as CustomEvent<{ url: string | null }>).detail;
+      if (detail && 'url' in detail) setAvatarUrl(detail.url);
+    };
+    window.addEventListener('profile-avatar:updated', updateAvatar);
+    return () => window.removeEventListener('profile-avatar:updated', updateAvatar);
+  }, []);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
