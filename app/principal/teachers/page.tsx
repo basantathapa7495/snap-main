@@ -955,25 +955,64 @@ function Select({
   options: string[];
   allLabel?: string;
 }) {
+  const [open, setOpen] = useState(false);
+  const selectRef = useRef<HTMLDivElement>(null);
+  const displayValue = value === "All" && allLabel ? allLabel : value;
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: PointerEvent) => {
+      if (!selectRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [open]);
+
   return (
-    <label className="relative">
-      <span className="sr-only">{label}</span>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-white px-3 pr-9 text-sm text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+    <div ref={selectRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setOpen(false);
+        }}
+        aria-label={label}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={`flex h-10 w-full items-center justify-between rounded-xl border bg-white px-3 text-left text-sm font-medium text-slate-700 outline-none transition ${open ? "border-blue-400 ring-2 ring-blue-100" : "border-slate-200 hover:border-slate-300"}`}
       >
-        {options.map((option) => (
-          <option key={option}>{option}</option>
-        ))}
-      </select>
-      {value === "All" && allLabel && (
-        <span className="pointer-events-none absolute inset-y-px left-px flex items-center rounded-l-[11px] bg-white px-3 text-sm text-slate-700">
-          {allLabel}
-        </span>
+        <span className="truncate">{displayValue}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          aria-label={label}
+          className="absolute left-0 right-0 top-full z-[65] mt-1 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/15"
+        >
+          {options.map((option) => {
+            const selected = option === value;
+            return (
+              <button
+                key={option}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                onClick={() => {
+                  onChange(option);
+                  setOpen(false);
+                }}
+                className={`flex min-h-10 w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${selected ? "bg-emerald-50 font-bold text-emerald-700" : "font-medium text-slate-700 hover:bg-slate-50"}`}
+              >
+                <span className="truncate">{option}</span>
+                <span className={`h-4 w-4 shrink-0 rounded-full border-2 ${selected ? "border-emerald-600 bg-emerald-600 shadow-[inset_0_0_0_3px_white]" : "border-slate-300"}`} aria-hidden="true" />
+              </button>
+            );
+          })}
+        </div>
       )}
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-    </label>
+    </div>
   );
 }
 
