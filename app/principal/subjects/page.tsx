@@ -191,32 +191,32 @@ export default function SubjectsPage() {
             )}
 
             {loading ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5" aria-label="Loading subjects">
+              <div className="grid grid-cols-3 gap-2 sm:gap-5" aria-label="Loading subjects">
                 {Array.from({ length: 6 }, (_, index) => (
-                  <div key={index} className="aspect-[0.84] animate-pulse rounded-2xl border border-slate-200 bg-white" />
+                  <div key={index} className="aspect-[0.84] animate-pulse rounded-xl border border-slate-200 bg-white sm:rounded-2xl" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5">
+              <div className="grid grid-cols-3 gap-2 sm:gap-5">
                 {subjects.map((subject, index) => (
                   <article
                     key={subject.id}
-                    className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-2.5 shadow-[0_5px_18px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(15,23,42,0.10)] sm:p-4"
+                    className="group min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_3px_10px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(15,23,42,0.10)] sm:rounded-2xl sm:p-4 sm:shadow-[0_5px_18px_rgba(15,23,42,0.06)]"
                   >
                     <div className={`relative aspect-[1.18] overflow-hidden rounded-xl bg-gradient-to-br ${SUBJECT_COVERS[index % SUBJECT_COVERS.length]}`}>
                       <div className="absolute -right-[12%] -top-[8%] h-[116%] w-[78%] rotate-[-7deg] rounded-md border-l-[7px] border-white/30 bg-black/10 shadow-[-10px_12px_22px_rgba(15,23,42,0.28)]" />
-                      <BookOpen className="absolute bottom-3 right-3 h-10 w-10 text-white/20 sm:h-14 sm:w-14" strokeWidth={1.4} aria-hidden="true" />
-                      <span className="absolute left-3 right-2 top-3 line-clamp-2 text-[15px] font-black leading-tight tracking-[-0.03em] text-white drop-shadow-sm sm:left-5 sm:top-5 sm:text-2xl">
+                      <BookOpen className="absolute bottom-2 right-2 h-7 w-7 text-white/20 sm:bottom-3 sm:right-3 sm:h-14 sm:w-14" strokeWidth={1.4} aria-hidden="true" />
+                      <span className="absolute left-2 right-1.5 top-2 line-clamp-2 text-[11px] font-black leading-tight tracking-[-0.03em] text-white drop-shadow-sm sm:left-5 sm:right-2 sm:top-5 sm:text-2xl">
                         {subject.name}
                       </span>
                     </div>
 
-                    <div className="flex min-w-0 items-center gap-2 px-1 pb-0.5 pt-3 sm:pt-4">
-                      <h3 className="min-w-0 flex-1 truncate text-[15px] font-extrabold tracking-[-0.02em] text-slate-950 sm:text-xl">
+                    <div className="flex min-w-0 items-center gap-1 px-0.5 pb-0.5 pt-2 sm:gap-2 sm:px-1 sm:pt-4">
+                      <h3 className="min-w-0 flex-1 truncate text-[11px] font-extrabold tracking-[-0.02em] text-slate-950 sm:text-xl">
                         {subject.name}
                       </h3>
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-700 sm:h-10 sm:w-10">
-                        <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-700 sm:h-10 sm:w-10">
+                        <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
                       </span>
                     </div>
                   </article>
@@ -228,12 +228,12 @@ export default function SubjectsPage() {
                     setError('');
                     setAdding(true);
                   }}
-                  className="flex aspect-[0.84] w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-white/50 p-4 text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="flex aspect-[0.84] min-w-0 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-white/50 p-2 text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:gap-3 sm:rounded-2xl sm:p-4"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-current sm:h-16 sm:w-16">
-                    <Plus className="h-7 w-7 sm:h-9 sm:w-9" aria-hidden="true" />
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-current sm:h-16 sm:w-16">
+                    <Plus className="h-5 w-5 sm:h-9 sm:w-9" aria-hidden="true" />
                   </span>
-                  <span className="text-base font-extrabold sm:text-xl">Add Subject</span>
+                  <span className="text-center text-[11px] font-extrabold leading-tight sm:text-xl">Add Subject</span>
                 </button>
               </div>
             )}
