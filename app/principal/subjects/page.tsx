@@ -44,7 +44,7 @@ const SUBJECT_FALLBACKS = [
 ];
 
 function subjectImage(name: string) {
-  return SUBJECT_IMAGES[name.trim().toLowerCase()] || null;
+  return SUBJECT_IMAGES[name.trim().toLowerCase()] || '/default.jpg';
 }
 
 export default function SubjectsPage() {
