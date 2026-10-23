@@ -24,8 +24,8 @@ const todayStart = () => {
   return new Date(`${get("year")}-${get("month")}-${get("day")}T00:00:00+05:45`).toISOString();
 };
 
-export default function PrincipalMessagesPanel({ schoolId, principalId, newMessageKey, onUnread }: {
-  schoolId: string; principalId: string; newMessageKey: number; onUnread: (count: number) => void;
+export default function PrincipalMessagesPanel({ schoolId, principalId, newMessageKey, initialRecipientId, onUnread }: {
+  schoolId: string; principalId: string; newMessageKey: number; initialRecipientId?: string | null; onUnread: (count: number) => void;
 }) {
   const [inbox, setInbox] = useState<Inbox[]>([]);
   const [total, setTotal] = useState(0);
@@ -52,6 +52,7 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
   const [sending, setSending] = useState(false);
   const sendingRef = useRef(false);
   const chatEnd = useRef<HTMLDivElement>(null);
+  const directRecipientRef = useRef<string | null>(null);
 
   const loadInbox = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -135,6 +136,14 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
     } catch (cause) { console.error("Message recipient failed", cause); setPeopleError("Conversation could not be opened. Check account access and try again."); }
     finally { setStarting(null); }
   }
+
+  useEffect(() => {
+    if (!initialRecipientId || peopleLoading || directRecipientRef.current === initialRecipientId) return;
+    const recipient = people.find((item) => item.userId === initialRecipientId);
+    if (!recipient) return;
+    directRecipientRef.current = initialRecipientId;
+    void start(recipient);
+  }, [initialRecipientId, people, peopleLoading]);
   async function send(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const content = draft.trim();
