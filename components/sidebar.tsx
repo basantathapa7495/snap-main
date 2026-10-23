@@ -270,9 +270,9 @@ export default function Sidebar() {
 
   useEffect(() => {
     const updateAvatar = (event: Event) => {
-      const detail = (event as CustomEvent<{ url?: string }>).detail;
-      if (!detail?.url) return;
-      setPrincipal((current) => current ? { ...current, avatarUrl: detail.url! } : current);
+      const detail = (event as CustomEvent<{ url: string | null }>).detail;
+      if (!detail || !('url' in detail)) return;
+      setPrincipal((current) => current ? { ...current, avatarUrl: detail.url } : current);
     };
     window.addEventListener('profile-avatar:updated', updateAvatar);
     return () => window.removeEventListener('profile-avatar:updated', updateAvatar);
