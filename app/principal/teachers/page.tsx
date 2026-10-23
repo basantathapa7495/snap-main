@@ -649,7 +649,7 @@ export default function TeachersPage() {
       <Sidebar />
       <div className="relative z-10 flex min-h-screen flex-col pt-14 lg:ml-64 lg:pt-0">
         <div className="hidden lg:block"><TopBar /></div>
-        <main className="flex-1 px-3.5 pb-28 pt-3 sm:px-6 sm:pt-6 lg:px-8 lg:pt-24">
+        <main className="flex-1 px-3.5 pb-28 pt-0 sm:px-6 sm:pt-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
             <header className="relative -mx-3.5 aspect-[3/1] min-h-[112px] overflow-hidden bg-[#eef6ff] sm:mx-0 sm:rounded-2xl sm:border sm:border-blue-100 dark:sm:border-blue-900/60">
               <h1 className="sr-only">Teachers</h1>
