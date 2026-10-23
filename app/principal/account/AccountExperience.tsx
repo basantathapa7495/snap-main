@@ -42,7 +42,7 @@ export default function AccountExperience({section='home'}:{section?:Section}) {
     if(profileError)throw profileError;if(!p?.school_id||!['principal','admin'].includes(p.role))throw new Error('Principal school access is required.');
     const {data:s,error:schoolError}=await supabase.from('schools').select('name,school_email,phone,school_type,slug,is_approved,created_at').eq('id',p.school_id).single();if(schoolError)throw schoolError;
     if(section==='school'){const session=await supabase.auth.getSession();if(session.data.session?.access_token){const codes=await fetch('/api/school-join-codes',{headers:{Authorization:`Bearer ${session.data.session.access_token}`}});if(codes.ok){const value=await codes.json();if(mounted)setSchoolCode(value.codes?.school_code||'');}}}
-    let avatar='';if(p.avatar_path){avatar=await profileAvatarUrl(p.avatar_path)||'';}
+    let avatar='';if(p.avatar_path){avatar=await profileAvatarUrl(p.avatar_path).catch((avatarError)=>{console.error('Avatar URL error',avatarError);return null;})||'';}
     if(mounted){setUser(authUser);setProfile(p);setSchool(s);setName(p.full_name||'');setPhone(p.phone||'');setAddress(p.address||'');setEmail(authUser.email||'');setPhotoUrl(avatar);}
   }catch(cause){if(mounted)setError(cause instanceof Error?cause.message:typeof cause==='object'&&cause!==null&&'message'in cause?String(cause.message):'Could not load account.');}finally{if(mounted)setLoading(false);}}void load();return()=>{mounted=false;};},[section]);
   useEffect(()=>()=>{if(photoPreview)URL.revokeObjectURL(photoPreview);},[photoPreview]);
