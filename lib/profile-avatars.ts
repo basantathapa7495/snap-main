@@ -37,12 +37,24 @@ export async function removeProfileAvatar(path: string) {
 
 export async function profileAvatarUrl(path?: string | null) {
   if (!path) return null;
-  const response = await fetch(`${origin}/sign`, {
-    method: "POST",
-    headers: { ...await authorization(), "Content-Type": "application/json" },
-    body: JSON.stringify({ paths: [path] }),
-  });
-  if (!response.ok) throw new Error(`Could not load profile picture (${response.status}).`);
-  const result: { urls: { path: string; signedUrl: string }[] } = await response.json();
-  return result.urls.find((entry) => entry.path === path)?.signedUrl || null;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(`${origin}/sign`, {
+      method: "POST",
+      headers: { ...await authorization(), "Content-Type": "application/json" },
+      body: JSON.stringify({ paths: [path] }),
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`Could not load profile picture (${response.status}).`);
+    const result: { urls: { path: string; signedUrl: string }[] } = await response.json();
+    return result.urls.find((entry) => entry.path === path)?.signedUrl || null;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Profile picture service timed out.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
