@@ -5,6 +5,7 @@ import HelpModal from './HelpModal';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { profileAvatarUrl } from '@/lib/profile-avatars';
 import StudentProfileSheet from './StudentProfileSheet';
 import { 
   Search,
@@ -118,14 +119,18 @@ export default function TopBar() {
                 })
             : Promise.resolve();
 
-          const avatarRequest = isStudentArea && profileData.avatar_path
-            ? supabase.storage
-                .from('student-avatars')
-                .createSignedUrl(profileData.avatar_path, 3600)
-                .then(({ data, error }) => {
-                  if (error) console.error('Avatar URL error', error);
-                  else if (data) setAvatarUrl(data.signedUrl);
-                })
+          const avatarRequest = profileData.avatar_path
+            ? isStudentArea
+              ? supabase.storage
+                  .from('student-avatars')
+                  .createSignedUrl(profileData.avatar_path, 3600)
+                  .then(({ data, error }) => {
+                    if (error) console.error('Avatar URL error', error);
+                    else if (data) setAvatarUrl(data.signedUrl);
+                  })
+              : profileAvatarUrl(profileData.avatar_path).then((url) => {
+                  if (url) setAvatarUrl(url);
+                }).catch((error) => console.error('Avatar URL error', error))
             : Promise.resolve();
 
           await Promise.allSettled([schoolRequest, studentRequest, avatarRequest]);
@@ -299,8 +304,14 @@ export default function TopBar() {
             {isLoading ? (
               <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
             ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white shadow-sm">
-                {userInitials}
+              <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-sm font-bold text-blue-700 shadow-sm">
+                {avatarUrl ? (
+                  <span
+                    className="h-full w-full bg-cover bg-center"
+                    style={{ backgroundImage: `url("${avatarUrl.replace(/"/g, '%22')}")` }}
+                    aria-hidden="true"
+                  />
+                ) : userInitials}
               </div>
             )}
             <div className="hidden text-left md:block">
