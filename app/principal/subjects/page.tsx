@@ -23,13 +23,13 @@ const DEFAULT_SUBJECTS = [
   'Computer',
 ];
 
-const SUBJECT_TONES = [
-  'bg-rose-50 text-rose-700',
-  'bg-blue-50 text-blue-700',
-  'bg-emerald-50 text-emerald-700',
-  'bg-indigo-50 text-indigo-700',
-  'bg-amber-50 text-amber-700',
-  'bg-violet-50 text-violet-700',
+const SUBJECT_COVERS = [
+  'from-rose-700 via-red-500 to-orange-300',
+  'from-blue-900 via-blue-600 to-sky-300',
+  'from-emerald-950 via-emerald-800 to-teal-500',
+  'from-slate-950 via-blue-950 to-blue-500',
+  'from-amber-800 via-orange-600 to-yellow-300',
+  'from-violet-900 via-indigo-700 to-blue-400',
 ];
 
 export default function SubjectsPage() {
@@ -191,25 +191,34 @@ export default function SubjectsPage() {
             )}
 
             {loading ? (
-              <div className="space-y-2.5" aria-label="Loading subjects">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5" aria-label="Loading subjects">
                 {Array.from({ length: 6 }, (_, index) => (
-                  <div key={index} className="h-[68px] animate-pulse rounded-2xl border border-slate-200 bg-white" />
+                  <div key={index} className="aspect-[0.84] animate-pulse rounded-2xl border border-slate-200 bg-white" />
                 ))}
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5">
                 {subjects.map((subject, index) => (
                   <article
                     key={subject.id}
-                    className="flex min-h-[68px] items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-[0_2px_8px_rgba(15,23,42,0.035)] sm:min-h-[76px] sm:px-4"
+                    className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-2.5 shadow-[0_5px_18px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(15,23,42,0.10)] sm:p-4"
                   >
-                    <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${SUBJECT_TONES[index % SUBJECT_TONES.length]}`}>
-                      <BookOpen className="h-6 w-6" strokeWidth={1.9} aria-hidden="true" />
-                    </span>
-                    <h3 className="min-w-0 flex-1 truncate text-[17px] font-bold tracking-[-0.02em] text-slate-950 sm:text-lg">
-                      {subject.name}
-                    </h3>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
+                    <div className={`relative aspect-[1.18] overflow-hidden rounded-xl bg-gradient-to-br ${SUBJECT_COVERS[index % SUBJECT_COVERS.length]}`}>
+                      <div className="absolute -right-[12%] -top-[8%] h-[116%] w-[78%] rotate-[-7deg] rounded-md border-l-[7px] border-white/30 bg-black/10 shadow-[-10px_12px_22px_rgba(15,23,42,0.28)]" />
+                      <BookOpen className="absolute bottom-3 right-3 h-10 w-10 text-white/20 sm:h-14 sm:w-14" strokeWidth={1.4} aria-hidden="true" />
+                      <span className="absolute left-3 right-2 top-3 line-clamp-2 text-[15px] font-black leading-tight tracking-[-0.03em] text-white drop-shadow-sm sm:left-5 sm:top-5 sm:text-2xl">
+                        {subject.name}
+                      </span>
+                    </div>
+
+                    <div className="flex min-w-0 items-center gap-2 px-1 pb-0.5 pt-3 sm:pt-4">
+                      <h3 className="min-w-0 flex-1 truncate text-[15px] font-extrabold tracking-[-0.02em] text-slate-950 sm:text-xl">
+                        {subject.name}
+                      </h3>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition group-hover:bg-blue-50 group-hover:text-blue-700 sm:h-10 sm:w-10">
+                        <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                    </div>
                   </article>
                 ))}
 
@@ -219,10 +228,12 @@ export default function SubjectsPage() {
                     setError('');
                     setAdding(true);
                   }}
-                  className="flex min-h-[68px] w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white/60 px-4 text-base font-bold text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="flex aspect-[0.84] w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-slate-300 bg-white/50 p-4 text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
-                  <Plus className="h-6 w-6" aria-hidden="true" />
-                  Add Subject
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-current sm:h-16 sm:w-16">
+                    <Plus className="h-7 w-7 sm:h-9 sm:w-9" aria-hidden="true" />
+                  </span>
+                  <span className="text-base font-extrabold sm:text-xl">Add Subject</span>
                 </button>
               </div>
             )}
