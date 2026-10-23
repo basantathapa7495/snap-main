@@ -919,7 +919,7 @@ function MobileTeacherCard({ teacher, avatarScope, index, status, onClick }: { t
       <button type="button" onClick={onClick} className="min-w-0 flex-1 overflow-hidden text-left">
         <span className="block truncate whitespace-nowrap text-sm font-extrabold leading-tight text-slate-950 dark:text-white">{teacher.name}</span>
         <span className="mt-0.5 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-[10px] text-slate-600 dark:text-slate-300"><BookOpen className="h-3 w-3 shrink-0 text-slate-400 dark:text-slate-400" /><span className="truncate whitespace-nowrap">{subject}</span></span>
-        <span className="mt-0.5 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-[10px] text-slate-600 dark:text-slate-300"><Phone className="h-3 w-3 shrink-0 fill-slate-300 text-slate-500 dark:fill-slate-600 dark:text-slate-400" /><span className="truncate whitespace-nowrap">{teacher.phone || "Phone not added"}</span></span>
+        <span className="mt-0.5 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-[10px] text-slate-600 dark:text-slate-300"><Phone className="h-3 w-3 shrink-0 fill-slate-950 text-slate-950 dark:fill-white dark:text-white" /><span className="truncate whitespace-nowrap">{teacher.phone || "Phone not added"}</span></span>
       </button>
     </div>
     <div className="mt-1.5 flex min-w-0 items-center justify-start gap-1">
