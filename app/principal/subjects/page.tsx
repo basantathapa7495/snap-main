@@ -161,7 +161,7 @@ export default function SubjectsPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <Sidebar />
-      <div className="pt-14 lg:ml-64 lg:pt-10">
+      <div className="pt-[55px] lg:ml-64 lg:pt-10">
         <div className="hidden lg:block">
           <TopBar />
         </div>
