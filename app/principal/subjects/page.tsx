@@ -162,7 +162,9 @@ export default function SubjectsPage() {
     <div className="min-h-screen bg-slate-50">
       <Sidebar />
       <div className="pt-14 lg:ml-64 lg:pt-10">
-        <TopBar />
+        <div className="hidden lg:block">
+          <TopBar />
+        </div>
 
         <main className="px-3 pb-24 pt-0 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1180px]">
