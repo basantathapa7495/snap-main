@@ -540,6 +540,7 @@ export default function Sidebar() {
                   const Icon = item.icon;
                   const isActive = isMenuItemActive(item.href);
                   const hideOnPrincipalMobile = isPrincipalPath && [
+                    '/principal',
                     '/principal/teachers',
                     '/principal/students',
                     '/principal/communication',
