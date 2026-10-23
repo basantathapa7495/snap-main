@@ -755,11 +755,7 @@ export default function TeachersPage() {
               </section>
             )}
 
-            {pageTab === "teachers" && <section id="mobile-teacher-records" className="mt-5 scroll-mt-20 sm:hidden" aria-labelledby="mobile-teachers-title">
-              <div className="flex items-center justify-between">
-                <h2 id="mobile-teachers-title" className="text-xl font-extrabold text-slate-950 dark:text-white">Teachers</h2>
-                {filteredTeachers.length > 6 && <button type="button" onClick={() => setShowAllMobileTeachers((value) => !value)} aria-expanded={showAllMobileTeachers} className="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">{showAllMobileTeachers ? "Show less" : "View all"}<ChevronRight className="h-4 w-4" /></button>}
-              </div>
+            {pageTab === "teachers" && <section id="mobile-teacher-records" className="mt-5 scroll-mt-20 sm:hidden" aria-label="Teachers">
               <div className="mt-2 flex gap-2">
                 <label className="relative min-w-0 flex-1">
                   <span className="sr-only">Search teachers</span>
@@ -769,9 +765,12 @@ export default function TeachersPage() {
                 <button type="button" aria-label="Filter teachers" aria-expanded={showMobileFilters} onClick={() => setShowMobileFilters((value) => !value)} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-200"><SlidersHorizontal className="h-5 w-5" /></button>
               </div>
               {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={subject} onChange={setSubject} label="Department" options={subjects} /><Select value={account} onChange={(value) => setAccount(value as typeof account)} label="Account" options={["All", "Active", "Not created"]} /></div>}
-              {filteredTeachers.length ? <div className="mt-2 grid grid-cols-2 gap-2">
-                {(showAllMobileTeachers || search || subject !== "All" || account !== "All" ? filteredTeachers : filteredTeachers.slice(0, 6)).map((teacher, index) => <MobileTeacherCard key={teacher.id} teacher={teacher} avatarScope={avatarScope} index={index} status={overview?.statuses[teacher.id] || ""} onClick={() => setSelectedTeacher(teacher)} />)}
-              </div> : <p className="py-5 text-sm text-slate-500">No teachers match your search.</p>}
+              {filteredTeachers.length ? <>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {(showAllMobileTeachers ? filteredTeachers : filteredTeachers.slice(0, 10)).map((teacher, index) => <MobileTeacherCard key={teacher.id} teacher={teacher} avatarScope={avatarScope} index={index} status={overview?.statuses[teacher.id] || ""} onClick={() => setSelectedTeacher(teacher)} />)}
+                </div>
+                {filteredTeachers.length > 10 && <button type="button" onClick={() => setShowAllMobileTeachers((value) => !value)} aria-expanded={showAllMobileTeachers} className="mx-auto mt-3 flex min-h-10 items-center gap-1 px-4 text-sm font-semibold text-emerald-700 dark:text-emerald-300">{showAllMobileTeachers ? "Show less" : "View more"}<ChevronRight className={`h-4 w-4 transition-transform ${showAllMobileTeachers ? "-rotate-90" : "rotate-90"}`} /></button>}
+              </> : <p className="py-5 text-sm text-slate-500">No teachers match your search.</p>}
               <button type="button" onClick={openCreateForm} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add teacher</button>
             </section>}
 
