@@ -152,9 +152,8 @@ export default function TeachersPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState("");
   const [subject, setSubject] = useState("All");
-  const [account, setAccount] = useState<"All" | "Active" | "Not created">(
-    "All",
-  );
+  const [grade, setGrade] = useState("All");
+  const [subjectOptions, setSubjectOptions] = useState<string[]>(["All"]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
@@ -224,20 +223,34 @@ export default function TeachersPage() {
           .single();
         if (profileError || !profile?.school_id)
           throw new Error("Your school profile could not be loaded.");
-        const { data, error: teachersError } = await supabase
-          .from("teachers")
-          .select(
-            "id, school_id, name, subject, phone, email, qualification, address, salary, created_at, user_id, department, joining_date, date_of_birth, employment_status, employee_id, left_at, avatar_path",
-          )
-          .eq("school_id", profile.school_id)
-          .order("created_at", { ascending: false });
-        if (teachersError) throw teachersError;
+        const [teachersResult, subjectsResult] = await Promise.all([
+          supabase
+            .from("teachers")
+            .select(
+              "id, school_id, name, subject, phone, email, qualification, address, salary, created_at, user_id, department, joining_date, date_of_birth, employment_status, employee_id, left_at, avatar_path",
+            )
+            .eq("school_id", profile.school_id)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("school_subjects")
+            .select("name")
+            .eq("school_id", profile.school_id)
+            .order("sort_order", { ascending: true })
+            .order("name", { ascending: true }),
+        ]);
+        if (teachersResult.error) throw teachersResult.error;
+        if (subjectsResult.error) throw subjectsResult.error;
+        const data = teachersResult.data;
         if (!cancelled) {
           setSchoolId(profile.school_id);
           const scope = activateTeacherAvatarCache(user.id, profile.school_id);
           setAvatarScope(scope);
           resumeTeacherAvatarCleanup(scope);
           setTeachers((data || []) as Teacher[]);
+          setSubjectOptions([
+            "All",
+            ...(subjectsResult.data || []).map((item) => item.name),
+          ]);
           const selectedId = new URLSearchParams(window.location.search).get('teacher');
           const match = (data || []).find((item) => item.id === selectedId);
           if (match) {
@@ -307,20 +320,6 @@ export default function TeachersPage() {
     return () => { cancelled = true; };
   }, [schoolId, pageTab, refreshKey, teachers]);
 
-  const subjects = useMemo(
-    () => [
-      "All",
-      ...Array.from(
-        new Set(
-          teachers
-            .map((teacher) => teacher.department || teacher.subject)
-            .filter((value): value is string => Boolean(value)),
-        ),
-      ).sort(),
-    ],
-    [teachers],
-  );
-
   const filteredTeachers = useMemo(() => {
     const query = search.trim().toLowerCase();
     return teachers.filter((teacher) => {
@@ -329,13 +328,12 @@ export default function TeachersPage() {
         [teacher.name, teacher.subject, teacher.phone, teacher.email].some(
           (value) => value?.toLowerCase().includes(query),
         );
-      const matchesSubject = subject === "All" || (teacher.department || teacher.subject) === subject;
-      const matchesAccount =
-        account === "All" ||
-        (account === "Active" ? Boolean(teacher.user_id) : !teacher.user_id);
-      return matchesSearch && matchesSubject && matchesAccount;
+      const teacherSubject = (teacher.subject || teacher.department || "").trim().toLowerCase();
+      const matchesSubject =
+        subject === "All" || teacherSubject === subject.trim().toLowerCase();
+      return matchesSearch && matchesSubject;
     });
-  }, [account, search, subject, teachers]);
+  }, [search, subject, teachers]);
 
   function openCreateForm() {
     photoSelection.current++;
@@ -769,7 +767,7 @@ export default function TeachersPage() {
                 </label>
                 <button type="button" aria-label="Filter teachers" aria-expanded={showMobileFilters} aria-pressed={showMobileFilters} onClick={() => setShowMobileFilters((value) => !value)} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 dark:focus-visible:ring-emerald-950 ${showMobileFilters ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" : "border-slate-200 bg-slate-100 text-slate-600 hover:border-emerald-200 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"}`}><SlidersHorizontal className="h-5 w-5" /></button>
               </div>
-              {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={subject} onChange={setSubject} label="Department" options={subjects} /><Select value={account} onChange={(value) => setAccount(value as typeof account)} label="Account" options={["All", "Active", "Not created"]} /></div>}
+              {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={grade} onChange={setGrade} label="Grade" options={["All"]} /><Select value={subject} onChange={setSubject} label="Subject" options={subjectOptions} /></div>}
               {filteredTeachers.length ? <>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {(showAllMobileTeachers ? filteredTeachers : filteredTeachers.slice(0, 10)).map((teacher, index) => <MobileTeacherCard key={teacher.id} teacher={teacher} avatarScope={avatarScope} index={index} status={overview?.statuses[teacher.id] || ""} onClick={() => setSelectedTeacher(teacher)} />)}
@@ -807,22 +805,22 @@ export default function TeachersPage() {
                   />
                 </label>
                 <Select
-                  value={subject}
-                  onChange={setSubject}
-                  label="Department"
-                  options={subjects}
+                  value={grade}
+                  onChange={setGrade}
+                  label="Grade"
+                  options={["All"]}
                 />
                 <Select
-                  value={account}
-                  onChange={(value) => setAccount(value as typeof account)}
-                  label="Account"
-                  options={["All", "Active", "Not created"]}
+                  value={subject}
+                  onChange={setSubject}
+                  label="Subject"
+                  options={subjectOptions}
                 />
               </div>
               {filteredTeachers.length === 0 ? (
                 <EmptyState
                   search={Boolean(
-                    search || subject !== "All" || account !== "All",
+                    search || subject !== "All" || grade !== "All",
                   )}
                   onAdd={openCreateForm}
                 />
