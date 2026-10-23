@@ -168,7 +168,7 @@ export default function SubjectsPage() {
 
         <main className="px-3 pb-24 pt-0 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1180px]">
-            <section className="relative -mx-3 aspect-[1672/650] w-[calc(100%+1.5rem)] overflow-hidden border-b border-blue-100 bg-[#edf7ff] shadow-sm sm:mx-0 sm:w-full sm:rounded-2xl sm:border">
+            <section className="relative -mx-3 aspect-[1672/650] w-[calc(100%+1.5rem)] overflow-hidden bg-[#edf7ff] sm:mx-0 sm:w-full sm:rounded-2xl sm:border sm:border-blue-100 sm:shadow-sm">
               <Image
                 src="/subject.png"
                 alt="Subjects — manage school subjects, grades and teacher mapping"
