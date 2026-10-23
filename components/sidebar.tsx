@@ -50,6 +50,11 @@ type SchoolInfo = {
   slug: string | null;
 };
 
+type PrincipalInfo = {
+  fullName: string;
+  avatarUrl: string | null;
+};
+
 // =========================================================
 // PRINCIPAL MENU
 // =========================================================
@@ -124,6 +129,7 @@ export default function Sidebar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const closeSearch = useCallback(() => setSearchOpen(false), []);
   const [school, setSchool] = useState<SchoolInfo | null>(null);
+  const [principal, setPrincipal] = useState<PrincipalInfo | null>(null);
 
   // =========================================================
   // DETECT WHICH PORTAL WE ARE CURRENTLY INSIDE
@@ -143,7 +149,7 @@ export default function Sidebar() {
       window.removeEventListener('teacher-search:open', openSearch);
       window.removeEventListener('student-sidebar:open', openStudentSidebar);
     };
-  }, []);
+  }, [isPrincipalPath]);
 
   const isTeacherPath =
     pathname === '/teacher' || pathname.startsWith('/teacher/');
@@ -188,7 +194,7 @@ export default function Sidebar() {
 
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('school_id')
+          .select('school_id, full_name, avatar_path')
           .eq('user_id', user.id)
           .single();
 
@@ -198,6 +204,27 @@ export default function Sidebar() {
         }
 
         if (!profile?.school_id) return;
+
+        if (mounted && isPrincipalPath) {
+          let principalAvatarUrl: string | null = null;
+
+          if (profile.avatar_path) {
+            const { data: signedAvatar, error: avatarError } = await supabase.storage
+              .from('principal-avatars')
+              .createSignedUrl(profile.avatar_path, 3600);
+
+            if (avatarError) {
+              console.error('Error getting principal avatar:', avatarError);
+            } else {
+              principalAvatarUrl = signedAvatar.signedUrl;
+            }
+          }
+
+          setPrincipal({
+            fullName: profile.full_name?.trim() || 'Principal',
+            avatarUrl: principalAvatarUrl,
+          });
+        }
 
         const { data: schoolData, error: schoolError } = await supabase
           .from('schools')
@@ -248,40 +275,85 @@ export default function Sidebar() {
       {/* =====================================================
           MOBILE TOP BAR
       ===================================================== */}
-      {!isStudentPath && <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center border-b border-gray-200 bg-white px-4 lg:hidden">
+      {!isStudentPath && <div className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center gap-2 border-b border-slate-200 bg-white px-3 lg:hidden">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition hover:bg-gray-100"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           aria-label="Open sidebar"
         >
           <Menu className="h-6 w-6" aria-hidden="true" />
         </button>
 
-        <Link
-          href="/principal"
-          className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
-          aria-label="Go to NEPSOM dashboard"
-        >
-          <Image
-            src="/logo2.png"
-            alt="NEPSOM"
-            width={148}
-            height={64}
-            priority
-            className="h-12 w-[148px] object-contain"
-          />
-        </Link>
+        {isPrincipalPath ? (
+          <>
+            <Link
+              href="/principal"
+              className="min-w-0 max-w-[96px] shrink-0 truncate text-sm font-extrabold tracking-[-0.02em] text-slate-950"
+              aria-label="Go to principal dashboard"
+              title={school?.name || 'School'}
+            >
+              {school?.name || 'School'}
+            </Link>
 
-        {(isPrincipalPath || isTeacherPath) && (
-          <button
-            type="button"
-            onClick={() => setSearchOpen(true)}
-            className="ml-auto flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-            aria-label={isTeacherPath ? 'Search students and classes' : 'Search school records'}
-          >
-            <Search className="h-5 w-5" aria-hidden="true" />
-          </button>
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="Search school records"
+            >
+              <Search className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+              <span className="truncate">Search...</span>
+            </button>
+
+            <Link
+              href="/principal/account"
+              className="flex min-w-0 shrink-0 items-center justify-end rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="Open principal account"
+              title={principal?.fullName || 'Principal'}
+            >
+              {principal?.avatarUrl ? (
+                <span
+                  role="img"
+                  aria-label={`${principal.fullName} profile picture`}
+                  className="h-9 w-9 shrink-0 rounded-full border border-slate-200 bg-slate-100 bg-cover bg-center"
+                  style={{ backgroundImage: `url("${principal.avatarUrl.replace(/"/g, '%22')}")` }}
+                />
+              ) : (
+                <span className="max-w-[72px] truncate text-xs font-bold text-slate-700">
+                  {principal?.fullName || 'Principal'}
+                </span>
+              )}
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link
+              href="/teacher"
+              className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
+              aria-label="Go to NEPSOM dashboard"
+            >
+              <Image
+                src="/logo2.png"
+                alt="NEPSOM"
+                width={148}
+                height={64}
+                priority
+                className="h-12 w-[148px] object-contain"
+              />
+            </Link>
+
+            {isTeacherPath && (
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="ml-auto flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                aria-label="Search students and classes"
+              >
+                <Search className="h-5 w-5" aria-hidden="true" />
+              </button>
+            )}
+          </>
         )}
       </div>}
 
