@@ -270,6 +270,16 @@ export default function Sidebar() {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  const schoolNameParts = school?.name.trim().split(/\s+/).filter(Boolean) || [];
+  const compactSchoolName = schoolNameParts.length > 2
+    ? `${schoolNameParts.slice(0, 2).join(' ')}…`
+    : schoolNameParts.join(' ') || 'School';
+
+  const principalNameParts = principal?.fullName.trim().split(/\s+/).filter(Boolean) || [];
+  const principalInitials = principalNameParts.length > 1
+    ? `${principalNameParts[0][0]}${principalNameParts[principalNameParts.length - 1][0]}`.toUpperCase()
+    : principalNameParts[0]?.slice(0, 2).toUpperCase() || 'PR';
+
   return (
     <>
       {/* =====================================================
@@ -293,7 +303,7 @@ export default function Sidebar() {
               aria-label="Go to principal dashboard"
               title={school?.name || 'School'}
             >
-              {school?.name || 'School'}
+              {compactSchoolName}
             </Link>
 
             <button
@@ -320,8 +330,11 @@ export default function Sidebar() {
                   style={{ backgroundImage: `url("${principal.avatarUrl.replace(/"/g, '%22')}")` }}
                 />
               ) : (
-                <span className="max-w-[72px] truncate text-xs font-bold text-slate-700">
-                  {principal?.fullName || 'Principal'}
+                <span
+                  aria-hidden="true"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-extrabold tracking-wide text-blue-700"
+                >
+                  {principalInitials}
                 </span>
               )}
             </Link>
