@@ -767,7 +767,7 @@ export default function TeachersPage() {
                 </label>
                 <button type="button" aria-label="Filter teachers" aria-expanded={showMobileFilters} aria-pressed={showMobileFilters} onClick={() => setShowMobileFilters((value) => !value)} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 dark:focus-visible:ring-emerald-950 ${showMobileFilters ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" : "border-slate-200 bg-slate-100 text-slate-600 hover:border-emerald-200 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"}`}><SlidersHorizontal className="h-5 w-5" /></button>
               </div>
-              {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={grade} onChange={setGrade} label="Class" options={["All"]} allLabel="Class" /><Select value={subject} onChange={setSubject} label="Subject" options={subjectOptions} allLabel="Subjects" /></div>}
+              {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={grade} onChange={setGrade} label="Class" options={["All"]} allLabel="Class" icon={School} /><Select value={subject} onChange={setSubject} label="Subject" options={subjectOptions} allLabel="Subjects" icon={BookOpen} /></div>}
               {filteredTeachers.length ? <>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {(showAllMobileTeachers ? filteredTeachers : filteredTeachers.slice(0, 10)).map((teacher, index) => <MobileTeacherCard key={teacher.id} teacher={teacher} avatarScope={avatarScope} index={index} status={overview?.statuses[teacher.id] || ""} onClick={() => setSelectedTeacher(teacher)} />)}
@@ -810,6 +810,7 @@ export default function TeachersPage() {
                   label="Class"
                   options={["All"]}
                   allLabel="Class"
+                  icon={School}
                 />
                 <Select
                   value={subject}
@@ -817,6 +818,7 @@ export default function TeachersPage() {
                   label="Subject"
                   options={subjectOptions}
                   allLabel="Subjects"
+                  icon={BookOpen}
                 />
               </div>
               {filteredTeachers.length === 0 ? (
@@ -948,12 +950,14 @@ function Select({
   label,
   options,
   allLabel,
+  icon: Icon,
 }: {
   value: string;
   onChange: (value: string) => void;
   label: string;
   options: string[];
   allLabel?: string;
+  icon?: React.ElementType;
 }) {
   const [open, setOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
@@ -979,10 +983,15 @@ function Select({
         aria-label={label}
         aria-haspopup="listbox"
         aria-expanded={open}
-        className={`flex h-10 w-full items-center justify-between rounded-xl border bg-white px-3 text-left text-sm font-medium text-slate-700 outline-none transition ${open ? "border-blue-400 ring-2 ring-blue-100" : "border-slate-200 hover:border-slate-300"}`}
+        className={`group flex h-11 w-full items-center gap-2.5 rounded-xl border bg-white px-2.5 text-left outline-none transition-all ${open ? "border-emerald-400 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]" : "border-slate-200 shadow-[0_2px_7px_rgba(15,23,42,0.05)] hover:border-slate-300 hover:shadow-md"}`}
       >
-        <span className="truncate">{displayValue}</span>
-        <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden="true" />
+        {Icon && (
+          <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${open ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200"}`}>
+            <Icon className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+          </span>
+        )}
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">{displayValue}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${open ? "rotate-180 text-emerald-600" : ""}`} aria-hidden="true" />
       </button>
 
       {open && (
