@@ -69,80 +69,85 @@ export default function TopBar() {
   const [isStudentProfileOpen, setIsStudentProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch Data
+  // Load identity first; school, student and avatar data must never block the whole topbar.
   useEffect(() => {
+    let active = true;
     async function fetchTopBarData() {
       try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError || !user) {
-          setIsLoading(false);
-          return;
-        }
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const user = session?.user;
+        if (sessionError || !user) return;
 
-        setAvatarUrl(
-          user.user_metadata?.avatar_url ||
-          user.user_metadata?.picture ||
-          null
-        );
+        if (active) {
+          setAvatarUrl(user.user_metadata?.avatar_url || user.user_metadata?.picture || null);
+        }
 
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('id, user_id, full_name, role, school_id, avatar_path')
           .eq('user_id', user.id)
           .single();
-        
-        if (profileError) console.error('Profile fetch error', profileError);
-        else {
-          setProfile(profileData);
 
-          const schoolRequest = profileData.school_id
-            ? supabase
-                .from('schools')
-                .select('id, name, municipality, district')
-                .eq('id', profileData.school_id)
-                .single()
-                .then(({ data, error }) => {
-                  if (error) console.error('School fetch error', error);
-                  else setSchool(data);
-                })
-            : Promise.resolve();
-
-          const studentRequest = isStudentArea
-            ? supabase
-                .from('students')
-                .select('name, class, section, roll_no')
-                .eq('user_id', user.id)
-                .maybeSingle()
-                .then(({ data, error }) => {
-                  if (error) console.error('Student fetch error', error);
-                  else setStudent(data);
-                })
-            : Promise.resolve();
-
-          const avatarRequest = profileData.avatar_path
-            ? isStudentArea
-              ? supabase.storage
-                  .from('student-avatars')
-                  .createSignedUrl(profileData.avatar_path, 3600)
-                  .then(({ data, error }) => {
-                    if (error) console.error('Avatar URL error', error);
-                    else if (data) setAvatarUrl(data.signedUrl);
-                  })
-              : profileAvatarUrl(profileData.avatar_path).then((url) => {
-                  if (url) setAvatarUrl(url);
-                }).catch((error) => console.error('Avatar URL error', error))
-            : Promise.resolve();
-
-          await Promise.allSettled([schoolRequest, studentRequest, avatarRequest]);
+        if (profileError) {
+          console.error('Profile fetch error', profileError);
+          return;
         }
+        if (!active) return;
+
+        setProfile(profileData);
+        setIsLoading(false);
+
+        const schoolRequest = profileData.school_id
+          ? supabase
+              .from('schools')
+              .select('id, name, municipality, district')
+              .eq('id', profileData.school_id)
+              .single()
+              .then(({ data, error }) => {
+                if (error) console.error('School fetch error', error);
+                else if (active) setSchool(data);
+              })
+          : Promise.resolve();
+
+        const studentRequest = isStudentArea
+          ? supabase
+              .from('students')
+              .select('name, class, section, roll_no')
+              .eq('user_id', user.id)
+              .maybeSingle()
+              .then(({ data, error }) => {
+                if (error) console.error('Student fetch error', error);
+                else if (active) setStudent(data);
+              })
+          : Promise.resolve();
+
+        const avatarRequest = profileData.avatar_path
+          ? isStudentArea
+            ? supabase.storage
+                .from('student-avatars')
+                .createSignedUrl(profileData.avatar_path, 3600)
+                .then(({ data, error }) => {
+                  if (error) console.error('Avatar URL error', error);
+                  else if (active && data) setAvatarUrl(data.signedUrl);
+                })
+            : profileAvatarUrl(profileData.avatar_path)
+                .then((url) => {
+                  if (active && url) setAvatarUrl(url);
+                })
+                .catch((error) => console.error('Avatar URL error', error))
+          : Promise.resolve();
+
+        // These improve the topbar after identity renders; none may hold its loading state open.
+        void Promise.allSettled([schoolRequest, studentRequest, avatarRequest]);
       } catch (error) {
         console.error('TopBar: Unexpected error', error);
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     }
-    
-    fetchTopBarData();
+
+    void fetchTopBarData();
+    return () => { active = false; };
   }, [isStudentArea]);
 
   // Close dropdown when clicking outside
