@@ -7,6 +7,9 @@ import {
   AlertCircle,
   ArrowRight,
   BriefcaseBusiness,
+  BookOpen,
+  CircleCheck,
+  Clock3,
   Camera,
   Check,
   ChevronRight,
@@ -27,6 +30,9 @@ import {
   UserRound,
   UsersRound,
   LayoutDashboard,
+  MessageCircle,
+  MoreVertical,
+  Phone,
   School,
   MoreHorizontal,
   SlidersHorizontal,
@@ -903,11 +909,26 @@ export default function TeachersPage() {
 
 function MobileTeacherCard({ teacher, avatarScope, index, status, onClick }: { teacher: Teacher; avatarScope: string; index: number; status: string; onClick: () => void }) {
   const displayStatus = teacher.employment_status === "inactive" ? "Inactive" : status === "present" ? "Present" : status === "late" ? "Late" : status === "absent" ? "Absent" : status === "leave" ? "On leave" : "Not marked";
-  const badgeTone = displayStatus === "Present" ? "bg-emerald-100 text-emerald-800" : displayStatus === "Late" ? "bg-amber-100 text-amber-800" : displayStatus === "Absent" || displayStatus === "Inactive" ? "bg-rose-100 text-rose-800" : displayStatus === "On leave" ? "bg-violet-100 text-violet-800" : "bg-slate-100 text-slate-600";
-  return <button type="button" onClick={onClick} className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-300 bg-white p-2 text-left dark:border-slate-700 dark:bg-slate-900">
-    <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className={`h-10 w-10 rounded-xl bg-gradient-to-br text-xs font-bold text-white ${teacherTones[index % teacherTones.length]}`} />
-    <span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold text-slate-950 dark:text-white">{teacher.name}</span><span className="block truncate text-[11px] text-slate-600 dark:text-slate-300">{teacher.subject || "Subject not assigned"}</span><span className={`mt-0.5 inline-block max-w-full truncate rounded-full px-1.5 py-0.5 text-[10px] font-medium ${badgeTone}`}>{displayStatus}</span></span>
-  </button>;
+  const statusTone = displayStatus === "Present" ? "bg-emerald-100 text-emerald-800" : displayStatus === "Late" ? "bg-amber-100 text-amber-800" : displayStatus === "Absent" || displayStatus === "Inactive" ? "bg-rose-100 text-rose-800" : displayStatus === "On leave" ? "bg-violet-100 text-violet-800" : "bg-slate-100 text-slate-600";
+  const StatusIcon = displayStatus === "Present" ? CircleCheck : displayStatus === "Late" ? Clock3 : displayStatus === "Absent" || displayStatus === "Inactive" || displayStatus === "On leave" ? UserMinus : Clock3;
+  const subject = teacher.subject || teacher.department || "Subject not assigned";
+  return <article className="min-w-0 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div className="flex min-w-0 items-start gap-2">
+      <button type="button" onClick={onClick} className="shrink-0 rounded-xl" aria-label={`View ${teacher.name}`}>
+        <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className={`h-12 w-12 rounded-xl bg-gradient-to-br text-xs font-bold text-white ${teacherTones[index % teacherTones.length]}`} />
+      </button>
+      <button type="button" onClick={onClick} className="min-w-0 flex-1 text-left">
+        <span className="block truncate text-xs font-extrabold text-slate-950 dark:text-white">{teacher.name}</span>
+        <span className="mt-1 flex min-w-0 items-center gap-1 text-[10px] text-slate-600 dark:text-slate-300"><BookOpen className="h-3.5 w-3.5 shrink-0 text-slate-400" /><span className="truncate">{subject}</span></span>
+        <span className="mt-1 flex min-w-0 items-center gap-1 text-[10px] text-slate-600 dark:text-slate-300"><Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" /><span className="truncate">{teacher.phone || "Phone not added"}</span></span>
+      </button>
+      <button type="button" onClick={onClick} aria-label={`Open ${teacher.name} details`} className="-mr-1 -mt-1 rounded-lg p-1 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><MoreVertical className="h-4 w-4" /></button>
+    </div>
+    <div className="mt-2 grid grid-cols-2 gap-1.5">
+      <span className={`flex min-h-8 items-center justify-center gap-1 rounded-xl px-1.5 text-[10px] font-bold ${statusTone}`}><StatusIcon className="h-3.5 w-3.5 shrink-0" />{displayStatus}</span>
+      {teacher.user_id ? <Link href={`/principal/communication?tab=messages&recipient=${encodeURIComponent(teacher.user_id)}`} className="flex min-h-8 items-center justify-center gap-1 rounded-xl bg-blue-50 px-1.5 text-[10px] font-bold text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"><MessageCircle className="h-3.5 w-3.5" />Message</Link> : <span className="flex min-h-8 items-center justify-center gap-1 rounded-xl bg-amber-50 px-1.5 text-[10px] font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"><Clock3 className="h-3.5 w-3.5" />Login pending</span>}
+    </div>
+  </article>;
 }
 
 const teacherTones = [
