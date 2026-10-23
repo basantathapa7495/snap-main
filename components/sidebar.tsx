@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { cachedProfileAvatarUrl, profileAvatarUrl } from '@/lib/profile-avatars';
 import PrincipalSearch from './PrincipalSearch';
 import TeacherSearch from './TeacherSearch';
 import {
@@ -172,7 +173,7 @@ export default function Sidebar() {
   }
 
   // =========================================================
-  // FETCH SCHOOL NAME + SLUG
+  // FETCH MOBILE TOPBAR DATA
   // =========================================================
 
   useEffect(() => {
@@ -180,17 +181,27 @@ export default function Sidebar() {
 
     async function getSchool() {
       try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const user = session?.user;
+        if (sessionError || !user) return;
 
-        if (userError) {
-          console.error('Error getting user:', userError);
-          return;
+        const cacheKey = `nepsom:principal-topbar:v1:${user.id}`;
+        if (isPrincipalPath) {
+          try {
+            const cached = JSON.parse(sessionStorage.getItem(cacheKey) || 'null') as {
+              fullName?: string;
+              avatarPath?: string | null;
+              school?: SchoolInfo;
+            } | null;
+            if (mounted && cached?.fullName) {
+              setPrincipal({
+                fullName: cached.fullName,
+                avatarUrl: cachedProfileAvatarUrl(cached.avatarPath),
+              });
+            }
+            if (mounted && cached?.school) setSchool(cached.school);
+          } catch { /* Fresh data below replaces an invalid cache. */ }
         }
-
-        if (!user) return;
 
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -202,57 +213,69 @@ export default function Sidebar() {
           console.error('Error getting profile:', profileError);
           return;
         }
+        if (!profile?.school_id || !mounted) return;
 
-        if (!profile?.school_id) return;
-
-        if (mounted && isPrincipalPath) {
-          let principalAvatarUrl: string | null = null;
-
-          if (profile.avatar_path) {
-            const { data: signedAvatar, error: avatarError } = await supabase.storage
-              .from('principal-avatars')
-              .createSignedUrl(profile.avatar_path, 3600);
-
-            if (avatarError) {
-              console.error('Error getting principal avatar:', avatarError);
-            } else {
-              principalAvatarUrl = signedAvatar.signedUrl;
-            }
-          }
-
+        const fullName = profile.full_name?.trim() || 'Principal';
+        if (isPrincipalPath) {
           setPrincipal({
-            fullName: profile.full_name?.trim() || 'Principal',
-            avatarUrl: principalAvatarUrl,
+            fullName,
+            avatarUrl: cachedProfileAvatarUrl(profile.avatar_path),
           });
         }
 
-        const { data: schoolData, error: schoolError } = await supabase
+        const schoolRequest = supabase
           .from('schools')
           .select('name, slug')
           .eq('id', profile.school_id)
-          .single();
-
-        if (schoolError) {
-          console.error('Error getting school:', schoolError);
-          return;
-        }
-
-        if (mounted && schoolData) {
-          setSchool({
-            name: schoolData.name,
-            slug: schoolData.slug,
+          .single()
+          .then(({ data, error }) => {
+            if (error) {
+              console.error('Error getting school:', error);
+              return;
+            }
+            if (!mounted || !data) return;
+            const schoolData = { name: data.name, slug: data.slug };
+            setSchool(schoolData);
+            if (isPrincipalPath) {
+              try {
+                sessionStorage.setItem(cacheKey, JSON.stringify({
+                  fullName,
+                  avatarPath: profile.avatar_path,
+                  school: schoolData,
+                }));
+              } catch { /* Topbar still works without browser storage. */ }
+            }
           });
-        }
+
+        const avatarRequest = isPrincipalPath && profile.avatar_path
+          ? profileAvatarUrl(profile.avatar_path)
+              .then((avatarUrl) => {
+                if (mounted && avatarUrl) {
+                  setPrincipal({ fullName, avatarUrl });
+                }
+              })
+              .catch((avatarError) => console.error('Error getting principal avatar:', avatarError))
+          : Promise.resolve();
+
+        // School and photo load together; cached values render immediately when available.
+        void Promise.allSettled([schoolRequest, avatarRequest]);
       } catch (error) {
         console.error('Sidebar error:', error);
       }
     }
 
-    getSchool();
+    void getSchool();
+    return () => { mounted = false; };
+  }, [isPrincipalPath]);
 
-    return () => {
-      mounted = false;
+  useEffect(() => {
+    const updateAvatar = (event: Event) => {
+      const detail = (event as CustomEvent<{ url?: string }>).detail;
+      if (!detail?.url) return;
+      setPrincipal((current) => current ? { ...current, avatarUrl: detail.url! } : current);
     };
+    window.addEventListener('profile-avatar:updated', updateAvatar);
+    return () => window.removeEventListener('profile-avatar:updated', updateAvatar);
   }, []);
 
   // =========================================================
