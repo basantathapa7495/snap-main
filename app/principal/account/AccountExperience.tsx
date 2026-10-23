@@ -61,7 +61,7 @@ export default function AccountExperience({section='home'}:{section?:Section}) {
       const signed=await profileAvatarUrl(uploadedPath);
       if(!signed)throw new Error('Could not load the uploaded profile picture.');
       if(previousPath&&previousPath!==uploadedPath)removeProfileAvatar(previousPath).catch((cleanupError)=>console.error('Could not remove previous principal avatar:',cleanupError));
-      setProfile(result.data);setPhotoUrl(signed);setPhoto(null);setPhotoPreview('');URL.revokeObjectURL(preview);setSuccess('Profile picture updated.');
+      setProfile(result.data);setPhotoUrl(signed);setPhoto(null);setPhotoPreview('');URL.revokeObjectURL(preview);window.dispatchEvent(new CustomEvent('profile-avatar:updated',{detail:{path:uploadedPath,url:signed}}));setSuccess('Profile picture updated.');
     }catch(cause){
       setPhoto(null);setPhotoPreview('');URL.revokeObjectURL(preview);setError(cause instanceof Error?cause.message:typeof cause==='object'&&cause!==null&&'message'in cause?String(cause.message):'Could not upload profile picture.');
     }finally{setUploadingPhoto(false);}
@@ -71,7 +71,7 @@ export default function AccountExperience({section='home'}:{section?:Section}) {
       if(removePhoto)path=null;
       const result=await supabase.from('profiles').update({full_name:name.trim(),phone:phone.trim()||null,address:address.trim()||null,avatar_path:path}).eq('user_id',user.id).eq('school_id',profile.school_id).select('user_id,school_id,role,full_name,phone,address,avatar_path,created_at').single();if(result.error)throw result.error;
       if(removePhoto&&profile.avatar_path&&profile.avatar_path!==path)await removeProfileAvatar(profile.avatar_path).catch((cleanupError)=>console.error('Could not remove principal avatar:',cleanupError));
-      setProfile(result.data);setPhoto(null);setRemovePhoto(false);if(!path)setPhotoUrl('');
+      setProfile(result.data);setPhoto(null);setRemovePhoto(false);if(!path){setPhotoUrl('');window.dispatchEvent(new CustomEvent('profile-avatar:updated',{detail:{path:null,url:null}}));}
       if(photoPreview){URL.revokeObjectURL(photoPreview);setPhotoPreview('');}
       if(email.trim().toLowerCase()!==(user.email||'').toLowerCase()){const changedEmail=await supabase.auth.updateUser({email:email.trim().toLowerCase()});if(changedEmail.error)throw changedEmail.error;setPendingEmail(email.trim().toLowerCase());setSuccess('Profile saved. Check both email inboxes for the confirmation link. Your login email changes after verification.');}else setSuccess('Profile saved.');
     }catch(cause){setError(cause instanceof Error?cause.message:'Could not save profile.');}finally{setSaving(false);}}
