@@ -668,8 +668,8 @@ export default function TeachersPage() {
                   aria-current={pageTab === value ? "page" : undefined}
                   className={`relative min-h-8 flex-1 shrink-0 whitespace-nowrap px-2 text-[10px] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 min-[420px]:px-3 min-[420px]:text-[11px] sm:min-h-10 sm:px-4 sm:text-sm ${
                     pageTab === value
-                      ? "bg-blue-50 font-bold text-blue-700 shadow-sm dark:bg-blue-900/45 dark:text-blue-200"
-                      : "font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                      ? "border border-emerald-200 bg-emerald-50 font-bold text-emerald-700 shadow-sm dark:border-emerald-800 dark:bg-emerald-900/35 dark:text-emerald-200"
+                      : "border border-slate-200 bg-slate-50/70 font-semibold text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-emerald-800 dark:hover:bg-emerald-900/25 dark:hover:text-emerald-200"
                   }`}>
                   {label}
                 </button>
