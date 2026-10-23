@@ -164,24 +164,17 @@ export default function SubjectsPage() {
       <div className="pt-10 lg:ml-64">
         <TopBar />
 
-        <main className="px-3 pb-24 pt-8 sm:px-6 lg:px-8 lg:pt-24">
+        <main className="px-3 pb-24 pt-4 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1180px]">
-            <section className="relative h-[142px] overflow-hidden rounded-2xl border border-blue-100 bg-[#edf7ff] shadow-sm sm:h-[190px]">
+            <section className="relative aspect-[1672/650] w-full overflow-hidden rounded-2xl border border-blue-100 bg-[#edf7ff] shadow-sm">
               <Image
                 src="/subject.png"
-                alt="School subject books"
+                alt="Subjects — manage school subjects, grades and teacher mapping"
                 fill
                 priority
-                sizes="(max-width: 768px) 100vw, 900px"
+                sizes="(max-width: 768px) 100vw, 1180px"
                 className="object-cover object-center"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/75 to-white/5" />
-              <div className="relative z-10 flex h-full max-w-[58%] flex-col justify-center px-5 sm:px-8">
-                <h1 className="text-3xl font-extrabold tracking-[-0.04em] text-slate-950 sm:text-4xl">Subjects</h1>
-                <p className="mt-2 text-sm font-medium leading-5 text-slate-600 sm:text-base">
-                  Manage all subjects for your school.
-                </p>
-              </div>
             </section>
 
             <div className="mb-3 mt-6">
