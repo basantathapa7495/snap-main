@@ -270,11 +270,6 @@ export default function Sidebar() {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  const schoolNameParts = school?.name.trim().split(/\s+/).filter(Boolean) || [];
-  const compactSchoolName = schoolNameParts.length > 2
-    ? `${schoolNameParts.slice(0, 2).join(' ')}…`
-    : schoolNameParts.join(' ') || 'School';
-
   const principalNameParts = principal?.fullName.trim().split(/\s+/).filter(Boolean) || [];
   const principalInitials = principalNameParts.length > 1
     ? `${principalNameParts[0][0]}${principalNameParts[principalNameParts.length - 1][0]}`.toUpperCase()
@@ -303,7 +298,7 @@ export default function Sidebar() {
               aria-label="Go to principal dashboard"
               title={school?.name || 'School'}
             >
-              {compactSchoolName}
+              {school?.name?.trim() || 'School'}
             </Link>
 
             <button
