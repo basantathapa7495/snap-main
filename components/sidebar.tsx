@@ -335,7 +335,7 @@ export default function Sidebar() {
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="flex h-9 min-w-0 max-w-[150px] flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="ml-auto flex h-9 min-w-0 max-w-[150px] flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               aria-label="Search school records"
             >
               <Search className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
