@@ -917,13 +917,13 @@ function MobileTeacherCard({ teacher, avatarScope, index, status, onClick }: { t
         <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className={`h-11 w-11 rounded-lg bg-gradient-to-br text-xs font-bold text-white ${teacherTones[index % teacherTones.length]}`} />
       </button>
       <button type="button" onClick={onClick} className="min-w-0 flex-1 overflow-hidden text-left">
-        <span className="block truncate whitespace-nowrap text-xs font-extrabold text-slate-950 dark:text-white">{teacher.name}</span>
+        <span className="block truncate whitespace-nowrap text-sm font-extrabold leading-tight text-slate-950 dark:text-white">{teacher.name}</span>
         <span className="mt-0.5 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-[10px] text-slate-600 dark:text-slate-300"><BookOpen className="h-3 w-3 shrink-0 text-slate-400" /><span className="truncate whitespace-nowrap">{subject}</span></span>
         <span className="mt-0.5 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-[10px] text-slate-600 dark:text-slate-300"><Phone className="h-3 w-3 shrink-0 text-slate-400" /><span className="truncate whitespace-nowrap">{teacher.phone || "Phone not added"}</span></span>
       </button>
     </div>
-    <div className="mt-1.5 flex min-w-0 items-center justify-between gap-1">
-      <span className={`inline-flex h-6 min-w-0 items-center gap-0.5 overflow-hidden whitespace-nowrap rounded-md px-1.5 text-[9px] font-bold ${statusTone}`}><StatusIcon className="h-2.5 w-2.5 shrink-0" /><span className="truncate">{displayStatus}</span></span>
+    <div className="mt-1.5 flex min-w-0 items-center justify-start gap-1">
+      <span className={`inline-flex h-6 min-w-[4.25rem] items-center justify-center gap-0.5 overflow-hidden whitespace-nowrap rounded-md px-2 text-[9px] font-bold ${statusTone}`}><StatusIcon className="h-2.5 w-2.5 shrink-0" /><span className="truncate">{displayStatus}</span></span>
       {teacher.user_id ? <Link href={`/principal/communication?tab=messages&recipient=${encodeURIComponent(teacher.user_id)}`} className="inline-flex h-6 min-w-0 items-center gap-0.5 overflow-hidden whitespace-nowrap rounded-md bg-blue-50 px-1.5 text-[9px] font-bold text-blue-800 dark:bg-blue-900/30 dark:text-blue-200"><MessageCircle className="h-2.5 w-2.5 shrink-0" /><span className="truncate">Message</span></Link> : <span className="inline-flex h-6 min-w-0 items-center gap-0.5 overflow-hidden whitespace-nowrap rounded-md bg-amber-50 px-1.5 text-[9px] font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"><Clock3 className="h-2.5 w-2.5 shrink-0" /><span className="truncate">Login pending</span></span>}
     </div>
   </article>;
