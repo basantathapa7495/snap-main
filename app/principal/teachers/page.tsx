@@ -935,11 +935,17 @@ const statTones = {
   amber: "bg-amber-50 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300",
 };
 
-function TeacherStat({ icon: Icon, label, value, tone, onClick }: { icon: React.ElementType; label: string; value: number | null; tone: keyof typeof statTones; onClick: () => void }) {
-  return <button type="button" onClick={onClick} aria-label={`${label}: ${value === null ? "Loading" : value}. Open details`} className="group flex min-h-[64px] min-w-0 items-center gap-1 rounded-xl border border-slate-300 bg-white p-1.5 text-left transition hover:border-blue-300 hover:bg-blue-50/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 sm:min-h-[90px] sm:gap-3 sm:rounded-2xl sm:p-4">
-    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg min-[420px]:h-9 min-[420px]:w-9 sm:h-12 sm:w-12 sm:rounded-[12px] ${statTones[tone]}`}><Icon className="h-4 w-4 sm:h-6 sm:w-6" strokeWidth={2.4} aria-hidden="true" /></span>
-    <span className="min-w-0 flex-1"><span className="block text-[9px] font-medium leading-tight break-words text-slate-700 dark:text-slate-300 min-[420px]:text-[10px] sm:text-sm">{label}</span><span className="mt-0.5 block text-lg font-extrabold leading-none tabular-nums text-slate-950 dark:text-white sm:text-[1.75rem]">{value ?? "—"}</span></span>
-    <ChevronRight className="hidden h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:t-100 text-rose-800" : displayStatus === "On leave" ? "bg-violet-100 text-violet-800" : "bg-slate-100 text-slate-600";
+function AttentionRow({ icon: Icon, tone, title, detail, onClick }: { icon: React.ElementType; tone: keyof typeof statTones; title: string; detail: string; onClick: () => void }) {
+  return <button type="button" onClick={onClick} className="flex w-full items-center gap-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900">
+    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${statTones[tone]}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
+    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-slate-950 dark:text-white">{title}</span><span className="block text-xs text-slate-600 dark:text-slate-300">{detail}</span></span>
+    <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
+  </button>;
+}
+
+function MobileTeacherCard({ teacher, avatarScope, index, status, onClick }: { teacher: Teacher; avatarScope: string; index: number; status: string; onClick: () => void }) {
+  const displayStatus = teacher.employment_status === "inactive" ? "Inactive" : status === "present" ? "Present" : status === "late" ? "Late" : status === "absent" ? "Absent" : status === "leave" ? "On leave" : "Not marked";
+  const badgeTone = displayStatus === "Present" ? "bg-emerald-100 text-emerald-800" : displayStatus === "Late" ? "bg-amber-100 text-amber-800" : displayStatus === "Absent" || displayStatus === "Inactive" ? "bg-rose-100 text-rose-800" : displayStatus === "On leave" ? "bg-violet-100 text-violet-800" : "bg-slate-100 text-slate-600";
   return <button type="button" onClick={onClick} className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-300 bg-white p-2 text-left dark:border-slate-700 dark:bg-slate-900">
     <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className={`h-10 w-10 rounded-xl bg-gradient-to-br text-xs font-bold text-white ${teacherTones[index % teacherTones.length]}`} />
     <span className="min-w-0 flex-1"><span className="block truncate text-xs font-bold text-slate-950 dark:text-white">{teacher.name}</span><span className="block truncate text-[11px] text-slate-600 dark:text-slate-300">{teacher.subject || "Subject not assigned"}</span><span className={`mt-0.5 inline-block max-w-full truncate rounded-full px-1.5 py-0.5 text-[10px] font-medium ${badgeTone}`}>{displayStatus}</span></span>
