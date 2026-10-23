@@ -44,6 +44,7 @@ export default function CommunicationPage() {
   const [composerAudience, setComposerAudience] = useState<Audience | null>(null);
   const [composerKey, setComposerKey] = useState(0);
   const [initialFilter, setInitialFilter] = useState("All");
+  const [initialRecipientId, setInitialRecipientId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +75,8 @@ export default function CommunicationPage() {
             const params = new URLSearchParams(window.location.search);
             const requestedTab = params.get("tab");
             if (["notices", "messages", "scheduled"].includes(requestedTab || "")) setTab(requestedTab as Tab);
+            const requestedRecipient = params.get("recipient");
+            if (requestedTab === "messages" && requestedRecipient) setInitialRecipientId(requestedRecipient);
             const requestedNotice = params.get("notice");
             if (requestedNotice && (noticeResult.data || []).some((item) => item.id === requestedNotice)) { setInitialNoticeId(requestedNotice); setTab("notices"); }
             else if (params.get("action") === "create") { setComposerAudience("all"); setComposerKey((value) => value + 1); setTab("notices"); }
@@ -120,7 +123,7 @@ export default function CommunicationPage() {
     {tab === "overview" && <CommunicationOverview notices={notices} unreadMessages={unreadMessages} error={error} teacherCount={teacherCount} studentCount={studentCount} countsError={countsError} audienceInfo="" onAudience={(audience) => openComposer(audience === "Everyone" ? "all" : audience.toLowerCase() as Audience)} onNotice={(item) => { setComposerAudience(null); setInitialNoticeId(item.id); setTab("notices"); }} onTab={chooseTab} onCreate={() => openComposer()} onNewMessage={openNewMessage} onDrafts={() => { setComposerAudience(null); setInitialFilter("Drafts"); setTab("notices"); }} />}
     {tab === "notices" && schoolId && <PrincipalNoticesPanel key={`${initialNoticeId || ""}-${composerKey}-${initialFilter}`} schoolId={schoolId} notices={notices} onChanged={() => setRefreshKey((value) => value + 1)} initialNoticeId={initialNoticeId} composerAudience={composerAudience} composerKey={composerKey} initialFilter={initialFilter} />}
     {tab === "notices" && !schoolId && error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300">{error}</p>}
-    {tab === "messages" && schoolId && principalId && <PrincipalMessagesPanel schoolId={schoolId} principalId={principalId} newMessageKey={messageKey} onUnread={handleUnread} />}
+    {tab === "messages" && schoolId && principalId && <PrincipalMessagesPanel schoolId={schoolId} principalId={principalId} newMessageKey={messageKey} initialRecipientId={initialRecipientId} onUnread={handleUnread} />}
     {tab === "messages" && !schoolId && error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300">{error}</p>}
     {tab === "scheduled" && <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"><h2 className="text-sm font-bold text-slate-950 dark:text-white">Scheduled communications</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">The full Scheduled page is coming later. Scheduled notices appear in Notices and in Overview.</p></section>}
   </div></main></div></div>;
