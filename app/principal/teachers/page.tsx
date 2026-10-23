@@ -18,7 +18,6 @@ import {
   EyeOff,
   KeyRound,
   Plus,
-  ClipboardClock,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -31,7 +30,6 @@ import {
   School,
   MoreHorizontal,
   SlidersHorizontal,
-  TriangleAlert,
   Trash2,
   X,
 } from "lucide-react";
@@ -172,10 +170,8 @@ export default function TeachersPage() {
   const [allCredentialsCopied, setAllCredentialsCopied] = useState(false);
   const [pageTab, setPageTab] = useState<"teachers" | "attendance" | "leave" | "assignments" | "joining" | "more">("teachers");
   const [overview, setOverview] = useState<TeacherOverview | null>(null);
-  const [overviewLoading, setOverviewLoading] = useState(true);
   const [overviewError, setOverviewError] = useState("");
   const [showAllMobileTeachers, setShowAllMobileTeachers] = useState(false);
-  const [showAllAttention, setShowAllAttention] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [teacherPhoto, setTeacherPhoto] = useState<File | null>(null);
   const [teacherPhotoPreview, setTeacherPhotoPreview] = useState("");
@@ -269,7 +265,6 @@ export default function TeachersPage() {
     if (!schoolId || pageTab !== "teachers") return;
     let cancelled = false;
     async function loadOverview() {
-      setOverviewLoading(true);
       setOverviewError("");
       const today = todayInNepal();
       const [attendance, leaves, pending, classes, assignments] = await Promise.all([
@@ -302,7 +297,6 @@ export default function TeachersPage() {
           statuses: Object.fromEntries(active.map((teacher) => [teacher.id, statuses.get(teacher.id) || (approvedLeaveIds.has(teacher.id) ? "leave" : "") ])),
         });
       }
-      setOverviewLoading(false);
     }
     void loadOverview();
     return () => { cancelled = true; };
@@ -621,14 +615,7 @@ export default function TeachersPage() {
     window.setTimeout(() => setAllCredentialsCopied(false), 2000);
   }
 
-  const inactiveCount = teachers.filter((teacher) => teacher.employment_status === "inactive").length;
-  const missingLoginCount = teachers.filter((teacher) => teacher.employment_status !== "inactive" && !teacher.user_id).length;
-  const attentionItems: Array<{ icon: React.ElementType; tone: keyof typeof statTones; title: string; detail: string; onClick: () => void }> = [
-    ...((overview?.pendingLeave ?? 0) > 0 ? [{ icon: ClipboardClock, tone: "amber" as const, title: "Pending leave requests", detail: `${overview?.pendingLeave} require approval`, onClick: () => setPageTab("leave") }] : []),
-    ...((overview?.unassigned ?? 0) > 0 ? [{ icon: UserRound, tone: "violet" as const, title: "Teachers unassigned", detail: `${overview?.unassigned} not assigned to a class`, onClick: () => setPageTab("assignments") }] : []),
-    ...(inactiveCount > 0 ? [{ icon: UserMinus, tone: "rose" as const, title: "Inactive teachers", detail: `${inactiveCount} teacher records marked inactive`, onClick: () => document.getElementById(window.innerWidth < 640 ? "mobile-teacher-records" : "teacher-records")?.scrollIntoView({ behavior: "smooth" }) }] : []),
-    ...(missingLoginCount > 0 ? [{ icon: KeyRound, tone: "blue" as const, title: "Teacher accounts to set up", detail: `${missingLoginCount} teachers without login access`, onClick: () => document.getElementById(window.innerWidth < 640 ? "mobile-teacher-records" : "teacher-records")?.scrollIntoView({ behavior: "smooth" }) }] : []),
-  ];
+
 
   if (loading) return <TeachersSkeleton />;
   if (!authenticated)
@@ -677,17 +664,6 @@ export default function TeachersPage() {
 
             {pageTab === "teachers" && <>
               {overviewError && <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-300">{overviewError}</p>}
-              <section className="mt-5 sm:mt-8" aria-labelledby="teacher-attention-title">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 id="teacher-attention-title" className="flex items-center gap-2 text-lg font-extrabold text-slate-950 dark:text-white sm:text-xl"><TriangleAlert className="h-5 w-5 fill-red-500 text-white" aria-hidden="true" /> Needs Attention</h2>
-                  <button type="button" onClick={() => setShowAllAttention((value) => !value)} aria-expanded={showAllAttention} className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-300 sm:text-sm">{showAllAttention ? "Show less" : "View all"} <ChevronRight className="h-4 w-4" /></button>
-                </div>
-                {overviewLoading ? <p className="py-4 text-sm text-slate-500">Loading teacher updates…</p> : overviewError ? <p className="py-4 text-sm text-slate-500">Teacher updates are unavailable.</p> : attentionItems.length ? (
-                  <div className="mt-2 divide-y divide-slate-200 dark:divide-slate-800">
-                    {(showAllAttention ? attentionItems : attentionItems.slice(0, 3)).map((item) => <AttentionRow key={item.title} {...item} />)}
-                  </div>
-                ) : <p className="py-4 text-sm text-slate-600 dark:text-slate-300">Nothing left to review — you’re all caught up.</p>}
-              </section>
             </>}
 
             {pageTab === "joining" && <>
@@ -924,23 +900,6 @@ export default function TeachersPage() {
       )}
     </div>
   );
-}
-
-const statTones = {
-  blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300",
-  emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-300",
-  rose: "bg-rose-50 text-rose-600 dark:bg-rose-900/40 dark:text-rose-300",
-  orange: "bg-orange-50 text-orange-600 dark:bg-orange-900/40 dark:text-orange-300",
-  violet: "bg-violet-50 text-violet-600 dark:bg-violet-900/40 dark:text-violet-300",
-  amber: "bg-amber-50 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300",
-};
-
-function AttentionRow({ icon: Icon, tone, title, detail, onClick }: { icon: React.ElementType; tone: keyof typeof statTones; title: string; detail: string; onClick: () => void }) {
-  return <button type="button" onClick={onClick} className="flex w-full items-center gap-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900">
-    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${statTones[tone]}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>
-    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-slate-950 dark:text-white">{title}</span><span className="block text-xs text-slate-600 dark:text-slate-300">{detail}</span></span>
-    <ChevronRight className="h-4 w-4 text-slate-400" aria-hidden="true" />
-  </button>;
 }
 
 function MobileTeacherCard({ teacher, avatarScope, index, status, onClick }: { teacher: Teacher; avatarScope: string; index: number; status: string; onClick: () => void }) {
