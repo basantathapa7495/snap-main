@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { cachedProfileAvatarUrl, profileAvatarUrl } from '@/lib/profile-avatars';
 import PrincipalSearch from './PrincipalSearch';
 import TeacherSearch from './TeacherSearch';
+import PrincipalProfileSheet from './PrincipalProfileSheet';
 import {
   LayoutDashboard,
   Users,
@@ -36,6 +37,7 @@ import {
   CheckSquare,
   Award,
   ChevronRight,
+  ChevronDown,
 } from 'lucide-react';
 
 type MenuItem = {
@@ -131,6 +133,7 @@ export default function Sidebar() {
   const closeSearch = useCallback(() => setSearchOpen(false), []);
   const [school, setSchool] = useState<SchoolInfo | null>(null);
   const [principal, setPrincipal] = useState<PrincipalInfo | null>(null);
+  const [principalProfileOpen, setPrincipalProfileOpen] = useState(false);
 
   // =========================================================
   // DETECT WHICH PORTAL WE ARE CURRENTLY INSIDE
@@ -332,17 +335,19 @@ export default function Sidebar() {
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
-              className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="flex h-9 w-[min(42vw,190px)] min-w-0 shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2.5 text-left text-sm text-slate-500 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               aria-label="Search school records"
             >
               <Search className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
               <span className="truncate">Search...</span>
             </button>
 
-            <Link
-              href="/principal/account"
-              className="flex min-w-0 shrink-0 items-center justify-end rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              aria-label="Open principal account"
+            <button
+              type="button"
+              onClick={() => setPrincipalProfileOpen((value) => !value)}
+              className="flex min-w-0 shrink-0 items-center justify-end gap-0.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label={principalProfileOpen ? 'Close principal account menu' : 'Open principal account menu'}
+              aria-expanded={principalProfileOpen}
               title={principal?.fullName || 'Principal'}
             >
               {principal?.avatarUrl ? (
@@ -360,7 +365,8 @@ export default function Sidebar() {
                   {principalInitials}
                 </span>
               )}
-            </Link>
+              <ChevronDown className={`h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 ${principalProfileOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+            </button>
           </>
         ) : (
           <>
@@ -392,6 +398,15 @@ export default function Sidebar() {
           </>
         )}
       </div>}
+
+      {isPrincipalPath && (
+        <PrincipalProfileSheet
+          open={principalProfileOpen}
+          onClose={() => setPrincipalProfileOpen(false)}
+          fullName={principal?.fullName || 'Principal'}
+          avatarUrl={principal?.avatarUrl || null}
+        />
+      )}
 
       {/* =====================================================
           MOBILE OVERLAY
