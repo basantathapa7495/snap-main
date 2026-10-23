@@ -9,6 +9,8 @@ import { Bell, Building2, CalendarDays, Camera, ChevronLeft, ChevronRight, Eye, 
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
 import { supabase } from '@/lib/supabase';
+import { prepareTeacherPhoto } from '@/lib/teacher-photo';
+import { profileAvatarUrl, removeProfileAvatar, uploadProfileAvatar } from '@/lib/profile-avatars';
 
 type Profile = {user_id:string;school_id:string;role:string;full_name:string|null;phone:string|null;address:string|null;avatar_path:string|null;created_at:string};
 type School = {name:string;school_email:string|null;phone:string|null;school_type:string|null;slug:string|null;is_approved:boolean;created_at:string};
@@ -40,42 +42,39 @@ export default function AccountExperience({section='home'}:{section?:Section}) {
     if(profileError)throw profileError;if(!p?.school_id||!['principal','admin'].includes(p.role))throw new Error('Principal school access is required.');
     const {data:s,error:schoolError}=await supabase.from('schools').select('name,school_email,phone,school_type,slug,is_approved,created_at').eq('id',p.school_id).single();if(schoolError)throw schoolError;
     if(section==='school'){const session=await supabase.auth.getSession();if(session.data.session?.access_token){const codes=await fetch('/api/school-join-codes',{headers:{Authorization:`Bearer ${session.data.session.access_token}`}});if(codes.ok){const value=await codes.json();if(mounted)setSchoolCode(value.codes?.school_code||'');}}}
-    let avatar='';if(p.avatar_path){const signed=await supabase.storage.from('principal-avatars').createSignedUrl(p.avatar_path,3600);if(signed.error)throw signed.error;avatar=signed.data.signedUrl;}
+    let avatar='';if(p.avatar_path){avatar=await profileAvatarUrl(p.avatar_path)||'';}
     if(mounted){setUser(authUser);setProfile(p);setSchool(s);setName(p.full_name||'');setPhone(p.phone||'');setAddress(p.address||'');setEmail(authUser.email||'');setPhotoUrl(avatar);}
   }catch(cause){if(mounted)setError(cause instanceof Error?cause.message:typeof cause==='object'&&cause!==null&&'message'in cause?String(cause.message):'Could not load account.');}finally{if(mounted)setLoading(false);}}void load();return()=>{mounted=false;};},[section]);
   useEffect(()=>()=>{if(photoPreview)URL.revokeObjectURL(photoPreview);},[photoPreview]);
   const changed=Boolean(profile && user && (name.trim()!==(profile.full_name||'')||phone.trim()!==(profile.phone||'')||address.trim()!==(profile.address||'')||email.trim().toLowerCase()!==(pendingEmail||user.email||'').toLowerCase()||photo||removePhoto));
   async function uploadPhoto(file:File|null){
     if(!file||!profile||!user)return;
-    if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>2*1024*1024){setError('Choose a PNG, JPG or WebP photo under 2 MB.');return;}
     const preview=URL.createObjectURL(file);
-    const extension=file.name.split('.').pop()?.toLowerCase()||'jpg';
-    const uploadedPath=`${user.id}/${crypto.randomUUID()}.${extension}`;
+    const uploadedPath=`${user.id}/${crypto.randomUUID()}.webp`;
     const previousPath=profile.avatar_path;
     setPhoto(file);setPhotoPreview(preview);setRemovePhoto(false);setUploadingPhoto(true);setError('');setSuccess('');
     try{
-      const upload=await supabase.storage.from('principal-avatars').upload(uploadedPath,file,{contentType:file.type,cacheControl:'3600',upsert:false});
-      if(upload.error)throw upload.error;
+      const prepared=await prepareTeacherPhoto(file);
+      await uploadProfileAvatar(uploadedPath,prepared);
       const result=await supabase.from('profiles').update({avatar_path:uploadedPath}).eq('user_id',user.id).eq('school_id',profile.school_id).select('user_id,school_id,role,full_name,phone,address,avatar_path,created_at').single();
-      if(result.error){await supabase.storage.from('principal-avatars').remove([uploadedPath]);throw result.error;}
-      const signed=await supabase.storage.from('principal-avatars').createSignedUrl(uploadedPath,3600);
-      if(signed.error)throw signed.error;
-      if(previousPath&&previousPath!==uploadedPath){const removed=await supabase.storage.from('principal-avatars').remove([previousPath]);if(removed.error)console.error('Could not remove previous principal avatar:',removed.error);}
-      setProfile(result.data);setPhotoUrl(signed.data.signedUrl);setPhoto(null);setPhotoPreview('');URL.revokeObjectURL(preview);setSuccess('Profile picture updated.');
+      if(result.error){await removeProfileAvatar(uploadedPath).catch(()=>undefined);throw result.error;}
+      const signed=await profileAvatarUrl(uploadedPath);
+      if(!signed)throw new Error('Could not load the uploaded profile picture.');
+      if(previousPath&&previousPath!==uploadedPath)removeProfileAvatar(previousPath).catch((cleanupError)=>console.error('Could not remove previous principal avatar:',cleanupError));
+      setProfile(result.data);setPhotoUrl(signed);setPhoto(null);setPhotoPreview('');URL.revokeObjectURL(preview);setSuccess('Profile picture updated.');
     }catch(cause){
-      setPhoto(null);setPhotoPreview('');URL.revokeObjectURL(preview);setError(cause instanceof Error?cause.message:'Could not upload profile picture.');
+      setPhoto(null);setPhotoPreview('');URL.revokeObjectURL(preview);setError(cause instanceof Error?cause.message:typeof cause==='object'&&cause!==null&&'message'in cause?String(cause.message):'Could not upload profile picture.');
     }finally{setUploadingPhoto(false);}
   }
   async function saveProfile(){if(!profile||!user||!changed)return;if(!name.trim()){setError('Full name is required.');return;}if(email.trim()&&!/^\S+@\S+\.\S+$/.test(email.trim())){setError('Enter a valid email address.');return;}
-    setSaving(true);setError('');setSuccess('');let path=profile.avatar_path;let uploaded='';try{
-      if(photo){uploaded=`${user.id}/${crypto.randomUUID()}.${photo.name.split('.').pop()?.toLowerCase()||'jpg'}`;const upload=await supabase.storage.from('principal-avatars').upload(uploaded,photo,{contentType:photo.type,upsert:false});if(upload.error)throw upload.error;path=uploaded;}
+    setSaving(true);setError('');setSuccess('');let path=profile.avatar_path;try{
       if(removePhoto)path=null;
       const result=await supabase.from('profiles').update({full_name:name.trim(),phone:phone.trim()||null,address:address.trim()||null,avatar_path:path}).eq('user_id',user.id).eq('school_id',profile.school_id).select('user_id,school_id,role,full_name,phone,address,avatar_path,created_at').single();if(result.error)throw result.error;
-      if((photo||removePhoto)&&profile.avatar_path&&profile.avatar_path!==path)await supabase.storage.from('principal-avatars').remove([profile.avatar_path]);
-      setProfile(result.data);setPhoto(null);setRemovePhoto(false);if(uploaded){const signed=await supabase.storage.from('principal-avatars').createSignedUrl(uploaded,3600);if(signed.data)setPhotoUrl(signed.data.signedUrl);}else if(!path)setPhotoUrl('');
+      if(removePhoto&&profile.avatar_path&&profile.avatar_path!==path)await removeProfileAvatar(profile.avatar_path).catch((cleanupError)=>console.error('Could not remove principal avatar:',cleanupError));
+      setProfile(result.data);setPhoto(null);setRemovePhoto(false);if(!path)setPhotoUrl('');
       if(photoPreview){URL.revokeObjectURL(photoPreview);setPhotoPreview('');}
       if(email.trim().toLowerCase()!==(user.email||'').toLowerCase()){const changedEmail=await supabase.auth.updateUser({email:email.trim().toLowerCase()});if(changedEmail.error)throw changedEmail.error;setPendingEmail(email.trim().toLowerCase());setSuccess('Profile saved. Check both email inboxes for the confirmation link. Your login email changes after verification.');}else setSuccess('Profile saved.');
-    }catch(cause){if(uploaded&&path!==profile.avatar_path){const check=await supabase.from('profiles').select('avatar_path').eq('user_id',user.id).single();if(check.data?.avatar_path!==uploaded)await supabase.storage.from('principal-avatars').remove([uploaded]);}setError(cause instanceof Error?cause.message:'Could not save profile.');}finally{setSaving(false);}}
+    }catch(cause){setError(cause instanceof Error?cause.message:'Could not save profile.');}finally{setSaving(false);}}
   async function updatePassword(){if(!user?.email)return;if(newPassword.length<8||!/[A-Za-z]/.test(newPassword)||!/[0-9]/.test(newPassword)){setError('Use at least 8 characters with letters and numbers.');return;}if(newPassword!==confirmPassword){setError('New passwords do not match.');return;}setSaving(true);setError('');setSuccess('');try{const verified=await supabase.auth.signInWithPassword({email:user.email,password:currentPassword});if(verified.error)throw new Error('Current password is incorrect.');const updated=await supabase.auth.updateUser({password:newPassword});if(updated.error)throw updated.error;setCurrentPassword('');setNewPassword('');setConfirmPassword('');setSuccess('Password updated.');}catch(cause){setError(cause instanceof Error?cause.message:'Could not update password.');}finally{setSaving(false);}}
   async function signOut(){if(!window.confirm('Sign out of your NEPSOM account?'))return;const result=await supabase.auth.signOut();if(result.error){setError(result.error.message);return;}router.replace('/auth/login');router.refresh();}
   const portrait=photoPreview || (removePhoto?'':photoUrl);
