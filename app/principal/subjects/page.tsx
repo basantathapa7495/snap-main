@@ -23,7 +23,18 @@ const DEFAULT_SUBJECTS = [
   'Computer',
 ];
 
-const SUBJECT_COVERS = [
+const SUBJECT_IMAGES: Record<string, string> = {
+  nepali: '/nepali.jpg',
+  english: '/english.jpg',
+  math: '/math.jpg',
+  mathematics: '/math.jpg',
+  science: '/science.jpg',
+  social: '/social.jpg',
+  'social studies': '/social.jpg',
+  computer: '/computer.jpg',
+};
+
+const SUBJECT_FALLBACKS = [
   'from-rose-700 via-red-500 to-orange-300',
   'from-blue-900 via-blue-600 to-sky-300',
   'from-emerald-950 via-emerald-800 to-teal-500',
@@ -31,6 +42,10 @@ const SUBJECT_COVERS = [
   'from-amber-800 via-orange-600 to-yellow-300',
   'from-violet-900 via-indigo-700 to-blue-400',
 ];
+
+function subjectImage(name: string) {
+  return SUBJECT_IMAGES[name.trim().toLowerCase()] || null;
+}
 
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -203,12 +218,24 @@ export default function SubjectsPage() {
                     key={subject.id}
                     className="group min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_3px_10px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(15,23,42,0.10)] sm:rounded-2xl sm:p-4 sm:shadow-[0_5px_18px_rgba(15,23,42,0.06)]"
                   >
-                    <div className={`relative aspect-[1.18] overflow-hidden rounded-xl bg-gradient-to-br ${SUBJECT_COVERS[index % SUBJECT_COVERS.length]}`}>
-                      <div className="absolute -right-[12%] -top-[8%] h-[116%] w-[78%] rotate-[-7deg] rounded-md border-l-[7px] border-white/30 bg-black/10 shadow-[-10px_12px_22px_rgba(15,23,42,0.28)]" />
-                      <BookOpen className="absolute bottom-2 right-2 h-7 w-7 text-white/20 sm:bottom-3 sm:right-3 sm:h-14 sm:w-14" strokeWidth={1.4} aria-hidden="true" />
-                      <span className="absolute left-2 right-1.5 top-2 line-clamp-2 text-[11px] font-black leading-tight tracking-[-0.03em] text-white drop-shadow-sm sm:left-5 sm:right-2 sm:top-5 sm:text-2xl">
-                        {subject.name}
-                      </span>
+                    <div className={`relative aspect-[1.18] overflow-hidden rounded-lg bg-gradient-to-br sm:rounded-xl ${SUBJECT_FALLBACKS[index % SUBJECT_FALLBACKS.length]}`}>
+                      {subjectImage(subject.name) ? (
+                        <Image
+                          src={subjectImage(subject.name) as string}
+                          alt={`${subject.name} subject book`}
+                          fill
+                          sizes="(max-width: 640px) 30vw, 360px"
+                          className="object-cover object-center"
+                        />
+                      ) : (
+                        <>
+                          <div className="absolute -right-[12%] -top-[8%] h-[116%] w-[78%] rotate-[-7deg] rounded-md border-l-[7px] border-white/30 bg-black/10 shadow-[-10px_12px_22px_rgba(15,23,42,0.28)]" />
+                          <BookOpen className="absolute bottom-2 right-2 h-7 w-7 text-white/20 sm:bottom-3 sm:right-3 sm:h-14 sm:w-14" strokeWidth={1.4} aria-hidden="true" />
+                          <span className="absolute left-2 right-1.5 top-2 line-clamp-2 text-[11px] font-black leading-tight tracking-[-0.03em] text-white drop-shadow-sm sm:left-5 sm:right-2 sm:top-5 sm:text-2xl">
+                            {subject.name}
+                          </span>
+                        </>
+                      )}
                     </div>
 
                     <div className="flex min-w-0 items-center gap-1 px-0.5 pb-0.5 pt-2 sm:gap-2 sm:px-1 sm:pt-4">
