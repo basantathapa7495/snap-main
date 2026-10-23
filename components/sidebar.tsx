@@ -270,6 +270,11 @@ export default function Sidebar() {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  const displaySchoolName = school?.name
+    ?.replace(/\b(?:primary|secondary)\s+school\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim() || 'School';
+
   const principalNameParts = principal?.fullName.trim().split(/\s+/).filter(Boolean) || [];
   const principalInitials = principalNameParts.length > 1
     ? `${principalNameParts[0][0]}${principalNameParts[principalNameParts.length - 1][0]}`.toUpperCase()
@@ -294,11 +299,11 @@ export default function Sidebar() {
           <>
             <Link
               href="/principal"
-              className="min-w-0 max-w-[96px] shrink-0 truncate text-sm font-extrabold tracking-[-0.02em] text-slate-950"
+              className="min-w-0 max-w-[118px] shrink-0 truncate text-[13px] font-extrabold tracking-[-0.02em] text-slate-950"
               aria-label="Go to principal dashboard"
               title={school?.name || 'School'}
             >
-              {school?.name?.trim() || 'School'}
+              {displaySchoolName}
             </Link>
 
             <button
