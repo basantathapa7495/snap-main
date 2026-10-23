@@ -225,7 +225,7 @@ export default function SubjectsPage() {
                           alt={`${subject.name} subject book`}
                           fill
                           sizes="(max-width: 640px) 30vw, 360px"
-                          className="object-cover object-center"
+                          className="object-contain object-center p-1.5 sm:p-2"
                         />
                       ) : (
                         <>
