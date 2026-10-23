@@ -218,7 +218,7 @@ export default function SubjectsPage() {
                     key={subject.id}
                     className="group min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-[0_3px_10px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(15,23,42,0.10)] sm:rounded-2xl sm:p-4 sm:shadow-[0_5px_18px_rgba(15,23,42,0.06)]"
                   >
-                    <div className={`relative aspect-[1.18] overflow-hidden rounded-lg bg-gradient-to-br sm:rounded-xl ${SUBJECT_FALLBACKS[index % SUBJECT_FALLBACKS.length]}`}>
+                    <div className={`relative aspect-[1.18] overflow-hidden rounded-lg sm:rounded-xl ${subjectImage(subject.name) ? 'bg-white' : `bg-gradient-to-br ${SUBJECT_FALLBACKS[index % SUBJECT_FALLBACKS.length]}`}`}>
                       {subjectImage(subject.name) ? (
                         <Image
                           src={subjectImage(subject.name) as string}
