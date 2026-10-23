@@ -656,7 +656,7 @@ export default function TeachersPage() {
               <Image src="/teacher.png" alt="Teachers — Manage teachers, attendance, leave and school access." fill priority sizes="(max-width: 639px) 100vw, (max-width: 1023px) calc(100vw - 3rem), calc(100vw - 20rem)" className="object-cover" />
             </header>
 
-            <nav aria-label="Teachers sections" className="mt-1 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700 sm:mt-3 sm:gap-4">
+            <nav aria-label="Teachers sections" className="mt-2 flex gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:mt-3 sm:gap-2 sm:p-1.5">
               {([
                 ["teachers", "Overview"],
                 ["attendance", "Attendance"],
@@ -666,10 +666,10 @@ export default function TeachersPage() {
               ] as const).map(([value, label]) => (
                 <button key={value} type="button" onClick={() => setPageTab(value)}
                   aria-current={pageTab === value ? "page" : undefined}
-                  className={`relative min-h-10 shrink-0 whitespace-nowrap border-b-[3px] px-2 text-xs transition focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-blue-500 min-[420px]:px-3 min-[420px]:text-sm sm:min-h-12 sm:px-4 ${
+                  className={`relative min-h-10 flex-1 shrink-0 whitespace-nowrap rounded-xl px-2 text-[11px] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 min-[420px]:px-3 min-[420px]:text-xs sm:min-h-12 sm:px-4 sm:text-sm ${
                     pageTab === value
-                      ? "border-blue-600 font-bold text-slate-950 dark:border-blue-400 dark:text-blue-200"
-                      : "border-transparent text-slate-600 hover:bg-blue-50/70 hover:text-blue-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                      ? "bg-blue-50 font-bold text-blue-700 shadow-sm dark:bg-blue-900/45 dark:text-blue-200"
+                      : "font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                   }`}>
                   {label}
                 </button>
