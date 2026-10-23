@@ -7,6 +7,7 @@ import { BookOpen, CalendarDays, ChevronRight, Clock3, FileText, FolderOpen, Gra
 import { supabase } from '@/lib/supabase';
 import { cleanSearchQuery, searchGroups, searchPrincipalSchool, type SearchGroup, type SearchResult } from '@/lib/principal-search';
 import TeacherAvatar from '@/components/TeacherAvatar';
+import { activateTeacherAvatarCache } from '@/lib/teacher-avatars';
 
 const icons = { Students: Users, Teachers: GraduationCap, Classes: School, Admissions: UserPlus, 'Fees & Receipts': Receipt, Documents: FolderOpen, Notices: FileText, Exams: BookOpen, Calendar: CalendarDays };
 const tones: Record<SearchGroup, string> = {
@@ -30,6 +31,7 @@ export default function PrincipalSearch({ open, onClose }: { open: boolean; onCl
     catch { return []; }
   });
   const [schoolId, setSchoolId] = useState<string | null>(null);
+  const [avatarScope, setAvatarScope] = useState('');
   const [state, setState] = useState<'idle' | 'searching' | 'results' | 'error'>('idle');
   const [active, setActive] = useState(0);
 
@@ -47,6 +49,7 @@ export default function PrincipalSearch({ open, onClose }: { open: boolean; onCl
       if (cancelled) return;
       if (error || !profile?.school_id || !['principal', 'admin', 'school_admin'].includes(profile.role || '')) { setState('error'); return; }
       setSchoolId(profile.school_id);
+      setAvatarScope(activateTeacherAvatarCache(user.id, profile.school_id));
     })();
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKeyDown);
@@ -101,7 +104,7 @@ export default function PrincipalSearch({ open, onClose }: { open: boolean; onCl
         {state === 'searching' && <p className="py-12 text-center text-sm text-slate-500 dark:text-slate-400">Searching...</p>}
         {state === 'error' && <div role="alert" className="py-12 text-center text-sm text-rose-700 dark:text-rose-300">Search couldn’t be completed. Try again.</div>}
         {state === 'results' && !results.length && <div className="py-12 text-center"><h2 className="text-sm font-bold text-slate-900 dark:text-white">No results for “{query.trim()}”</h2><p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">Try a student name, teacher, receipt number, document, class, notice, exam, or admission.</p></div>}
-        {state === 'results' && searchGroups.map((group) => { const rows = results.filter((item) => item.group === group); if (!rows.length) return null; return <section key={group} className="mb-5"><h2 className="mb-2 text-xs font-bold text-slate-700 dark:text-slate-200">{group} ({rows.length})</h2><div className="grid gap-2">{rows.map((item) => { const Icon = icons[item.group]; const index = results.indexOf(item); return <button key={`${group}-${item.id}`} type="button" onClick={() => openResult(item)} className={`flex min-h-16 w-full min-w-0 items-center gap-3 rounded-xl border p-2.5 text-left transition focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-800 ${active === index ? 'border-blue-300 bg-blue-50 dark:bg-blue-400/10' : 'border-slate-200 bg-slate-50 hover:border-blue-200 hover:bg-blue-50/60'}`}>{item.group === 'Teachers' && item.avatarPath ? <TeacherAvatar name={item.title} path={item.avatarPath} scope={`principal-search:${item.id}`} className="h-10 w-10 rounded-xl bg-emerald-100 text-xs font-bold text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300" /> : <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tones[item.group]}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>}<span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-950 dark:text-white">{item.title}</span><span className="mt-0.5 block truncate text-xs text-slate-600 dark:text-slate-300">{item.detail}</span>{item.meta && <span className="mt-1 inline-block max-w-full truncate rounded-md bg-slate-200/80 px-1.5 py-0.5 text-[10px] text-slate-700 dark:bg-slate-700 dark:text-slate-200">{item.meta}</span>}</span><ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" /></button>; })}</div></section>; })}
+        {state === 'results' && searchGroups.map((group) => { const rows = results.filter((item) => item.group === group); if (!rows.length) return null; return <section key={group} className="mb-5"><h2 className="mb-2 text-xs font-bold text-slate-700 dark:text-slate-200">{group} ({rows.length})</h2><div className="grid gap-2">{rows.map((item) => { const Icon = icons[item.group]; const index = results.indexOf(item); return <button key={`${group}-${item.id}`} type="button" onClick={() => openResult(item)} className={`flex min-h-16 w-full min-w-0 items-center gap-3 rounded-xl border p-2.5 text-left transition focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-700 dark:bg-slate-800 ${active === index ? 'border-blue-300 bg-blue-50 dark:bg-blue-400/10' : 'border-slate-200 bg-slate-50 hover:border-blue-200 hover:bg-blue-50/60'}`}>{item.group === 'Teachers' && item.avatarPath ? <TeacherAvatar name={item.title} path={item.avatarPath} scope={avatarScope} className="h-10 w-10 rounded-xl bg-emerald-100 text-xs font-bold text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300" /> : <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tones[item.group]}`}><Icon className="h-5 w-5" aria-hidden="true" /></span>}<span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-slate-950 dark:text-white">{item.title}</span><span className="mt-0.5 block truncate text-xs text-slate-600 dark:text-slate-300">{item.detail}</span>{item.meta && <span className="mt-1 inline-block max-w-full truncate rounded-md bg-slate-200/80 px-1.5 py-0.5 text-[10px] text-slate-700 dark:bg-slate-700 dark:text-slate-200">{item.meta}</span>}</span><ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" /></button>; })}</div></section>; })}
       </div>
     </section>
   </div>, document.body);
