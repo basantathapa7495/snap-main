@@ -21,7 +21,7 @@ export default function MobileBottomNav() {
     { href: '/principal/students', label: 'Students', icon: UsersRound },
     { href: '/principal', label: 'Home', icon: House },
     { href: '/principal/communication', label: 'Communication', icon: MessageCircle },
-    { href: '/principal/account', label: 'Account', icon: UserRound },
+    { href: '/principal/calendar', label: 'Calendar', icon: CalendarDays },
   ];
   const teacherNavItems = [
     { href: '/teacher/attendance', label: 'Attendance', icon: ClipboardCheck },
@@ -53,8 +53,7 @@ export default function MobileBottomNav() {
           const isPortalRoot = ['/principal', '/teacher', '/student'].includes(item.href);
           const isActive =
             pathname === item.href ||
-            (!isPortalRoot && pathname.startsWith(`${item.href}/`)) ||
-            (item.label === 'Account' && pathname.startsWith('/principal/settings'));
+            (!isPortalRoot && pathname.startsWith(`${item.href}/`));
 
           return (
             <Link
