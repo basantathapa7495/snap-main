@@ -68,6 +68,7 @@ const principalMenu: MenuSection[] = [
     { href: '/principal/teachers', label: 'Teachers', icon: GraduationCap },
     { href: '/principal/students', label: 'Students', icon: Users },
     { href: '/principal/classes', label: 'Classes', icon: School },
+    { href: '/principal/subjects', label: 'Subjects', icon: BookOpen },
     { href: '/principal/attendance', label: 'Attendance', icon: ClipboardList },
     { href: '/principal/fees', label: 'Fees', icon: Wallet },
     { href: '/principal/admission', label: 'Admission', icon: UserCog },
@@ -539,6 +540,7 @@ export default function Sidebar() {
                   const Icon = item.icon;
                   const isActive = isMenuItemActive(item.href);
                   const hideOnPrincipalMobile = isPrincipalPath && [
+                    '/principal',
                     '/principal/teachers',
                     '/principal/students',
                     '/principal/communication',
