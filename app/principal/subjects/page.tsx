@@ -161,12 +161,12 @@ export default function SubjectsPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <Sidebar />
-      <div className="pt-10 lg:ml-64">
+      <div className="pt-14 lg:ml-64 lg:pt-10">
         <TopBar />
 
-        <main className="px-3 pb-24 pt-4 sm:px-6 lg:px-8 lg:pt-24">
+        <main className="px-3 pb-24 pt-0 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1180px]">
-            <section className="relative aspect-[1672/650] w-full overflow-hidden rounded-2xl border border-blue-100 bg-[#edf7ff] shadow-sm">
+            <section className="relative -mx-3 aspect-[1672/650] w-[calc(100%+1.5rem)] overflow-hidden border-y border-blue-100 bg-[#edf7ff] shadow-sm sm:mx-0 sm:w-full sm:rounded-2xl sm:border">
               <Image
                 src="/subject.png"
                 alt="Subjects — manage school subjects, grades and teacher mapping"
