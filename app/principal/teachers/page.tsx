@@ -151,9 +151,9 @@ export default function TeachersPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState("");
-  const [subject, setSubject] = useState("Subjects");
-  const [grade, setGrade] = useState("Class");
-  const [subjectOptions, setSubjectOptions] = useState<string[]>(["Subjects"]);
+  const [subject, setSubject] = useState("All");
+  const [grade, setGrade] = useState("All");
+  const [subjectOptions, setSubjectOptions] = useState<string[]>(["All"]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
@@ -248,7 +248,7 @@ export default function TeachersPage() {
           resumeTeacherAvatarCleanup(scope);
           setTeachers((data || []) as Teacher[]);
           setSubjectOptions([
-            "Subjects",
+            "All",
             ...(subjectsResult.data || []).map((item) => item.name),
           ]);
           const selectedId = new URLSearchParams(window.location.search).get('teacher');
@@ -330,7 +330,7 @@ export default function TeachersPage() {
         );
       const teacherSubject = (teacher.subject || teacher.department || "").trim().toLowerCase();
       const matchesSubject =
-        subject === "Subjects" || teacherSubject === subject.trim().toLowerCase();
+        subject === "All" || teacherSubject === subject.trim().toLowerCase();
       return matchesSearch && matchesSubject;
     });
   }, [search, subject, teachers]);
@@ -767,7 +767,7 @@ export default function TeachersPage() {
                 </label>
                 <button type="button" aria-label="Filter teachers" aria-expanded={showMobileFilters} aria-pressed={showMobileFilters} onClick={() => setShowMobileFilters((value) => !value)} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 dark:focus-visible:ring-emerald-950 ${showMobileFilters ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" : "border-slate-200 bg-slate-100 text-slate-600 hover:border-emerald-200 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"}`}><SlidersHorizontal className="h-5 w-5" /></button>
               </div>
-              {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={grade} onChange={setGrade} label="Class" options={["Class"]} /><Select value={subject} onChange={setSubject} label="Subject" options={subjectOptions} /></div>}
+              {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={grade} onChange={setGrade} label="Class" options={["All"]} allLabel="Class" /><Select value={subject} onChange={setSubject} label="Subject" options={subjectOptions} allLabel="Subjects" /></div>}
               {filteredTeachers.length ? <>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {(showAllMobileTeachers ? filteredTeachers : filteredTeachers.slice(0, 10)).map((teacher, index) => <MobileTeacherCard key={teacher.id} teacher={teacher} avatarScope={avatarScope} index={index} status={overview?.statuses[teacher.id] || ""} onClick={() => setSelectedTeacher(teacher)} />)}
@@ -808,19 +808,21 @@ export default function TeachersPage() {
                   value={grade}
                   onChange={setGrade}
                   label="Class"
-                  options={["Class"]}
+                  options={["All"]}
+                  allLabel="Class"
                 />
                 <Select
                   value={subject}
                   onChange={setSubject}
                   label="Subject"
                   options={subjectOptions}
+                  allLabel="Subjects"
                 />
               </div>
               {filteredTeachers.length === 0 ? (
                 <EmptyState
                   search={Boolean(
-                    search || subject !== "Subjects" || grade !== "Class",
+                    search || subject !== "All" || grade !== "All",
                   )}
                   onAdd={openCreateForm}
                 />
@@ -945,11 +947,13 @@ function Select({
   onChange,
   label,
   options,
+  allLabel,
 }: {
   value: string;
   onChange: (value: string) => void;
   label: string;
   options: string[];
+  allLabel?: string;
 }) {
   return (
     <label className="relative">
@@ -963,6 +967,11 @@ function Select({
           <option key={option}>{option}</option>
         ))}
       </select>
+      {value === "All" && allLabel && (
+        <span className="pointer-events-none absolute inset-y-px left-px flex items-center rounded-l-[11px] bg-white px-3 text-sm text-slate-700">
+          {allLabel}
+        </span>
+      )}
       <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
     </label>
   );
