@@ -545,7 +545,7 @@ export default function ClassesPage() {
             {error && <div role="alert" className="mt-3 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/15 dark:text-red-200"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
             {notice && <div role="status" className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"><CheckCircle2 className="h-4 w-4 shrink-0" />{notice}</div>}
 
-            <section className="mt-6" aria-label="Class list">
+            <section className="mt-3" aria-label="Class list">
               <div className="mb-4 flex items-end justify-between gap-4">
                 <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-3xl">Class List</h1>
                 <div className="shrink-0 text-right">
