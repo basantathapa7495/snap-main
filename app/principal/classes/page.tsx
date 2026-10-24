@@ -548,10 +548,9 @@ export default function ClassesPage() {
             <section className="mt-3" aria-label="Class list">
               <div className="mb-4 flex items-end justify-between gap-4">
                 <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-3xl">Class List</h1>
-                <div className="shrink-0 text-right">
-                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Students</p>
-                  <p className="mt-0.5 text-2xl font-extrabold leading-none tabular-nums text-slate-950 dark:text-white">{totalStudents.toLocaleString()}</p>
-                </div>
+                <p className="shrink-0 text-right text-xs font-normal tabular-nums text-slate-500 dark:text-slate-400 sm:text-sm">
+                  Total Students: {totalStudents.toLocaleString()}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
