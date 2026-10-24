@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, UserCheck, UserMinus, UserRound, Clock3 } from "lucide-react";
+import TeacherAvatar from "@/components/TeacherAvatar";
 import { supabase } from "@/lib/supabase";
 
 type Status = "present" | "absent" | "leave" | "holiday";
@@ -12,6 +13,7 @@ type Teacher = {
   subject: string | null;
   employment_status?: string | null;
   left_at?: string | null;
+  avatar_path?: string | null;
 };
 type Attendance = { teacher_id: string; attendance_date: string; status: Status };
 type Leave = { teacher_id: string; start_date: string; end_date: string };
@@ -23,12 +25,8 @@ function todayInNepal() {
   }).format(new Date());
 }
 
-function initial(name: string) {
-  return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0] || "").join("").toUpperCase();
-}
-
-export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: {
-  schoolId: string; teachers: Teacher[]; onSaved: () => void;
+export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope, onSaved }: {
+  schoolId: string; teachers: Teacher[]; avatarScope: string; onSaved: () => void;
 }) {
   const [today, setToday] = useState(todayInNepal);
   const [date, setDate] = useState(todayInNepal);
@@ -259,7 +257,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
             <h3 className="text-xl font-extrabold tracking-tight sm:text-3xl">Daily attendance</h3>
             <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400 sm:text-base">Tap a status to save teacher attendance.</p>
           </div>
-          <label className="relative flex h-11 max-w-[190px] shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white sm:h-12 sm:max-w-none sm:px-4 sm:text-sm">
+          <label className="relative flex h-10 w-[145px] shrink-0 cursor-pointer items-center gap-1.5 overflow-hidden rounded-xl border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-800 shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white min-[380px]:w-[160px] min-[380px]:text-[11px] sm:h-12 sm:w-auto sm:gap-2 sm:px-4 sm:text-sm">
             <CalendarDays className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
             <span className="truncate">{date === today ? `Today · ${displayDate}` : displayDate}</span>
             <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
@@ -267,9 +265,9 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
           </label>
         </div>
 
-        <div className="mt-5 grid grid-cols-4 gap-2 sm:grid-cols-[minmax(220px,1.45fr)_repeat(4,minmax(100px,.55fr))] sm:gap-3">
-          {editable && <button type="button" onClick={markAllPresent} disabled={loading || loadFailed || busy || Boolean(busyTeacher) || !activeTeachers.length} className="col-span-4 flex min-h-12 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-extrabold text-blue-700 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-800 dark:bg-blue-500/15 dark:text-blue-200 sm:col-span-1">
-            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserCheck className="h-5 w-5" />} Mark All Present
+        <div className="mt-5 grid grid-cols-[minmax(102px,1.55fr)_repeat(4,minmax(42px,.65fr))] gap-1.5 sm:grid-cols-[minmax(220px,1.45fr)_repeat(4,minmax(100px,.55fr))] sm:gap-3">
+          {editable && <button type="button" onClick={markAllPresent} disabled={loading || loadFailed || busy || Boolean(busyTeacher) || !activeTeachers.length} className="flex min-h-12 items-center justify-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-1.5 text-[10px] font-extrabold text-blue-700 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-800 dark:bg-blue-500/15 dark:text-blue-200 min-[380px]:text-[11px] sm:gap-2 sm:px-3 sm:text-sm">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin sm:h-5 sm:w-5" /> : <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />} <span className="whitespace-nowrap">Mark All Present</span>
           </button>}
           {([ ["Total", activeTeachers.length, "text-slate-950 dark:text-white"], ["Present", summary.present, "text-emerald-700 dark:text-emerald-300"], ["Absent", summary.absent, "text-rose-700 dark:text-rose-300"], ["Leave", summary.leave, "text-amber-700 dark:text-amber-300"] ] as const).map(([label, count, tone]) => <div key={label} className="flex min-h-12 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-2 text-center dark:border-slate-700 dark:bg-slate-800"><p className="text-[11px] font-semibold text-slate-500 sm:text-xs">{label}</p><p className={`mt-0.5 text-lg font-extrabold leading-none sm:text-xl ${tone}`}>{loading ? "–" : count}</p></div>)}
         </div>
@@ -287,18 +285,18 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
           {loading ? <p className="p-5 text-sm text-slate-500">Loading attendance…</p> : activeTeachers.length === 0 ? <p className="p-5 text-sm text-slate-500">No active teachers added yet.</p> : visibleTeachers.length === 0 ? <p className="p-5 text-center text-sm text-slate-500">No matching teachers.</p> : visibleTeachers.map((teacher) => {
             const selected = statusFor(teacher.id);
             const locked = !editable || loadFailed || busy || Boolean(busyTeacher) || leaveIds.has(teacher.id);
-            return <article key={teacher.id} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800/60 sm:grid-cols-[minmax(220px,1fr)_minmax(360px,1.25fr)] sm:items-center sm:px-4">
-              <div className="flex min-w-0 items-center gap-3">
-                <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-extrabold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">{initial(teacher.name)}</span>
+            return <article key={teacher.id} className="grid grid-cols-[minmax(0,.9fr)_minmax(168px,1.1fr)] items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-800/60 sm:grid-cols-[minmax(220px,1fr)_minmax(360px,1.25fr)] sm:gap-3 sm:px-4 sm:py-3">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className="h-10 w-10 rounded-full bg-blue-100 text-xs font-extrabold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200 sm:h-12 sm:w-12 sm:text-sm" />
                 <div className="min-w-0"><p className="truncate text-sm font-extrabold text-slate-950 dark:text-white sm:text-base">{teacher.name}</p><p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400 sm:text-sm">{teacher.subject || teacher.department || "Teacher"}{leaveIds.has(teacher.id) ? " · Approved leave" : ""}</p></div>
                 {busyTeacher === teacher.id && <Loader2 className="ml-auto h-4 w-4 animate-spin text-blue-600" />}
               </div>
-              <div className="grid grid-cols-3 gap-2" aria-label={`Attendance options for ${teacher.name}`}>
+              <div className="grid min-w-0 grid-cols-3 gap-1.5 sm:gap-2" aria-label={`Attendance options for ${teacher.name}`}>
                 {statuses.map((value) => {
                   const active = selected === value;
                   const Icon = value === "present" ? (active ? Check : UserRound) : value === "absent" ? UserMinus : Clock3;
                   const activeClass = value === "present" ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200" : value === "absent" ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-500/20 dark:text-rose-200" : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-500/20 dark:text-amber-200";
-                  return <button key={value} type="button" onClick={() => void saveOne(teacher.id, value)} disabled={locked} aria-pressed={active} className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border px-1.5 text-xs font-bold capitalize transition disabled:cursor-default sm:min-h-12 sm:text-sm ${active ? activeClass : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"}`}><Icon className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />{value}</button>;
+                  return <button key={value} type="button" onClick={() => void saveOne(teacher.id, value)} disabled={locked} aria-pressed={active} className={`flex min-h-10 min-w-0 items-center justify-center gap-1 rounded-xl border px-1 text-[10px] font-bold capitalize transition disabled:cursor-default min-[380px]:text-[11px] sm:min-h-12 sm:gap-1.5 sm:px-1.5 sm:text-sm ${active ? activeClass : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"}`}><Icon className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" />{value}</button>;
                 })}
               </div>
             </article>;
