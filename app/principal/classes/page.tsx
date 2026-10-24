@@ -256,6 +256,10 @@ export default function ClassesPage() {
 
   const yearClasses = useMemo(() => classes.filter((item) => item.academicYear === selectedYear), [classes, selectedYear]);
   const filteredClasses = yearClasses;
+  const totalStudents = yearClasses.reduce(
+    (total, schoolClass) => total + schoolClass.students,
+    0,
+  );
 
   function assignedElsewhere(teacherId: string, currentRowId?: string) {
     if (!teacherId) return null;
@@ -542,9 +546,12 @@ export default function ClassesPage() {
             {notice && <div role="status" className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"><CheckCircle2 className="h-4 w-4 shrink-0" />{notice}</div>}
 
             <section className="mt-6" aria-label="Class list">
-              <div className="mb-4">
+              <div className="mb-4 flex items-end justify-between gap-4">
                 <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-3xl">Class List</h1>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 sm:text-base">Manage classes, sections and students by grade.</p>
+                <div className="shrink-0 text-right">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Students</p>
+                  <p className="mt-0.5 text-2xl font-extrabold leading-none tabular-nums text-slate-950 dark:text-white">{totalStudents.toLocaleString()}</p>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
