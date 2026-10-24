@@ -5,6 +5,7 @@ import { AlertCircle, BarChart3, CalendarDays, CheckCircle2, ChevronLeft, Chevro
 import { supabase } from '@/lib/supabase';
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
+import { loadAllRows } from '@/lib/load-all-rows';
 
 type Exam = { id:string; school_id:string; name:string; start_date:string|null; end_date:string|null; academic_year:number|null; published_at:string|null };
 type Subject = { id:string; school_id:string; exam_id:string; class_name:string; section:string; subject_name:string; full_marks:number; pass_marks:number };
@@ -66,7 +67,7 @@ export default function ResultsPage() {
       const [e,s,m,st,c,prefs]=await Promise.all([
         supabase.from('exams').select('id,school_id,name,start_date,end_date,academic_year,published_at').eq('school_id',school).order('start_date',{ascending:false}),
         supabase.from('exam_subjects').select('*').eq('school_id',school),
-        supabase.from('exam_marks').select('*').eq('school_id',school),
+        loadAllRows<Mark>(offset => supabase.from('exam_marks').select('*').eq('school_id',school).order('id').range(offset,offset+999)),
         supabase.from('students').select('id,name,class,section,roll_no').eq('school_id',school),
         supabase.from('classes').select('id,class_number,class_name,class,section_name,section,academic_year,archived_at').eq('school_id',school).is('archived_at',null),
         supabase.from('schools').select('default_pass_mark,grade_scale,grading_system').eq('id',school).single(),

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, ArrowRightLeft, CalendarCheck2, Check, ChevronRight, Clock3, Plus, UserPlus, UserX, UsersRound } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { loadAllRows } from "@/lib/load-all-rows";
 
 type Student = { id: string; name: string; class: string | null; section: string | null; created_at: string | null };
 type ClassRow = { class_name: string | null; class: string | null; name: string | null; class_number: string | null; section: string | null; section_name: string | null; academic_year: number | null };
@@ -36,7 +37,7 @@ export default function PrincipalStudentsOverview({ schoolId, students, onAdd, o
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Sign in again to load the overview.");
         const [attendance, classes, requestResponse] = await Promise.all([
-          supabase.from("attendance").select("student_id, attendance_date, status").eq("school_id", schoolId).gte("attendance_date", since()).lte("attendance_date", today()),
+          loadAllRows<Mark>(offset => supabase.from("attendance").select("student_id, attendance_date, status").eq("school_id", schoolId).gte("attendance_date", since()).lte("attendance_date", today()).order("id").range(offset,offset+999)),
           supabase.from("classes").select("class_name,class,name,class_number,section,section_name,academic_year").eq("school_id", schoolId).is("archived_at", null).limit(1000),
           fetch("/api/account-requests?role=student", { headers: { Authorization: `Bearer ${session.access_token}` }, cache: "no-store" }),
         ]);
