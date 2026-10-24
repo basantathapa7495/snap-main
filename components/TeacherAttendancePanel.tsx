@@ -251,7 +251,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
 
   return (
     <div className="space-y-4 pb-8 text-slate-900 dark:text-slate-100 sm:space-y-5">
-      <section className="px-3 pb-3 dark:bg-slate-900 sm:px-4 sm:pb-4">
+      <section className="pb-3 dark:bg-slate-900 sm:px-4 sm:pb-4">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-xl font-extrabold tracking-tight sm:text-3xl">Daily attendance</h3>
