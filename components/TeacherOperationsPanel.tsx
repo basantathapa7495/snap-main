@@ -131,7 +131,7 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
   ] as const;
 
   return (
-    <section className={tab === "assignments" ? "mt-3" : "mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-900/5 dark:border-slate-700 dark:bg-[#111B2B]"}>
+    <section className={tab === "assignments" ? "mt-3" : tab === "attendance" ? "mt-5" : "mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-900/5 dark:border-slate-700 dark:bg-[#111B2B]"}>
       {tab !== "attendance" && tab !== "assignments" && <div className="border-b border-slate-200 px-4 pt-4 dark:border-slate-700 sm:px-5">
         <div className="flex items-center justify-between gap-3 pb-4">
           <div><h2 className="text-lg font-extrabold text-slate-950 dark:text-white">Teacher operations</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Attendance, workload, approvals and staff records in one place.</p></div>
@@ -144,7 +144,7 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
 
       {(error || message) && <div className={`m-4 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error ? <AlertTriangle className="h-4 w-4" /> : <Check className="h-4 w-4" />}<span>{error || message}</span><button className="ml-auto" onClick={() => { setError(""); setMessage(""); }}><X className="h-4 w-4" /></button></div>}
 
-      <div className={tab === "assignments" ? "" : "p-4 sm:p-5"}>
+      <div className={tab === "assignments" || tab === "attendance" ? "" : "p-4 sm:p-5"}>
         {tab === "overview" && <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{stats.map(([label, value, Icon, tone]) => <Metric key={label} label={label} value={value} icon={Icon} tone={tone} />)}</div>
           <div className="grid gap-4 xl:grid-cols-2">
@@ -202,3 +202,4 @@ function DocumentsPanel({schoolId,teachers,rows,working,setWorking,flash,setErro
 function ActivityPanel({teachers,rows}:any){const [query,setQuery]=useState("");const shown=rows.filter((r:Row)=>`${r.actor_name||""} ${r.description||""} ${r.action_type||""}`.toLowerCase().includes(query.toLowerCase()));return <div className="space-y-4"><label className="relative block max-w-md"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"/><input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search teacher activity" className={`${input} pl-10`}/></label><div className="space-y-2">{shown.map((r:Row)=><div key={r.id} className="flex gap-3 rounded-xl border border-slate-200 p-3"><span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><Activity className="h-4 w-4"/></span><div><p className="text-sm font-semibold text-slate-900">{r.description}</p><p className="mt-1 text-xs text-slate-500">{r.actor_name||teacherName(teachers,r.teacher_id)} · {new Date(r.created_at).toLocaleString()}</p></div></div>)}{!shown.length&&<Empty text="No matching teacher activity yet. Attendance marking, marks, results and homework events will appear here."/>}</div></div>}
 
 function Status({value}:{value:string}){const tones:Record<string,string>={present:"bg-emerald-50 text-emerald-700",approved:"bg-emerald-50 text-emerald-700",paid:"bg-emerald-50 text-emerald-700",absent:"bg-rose-50 text-rose-700",rejected:"bg-rose-50 text-rose-700",leave:"bg-amber-50 text-amber-700",pending:"bg-amber-50 text-amber-700",clarification:"bg-orange-50 text-orange-700",draft:"bg-slate-100 text-slate-700",change_requested:"bg-violet-50 text-violet-700"};return <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold capitalize ${tones[value]||"bg-blue-50 text-blue-700"}`}>{value.replaceAll("_"," ")}</span>}
+
