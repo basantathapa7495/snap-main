@@ -760,7 +760,7 @@ export default function TeachersPage() {
             </>}
 
             {pageTab === "more" && <button type="button" onClick={() => setPageTab("teachers")} className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-blue-200 px-4 text-sm font-semibold text-blue-700 dark:border-blue-700 dark:text-blue-300">Back to overview</button>}
-            {schoolId && pageTab !== "teachers" && pageTab !== "joining" && <TeacherOperationsPanel key={pageTab} schoolId={schoolId} teachers={teachers} onTeacherChanged={() => setRefreshKey((value) => value + 1)} initialTab={pageTab === "assignments" ? "assignments" : pageTab === "more" ? "overview" : pageTab} showTabs={pageTab === "more"} />}
+            {schoolId && pageTab !== "teachers" && pageTab !== "joining" && <TeacherOperationsPanel key={pageTab} schoolId={schoolId} teachers={teachers} avatarScope={avatarScope} onTeacherChanged={() => setRefreshKey((value) => value + 1)} initialTab={pageTab === "assignments" ? "assignments" : pageTab === "more" ? "overview" : pageTab} showTabs={pageTab === "more"} />}
 
             {(error || notice) && (
               <div
@@ -1504,3 +1504,4 @@ function TeachersSkeleton() {
     </div>
   );
 }
+
