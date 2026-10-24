@@ -701,9 +701,11 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, o
     <article className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 dark:border-slate-700"}`}>
       <button type="button" aria-expanded={expanded} onClick={onToggle} className={`relative w-full px-3 pb-2 pt-2 text-left sm:px-4 sm:pb-3 sm:pt-3 ${hasSections ? "min-h-[108px] sm:min-h-[120px]" : "min-h-[88px] sm:min-h-[100px]"}`}>
         <span className="absolute left-3 top-2.5 z-10 block max-w-[58%] truncate text-base font-extrabold leading-tight text-slate-950 dark:text-white sm:left-4 sm:top-3 sm:text-xl">{displayName}</span>
-        <span className="absolute left-3 top-8 z-10 block max-w-[58%] truncate text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:left-4 sm:top-10 sm:text-xs">
-          {teacherFirstName && <span className="font-semibold text-slate-700 dark:text-slate-200">{teacherFirstName} · </span>}
-          {showStudents ? `${schoolClass.students} Students` : "Students unavailable"}
+        <span className="absolute left-3 top-8 z-10 block max-w-[58%] truncate text-[10px] font-medium leading-4 text-slate-500 dark:text-slate-400 sm:left-4 sm:top-10 sm:text-xs sm:leading-5">
+          Teacher: <span className="text-slate-700 dark:text-slate-200">{teacherFirstName || "Not assigned"}</span>
+        </span>
+        <span className="absolute left-3 top-12 z-10 block max-w-[58%] truncate text-[10px] font-medium leading-4 text-slate-500 dark:text-slate-400 sm:left-4 sm:top-[3.75rem] sm:text-xs sm:leading-5">
+          Students: {showStudents ? schoolClass.students : "Unavailable"}
         </span>
 
         <span className="absolute right-1.5 top-1 h-[58px] w-[48%] overflow-hidden sm:right-2 sm:top-1.5 sm:h-[68px]">
