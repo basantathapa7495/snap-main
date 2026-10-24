@@ -5,12 +5,9 @@ import {
   AlertCircle,
   BookOpen,
   CheckCircle2,
-  Layers3,
   Plus,
   GraduationCap,
-  Search,
   Trash2,
-  UserRound,
   Users,
   X,
   ChevronDown,
@@ -71,30 +68,6 @@ const emptySection: SectionForm = {
 
 function normalize(value: string | null | undefined) {
   return (value || "").trim().toLowerCase();
-}
-
-function matchesSectionOrTeacher(schoolClass: SchoolClass, query: string) {
-  return schoolClass.sections.some((section) =>
-    normalize(section.name).includes(query) ||
-    normalize(`Section ${section.name}`).includes(query) ||
-    normalize(section.teacher).includes(query),
-  );
-}
-
-function matchesClassSearch(schoolClass: SchoolClass, query: string) {
-  if (!query) return true;
-  const names = [
-    schoolClass.name,
-    schoolClass.name.replace(/^class\s+/i, "Grade "),
-    schoolClass.name.replace(/^grade\s+/i, "Class "),
-  ];
-  // A single letter such as A should find Section A rather than every "Class".
-  const matchesName = names.some((name) => query.length === 1
-    ? normalize(name) === query
-    : normalize(name).includes(query));
-  return matchesName ||
-    (schoolClass.sections.length === 0 && normalize(schoolClass.teacher).includes(query)) ||
-    matchesSectionOrTeacher(schoolClass, query);
 }
 
 function classLabel(row: ClassRow) {
@@ -179,7 +152,6 @@ export default function ClassesPage() {
   const [authenticated, setAuthenticated] = useState(true);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [search, setSearch] = useState("");
   const currentYear = Number(new NepaliDate(new Date()).format("YYYY"));
   const selectedYear = currentYear;
   const [expandedClass, setExpandedClass] = useState<string | null>(null);
@@ -283,27 +255,7 @@ export default function ClassesPage() {
   }, [refreshKey]);
 
   const yearClasses = useMemo(() => classes.filter((item) => item.academicYear === selectedYear), [classes, selectedYear]);
-  const filteredClasses = useMemo(() => {
-    const query = normalize(search);
-    return yearClasses.filter((schoolClass) => matchesClassSearch(schoolClass, query));
-  }, [yearClasses, search]);
-
-  const totalSections = yearClasses.reduce(
-    (total, schoolClass) => total + schoolClass.sections.length,
-    0,
-  );
-  const totalStudents = selectedYear === currentYear ? yearClasses.reduce(
-    (total, schoolClass) => total + schoolClass.students,
-    0,
-  ) : null;
-  const unassignedSections = yearClasses.reduce(
-    (total, schoolClass) =>
-      total +
-      (schoolClass.sections.length === 0
-        ? Number(!schoolClass.teacherId)
-        : schoolClass.sections.filter((section) => !section.teacherId).length),
-    0,
-  );
+  const filteredClasses = yearClasses;
 
   function assignedElsewhere(teacherId: string, currentRowId?: string) {
     if (!teacherId) return null;
@@ -547,8 +499,6 @@ export default function ClassesPage() {
     setRefreshKey((value) => value + 1);
   }
 
-  const hasFilters = Boolean(search.trim());
-
   if (loading) return <ClassesSkeleton />;
 
   if (!authenticated) {
@@ -591,22 +541,55 @@ export default function ClassesPage() {
             {error && <div role="alert" className="mt-3 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/15 dark:text-red-200"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
             {notice && <div role="status" className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"><CheckCircle2 className="h-4 w-4 shrink-0" />{notice}</div>}
 
-            <section aria-label="Class summary" className="mt-3 grid grid-cols-4 gap-1.5 sm:gap-3">
-              <StatCard icon={BookOpen} label="Classes" value={yearClasses.length} tone="blue" />
-              <StatCard icon={BookOpen} label="Sections" value={totalSections} tone="emerald" />
-              <StatCard icon={Users} label="Students" value={totalStudents} tone="amber" />
-              <StatCard icon={UserRound} label="Unassigned" value={unassignedSections} tone="rose" />
-            </section>
+            <section className="mt-6" aria-label="Class list">
+              <div className="mb-4">
+                <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-3xl">Class List</h1>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 sm:text-base">Manage classes, sections and students by grade.</p>
+              </div>
 
-            <div className="mt-4 flex gap-2">
-              <div className="relative min-w-0 flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><input type="text" aria-label="Search class, section or teacher" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search class, section or teacher..." className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-9 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white sm:text-sm" />{search && <button type="button" onClick={() => { setSearch(""); setExpandedClass(null); }} aria-label="Clear search" className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>}</div>
-              <button type="button" onClick={() => { setError(""); setEditingClass(null); setClassName(""); setClassTeacherId(""); setClassModalOpen(true); }} className="inline-flex h-11 shrink-0 items-center gap-1 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700 sm:px-5 sm:text-sm"><Plus className="h-4 w-4" /> Add</button>
-            </div>
-
-            <section className="mt-5" aria-label="All classes">
-              <div className="mb-2 flex items-end justify-between"><h2 className="text-xl font-extrabold text-slate-950 dark:text-white">All Classes</h2><span className="text-xs text-slate-500 dark:text-slate-400">{filteredClasses.length} classes</span></div>
-              {filteredClasses.length === 0 ? <EmptyState filtered={hasFilters} onAdd={() => { setEditingClass(null); setClassName(""); setClassTeacherId(""); setClassModalOpen(true); }} /> :
-                <div className="space-y-2.5">{filteredClasses.map((schoolClass) => <div key={schoolClass.id} id={`class-${schoolClass.id}`} className="scroll-mt-24"><ClassCard schoolClass={schoolClass} expanded={(expandedClass === null && filteredClasses[0]?.id === schoolClass.id) || expandedClass === schoolClass.id || (Boolean(search.trim()) && (matchesSectionOrTeacher(schoolClass, normalize(search)) || (schoolClass.sections.length === 0 && normalize(schoolClass.teacher).includes(normalize(search)))))} onToggle={() => setExpandedClass((current) => (current === schoolClass.id || (current === null && filteredClasses[0]?.id === schoolClass.id)) ? "" : schoolClass.id)} showStudents canDelete={isExtraGrade(schoolClass)} onDeleteClass={deleteExtraClass} onAddSection={openAddSection} onEditClass={(item) => { setError(""); setEditingClass(item); setClassName(item.name); setClassTeacherId(item.teacherId || ""); setClassModalOpen(true); }} onEditSection={openEditSection} onDeleteSection={deleteSection} /></div>)}</div>}
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredClasses.map((schoolClass) => {
+                  const expanded = expandedClass === schoolClass.id;
+                  return (
+                    <div key={schoolClass.id} id={`class-${schoolClass.id}`} className={`scroll-mt-24 ${expanded ? "col-span-2 lg:col-span-3 xl:col-span-4" : ""}`}>
+                      <ClassCard
+                        schoolClass={schoolClass}
+                        expanded={expanded}
+                        onToggle={() => setExpandedClass((current) => current === schoolClass.id ? null : schoolClass.id)}
+                        showStudents
+                        canDelete={isExtraGrade(schoolClass)}
+                        onDeleteClass={deleteExtraClass}
+                        onAddSection={openAddSection}
+                        onEditClass={(item) => {
+                          setError("");
+                          setEditingClass(item);
+                          setClassName(item.name);
+                          setClassTeacherId(item.teacherId || "");
+                          setClassModalOpen(true);
+                        }}
+                        onEditSection={openEditSection}
+                        onDeleteSection={deleteSection}
+                      />
+                    </div>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError("");
+                    setEditingClass(null);
+                    setClassName("");
+                    setClassTeacherId("");
+                    setClassModalOpen(true);
+                  }}
+                  className="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white p-4 text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-current">
+                    <Plus className="h-6 w-6" />
+                  </span>
+                  <span className="mt-3 text-sm font-bold">Add Class</span>
+                </button>
+              </div>
             </section>
           </div>
         </main>
@@ -691,13 +674,6 @@ export default function ClassesPage() {
   );
 }
 
-function StatCard({ icon: Icon, label, value, tone }: { icon: React.ElementType; label: string; value: number | null; tone: "blue" | "emerald" | "amber" | "rose" }) {
-  const tones = { blue: "border-blue-200 text-blue-600 bg-blue-100 dark:border-blue-800 dark:bg-blue-500/20", emerald: "border-emerald-200 text-emerald-600 bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-500/20", amber: "border-amber-200 text-amber-600 bg-amber-100 dark:border-amber-800 dark:bg-amber-500/20", rose: "border-rose-200 text-rose-600 bg-rose-100 dark:border-rose-800 dark:bg-rose-500/20" };
-  return <div className={`flex min-w-0 items-center gap-1 rounded-xl border bg-white px-1 py-2 shadow-sm dark:bg-slate-900 sm:gap-3 sm:px-4 sm:py-3 ${tones[tone].split(" ").filter((item) => item.startsWith("border-")).join(" ")}`}>
-    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-11 sm:w-11 ${tones[tone].split(" ").filter((item) => !item.startsWith("border-")).join(" ")}`}><Icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" /></span><span className="min-w-0"><span className="block truncate text-[8px] leading-tight font-medium text-slate-600 dark:text-slate-300 min-[380px]:text-[9px] sm:text-xs">{label}</span><span className="mt-0.5 block text-base font-extrabold leading-none tabular-nums text-slate-950 dark:text-white sm:text-2xl">{value === null ? "—" : value.toLocaleString()}</span></span>
-  </div>;
-}
-
 function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, onDeleteClass, onAddSection, onEditClass, onEditSection, onDeleteSection }: {
   schoolClass: SchoolClass; expanded: boolean; onToggle: () => void; showStudents: boolean; canDelete: boolean;
   onDeleteClass: (schoolClass: SchoolClass) => void;
@@ -708,37 +684,83 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, o
 }) {
   const displayName = schoolClass.name.replace(/^Class\s+(\d+)$/i, "Grade $1");
   const hasSections = schoolClass.sections.length > 0;
-  return <article className={`rounded-2xl border bg-white shadow-sm dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"}`}>
-    <button type="button" aria-expanded={expanded} onClick={onToggle} className="flex w-full items-center gap-3 p-3 text-left sm:p-4">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300"><BookOpen className="h-5 w-5" /></span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-bold text-slate-950 dark:text-white sm:text-lg">{displayName}</span>
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] leading-4 sm:text-xs">
-          <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400" aria-label={showStudents ? `${schoolClass.students} students` : "Students unavailable"} title="Students"><Users className="h-3.5 w-3.5" aria-hidden="true" />{showStudents ? schoolClass.students : "—"}</span>
-          {hasSections && <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400" aria-label={`${schoolClass.sections.length} sections`} title="Sections"><Layers3 className="h-3.5 w-3.5" aria-hidden="true" />{schoolClass.sections.length}</span>}
-          {hasSections ? schoolClass.sections.map((section) => <span key={section.id} className={`inline-flex min-w-0 items-center gap-1 ${section.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}`} title={`Section ${section.name}: ${section.teacher || "Not assigned"}`} aria-label={`Section ${section.name} teacher: ${section.teacher || "Not assigned"}`}><GraduationCap className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{section.name}: {section.teacherId ? section.teacher?.trim().split(/\s+/)[0] : "Not assigned"}</span>) : <span className={`inline-flex min-w-0 items-center gap-1 ${schoolClass.teacherId ? "font-medium text-slate-700 dark:text-slate-200" : "font-semibold text-red-600 dark:text-red-400"}`} title={schoolClass.teacher || "Not assigned"}><GraduationCap className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />{schoolClass.teacherId ? schoolClass.teacher : "Not assigned"}</span>}
+
+  return (
+    <article className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 dark:border-slate-700"}`}>
+      <button type="button" aria-expanded={expanded} onClick={onToggle} className="relative min-h-[180px] w-full p-4 text-left">
+        <span className="block max-w-[72%] truncate text-base font-extrabold text-slate-950 dark:text-white sm:text-lg">{displayName}</span>
+        <span className="mt-1 block text-sm font-medium text-slate-500 dark:text-slate-400">
+          {showStudents ? `${schoolClass.students} Students` : "Students unavailable"}
         </span>
-      </span>
-      <ChevronDown className={`h-5 w-5 shrink-0 text-slate-500 transition-transform ${expanded ? "rotate-180" : ""}`} />
-    </button>
-    {expanded && <div className="space-y-2 px-2.5 pb-3 sm:px-4 sm:pb-4">
-      {schoolClass.sections.length === 0 && <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-700"><p className="text-[10px] text-slate-500 dark:text-slate-400">Class Teacher</p><p className={`mt-0.5 text-sm font-semibold ${schoolClass.teacherId ? "text-slate-900 dark:text-white" : "text-rose-600 dark:text-rose-300"}`}>{schoolClass.teacher || "Not assigned"}</p><div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold"><Link href={`/principal/students?class=${encodeURIComponent(schoolClass.name)}`} className="rounded-lg border border-blue-200 px-2.5 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">View students</Link><button type="button" onClick={() => onEditClass(schoolClass)} className="rounded-lg border border-blue-200 px-2.5 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">{schoolClass.teacherId ? "Change teacher" : "Assign teacher"}</button><button type="button" onClick={() => onAddSection(schoolClass)} className="rounded-lg border border-blue-200 px-2.5 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">Add sections</button></div></div>}
-      {schoolClass.sections.map((section, index) => <div key={section.id} className="rounded-xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900 sm:p-3">
-        <div className="flex items-center gap-2.5"><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-bold ${["bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300", "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300", "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"][index % 3]}`}>{section.name.slice(0, 2)}</span>
-          <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-slate-950 dark:text-white">Section {section.name}</p><p className="text-xs text-slate-500 dark:text-slate-400">{showStudents ? `${section.students} students` : "Students unavailable"}</p></div>
-          <div className="min-w-0 flex-1 border-l border-slate-200 pl-2 dark:border-slate-700"><p className="text-[10px] text-slate-500 dark:text-slate-400">Class Teacher</p><p className={`truncate text-xs font-semibold ${section.teacher ? "text-slate-800 dark:text-slate-100" : "text-rose-600 dark:text-rose-300"}`}>{section.teacher || "Not assigned"}</p></div>
+
+        <span className="absolute right-3 top-4 flex h-16 w-16 items-center justify-center rounded-[45%] bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
+          <BookOpen className="h-8 w-8" aria-hidden="true" />
+        </span>
+
+        <span className="absolute inset-x-4 bottom-4">
+          <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">Sections</span>
+          <span className="mt-1.5 flex items-center gap-1.5">
+            {hasSections ? schoolClass.sections.slice(0, 4).map((section) => (
+              <span key={section.id} className="flex h-7 min-w-8 items-center justify-center rounded-full bg-blue-50 px-2 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                {section.name}
+              </span>
+            )) : (
+              <span className="text-xs font-medium text-slate-400">Not added</span>
+            )}
+            {schoolClass.sections.length > 4 && <span className="text-xs font-bold text-slate-500">+{schoolClass.sections.length - 4}</span>}
+            <span className="ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <ChevronDown className={`h-5 w-5 transition-transform ${expanded ? "rotate-180" : "-rotate-90"}`} />
+            </span>
+          </span>
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="space-y-2 border-t border-slate-100 px-3 pb-4 pt-3 dark:border-slate-800 sm:px-4">
+          {!hasSections && (
+            <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">Class Teacher</p>
+              <p className={`mt-0.5 text-sm font-semibold ${schoolClass.teacherId ? "text-slate-900 dark:text-white" : "text-rose-600 dark:text-rose-300"}`}>{schoolClass.teacher || "Not assigned"}</p>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                {showStudents && <Link href={`/principal/students?class=${encodeURIComponent(schoolClass.name)}`} className="rounded-lg border border-blue-200 px-2.5 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">View students</Link>}
+                <button type="button" onClick={() => onEditClass(schoolClass)} className="rounded-lg border border-blue-200 px-2.5 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">{schoolClass.teacherId ? "Change teacher" : "Assign teacher"}</button>
+                <button type="button" onClick={() => onAddSection(schoolClass)} className="rounded-lg border border-blue-200 px-2.5 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">Add sections</button>
+              </div>
+            </div>
+          )}
+
+          {schoolClass.sections.map((section) => (
+            <div key={section.id} className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 font-bold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">{section.name.slice(0, 2)}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-slate-950 dark:text-white">Section {section.name}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{showStudents ? `${section.students} students` : "Students unavailable"}</p>
+                </div>
+                <div className="min-w-0 flex-1 border-l border-slate-200 pl-3 dark:border-slate-700">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">Class Teacher</p>
+                  <p className={`truncate text-xs font-semibold ${section.teacher ? "text-slate-800 dark:text-slate-100" : "text-rose-600 dark:text-rose-300"}`}>{section.teacher || "Not assigned"}</p>
+                </div>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5 pl-[52px] text-[11px] font-semibold sm:text-xs">
+                {showStudents && <Link href={`/principal/students?class=${encodeURIComponent(schoolClass.name)}&section=${encodeURIComponent(section.name)}`} className="rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">View students</Link>}
+                <button type="button" onClick={() => onEditSection(schoolClass, section)} className="rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">Edit</button>
+                <button type="button" onClick={() => onDeleteSection(schoolClass.id, section)} className="rounded-lg px-2 py-1.5 text-rose-600 dark:text-rose-300">Archive</button>
+              </div>
+            </div>
+          ))}
+
+          {hasSections && (
+            <div className="flex items-center justify-between gap-2 pt-1 text-xs font-semibold">
+              <button type="button" onClick={() => onAddSection(schoolClass)} className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add section</button>
+              <button type="button" onClick={() => onEditClass(schoolClass)} className="text-blue-700 dark:text-blue-300">Edit class</button>
+            </div>
+          )}
+          {canDelete && <button type="button" onClick={() => onDeleteClass(schoolClass)} className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400"><Trash2 className="h-3.5 w-3.5" /> Delete class</button>}
         </div>
-        <div className="mt-2 flex flex-wrap gap-1.5 pl-[50px] text-[11px] font-semibold sm:text-xs">
-          {showStudents && <Link href={`/principal/students?class=${encodeURIComponent(schoolClass.name)}&section=${encodeURIComponent(section.name)}`} className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300"><Users className="h-3.5 w-3.5" /> View students</Link>}
-          <button type="button" onClick={() => onEditSection(schoolClass, section)} className="inline-flex items-center gap-1 rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">✎ Edit</button>
-          {!section.teacherId && <button type="button" onClick={() => onEditSection(schoolClass, section)} className="rounded-lg border border-blue-200 px-2 py-1.5 text-blue-700 dark:border-blue-700 dark:text-blue-300">Assign teacher</button>}
-          <button type="button" onClick={() => onDeleteSection(schoolClass.id, section)} className="rounded-lg px-1 py-1.5 text-rose-600 dark:text-rose-300">Archive</button>
-        </div>
-      </div>)}
-      {schoolClass.sections.length > 0 && <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs font-semibold"><button type="button" onClick={() => onAddSection(schoolClass)} className="inline-flex items-center gap-1 text-blue-700 dark:text-blue-300"><Plus className="h-4 w-4" /> Add section</button><button type="button" onClick={() => onEditClass(schoolClass)} className="text-blue-700 dark:text-blue-300">Edit class</button></div>}
-      {canDelete && <button type="button" onClick={() => onDeleteClass(schoolClass)} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-red-600 dark:text-red-400"><Trash2 className="h-3.5 w-3.5" /> Delete class</button>}
-    </div>}
-  </article>;
+      )}
+    </article>
+  );
 }
 
 function Field({
@@ -889,41 +911,6 @@ function Modal({
     </div>
   );
 }
-
-function EmptyState({
-  filtered,
-  onAdd,
-}: {
-  filtered: boolean;
-  onAdd: () => void;
-}) {
-  return (
-    <div className="flex flex-col items-center px-6 py-16 text-center">
-      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
-        {filtered ? (
-          <Search className="h-5 w-5" />
-        ) : (
-          <UserRound className="h-5 w-5" />
-        )}
-      </span>
-      <h3 className="mt-4 font-bold text-slate-900 dark:text-white">
-        {filtered ? "No classes found. Try another class, section or teacher name." : "No classes added yet"}
-      </h3>
-      {!filtered && <p className="mt-1 text-sm text-slate-500">Add your first class to create the academic structure.</p>}
-      {!filtered && (
-        <button
-          type="button"
-          onClick={onAdd}
-          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white"
-        >
-          <Plus className="h-4 w-4" />
-          Add class
-        </button>
-      )}
-    </div>
-  );
-}
-
 
 function ClassesSkeleton() {
   return (
