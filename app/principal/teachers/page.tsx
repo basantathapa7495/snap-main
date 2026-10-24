@@ -72,6 +72,22 @@ type Teacher = {
   avatar_path?: string | null;
 };
 
+type ClassFilterRow = {
+  id: string;
+  class_name: string | null;
+  class: string | null;
+  name: string | null;
+  class_number: string | null;
+  teacher_id: string | null;
+  academic_year: number | null;
+};
+
+type TeacherClassAssignment = {
+  teacher_id: string;
+  class_id: string | null;
+  class_name: string | null;
+};
+
 type TemporaryCredential = {
   teacherId: string;
   teacherName: string;
@@ -133,6 +149,16 @@ function titleCase(value: string) {
     .join(" ");
 }
 
+function classFilterLabel(row: ClassFilterRow) {
+  const value = (row.class_name || row.class || row.name || row.class_number || "").trim();
+  if (!value) return "";
+  return /^(?:class|grade)\s+/i.test(value) ? value.replace(/^class\s+/i, "Grade ") : `Grade ${value}`;
+}
+
+function normalizeClassFilter(value: string) {
+  return value.trim().replace(/^class\s+/i, "Grade ").toLowerCase();
+}
+
 function createPassword() {
   const characters =
     "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
@@ -154,6 +180,8 @@ export default function TeachersPage() {
   const [subject, setSubject] = useState("All");
   const [grade, setGrade] = useState("All");
   const [subjectOptions, setSubjectOptions] = useState<string[]>(["All"]);
+  const [classOptions, setClassOptions] = useState<string[]>(["All"]);
+  const [teacherClasses, setTeacherClasses] = useState<Record<string, string[]>>({});
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
@@ -223,7 +251,7 @@ export default function TeachersPage() {
           .single();
         if (profileError || !profile?.school_id)
           throw new Error("Your school profile could not be loaded.");
-        const [teachersResult, subjectsResult] = await Promise.all([
+        const [teachersResult, subjectsResult, classesResult, assignmentsResult] = await Promise.all([
           supabase
             .from("teachers")
             .select(
@@ -237,9 +265,21 @@ export default function TeachersPage() {
             .eq("school_id", profile.school_id)
             .order("sort_order", { ascending: true })
             .order("name", { ascending: true }),
+          supabase
+            .from("classes")
+            .select("id,class_name,class,name,class_number,teacher_id,academic_year")
+            .eq("school_id", profile.school_id)
+            .is("archived_at", null),
+          supabase
+            .from("teacher_assignments")
+            .select("teacher_id,class_id,class_name")
+            .eq("school_id", profile.school_id)
+            .eq("active", true),
         ]);
         if (teachersResult.error) throw teachersResult.error;
         if (subjectsResult.error) throw subjectsResult.error;
+        if (classesResult.error) throw classesResult.error;
+        if (assignmentsResult.error) throw assignmentsResult.error;
         const data = teachersResult.data;
         if (!cancelled) {
           setSchoolId(profile.school_id);
@@ -251,6 +291,42 @@ export default function TeachersPage() {
             "All",
             ...(subjectsResult.data || []).map((item) => item.name),
           ]);
+
+          const classRows = (classesResult.data || []) as ClassFilterRow[];
+          const latestAcademicYear = classRows.reduce(
+            (latest, row) => Math.max(latest, row.academic_year || 0),
+            0,
+          );
+          const currentClassRows = latestAcademicYear
+            ? classRows.filter((row) => row.academic_year === latestAcademicYear)
+            : classRows;
+          const labelsById = new Map(
+            currentClassRows.map((row) => [row.id, classFilterLabel(row)]),
+          );
+          const availableClasses = Array.from(
+            new Set(currentClassRows.map(classFilterLabel).filter(Boolean)),
+          ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+          setClassOptions(["All", ...availableClasses]);
+
+          const classesByTeacher = new Map<string, Set<string>>();
+          const addTeacherClass = (teacherId: string | null, className: string) => {
+            if (!teacherId || !className) return;
+            const existing = classesByTeacher.get(teacherId) || new Set<string>();
+            existing.add(className);
+            classesByTeacher.set(teacherId, existing);
+          };
+          currentClassRows.forEach((row) => addTeacherClass(row.teacher_id, classFilterLabel(row)));
+          ((assignmentsResult.data || []) as TeacherClassAssignment[]).forEach((assignment) => {
+            const className = assignment.class_id
+              ? labelsById.get(assignment.class_id) || assignment.class_name || ""
+              : assignment.class_name || "";
+            addTeacherClass(assignment.teacher_id, className.replace(/^class\s+/i, "Grade "));
+          });
+          setTeacherClasses(
+            Object.fromEntries(
+              Array.from(classesByTeacher, ([teacherId, names]) => [teacherId, Array.from(names)]),
+            ),
+          );
           const selectedId = new URLSearchParams(window.location.search).get('teacher');
           const match = (data || []).find((item) => item.id === selectedId);
           if (match) {
@@ -331,9 +407,14 @@ export default function TeachersPage() {
       const teacherSubject = (teacher.subject || teacher.department || "").trim().toLowerCase();
       const matchesSubject =
         subject === "All" || teacherSubject === subject.trim().toLowerCase();
-      return matchesSearch && matchesSubject;
+      const matchesClass =
+        grade === "All" ||
+        (teacherClasses[teacher.id] || []).some(
+          (className) => normalizeClassFilter(className) === normalizeClassFilter(grade),
+        );
+      return matchesSearch && matchesSubject && matchesClass;
     });
-  }, [search, subject, teachers]);
+  }, [grade, search, subject, teacherClasses, teachers]);
 
   function openCreateForm() {
     photoSelection.current++;
@@ -767,7 +848,7 @@ export default function TeachersPage() {
                 </label>
                 <button type="button" aria-label="Filter teachers" aria-expanded={showMobileFilters} aria-pressed={showMobileFilters} onClick={() => setShowMobileFilters((value) => !value)} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 dark:focus-visible:ring-emerald-950 ${showMobileFilters ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" : "border-slate-200 bg-slate-100 text-slate-600 hover:border-emerald-200 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"}`}><SlidersHorizontal className="h-5 w-5" /></button>
               </div>
-              {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={grade} onChange={setGrade} label="Class" options={["All"]} allLabel="Class" icon={School} /><Select value={subject} onChange={setSubject} label="Subject" options={subjectOptions} allLabel="Subjects" icon={BookOpen} /></div>}
+              {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={grade} onChange={setGrade} label="Class" options={classOptions} allLabel="Class" icon={School} /><Select value={subject} onChange={setSubject} label="Subject" options={subjectOptions} allLabel="Subjects" icon={BookOpen} /></div>}
               {filteredTeachers.length ? <>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {(showAllMobileTeachers ? filteredTeachers : filteredTeachers.slice(0, 10)).map((teacher, index) => <MobileTeacherCard key={teacher.id} teacher={teacher} avatarScope={avatarScope} index={index} status={overview?.statuses[teacher.id] || ""} onClick={() => setSelectedTeacher(teacher)} />)}
@@ -808,7 +889,7 @@ export default function TeachersPage() {
                   value={grade}
                   onChange={setGrade}
                   label="Class"
-                  options={["All"]}
+                  options={classOptions}
                   allLabel="Class"
                   icon={School}
                 />
