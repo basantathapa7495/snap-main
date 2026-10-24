@@ -251,11 +251,10 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
 
   return (
     <div className="space-y-4 pb-8 text-slate-900 dark:text-slate-100 sm:space-y-5">
-      <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:rounded-3xl sm:p-6">
-        <div className="flex items-start justify-between gap-3">
+      <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:rounded-3xl sm:p-4">
+        <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h3 className="text-xl font-extrabold tracking-tight sm:text-3xl">Daily attendance</h3>
-            <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400 sm:text-base">Tap a status to save teacher attendance.</p>
           </div>
           <label className="relative flex h-10 w-[145px] shrink-0 cursor-pointer items-center gap-1.5 overflow-hidden rounded-xl border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-800 shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white min-[380px]:w-[160px] min-[380px]:text-[11px] sm:h-12 sm:w-auto sm:gap-2 sm:px-4 sm:text-sm">
             <CalendarDays className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
@@ -265,7 +264,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
           </label>
         </div>
 
-        <div className="mt-5 grid grid-cols-[minmax(102px,1.55fr)_repeat(4,minmax(42px,.65fr))] gap-1.5 sm:grid-cols-[minmax(220px,1.45fr)_repeat(4,minmax(100px,.55fr))] sm:gap-3">
+        <div className="mt-3 grid grid-cols-[minmax(102px,1.55fr)_repeat(4,minmax(42px,.65fr))] gap-1.5 sm:grid-cols-[minmax(220px,1.45fr)_repeat(4,minmax(100px,.55fr))] sm:gap-3">
           {editable && <button type="button" onClick={markAllPresent} disabled={loading || loadFailed || busy || Boolean(busyTeacher) || !activeTeachers.length} className="flex min-h-12 items-center justify-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-1.5 text-[10px] font-extrabold text-blue-700 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-800 dark:bg-blue-500/15 dark:text-blue-200 min-[380px]:text-[11px] sm:gap-2 sm:px-3 sm:text-sm">
             {busy ? <Loader2 className="h-4 w-4 animate-spin sm:h-5 sm:w-5" /> : <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />} <span className="whitespace-nowrap">Mark All Present</span>
           </button>}
@@ -276,16 +275,16 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
         {error && <p role="alert" className="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-500/15 dark:text-rose-200">{error}</p>}
         {message && <p role="status" className="mt-4 rounded-lg bg-teal-50 p-3 text-sm text-teal-800 dark:bg-teal-500/15 dark:text-teal-200">{message}</p>}
 
-        <label className="relative mt-5 block">
+        <label className="relative mt-3 block">
           <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search teacher..." className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:focus:ring-blue-900/40 sm:h-14 sm:text-base" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search teacher..." className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:focus:ring-blue-900/40 sm:h-12 sm:text-base" />
         </label>
 
-        <div className="mt-4 space-y-2.5">
+        <div className="mt-3 space-y-2">
           {loading ? <p className="p-5 text-sm text-slate-500">Loading attendance…</p> : activeTeachers.length === 0 ? <p className="p-5 text-sm text-slate-500">No active teachers added yet.</p> : visibleTeachers.length === 0 ? <p className="p-5 text-center text-sm text-slate-500">No matching teachers.</p> : visibleTeachers.map((teacher) => {
             const selected = statusFor(teacher.id);
             const locked = !editable || loadFailed || busy || Boolean(busyTeacher) || leaveIds.has(teacher.id);
-            return <article key={teacher.id} className="grid grid-cols-[minmax(0,.9fr)_minmax(168px,1.1fr)] items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-800/60 sm:grid-cols-[minmax(220px,1fr)_minmax(360px,1.25fr)] sm:gap-3 sm:px-4 sm:py-3">
+            return <article key={teacher.id} className="grid grid-cols-[minmax(0,.9fr)_minmax(168px,1.1fr)] items-center gap-2 rounded-2xl border border-slate-200 bg-white px-2.5 py-2 dark:border-slate-700 dark:bg-slate-800/60 sm:grid-cols-[minmax(220px,1fr)_minmax(360px,1.25fr)] sm:gap-3 sm:px-4 sm:py-2.5">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className="h-10 w-10 rounded-full bg-blue-100 text-xs font-extrabold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200 sm:h-12 sm:w-12 sm:text-sm" />
                 <div className="min-w-0"><p className="truncate text-sm font-extrabold text-slate-950 dark:text-white sm:text-base">{teacher.name}</p><p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400 sm:text-sm">{teacher.subject || teacher.department || "Teacher"}{leaveIds.has(teacher.id) ? " · Approved leave" : ""}</p></div>
