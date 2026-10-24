@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight, Loader2, UserCheck, UsersRound, UserRound, UserX, Clock3 } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, UserCheck, UserMinus, UserRound, Clock3 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type Status = "present" | "absent" | "leave" | "holiday";
@@ -16,13 +16,6 @@ type Teacher = {
 type Attendance = { teacher_id: string; attendance_date: string; status: Status };
 type Leave = { teacher_id: string; start_date: string; end_date: string };
 const statuses = ["present", "absent", "leave"] as const;
-const statusTone: Record<Status, string> = {
-  present: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200",
-  absent: "bg-rose-50 text-rose-700 dark:bg-rose-500/20 dark:text-rose-200",
-  leave: "bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200",
-  holiday: "bg-sky-50 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200",
-};
-
 // Use the school's local day, including around midnight in Nepal.
 function todayInNepal() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -44,7 +37,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [busyTeacher, setBusyTeacher] = useState<string | null>(null);
-  const [editingTeacher, setEditingTeacher] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [loadFailed, setLoadFailed] = useState(false);
   const [message, setMessage] = useState("");
@@ -61,6 +54,15 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
       .sort((a, b) => a.name.localeCompare(b.name)),
     [teachers],
   );
+  const visibleTeachers = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return activeTeachers;
+    return activeTeachers.filter((teacher) =>
+      [teacher.name, teacher.subject, teacher.department].some((value) =>
+        value?.toLowerCase().includes(query),
+      ),
+    );
+  }, [activeTeachers, search]);
   const selectedTeacher = activeTeachers.find((teacher) => teacher.id === monthlyTeacher);
   const selectedMonthTeacherId = selectedTeacher?.id || activeTeachers[0]?.id || "";
 
@@ -178,7 +180,6 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
       if (approved.data?.length) {
         setLeaves((current) => [...current.filter((row) => row.teacher_id !== teacherId), ...(approved.data as Leave[])]);
         setError("This teacher has approved leave for the selected date.");
-        setEditingTeacher(null);
       } else setError(approved.error?.message || "Approved leave could not be checked.");
       setBusyTeacher(null);
       return;
@@ -195,7 +196,6 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
       ]);
       onSaved();
       setSaveRevision((revision) => revision + 1);
-      setEditingTeacher(null);
     }
     setBusyTeacher(null);
   }
@@ -247,70 +247,64 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
     setBusy(false);
   }
 
+  const displayDate = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit", month: "short", year: "numeric", timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00Z`));
+
   return (
     <div className="space-y-4 pb-8 text-slate-900 dark:text-slate-100 sm:space-y-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">Daily attendance</h3>
-          <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500 dark:text-slate-400 sm:text-sm">Tap a status to save it. Approved leave appears automatically.</p>
-        </div>
-        <label className="w-[136px] shrink-0 text-xs font-semibold text-slate-600 dark:text-slate-300 sm:w-[180px]">
-          Date
-          <input type="date" value={date} max={today} onChange={(event) => setDate(event.target.value)}
-            className="mt-1 block h-10 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-1 text-[11px] text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-white sm:px-3 sm:text-sm" />
-        </label>
-      </div>
-
-      <div className="grid grid-cols-[1.25fr_repeat(3,minmax(0,1fr))] gap-1.5 sm:grid-cols-4 sm:gap-3" aria-label="Daily attendance summary">
-        {([
-          ["Total Teachers", activeTeachers.length, UsersRound, "border-blue-100 bg-blue-50/70 text-blue-600 dark:border-blue-900 dark:bg-blue-500/10"],
-          ["Present", summary.present, UserRound, "border-emerald-100 bg-emerald-50/70 text-emerald-600 dark:border-emerald-900 dark:bg-emerald-500/10"],
-          ["Absent", summary.absent, UserX, "border-rose-100 bg-rose-50/70 text-rose-600 dark:border-rose-900 dark:bg-rose-500/10"],
-          ["Leave", summary.leave, Clock3, "border-amber-100 bg-amber-50/70 text-amber-600 dark:border-amber-900 dark:bg-amber-500/10"],
-        ] as const).map(([label, count, Icon, tone]) => (
-          <div key={label} className={`min-w-0 rounded-xl border px-1.5 py-1.5 sm:px-4 sm:py-2 ${tone}`}>
-            <div className="flex items-center justify-between gap-0.5"><p className="text-lg font-extrabold leading-none text-slate-950 dark:text-white sm:text-2xl">{loading ? "–" : count}</p><Icon className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" aria-hidden="true" /></div>
-            <p className="mt-1 whitespace-nowrap text-[9px] leading-tight font-medium text-slate-600 dark:text-slate-300 min-[380px]:text-[10px] sm:text-xs">{label}</p>
+      <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:rounded-3xl sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-xl font-extrabold tracking-tight sm:text-3xl">Daily attendance</h3>
+            <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400 sm:text-base">Tap a status to save teacher attendance.</p>
           </div>
-        ))}
-      </div>
+          <label className="relative flex h-11 max-w-[190px] shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white sm:h-12 sm:max-w-none sm:px-4 sm:text-sm">
+            <CalendarDays className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+            <span className="truncate">{date === today ? `Today · ${displayDate}` : displayDate}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
+            <input aria-label="Attendance date" type="date" value={date} max={today} onChange={(event) => setDate(event.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+          </label>
+        </div>
 
-      {editable && (
-        <button type="button" onClick={markAllPresent}
-          disabled={loading || loadFailed || busy || Boolean(busyTeacher) || !activeTeachers.length}
-          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-600 dark:hover:bg-blue-500 sm:min-h-12">
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
-          Mark All Present
-        </button>
-      )}
-      {!editable && <p className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><CalendarDays className="h-4 w-4" /> Viewing attendance history for {date}</p>}
-      {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-500/15 dark:text-rose-200">{error}</p>}
-      {message && <p role="status" className="rounded-lg bg-teal-50 p-3 text-sm text-teal-800 dark:bg-teal-500/15 dark:text-teal-200">{message}</p>}
+        <div className="mt-5 grid grid-cols-4 gap-2 sm:grid-cols-[minmax(220px,1.45fr)_repeat(4,minmax(100px,.55fr))] sm:gap-3">
+          {editable && <button type="button" onClick={markAllPresent} disabled={loading || loadFailed || busy || Boolean(busyTeacher) || !activeTeachers.length} className="col-span-4 flex min-h-12 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-extrabold text-blue-700 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-800 dark:bg-blue-500/15 dark:text-blue-200 sm:col-span-1">
+            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserCheck className="h-5 w-5" />} Mark All Present
+          </button>}
+          {([ ["Total", activeTeachers.length, "text-slate-950 dark:text-white"], ["Present", summary.present, "text-emerald-700 dark:text-emerald-300"], ["Absent", summary.absent, "text-rose-700 dark:text-rose-300"], ["Leave", summary.leave, "text-amber-700 dark:text-amber-300"] ] as const).map(([label, count, tone]) => <div key={label} className="flex min-h-12 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-2 text-center dark:border-slate-700 dark:bg-slate-800"><p className="text-[11px] font-semibold text-slate-500 sm:text-xs">{label}</p><p className={`mt-0.5 text-lg font-extrabold leading-none sm:text-xl ${tone}`}>{loading ? "–" : count}</p></div>)}
+        </div>
 
-      <div className="space-y-2 border-t border-slate-200 pt-4 dark:border-slate-700">
-        {loading ? <p className="p-5 text-sm text-slate-500">Loading attendance…</p>
-          : activeTeachers.length === 0 ? <p className="p-5 text-sm text-slate-500">No active teachers added yet.</p>
-          : activeTeachers.map((teacher) => {
+        {!editable && <p className="mt-4 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><CalendarDays className="h-4 w-4" /> Viewing attendance history for {displayDate}</p>}
+        {error && <p role="alert" className="mt-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-800 dark:bg-rose-500/15 dark:text-rose-200">{error}</p>}
+        {message && <p role="status" className="mt-4 rounded-lg bg-teal-50 p-3 text-sm text-teal-800 dark:bg-teal-500/15 dark:text-teal-200">{message}</p>}
+
+        <label className="relative mt-5 block">
+          <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search teacher..." className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:focus:ring-blue-900/40 sm:h-14 sm:text-base" />
+        </label>
+
+        <div className="mt-4 space-y-2.5">
+          {loading ? <p className="p-5 text-sm text-slate-500">Loading attendance…</p> : activeTeachers.length === 0 ? <p className="p-5 text-sm text-slate-500">No active teachers added yet.</p> : visibleTeachers.length === 0 ? <p className="p-5 text-center text-sm text-slate-500">No matching teachers.</p> : visibleTeachers.map((teacher) => {
             const selected = statusFor(teacher.id);
-            return (
-              <div key={teacher.id} className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/60 sm:px-4">
-                <button type="button" onClick={() => setEditingTeacher((current) => current === teacher.id ? null : teacher.id)} disabled={!editable || loadFailed || busy || Boolean(busyTeacher) || leaveIds.has(teacher.id)} aria-expanded={editingTeacher === teacher.id} aria-label={`Change attendance for ${teacher.name}`} className="flex w-full min-w-0 items-center gap-2.5 text-left disabled:cursor-default">
-                  <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">{initial(teacher.name)}</span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{teacher.name}</p>
-                    <p className="flex min-w-0 items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400"><span className="truncate">{teacher.subject || teacher.department || "Teacher"}</span>{leaveIds.has(teacher.id) && <span className="shrink-0 text-[11px] font-medium text-amber-700 dark:text-amber-300">Approved leave</span>}</p>
-                  </div>
-                  {busyTeacher === teacher.id && <Loader2 className="ml-auto h-4 w-4 animate-spin text-teal-600" />}
-                  <span className={`ml-auto inline-flex min-w-[68px] shrink-0 items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-bold sm:min-w-[90px] sm:text-xs ${selected ? statusTone[selected] : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"}`}><span className="h-1.5 w-1.5 rounded-full bg-current" />{selected ? selected[0].toUpperCase() + selected.slice(1) : "Unmarked"}</span>
-                  {!leaveIds.has(teacher.id) && editable && <ChevronRight className={`h-4 w-4 shrink-0 text-slate-400 transition ${editingTeacher === teacher.id ? "rotate-90" : ""}`} aria-hidden="true" />}
-                </button>
-                {editingTeacher === teacher.id && editable && !leaveIds.has(teacher.id) && <div className="mt-2 grid grid-cols-3 gap-2 border-t border-slate-100 pt-2 dark:border-slate-700" aria-label={`Attendance options for ${teacher.name}`}>
-                  {statuses.map((value) => <button key={value} type="button" onClick={() => void saveOne(teacher.id, value)} disabled={Boolean(busyTeacher) || busy} aria-pressed={selected === value} className={`min-h-10 rounded-lg px-2 text-xs font-semibold ${selected === value ? statusTone[value] : "bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-300"}`}>{value[0].toUpperCase() + value.slice(1)}</button>)}
-                </div>}
+            const locked = !editable || loadFailed || busy || Boolean(busyTeacher) || leaveIds.has(teacher.id);
+            return <article key={teacher.id} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800/60 sm:grid-cols-[minmax(220px,1fr)_minmax(360px,1.25fr)] sm:items-center sm:px-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-extrabold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">{initial(teacher.name)}</span>
+                <div className="min-w-0"><p className="truncate text-sm font-extrabold text-slate-950 dark:text-white sm:text-base">{teacher.name}</p><p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400 sm:text-sm">{teacher.subject || teacher.department || "Teacher"}{leaveIds.has(teacher.id) ? " · Approved leave" : ""}</p></div>
+                {busyTeacher === teacher.id && <Loader2 className="ml-auto h-4 w-4 animate-spin text-blue-600" />}
               </div>
-            );
+              <div className="grid grid-cols-3 gap-2" aria-label={`Attendance options for ${teacher.name}`}>
+                {statuses.map((value) => {
+                  const active = selected === value;
+                  const Icon = value === "present" ? (active ? Check : UserRound) : value === "absent" ? UserMinus : Clock3;
+                  const activeClass = value === "present" ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200" : value === "absent" ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-500/20 dark:text-rose-200" : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-500/20 dark:text-amber-200";
+                  return <button key={value} type="button" onClick={() => void saveOne(teacher.id, value)} disabled={locked} aria-pressed={active} className={`flex min-h-11 items-center justify-center gap-1.5 rounded-xl border px-1.5 text-xs font-bold capitalize transition disabled:cursor-default sm:min-h-12 sm:text-sm ${active ? activeClass : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"}`}><Icon className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />{value}</button>;
+                })}
+              </div>
+            </article>;
           })}
-      </div>
+        </div>
+      </section>
 
       <section className="bg-white pt-3 dark:bg-slate-900 sm:pt-5">
         <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">Monthly attendance</h3>
@@ -373,3 +367,4 @@ export default function TeacherAttendancePanel({ schoolId, teachers, onSaved }: 
     </div>
   );
 }
+
