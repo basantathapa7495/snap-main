@@ -700,8 +700,8 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, o
   return (
     <article className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 dark:border-slate-700"}`}>
       <button type="button" aria-expanded={expanded} onClick={onToggle} className="relative min-h-[112px] w-full px-3 pb-3 pt-2 text-left sm:min-h-[128px] sm:px-4 sm:pb-4 sm:pt-3">
-        <span className="block max-w-[60%] truncate text-base font-extrabold leading-tight text-slate-950 dark:text-white sm:text-xl">{displayName}</span>
-        <span className="mt-0.5 block text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:text-xs">
+        <span className="absolute left-3 top-2.5 z-10 block max-w-[58%] truncate text-base font-extrabold leading-tight text-slate-950 dark:text-white sm:left-4 sm:top-3 sm:text-xl">{displayName}</span>
+        <span className="absolute left-3 top-8 z-10 block text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:left-4 sm:top-10 sm:text-xs">
           {showStudents ? `${schoolClass.students} Students` : "Students unavailable"}
         </span>
 
