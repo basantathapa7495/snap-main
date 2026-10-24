@@ -256,7 +256,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
           <div className="min-w-0">
             <h3 className="text-xl font-extrabold tracking-tight sm:text-3xl">Daily attendance</h3>
           </div>
-          <label className="relative flex h-10 w-[145px] shrink-0 cursor-pointer items-center gap-1.5 overflow-hidden rounded-xl border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-800 shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white min-[380px]:w-[160px] min-[380px]:text-[11px] sm:h-12 sm:w-auto sm:gap-2 sm:px-4 sm:text-sm">
+          <label className="relative flex h-9 w-[145px] shrink-0 cursor-pointer items-center gap-1.5 overflow-hidden rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-800 shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-white min-[380px]:w-[160px] min-[380px]:text-[11px] sm:h-10 sm:w-auto sm:gap-2 sm:px-3 sm:text-sm">
             <CalendarDays className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
             <span className="truncate">{date === today ? `Today · ${displayDate}` : displayDate}</span>
             <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
@@ -265,10 +265,10 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
         </div>
 
         <div className="mt-3 grid grid-cols-[minmax(102px,1.55fr)_repeat(4,minmax(42px,.65fr))] gap-1.5 sm:grid-cols-[minmax(220px,1.45fr)_repeat(4,minmax(100px,.55fr))] sm:gap-3">
-          {editable && <button type="button" onClick={markAllPresent} disabled={loading || loadFailed || busy || Boolean(busyTeacher) || !activeTeachers.length} className="flex min-h-12 items-center justify-center gap-1 rounded-xl border border-blue-200 bg-blue-50 px-1.5 text-[10px] font-extrabold text-blue-700 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-800 dark:bg-blue-500/15 dark:text-blue-200 min-[380px]:text-[11px] sm:gap-2 sm:px-3 sm:text-sm">
+          {editable && <button type="button" onClick={markAllPresent} disabled={loading || loadFailed || busy || Boolean(busyTeacher) || !activeTeachers.length} className="flex min-h-10 items-center justify-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-1.5 text-[10px] font-extrabold text-blue-700 transition hover:bg-blue-100 disabled:opacity-50 dark:border-blue-800 dark:bg-blue-500/15 dark:text-blue-200 min-[380px]:text-[11px] sm:gap-2 sm:px-3 sm:text-sm">
             {busy ? <Loader2 className="h-4 w-4 animate-spin sm:h-5 sm:w-5" /> : <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />} <span className="whitespace-nowrap">Mark All Present</span>
           </button>}
-          {([ ["Total", activeTeachers.length, "text-slate-950 dark:text-white"], ["Present", summary.present, "text-emerald-700 dark:text-emerald-300"], ["Absent", summary.absent, "text-rose-700 dark:text-rose-300"], ["Leave", summary.leave, "text-amber-700 dark:text-amber-300"] ] as const).map(([label, count, tone]) => <div key={label} className="flex min-h-12 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-1.5 py-2 text-center dark:border-slate-700 dark:bg-slate-800"><p className="text-[11px] font-semibold text-slate-500 sm:text-xs">{label}</p><p className={`mt-0.5 text-lg font-extrabold leading-none sm:text-xl ${tone}`}>{loading ? "–" : count}</p></div>)}
+          {([ ["Total", activeTeachers.length, "text-slate-950 dark:text-white"], ["Present", summary.present, "text-emerald-700 dark:text-emerald-300"], ["Absent", summary.absent, "text-rose-700 dark:text-rose-300"], ["Leave", summary.leave, "text-amber-700 dark:text-amber-300"] ] as const).map(([label, count, tone]) => <div key={label} className="flex min-h-10 flex-col items-center justify-center rounded-lg border border-slate-200 bg-white px-1 py-1 text-center dark:border-slate-700 dark:bg-slate-800"><p className="text-[9px] font-semibold leading-none text-slate-500 sm:text-[11px]">{label}</p><p className={`mt-0.5 text-base font-extrabold leading-none sm:text-lg ${tone}`}>{loading ? "–" : count}</p></div>)}
         </div>
 
         {!editable && <p className="mt-4 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><CalendarDays className="h-4 w-4" /> Viewing attendance history for {displayDate}</p>}
@@ -277,16 +277,16 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
 
         <label className="relative mt-3 block">
           <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search teacher..." className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:focus:ring-blue-900/40 sm:h-12 sm:text-base" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search teacher..." className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:focus:ring-blue-900/40 sm:h-11 sm:text-base" />
         </label>
 
         <div className="mt-3 space-y-2">
           {loading ? <p className="p-5 text-sm text-slate-500">Loading attendance…</p> : activeTeachers.length === 0 ? <p className="p-5 text-sm text-slate-500">No active teachers added yet.</p> : visibleTeachers.length === 0 ? <p className="p-5 text-center text-sm text-slate-500">No matching teachers.</p> : visibleTeachers.map((teacher) => {
             const selected = statusFor(teacher.id);
             const locked = !editable || loadFailed || busy || Boolean(busyTeacher) || leaveIds.has(teacher.id);
-            return <article key={teacher.id} className="grid grid-cols-[minmax(0,.9fr)_minmax(168px,1.1fr)] items-center gap-2 rounded-2xl border border-slate-200 bg-white px-2.5 py-2 dark:border-slate-700 dark:bg-slate-800/60 sm:grid-cols-[minmax(220px,1fr)_minmax(360px,1.25fr)] sm:gap-3 sm:px-4 sm:py-2.5">
+            return <article key={teacher.id} className="grid grid-cols-[minmax(0,.9fr)_minmax(168px,1.1fr)] items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-800/60 sm:grid-cols-[minmax(220px,1fr)_minmax(360px,1.25fr)] sm:gap-3 sm:px-4 sm:py-2">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className="h-10 w-10 rounded-full bg-blue-100 text-xs font-extrabold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200 sm:h-12 sm:w-12 sm:text-sm" />
+                <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className="h-9 w-9 rounded-full bg-blue-100 text-[11px] font-extrabold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200 sm:h-10 sm:w-10 sm:text-xs" />
                 <div className="min-w-0"><p className="truncate text-sm font-extrabold text-slate-950 dark:text-white sm:text-base">{teacher.name}</p><p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400 sm:text-sm">{teacher.subject || teacher.department || "Teacher"}{leaveIds.has(teacher.id) ? " · Approved leave" : ""}</p></div>
                 {busyTeacher === teacher.id && <Loader2 className="ml-auto h-4 w-4 animate-spin text-blue-600" />}
               </div>
@@ -295,7 +295,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
                   const active = selected === value;
                   const Icon = value === "present" ? (active ? Check : UserRound) : value === "absent" ? UserMinus : Clock3;
                   const activeClass = value === "present" ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200" : value === "absent" ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-500/20 dark:text-rose-200" : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-500/20 dark:text-amber-200";
-                  return <button key={value} type="button" onClick={() => void saveOne(teacher.id, value)} disabled={locked} aria-pressed={active} className={`flex min-h-10 min-w-0 items-center justify-center gap-1 rounded-xl border px-1 text-[10px] font-bold capitalize transition disabled:cursor-default min-[380px]:text-[11px] sm:min-h-12 sm:gap-1.5 sm:px-1.5 sm:text-sm ${active ? activeClass : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"}`}><Icon className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" />{value}</button>;
+                  return <button key={value} type="button" onClick={() => void saveOne(teacher.id, value)} disabled={locked} aria-pressed={active} className={`flex min-h-9 min-w-0 items-center justify-center gap-1 rounded-lg border px-1 text-[10px] font-bold capitalize transition disabled:cursor-default min-[380px]:text-[11px] sm:min-h-10 sm:gap-1.5 sm:px-1.5 sm:text-sm ${active ? activeClass : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"}`}><Icon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />{value}</button>;
                 })}
               </div>
             </article>;
