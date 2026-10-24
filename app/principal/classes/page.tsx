@@ -589,7 +589,7 @@ export default function ClassesPage() {
                     setClassTeacherId("");
                     setClassModalOpen(true);
                   }}
-                  className="flex min-h-[112px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white p-4 text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                  className="flex min-h-[88px] flex-col items-center justify-center rounded-2xl sm:min-h-[100px] border-2 border-dashed border-slate-300 bg-white p-4 text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
                 >
                   <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-current">
                     <Plus className="h-5 w-5" />
@@ -699,13 +699,13 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, o
 
   return (
     <article className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 dark:border-slate-700"}`}>
-      <button type="button" aria-expanded={expanded} onClick={onToggle} className="relative min-h-[112px] w-full px-3 pb-3 pt-2 text-left sm:min-h-[128px] sm:px-4 sm:pb-4 sm:pt-3">
+      <button type="button" aria-expanded={expanded} onClick={onToggle} className={`relative w-full px-3 pb-2 pt-2 text-left sm:px-4 sm:pb-3 sm:pt-3 ${hasSections ? "min-h-[108px] sm:min-h-[120px]" : "min-h-[88px] sm:min-h-[100px]"}`}>
         <span className="absolute left-3 top-2.5 z-10 block max-w-[58%] truncate text-base font-extrabold leading-tight text-slate-950 dark:text-white sm:left-4 sm:top-3 sm:text-xl">{displayName}</span>
         <span className="absolute left-3 top-8 z-10 block text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:left-4 sm:top-10 sm:text-xs">
           {showStudents ? `${schoolClass.students} Students` : "Students unavailable"}
         </span>
 
-        <span className="absolute right-1.5 top-1.5 h-[66px] w-[50%] overflow-hidden sm:right-2 sm:top-2 sm:h-[78px]">
+        <span className="absolute right-1.5 top-1 h-[58px] w-[48%] overflow-hidden sm:right-2 sm:top-1.5 sm:h-[68px]">
           {classImage ? (
             <Image
               src={classImage}
@@ -731,13 +731,13 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, o
                 </span>
               ))}
               {schoolClass.sections.length > 4 && <span className="text-xs font-bold text-slate-500">+{schoolClass.sections.length - 4}</span>}
-              <span className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span className="ml-auto flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                 <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : "-rotate-90"}`} />
               </span>
             </span>
           </span>
         ) : (
-          <span className="absolute bottom-2.5 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 sm:bottom-3 sm:right-4">
+          <span className="absolute bottom-2 right-3 flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 sm:bottom-3 sm:right-4">
             <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : "-rotate-90"}`} />
           </span>
         )}
