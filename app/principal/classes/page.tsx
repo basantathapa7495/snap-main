@@ -699,9 +699,9 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, o
 
   return (
     <article className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 dark:border-slate-700"}`}>
-      <button type="button" aria-expanded={expanded} onClick={onToggle} className="relative min-h-[112px] w-full p-3 text-left sm:min-h-[128px] sm:p-4">
+      <button type="button" aria-expanded={expanded} onClick={onToggle} className="relative min-h-[112px] w-full px-3 pb-3 pt-2 text-left sm:min-h-[128px] sm:px-4 sm:pb-4 sm:pt-3">
         <span className="block max-w-[60%] truncate text-sm font-extrabold text-slate-950 dark:text-white sm:text-lg">{displayName}</span>
-        <span className="mt-0.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
+        <span className="mt-0.5 block text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:text-xs">
           {showStudents ? `${schoolClass.students} Students` : "Students unavailable"}
         </span>
 
@@ -721,22 +721,26 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, o
           )}
         </span>
 
-        <span className="absolute inset-x-3 bottom-2.5 sm:inset-x-4 sm:bottom-3">
-          <span className="block text-[10px] font-medium leading-none text-slate-500 dark:text-slate-400">Sections</span>
-          <span className="mt-1 flex items-center gap-1">
-            {hasSections ? schoolClass.sections.slice(0, 4).map((section) => (
-              <span key={section.id} className="flex h-6 min-w-7 items-center justify-center rounded-full bg-blue-50 px-1.5 text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                {section.name}
+        {hasSections ? (
+          <span className="absolute inset-x-3 bottom-2.5 sm:inset-x-4 sm:bottom-3">
+            <span className="block text-[10px] font-medium leading-none text-slate-500 dark:text-slate-400">Sections</span>
+            <span className="mt-1 flex items-center gap-1">
+              {schoolClass.sections.slice(0, 4).map((section) => (
+                <span key={section.id} className="flex h-6 min-w-7 items-center justify-center rounded-full bg-blue-50 px-1.5 text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                  {section.name}
+                </span>
+              ))}
+              {schoolClass.sections.length > 4 && <span className="text-xs font-bold text-slate-500">+{schoolClass.sections.length - 4}</span>}
+              <span className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : "-rotate-90"}`} />
               </span>
-            )) : (
-              <span className="text-xs font-medium text-slate-400">Not added</span>
-            )}
-            {schoolClass.sections.length > 4 && <span className="text-xs font-bold text-slate-500">+{schoolClass.sections.length - 4}</span>}
-            <span className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-              <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : "-rotate-90"}`} />
             </span>
           </span>
-        </span>
+        ) : (
+          <span className="absolute bottom-2.5 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300 sm:bottom-3 sm:right-4">
+            <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : "-rotate-90"}`} />
+          </span>
+        )}
       </button>
 
       {expanded && (
