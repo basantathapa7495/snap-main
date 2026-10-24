@@ -26,6 +26,7 @@ export type TeacherOperationsTeacher = {
   employment_status?: string | null;
   salary: number | string | null;
   user_id: string | null;
+  avatar_path?: string | null;
 };
 
 type Row = Record<string, any>;
@@ -47,7 +48,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const monthStart = () => `${today().slice(0, 7)}-01`;
 const teacherName = (teachers: TeacherOperationsTeacher[], id: string) => teachers.find((teacher) => teacher.id === id)?.name || "Unknown teacher";
 
-export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherChanged, initialTab = "overview", showTabs = true }: { schoolId: string; teachers: TeacherOperationsTeacher[]; onTeacherChanged: () => void; initialTab?: Tab; showTabs?: boolean }) {
+export default function TeacherOperationsPanel({ schoolId, teachers, avatarScope, onTeacherChanged, initialTab = "overview", showTabs = true }: { schoolId: string; teachers: TeacherOperationsTeacher[]; avatarScope: string; onTeacherChanged: () => void; initialTab?: Tab; showTabs?: boolean }) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [rows, setRows] = useState<Record<string, Row[]>>({});
   const [loading, setLoading] = useState(initialTab !== "attendance");
@@ -153,7 +154,7 @@ export default function TeacherOperationsPanel({ schoolId, teachers, onTeacherCh
           </div>
           <AccountRequestsPanel role="teacher" onApproved={() => { onTeacherChanged(); setRefresh((value) => value + 1); }} />
         </div>}
-        {tab === "attendance" && <TeacherAttendancePanel schoolId={schoolId} teachers={teachers} onSaved={() => setRefresh((value) => value + 1)} />}
+        {tab === "attendance" && <TeacherAttendancePanel schoolId={schoolId} teachers={teachers} avatarScope={avatarScope} onSaved={() => setRefresh((value) => value + 1)} />}
         {tab === "leave" && <LeavePanel teachers={teachers} rows={leaves} working={working} run={run} />}
         {tab === "assignments" && <TeacherAssignmentsPanel schoolId={schoolId} teachers={teachers} onTeacherChanged={onTeacherChanged} />}
         {tab === "timetable" && <TimetablePanel schoolId={schoolId} teachers={teachers} rows={timetable} working={working} run={run} />}
