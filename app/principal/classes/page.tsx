@@ -554,7 +554,7 @@ export default function ClassesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredClasses.map((schoolClass) => {
                   const expanded = expandedClass === schoolClass.id;
                   return (
@@ -589,12 +589,12 @@ export default function ClassesPage() {
                     setClassTeacherId("");
                     setClassModalOpen(true);
                   }}
-                  className="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white p-4 text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                  className="flex min-h-[112px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white p-4 text-slate-500 transition hover:border-blue-400 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-current">
-                    <Plus className="h-6 w-6" />
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-current">
+                    <Plus className="h-5 w-5" />
                   </span>
-                  <span className="mt-3 text-sm font-bold">Add Class</span>
+                  <span className="mt-2 text-xs font-bold sm:text-sm">Add Class</span>
                 </button>
               </div>
             </section>
@@ -699,13 +699,13 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, o
 
   return (
     <article className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 dark:border-slate-700"}`}>
-      <button type="button" aria-expanded={expanded} onClick={onToggle} className="relative min-h-[180px] w-full p-4 text-left">
-        <span className="block max-w-[72%] truncate text-base font-extrabold text-slate-950 dark:text-white sm:text-lg">{displayName}</span>
-        <span className="mt-1 block text-sm font-medium text-slate-500 dark:text-slate-400">
+      <button type="button" aria-expanded={expanded} onClick={onToggle} className="relative min-h-[112px] w-full p-3 text-left sm:min-h-[128px] sm:p-4">
+        <span className="block max-w-[60%] truncate text-sm font-extrabold text-slate-950 dark:text-white sm:text-lg">{displayName}</span>
+        <span className="mt-0.5 block text-xs font-medium text-slate-500 dark:text-slate-400">
           {showStudents ? `${schoolClass.students} Students` : "Students unavailable"}
         </span>
 
-        <span className="absolute right-2 top-3 h-[96px] w-[54%] overflow-hidden">
+        <span className="absolute right-1.5 top-1.5 h-[66px] w-[50%] overflow-hidden sm:right-2 sm:top-2 sm:h-[78px]">
           {classImage ? (
             <Image
               src={classImage}
@@ -721,19 +721,19 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, o
           )}
         </span>
 
-        <span className="absolute inset-x-4 bottom-4">
-          <span className="block text-xs font-medium text-slate-500 dark:text-slate-400">Sections</span>
-          <span className="mt-1.5 flex items-center gap-1.5">
+        <span className="absolute inset-x-3 bottom-2.5 sm:inset-x-4 sm:bottom-3">
+          <span className="block text-[10px] font-medium leading-none text-slate-500 dark:text-slate-400">Sections</span>
+          <span className="mt-1 flex items-center gap-1">
             {hasSections ? schoolClass.sections.slice(0, 4).map((section) => (
-              <span key={section.id} className="flex h-7 min-w-8 items-center justify-center rounded-full bg-blue-50 px-2 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+              <span key={section.id} className="flex h-6 min-w-7 items-center justify-center rounded-full bg-blue-50 px-1.5 text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                 {section.name}
               </span>
             )) : (
               <span className="text-xs font-medium text-slate-400">Not added</span>
             )}
             {schoolClass.sections.length > 4 && <span className="text-xs font-bold text-slate-500">+{schoolClass.sections.length - 4}</span>}
-            <span className="ml-auto flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-              <ChevronDown className={`h-5 w-5 transition-transform ${expanded ? "rotate-180" : "-rotate-90"}`} />
+            <span className="ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : "-rotate-90"}`} />
             </span>
           </span>
         </span>
