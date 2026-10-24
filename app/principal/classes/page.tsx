@@ -691,6 +691,11 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, o
 }) {
   const displayName = schoolClass.name.replace(/^Class\s+(\d+)$/i, "Grade $1");
   const hasSections = schoolClass.sections.length > 0;
+  const gradeMatch = /^(?:Class|Grade)\s+(\d+)$/i.exec(schoolClass.name.trim());
+  const gradeNumber = gradeMatch ? Number(gradeMatch[1]) : null;
+  const classImage = gradeNumber && gradeNumber >= 1 && gradeNumber <= 10
+    ? `/class${gradeNumber}.png`
+    : null;
 
   return (
     <article className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition dark:bg-slate-900 ${expanded ? "border-blue-200 dark:border-blue-800" : "border-slate-200 dark:border-slate-700"}`}>
@@ -700,8 +705,20 @@ function ClassCard({ schoolClass, expanded, onToggle, showStudents, canDelete, o
           {showStudents ? `${schoolClass.students} Students` : "Students unavailable"}
         </span>
 
-        <span className="absolute right-3 top-4 flex h-16 w-16 items-center justify-center rounded-[45%] bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
-          <BookOpen className="h-8 w-8" aria-hidden="true" />
+        <span className="absolute right-2 top-3 h-[96px] w-[54%] overflow-hidden">
+          {classImage ? (
+            <Image
+              src={classImage}
+              alt=""
+              fill
+              sizes="(max-width: 767px) 45vw, 260px"
+              className="object-contain object-center"
+            />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center rounded-[45%] bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300">
+              <BookOpen className="h-9 w-9" aria-hidden="true" />
+            </span>
+          )}
         </span>
 
         <span className="absolute inset-x-4 bottom-4">
