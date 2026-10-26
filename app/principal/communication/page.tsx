@@ -119,7 +119,7 @@ export default function CommunicationPage() {
   if (!authenticated) return <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6"><div className="rounded-xl bg-white p-6 text-center"><h1 className="text-lg font-bold">Please sign in</h1><Link href="/auth/login?role=principal" className="mt-3 inline-block text-sm text-blue-600">Go to login</Link></div></main>;
 
   return <div className="min-h-screen bg-white dark:bg-slate-950"><Sidebar /><div className="flex min-h-screen flex-col pt-[55px] lg:ml-64 lg:pt-10"><div className="hidden lg:block"><TopBar /></div><main className="flex-1 px-3 pb-28 pt-0 sm:px-6 lg:px-8 lg:pt-24"><div className="mx-auto max-w-[1500px]">
-    <section className="relative -mx-3 aspect-[1672/650] w-[calc(100%+1.5rem)] overflow-hidden bg-[#edf7ff] sm:mx-0 sm:w-full sm:rounded-2xl sm:border sm:border-blue-100 sm:shadow-sm">
+    <section className="relative -mx-3 aspect-[3/1] w-[calc(100%+1.5rem)] overflow-hidden bg-[#edf7ff] sm:mx-0 sm:w-full sm:rounded-2xl sm:border sm:border-blue-100 sm:shadow-sm">
       <Image
         src="/communication.png"
         alt="Communication — manage notices, messages, announcements and conversations"
@@ -188,5 +188,5 @@ function CommunicationOverview({ notices, unreadMessages, error, teacherCount, s
 }
 
 function PageSkeleton() {
-  return <div className="min-h-screen bg-white dark:bg-slate-950"><Sidebar /><div className="pt-[55px] lg:ml-64 lg:pt-10"><div className="hidden lg:block"><TopBar /></div><main className="px-3 pb-28 pt-0 sm:px-6 lg:px-8 lg:pt-24"><div className="mx-auto max-w-[1500px] animate-pulse"><div className="-mx-3 aspect-[1672/650] w-[calc(100%+1.5rem)] bg-blue-50 dark:bg-slate-900 sm:mx-0 sm:w-full sm:rounded-2xl" /><div className="mt-2 h-8 border-b border-slate-200 dark:border-slate-700" /><div className="mt-3 grid grid-cols-4 gap-1.5">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-14 rounded-xl bg-slate-100 dark:bg-slate-900" />)}</div><div className="mt-4 grid grid-cols-2 gap-2">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-12 rounded-xl bg-slate-100 dark:bg-slate-900" />)}</div></div></main></div></div>;
+  return <div className="min-h-screen bg-white dark:bg-slate-950"><Sidebar /><div className="pt-[55px] lg:ml-64 lg:pt-10"><div className="hidden lg:block"><TopBar /></div><main className="px-3 pb-28 pt-0 sm:px-6 lg:px-8 lg:pt-24"><div className="mx-auto max-w-[1500px] animate-pulse"><div className="-mx-3 aspect-[3/1] w-[calc(100%+1.5rem)] bg-blue-50 dark:bg-slate-900 sm:mx-0 sm:w-full sm:rounded-2xl" /><div className="mt-2 h-8 border-b border-slate-200 dark:border-slate-700" /><div className="mt-3 grid grid-cols-4 gap-1.5">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-14 rounded-xl bg-slate-100 dark:bg-slate-900" />)}</div><div className="mt-4 grid grid-cols-2 gap-2">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-12 rounded-xl bg-slate-100 dark:bg-slate-900" />)}</div></div></main></div></div>;
 }
