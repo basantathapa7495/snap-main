@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Bell, CalendarDays, ChevronRight, Clock3, Edit3, FileText, GraduationCap, Mail, Send, UsersRound } from "lucide-react";
+import { Bell, CalendarDays, ChevronRight, FileText, GraduationCap, Mail, Send, UsersRound } from "lucide-react";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
 import PrincipalNoticesPanel, { type SchoolNotice } from "@/components/PrincipalNoticesPanel";
@@ -30,7 +30,7 @@ function relativeTime(value: string | null) {
 export default function CommunicationPage() {
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [principalId, setPrincipalId] = useState<string | null>(null);
-  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [, setUnreadMessages] = useState(0);
   const [messageKey, setMessageKey] = useState(0);
   const [notices, setNotices] = useState<SchoolNotice[]>([]);
   const [tab, setTab] = useState<Tab>("overview");
@@ -130,7 +130,7 @@ export default function CommunicationPage() {
       />
     </section>
     <nav aria-label="Communication sections" className="-mx-3 mb-3 mt-2 grid w-[calc(100%+1.5rem)] grid-cols-4 gap-[2px] sm:mx-0 sm:w-full">{(["overview","notices","messages","scheduled"] as const).map((item) => <button key={item} type="button" onClick={() => chooseTab(item)} aria-current={tab === item ? "page" : undefined} className={`min-w-0 rounded-[3px] border-2 px-0.5 py-2 text-[11px] font-bold capitalize leading-none transition min-[380px]:text-xs sm:px-3 sm:py-2.5 sm:text-sm ${tab === item ? "border-blue-600 bg-blue-50 text-blue-800 dark:border-blue-400 dark:bg-blue-950/60 dark:text-blue-200" : "border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400 hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-900"}`}>{item}</button>)}</nav>
-    {tab === "overview" && <CommunicationOverview notices={notices} unreadMessages={unreadMessages} error={error} teacherCount={teacherCount} studentCount={studentCount} countsError={countsError} audienceInfo="" onAudience={(audience) => openComposer(audience === "Everyone" ? "all" : audience.toLowerCase() as Audience)} onNotice={(item) => { setComposerAudience(null); setInitialNoticeId(item.id); setTab("notices"); }} onTab={chooseTab} onCreate={() => openComposer()} onNewMessage={openNewMessage} onDrafts={() => { setComposerAudience(null); setInitialFilter("Drafts"); setTab("notices"); }} />}
+    {tab === "overview" && <CommunicationOverview notices={notices} error={error} teacherCount={teacherCount} studentCount={studentCount} countsError={countsError} audienceInfo="" onAudience={(audience) => openComposer(audience === "Everyone" ? "all" : audience.toLowerCase() as Audience)} onNotice={(item) => { setComposerAudience(null); setInitialNoticeId(item.id); setTab("notices"); }} onTab={chooseTab} onCreate={() => openComposer()} onNewMessage={openNewMessage} onDrafts={() => { setComposerAudience(null); setInitialFilter("Drafts"); setTab("notices"); }} />}
     {tab === "notices" && schoolId && <PrincipalNoticesPanel key={`${initialNoticeId || ""}-${composerKey}-${initialFilter}`} schoolId={schoolId} notices={notices} onChanged={() => setRefreshKey((value) => value + 1)} initialNoticeId={initialNoticeId} composerAudience={composerAudience} composerKey={composerKey} initialFilter={initialFilter} />}
     {tab === "notices" && !schoolId && error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300">{error}</p>}
     {tab === "messages" && schoolId && principalId && <PrincipalMessagesPanel schoolId={schoolId} principalId={principalId} newMessageKey={messageKey} initialRecipientId={initialRecipientId} onUnread={handleUnread} />}
@@ -139,9 +139,8 @@ export default function CommunicationPage() {
   </div></main></div></div>;
 }
 
-function CommunicationOverview({ notices, unreadMessages, error, teacherCount, studentCount, countsError, audienceInfo, onAudience, onNotice, onTab, onCreate, onNewMessage, onDrafts }: {
+function CommunicationOverview({ notices, error, teacherCount, studentCount, countsError, audienceInfo, onAudience, onNotice, onTab, onCreate, onNewMessage, onDrafts }: {
   notices: SchoolNotice[];
-  unreadMessages: number;
   error: string;
   teacherCount: number | null;
   studentCount: number | null;
@@ -156,12 +155,6 @@ function CommunicationOverview({ notices, unreadMessages, error, teacherCount, s
 }) {
   const published = notices.filter((item) => item.status === 'published');
   const scheduled = notices.filter((item) => item.status === 'scheduled').sort((a, b) => new Date(a.scheduled_at || 0).getTime() - new Date(b.scheduled_at || 0).getTime());
-  const summary = [
-    { label: 'Published', count: String(published.length), icon: Bell, tone: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300' },
-    { label: 'Scheduled', count: String(scheduled.length), icon: Clock3, tone: 'bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300' },
-    { label: 'Drafts', count: String(notices.filter((item) => item.status === 'draft').length), icon: Edit3, tone: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300' },
-    { label: 'Unread', count: String(unreadMessages), icon: Mail, tone: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300' },
-  ];
   const actions = [
     { title: 'Send Notice', detail: 'School announcement', icon: Bell, action: onCreate, tone: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30' },
     { title: 'New Message', detail: 'Message someone', icon: Mail, action: onNewMessage, tone: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30' },
@@ -175,8 +168,6 @@ function CommunicationOverview({ notices, unreadMessages, error, teacherCount, s
   ];
   return <div className="space-y-4 pb-6 text-slate-950 dark:text-white">
     {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">{error}</p>}
-    <section aria-label="Communication summary" className="grid grid-cols-4 gap-1.5 sm:gap-3">{summary.map(({ label, count, icon: Icon, tone }) => <div key={label} title={count === '—' ? `${label} data is not available in the current communication system` : undefined} className="min-w-0 rounded-xl border border-slate-200 bg-white px-2 py-1.5 dark:border-slate-700 dark:bg-slate-900 sm:px-3 sm:py-2"><span className={`flex h-5 w-5 items-center justify-center rounded-md ${tone}`}><Icon className="h-3 w-3" /></span><strong className="mt-1 block text-base leading-none sm:text-xl">{count}</strong><span className="mt-1 block truncate text-[9px] leading-none text-slate-500 dark:text-slate-400 sm:text-xs">{label}</span></div>)}</section>
-
     <section><div className="mb-2"><h2 className="text-base font-bold">Quick Actions</h2><p className="text-[11px] text-slate-500 dark:text-slate-400">Reach the right people quickly.</p></div><div className="grid grid-cols-2 gap-2">{actions.map(({ title, detail, icon: Icon, action, tone }) => <button key={title} type="button" onClick={action} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2 text-left dark:border-slate-700 dark:bg-slate-900"><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tone}`}><Icon className="h-4 w-4" /></span><span className="min-w-0"><strong className="block truncate text-xs">{title}</strong><span className="block truncate text-[10px] text-slate-500 dark:text-slate-400">{detail}</span></span></button>)}</div></section>
 
     <section><div className="mb-2"><h2 className="text-base font-bold">Send To</h2><p className="text-[11px] text-slate-500 dark:text-slate-400">Start communication by audience.</p></div>{countsError && <p role="alert" className="mb-2 text-xs text-rose-600">{countsError}</p>}{audienceInfo && <p role="status" className="mb-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">{audienceInfo}</p>}<div className="grid grid-cols-3 gap-1.5">{audiences.map(({ title, members, icon: Icon }) => <button key={title} type="button" onClick={() => onAudience(title)} className="min-w-0 rounded-xl border border-slate-200 bg-white p-2 text-left dark:border-slate-700 dark:bg-slate-900"><Icon className="mb-1 h-4 w-4 text-blue-600 dark:text-blue-300" /><strong className="block truncate text-[11px]">{title}</strong><span className="block truncate text-[9px] text-slate-500 dark:text-slate-400">{members}</span></button>)}</div></section>
