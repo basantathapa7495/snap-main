@@ -56,7 +56,11 @@ export default function CommunicationPage() {
         if (authError) throw authError;
         if (!user) { if (!cancelled) setAuthenticated(false); return; }
         const { data: profile, error: profileError } = await supabase.from("profiles").select("school_id,role").eq("user_id", user.id).single();
-        if (profileError || !profile?.school_id || profile.role !== "admin") throw new Error("School access unavailable.");
+        if (profileError || !profile?.school_id) throw new Error("School access unavailable.");
+        if (profile.role !== "admin") {
+          window.location.replace(profile.role === "teacher" ? "/teacher/communication" : "/student");
+          return;
+        }
         const [noticeResult, teacherResult, studentResult, unreadResult] = await Promise.all([
           supabase.from("notices").select("id,school_id,title,content,target_audience,target_class,target_section,status,scheduled_at,published_at,created_at,updated_at,created_by").eq("school_id", profile.school_id).order("created_at", { ascending: false }),
           supabase.from("teachers").select("id", { count: "exact", head: true }).eq("school_id", profile.school_id),
