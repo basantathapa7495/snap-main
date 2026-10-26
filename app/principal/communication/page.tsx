@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Bell, CalendarDays, ChevronRight, Clock3, Edit3, FileText, GraduationCap, Mail, Send, UsersRound } from "lucide-react";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
@@ -117,8 +118,17 @@ export default function CommunicationPage() {
   if (loading) return <PageSkeleton />;
   if (!authenticated) return <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6"><div className="rounded-xl bg-white p-6 text-center"><h1 className="text-lg font-bold">Please sign in</h1><Link href="/auth/login?role=principal" className="mt-3 inline-block text-sm text-blue-600">Go to login</Link></div></main>;
 
-  return <div className="min-h-screen bg-white dark:bg-slate-950"><Sidebar /><div className="flex min-h-screen flex-col pt-10 lg:ml-64"><TopBar /><main className="flex-1 px-3.5 pb-28 pt-7 sm:px-6 lg:px-8 lg:pt-24"><div className="mx-auto max-w-[1500px]">
-    <header className="-mx-3.5 bg-gradient-to-br from-[#e7f2ff] via-[#f5faff] to-[#9dbcf4] px-4 py-5 dark:from-[#132a49] dark:via-[#182d49] dark:to-[#1b365b] sm:mx-0 sm:rounded-2xl sm:border sm:border-blue-100 sm:px-8 sm:py-7 sm:dark:border-blue-900/60"><h1 className="text-[1.7rem] font-extrabold leading-tight tracking-tight text-slate-950 dark:text-white sm:text-4xl">Communication</h1><p className="mt-1 text-xs text-slate-700 dark:text-blue-100 sm:text-base">Notices, messages and school announcements in one place.</p></header>
+  return <div className="min-h-screen bg-white dark:bg-slate-950"><Sidebar /><div className="flex min-h-screen flex-col pt-[55px] lg:ml-64 lg:pt-10"><div className="hidden lg:block"><TopBar /></div><main className="flex-1 px-3 pb-28 pt-0 sm:px-6 lg:px-8 lg:pt-24"><div className="mx-auto max-w-[1500px]">
+    <section className="relative -mx-3 aspect-[1672/650] w-[calc(100%+1.5rem)] overflow-hidden bg-[#edf7ff] sm:mx-0 sm:w-full sm:rounded-2xl sm:border sm:border-blue-100 sm:shadow-sm">
+      <Image
+        src="/communication.png"
+        alt="Communication — manage notices, messages, announcements and conversations"
+        fill
+        priority
+        sizes="(max-width: 768px) 100vw, 1500px"
+        className="object-cover object-center"
+      />
+    </section>
     <nav aria-label="Communication sections" className="mb-3 mt-2 flex gap-5 overflow-x-auto border-b border-slate-200 dark:border-slate-700 [scrollbar-width:none]">{(["overview","notices","messages","scheduled"] as const).map((item) => <button key={item} type="button" onClick={() => chooseTab(item)} className={`shrink-0 border-b-2 px-0.5 py-2 text-xs font-semibold capitalize sm:text-sm ${tab === item ? "border-blue-600 text-blue-700 dark:text-blue-300" : "border-transparent text-slate-500 dark:text-slate-400"}`}>{item}</button>)}</nav>
     {tab === "overview" && <CommunicationOverview notices={notices} unreadMessages={unreadMessages} error={error} teacherCount={teacherCount} studentCount={studentCount} countsError={countsError} audienceInfo="" onAudience={(audience) => openComposer(audience === "Everyone" ? "all" : audience.toLowerCase() as Audience)} onNotice={(item) => { setComposerAudience(null); setInitialNoticeId(item.id); setTab("notices"); }} onTab={chooseTab} onCreate={() => openComposer()} onNewMessage={openNewMessage} onDrafts={() => { setComposerAudience(null); setInitialFilter("Drafts"); setTab("notices"); }} />}
     {tab === "notices" && schoolId && <PrincipalNoticesPanel key={`${initialNoticeId || ""}-${composerKey}-${initialFilter}`} schoolId={schoolId} notices={notices} onChanged={() => setRefreshKey((value) => value + 1)} initialNoticeId={initialNoticeId} composerAudience={composerAudience} composerKey={composerKey} initialFilter={initialFilter} />}
@@ -178,5 +188,5 @@ function CommunicationOverview({ notices, unreadMessages, error, teacherCount, s
 }
 
 function PageSkeleton() {
-  return <div className="min-h-screen bg-white dark:bg-slate-950"><Sidebar /><div className="pt-10 lg:ml-64"><TopBar /><main className="px-3.5 pb-28 pt-7 sm:px-6 lg:pt-24"><div className="mx-auto max-w-[1500px] animate-pulse"><div className="h-24 rounded-xl bg-blue-50 dark:bg-slate-900" /><div className="mt-2 h-8 border-b border-slate-200 dark:border-slate-700" /><div className="mt-3 grid grid-cols-4 gap-1.5">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-14 rounded-xl bg-slate-100 dark:bg-slate-900" />)}</div><div className="mt-4 grid grid-cols-2 gap-2">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-12 rounded-xl bg-slate-100 dark:bg-slate-900" />)}</div></div></main></div></div>;
+  return <div className="min-h-screen bg-white dark:bg-slate-950"><Sidebar /><div className="pt-[55px] lg:ml-64 lg:pt-10"><div className="hidden lg:block"><TopBar /></div><main className="px-3 pb-28 pt-0 sm:px-6 lg:px-8 lg:pt-24"><div className="mx-auto max-w-[1500px] animate-pulse"><div className="-mx-3 aspect-[1672/650] w-[calc(100%+1.5rem)] bg-blue-50 dark:bg-slate-900 sm:mx-0 sm:w-full sm:rounded-2xl" /><div className="mt-2 h-8 border-b border-slate-200 dark:border-slate-700" /><div className="mt-3 grid grid-cols-4 gap-1.5">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-14 rounded-xl bg-slate-100 dark:bg-slate-900" />)}</div><div className="mt-4 grid grid-cols-2 gap-2">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-12 rounded-xl bg-slate-100 dark:bg-slate-900" />)}</div></div></main></div></div>;
 }
