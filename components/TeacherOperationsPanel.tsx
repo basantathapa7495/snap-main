@@ -186,10 +186,11 @@ function LeavePanel({ teachers, rows, working, run, avatarScope }: any) {
   const [filter, setFilter] = useState("pending");
   const [query, setQuery] = useState("");
   const states = ["pending", "approved", "clarification", "rejected"] as const;
+  const normalizedQuery = query.trim().toLowerCase();
   const shown = rows.filter((r: Row) => {
-    if (r.status !== filter) return false;
+    if (!normalizedQuery && r.status !== filter) return false;
     const teacher = teachers.find((item: TeacherOperationsTeacher) => item.id === r.teacher_id);
-    return `${teacher?.name || ""} ${r.leave_type || ""} ${r.reason || ""}`.toLowerCase().includes(query.trim().toLowerCase());
+    return !normalizedQuery || `${teacher?.name || ""} ${r.leave_type || ""} ${r.reason || ""} ${r.status || ""}`.toLowerCase().includes(normalizedQuery);
   });
   const counts = Object.fromEntries(states.map((state) => [state, rows.filter((row: Row) => row.status === state).length]));
   async function review(id: string, status: string) { const note = status === "approved" ? "Approved by principal" : window.prompt(status === "clarification" ? "What clarification is required?" : "Reason for rejection?") || ""; if (status !== "approved" && !note) return; await run(() => supabase.from("teacher_leave_requests").update({ status, principal_note: note, reviewed_at: new Date().toISOString() }).eq("id", id), status === "approved" ? "Leave approved and attendance updated." : "Leave request updated."); }
@@ -207,7 +208,7 @@ function LeavePanel({ teachers, rows, working, run, avatarScope }: any) {
       <div className="absolute right-2 top-2 text-right"><Status value={row.status} /><p className="mt-0.5 text-[8px] leading-3 text-slate-400">Submitted<br />{submitted(row.created_at)}</p></div>
       <div className="flex gap-2"><TeacherAvatar name={name} path={teacher?.avatar_path} scope={avatarScope} className="h-10 w-10 rounded-full bg-blue-100 text-[10px] font-extrabold text-blue-700" /><div className="min-w-0 flex-1 pr-[92px]"><p className="truncate text-sm font-extrabold leading-4 text-slate-950">{name}</p><p className="truncate text-[11px] font-semibold capitalize leading-4 text-slate-700">{String(row.leave_type || "Leave").replaceAll("_", " ")} Leave</p><p className="flex items-center gap-1 text-[10px] leading-4 text-slate-600 sm:text-[11px]"><CalendarDays className="h-3 w-3 shrink-0" />{date(row.start_date)}{row.start_date !== row.end_date && ` to ${date(row.end_date)}`} · {row.total_days} day{row.total_days === 1 ? "" : "s"}</p><p className="flex items-start gap-1 text-[10px] leading-4 text-slate-600 sm:text-[11px]"><FileText className="mt-0.5 h-3 w-3 shrink-0" /><span className="line-clamp-1">{row.reason}</span></p>{row.attachment_path && <button type="button" onClick={() => void openAttachment(row)} className="inline-flex max-w-full items-center gap-1 text-[9px] font-bold text-blue-700"><FileText className="h-3 w-3 shrink-0"/><span className="truncate">{row.attachment_name || "View attachment"}</span></button>}{row.principal_note && <p className="mt-0.5 rounded bg-slate-50 px-1.5 py-1 text-[9px] text-slate-600">Principal note: {row.principal_note}</p>}</div></div>
       {row.status === "pending" && <div className="mt-1.5 grid grid-cols-3 gap-1"><button disabled={working} onClick={() => review(row.id,"approved")} className="inline-flex h-7 items-center justify-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-1 text-[10px] font-bold text-emerald-700 disabled:opacity-50"><Check className="h-3 w-3" />Approve</button><button disabled={working} onClick={() => review(row.id,"clarification")} className="inline-flex h-7 items-center justify-center gap-1 rounded-md border border-blue-200 bg-white px-1 text-[9px] font-bold text-blue-800 disabled:opacity-50 sm:text-[10px]"><span className="flex h-3 w-3 items-center justify-center rounded-full border border-current text-[8px]">?</span><span className="truncate">Clarification</span></button><button disabled={working} onClick={() => review(row.id,"rejected")} className="inline-flex h-7 items-center justify-center gap-1 rounded-md border border-rose-300 bg-rose-50 px-1 text-[10px] font-bold text-rose-700 disabled:opacity-50"><X className="h-3 w-3" />Reject</button></div>}
-    </article>; })}</div> : <Empty text={`No ${filter} leave requests.`} />}
+    </article>; })}</div> : <Empty text={normalizedQuery ? "No matching leave requests." : `No ${filter} leave requests.`} />}
   </div>;
 }
 
