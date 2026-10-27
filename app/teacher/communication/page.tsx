@@ -182,6 +182,7 @@ export default function TeacherCommunicationPage() {
   const [messageFile, setMessageFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
   const [deliveredIds, setDeliveredIds] = useState<Set<string>>(() => new Set());
+  const [timestampMessageId, setTimestampMessageId] = useState<string | null>(null);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
   const [editingNotice, setEditingNotice] = useState<NoticeRow | null>(null);
@@ -487,6 +488,7 @@ export default function TeacherCommunicationPage() {
   function openConversation(item: Conversation) {
     setMessages([]);
     setDeliveredIds(new Set());
+    setTimestampMessageId(null);
     setMessageError('');
     setSelectedConversation(item);
   }
@@ -865,12 +867,14 @@ export default function TeacherCommunicationPage() {
                 const showMeta = index === messages.length - 1 || messages[index + 1].sender_id !== item.sender_id;
                 const saved = !item.id.startsWith('sending-');
                 const received = Boolean(item.read_at) || deliveredIds.has(item.id);
-                return <div key={item.id} className={'flex ' + (mine ? 'justify-end' : 'justify-start')}>
-                  <div className={'max-w-[82%] rounded-2xl px-2.5 py-1.5 text-xs ' + (mine ? 'rounded-br-md bg-blue-600 text-white' : 'rounded-bl-md bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white')}>
-                    <p className="whitespace-pre-wrap break-words leading-4">{item.content}</p>
+                const showTime = timestampMessageId === item.id;
+                return <div key={item.id} className={'flex flex-col ' + (mine ? 'items-end' : 'items-start')}>
+                  <div role="button" tabIndex={0} onClick={() => setTimestampMessageId((current) => current === item.id ? null : item.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setTimestampMessageId((current) => current === item.id ? null : item.id); }} aria-label={(showTime ? 'Hide' : 'Show') + ' message time'} className={'max-w-[82%] rounded-2xl px-2.5 py-1.5 text-left text-xs ' + (mine ? 'rounded-br-md bg-blue-600 text-white' : 'rounded-bl-md bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white')}>
+                    <span className="whitespace-pre-wrap break-words leading-4">{item.content}</span>
                     {item.attachment_path && <button type="button" onClick={() => void openAttachment(item.attachment_path || null)} className={'mt-1.5 flex max-w-full items-center gap-1.5 rounded-lg px-2 py-1 text-left text-[10px] ' + (mine ? 'bg-white/15' : 'bg-white dark:bg-slate-700')}><Paperclip className="h-3 w-3 shrink-0" /><span className="truncate">{item.attachment_name || 'Attachment'}</span></button>}
-                    {showMeta && <span className={'mt-0.5 flex items-center justify-end gap-1 text-[9px] ' + (mine ? 'text-blue-100' : 'text-slate-400')}>{new Date(item.created_at).toLocaleTimeString('en-NP', { hour: 'numeric', minute: '2-digit' })}{mine && saved && (received ? <CheckCheck className="h-3 w-3" aria-label="Received" /> : <Check className="h-3 w-3" aria-label="Sent" />)}</span>}
+                    {showMeta && mine && saved && <span className="mt-0.5 flex justify-end text-blue-100">{received ? <CheckCheck className="h-3 w-3" aria-label="Received" /> : <Check className="h-3 w-3" aria-label="Sent" />}</span>}
                   </div>
+                  {showTime && <span className="mt-0.5 px-1 text-[9px] text-slate-400">{new Date(item.created_at).toLocaleTimeString('en-NP', { hour: 'numeric', minute: '2-digit' })}</span>}
                 </div>;
               })}
               <div ref={messageEndRef} />

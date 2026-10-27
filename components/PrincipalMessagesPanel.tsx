@@ -46,6 +46,7 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [deliveredIds, setDeliveredIds] = useState<Set<string>>(() => new Set());
+  const [timestampMessageId, setTimestampMessageId] = useState<string | null>(null);
   const sendingRef = useRef(false);
   const chatEnd = useRef<HTMLDivElement>(null);
   const directRecipientRef = useRef<string | null>(null);
@@ -118,7 +119,7 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [selected?.id, lastMessageId]);
 
   async function openConversation(row: Inbox) {
-    setSearchFocused(false); setSelected(row); setHistory([]); setDeliveredIds(new Set()); setHistoryError(""); setHasOlder(false); setDraft("");
+    setSearchFocused(false); setSelected(row); setHistory([]); setDeliveredIds(new Set()); setTimestampMessageId(null); setHistoryError(""); setHasOlder(false); setDraft("");
     await loadHistory(row.id);
     if (row.unread_count) await markRead(row.id);
   }
@@ -229,7 +230,8 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
               const showMeta = index === history.length - 1 || history[index + 1].sender_id !== item.sender_id;
               const saved = !item.id.startsWith("sending-");
               const received = Boolean(item.read_at) || deliveredIds.has(item.id);
-              return <div key={item.id}>{(index === 0 || dateGroup(item.created_at) !== dateGroup(history[index - 1].created_at)) && <p className="my-2 text-center text-[10px] text-slate-500">{dateGroup(item.created_at)}</p>}<div className={`mb-1 flex ${own ? "justify-end" : "justify-start"}`}><div className={`max-w-[82%] rounded-2xl px-2.5 py-1.5 text-xs leading-4 shadow-sm ${own ? "rounded-br-sm bg-blue-600 text-white" : "rounded-bl-sm border border-slate-200 bg-white text-slate-900"}`}><p className="whitespace-pre-wrap break-words">{item.content}</p>{showMeta && <span className={`mt-0.5 flex items-center justify-end gap-1 text-[9px] ${own ? "text-blue-100" : "text-slate-400"}`}><span>{time(item.created_at)}</span>{own && saved && (received ? <CheckCheck className="h-3 w-3" aria-label="Received" /> : <Check className="h-3 w-3" aria-label="Sent" />)}</span>}</div></div></div>;
+              const showTime = timestampMessageId === item.id;
+              return <div key={item.id}>{(index === 0 || dateGroup(item.created_at) !== dateGroup(history[index - 1].created_at)) && <p className="my-2 text-center text-[10px] text-slate-500">{dateGroup(item.created_at)}</p>}<div className={`mb-1 flex flex-col ${own ? "items-end" : "items-start"}`}><button type="button" onClick={() => setTimestampMessageId((current) => current === item.id ? null : item.id)} aria-label={`${showTime ? "Hide" : "Show"} message time`} className={`max-w-[82%] rounded-2xl px-2.5 py-1.5 text-left text-xs leading-4 shadow-sm ${own ? "rounded-br-sm bg-blue-600 text-white" : "rounded-bl-sm border border-slate-200 bg-white text-slate-900"}`}><span className="whitespace-pre-wrap break-words">{item.content}</span>{showMeta && own && saved && <span className="mt-0.5 flex justify-end text-blue-100">{received ? <CheckCheck className="h-3 w-3" aria-label="Received" /> : <Check className="h-3 w-3" aria-label="Sent" />}</span>}</button>{showTime && <span className="mt-0.5 px-1 text-[9px] text-slate-400">{time(item.created_at)}</span>}</div></div>;
             })}
             <div ref={chatEnd} />
           </div>
