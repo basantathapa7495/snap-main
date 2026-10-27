@@ -5,22 +5,79 @@ import { Copy, EllipsisVertical, Info, RefreshCw, School, ShieldCheck, UsersRoun
 import { supabase } from '@/lib/supabase';
 
 type Codes = { school_code: string; teacher_join_code?: string; student_join_code?: string; teacher_join_enabled?: boolean; student_join_enabled?: boolean };
+type CachedCodes = { userId: string; savedAt: number; codes: Codes };
+
+const CACHE_VERSION = 'v1';
+const CACHE_MAX_AGE = 6 * 60 * 60 * 1000;
+
+function cacheKey(role: 'teacher' | 'student') {
+  return `nepsom:school-join-codes:${CACHE_VERSION}:${role}`;
+}
+
+function readCachedCodes(role: 'teacher' | 'student', userId: string) {
+  try {
+    const raw = window.localStorage.getItem(cacheKey(role));
+    if (!raw) return null;
+    const cached = JSON.parse(raw) as CachedCodes;
+    if (cached.userId !== userId || Date.now() - cached.savedAt > CACHE_MAX_AGE || !cached.codes?.school_code) return null;
+    return cached.codes;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedCodes(role: 'teacher' | 'student', userId: string, codes: Codes) {
+  try {
+    window.localStorage.setItem(cacheKey(role), JSON.stringify({ userId, savedAt: Date.now(), codes } satisfies CachedCodes));
+  } catch {
+    // The live API response remains the source of truth if storage is unavailable.
+  }
+}
+
 export default function SchoolJoiningControls({ role }: { role: 'teacher' | 'student' }) {
   const [codes, setCodes] = useState<Codes | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCodeInfo, setShowCodeInfo] = useState(false);
-  const call = useCallback(async (body?: object) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('Please sign in again.');
-    const response = await fetch('/api/school-join-codes', { method: body ? 'PATCH' : 'GET', headers: { Authorization: `Bearer ${session.access_token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' });
+  const call = useCallback(async (body?: object, accessToken?: string) => {
+    let token = accessToken;
+    if (!token) {
+      const { data: { session } } = await supabase.auth.getSession();
+      token = session?.access_token;
+    }
+    if (!token) throw new Error('Please sign in again.');
+    const response = await fetch('/api/school-join-codes', { method: body ? 'PATCH' : 'GET', headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Joining settings could not be updated.');
     return result;
   }, []);
-  useEffect(() => { void call().then((result) => setCodes(result.codes)).catch((cause) => setError(cause.message)); }, [call]);
+  useEffect(() => {
+    let active = true;
+    void supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!active) return;
+      if (!session) throw new Error('Please sign in again.');
+      setUserId(session.user.id);
+      const cached = readCachedCodes(role, session.user.id);
+      if (cached) {
+        setCodes(cached);
+        setLoading(false);
+      }
+      const result = await call(undefined, session.access_token);
+      if (!active) return;
+      setCodes(result.codes);
+      writeCachedCodes(role, session.user.id, result.codes);
+      setLoading(false);
+    }).catch((cause) => {
+      if (!active) return;
+      setError(cause instanceof Error ? cause.message : 'Joining settings could not be loaded.');
+      setLoading(false);
+    });
+    return () => { active = false; };
+  }, [call, role]);
   async function update(action: 'regenerate' | 'set-enabled', enabled?: boolean) {
     if (busy || !codes) return;
     if (action === 'regenerate' && !window.confirm(`Regenerate the ${role} Join Code? The old code will stop working immediately.`)) return;
@@ -28,14 +85,26 @@ export default function SchoolJoiningControls({ role }: { role: 'teacher' | 'stu
     const enabledKey = role === 'teacher' ? 'teacher_join_enabled' : 'student_join_enabled';
     const codeKey = role === 'teacher' ? 'teacher_join_code' : 'student_join_code';
     setBusy(true); setError(''); setMessage('');
-    if (action === 'set-enabled') setCodes({ ...previousCodes, [enabledKey]: enabled });
+    if (action === 'set-enabled') {
+      const optimisticCodes = { ...previousCodes, [enabledKey]: enabled };
+      setCodes(optimisticCodes);
+      if (userId) writeCachedCodes(role, userId, optimisticCodes);
+    }
     try {
       const result = await call({ role, action, enabled });
-      if (action === 'regenerate') setCodes((current) => current ? { ...current, [codeKey]: result.joinCode } : current);
+      if (action === 'regenerate') setCodes((current) => {
+        if (!current) return current;
+        const nextCodes = { ...current, [codeKey]: result.joinCode };
+        if (userId) writeCachedCodes(role, userId, nextCodes);
+        return nextCodes;
+      });
       setMessage(action === 'regenerate' ? 'New code is ready. The old code no longer works.' : `${role === 'teacher' ? 'Teacher' : 'Student'} joining setting saved.`);
     }
     catch (cause) {
-      if (action === 'set-enabled') setCodes(previousCodes);
+      if (action === 'set-enabled') {
+        setCodes(previousCodes);
+        if (userId) writeCachedCodes(role, userId, previousCodes);
+      }
       setError(cause instanceof Error ? cause.message : 'Please try again.');
     }
     finally { setBusy(false); }
@@ -53,8 +122,8 @@ export default function SchoolJoiningControls({ role }: { role: 'teacher' | 'stu
       <span className={`flex shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300 ${role === 'teacher' ? 'h-8 w-8' : 'h-9 w-9'}`}><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
       <div className="min-w-0 flex-1"><h2 className="text-sm font-bold sm:text-base">{roleLabel} joining</h2>{role !== 'teacher' && <p className="mt-0.5 text-[11px] leading-4 text-slate-600 dark:text-slate-300 sm:text-xs">Allow {person} to request access to this school.</p>}</div>
       <div className="flex shrink-0 flex-col items-center gap-1">
-        <button type="button" role="switch" aria-label={`Allow ${person} to request access`} aria-checked={Boolean(enabled)} disabled={busy || !codes} onClick={() => void update('set-enabled', !enabled)} className={`relative h-8 w-[58px] rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:opacity-50 sm:h-9 sm:w-[66px] ${enabled ? 'bg-blue-600' : 'bg-slate-400 dark:bg-slate-600'}`}><span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all sm:h-7 sm:w-7 ${enabled ? 'left-[30px] sm:left-[35px]' : 'left-1'}`} /></button>
-        <span className={`whitespace-nowrap text-[10px] font-bold sm:text-xs ${enabled ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>{enabled ? '● Joining ON' : 'Joining OFF'}</span>
+        <button type="button" role="switch" aria-label={`Allow ${person} to request access`} aria-checked={codes ? Boolean(enabled) : undefined} disabled={busy || !codes} onClick={() => void update('set-enabled', !enabled)} className={`relative h-8 w-[58px] rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:opacity-50 sm:h-9 sm:w-[66px] ${enabled ? 'bg-blue-600' : 'bg-slate-400 dark:bg-slate-600'}`}><span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all sm:h-7 sm:w-7 ${enabled ? 'left-[30px] sm:left-[35px]' : 'left-1'} ${loading && !codes ? 'animate-pulse' : ''}`} /></button>
+        <span className={`whitespace-nowrap text-[10px] font-bold sm:text-xs ${enabled ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>{loading && !codes ? 'Loading…' : enabled ? '● Joining ON' : 'Joining OFF'}</span>
       </div>
     </section>
     {codes && enabled && <div className="grid grid-cols-2 gap-2 sm:gap-3">
