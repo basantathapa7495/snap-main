@@ -49,9 +49,9 @@ export default function SchoolJoiningControls({ role }: { role: 'teacher' | 'stu
   };
 
   return <div className="mt-3 space-y-2.5 text-slate-950 dark:text-white">
-    <section className="flex items-center gap-2.5 rounded-xl border border-blue-200 bg-blue-50/30 px-3 py-2 shadow-sm dark:border-blue-900 dark:bg-blue-950/20 sm:px-4 sm:py-2.5">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
-      <div className="min-w-0 flex-1"><h2 className="text-sm font-bold sm:text-base">{roleLabel} joining</h2><p className="mt-0.5 text-[11px] leading-4 text-slate-600 dark:text-slate-300 sm:text-xs">Allow {person} to request access to this school.</p></div>
+    <section className={`flex items-center gap-2.5 rounded-xl border border-blue-200 bg-blue-50/30 px-3 shadow-sm dark:border-blue-900 dark:bg-blue-950/20 sm:px-4 ${role === 'teacher' ? 'py-1.5 sm:py-2' : 'py-2 sm:py-2.5'}`}>
+      <span className={`flex shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300 ${role === 'teacher' ? 'h-8 w-8' : 'h-9 w-9'}`}><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
+      <div className="min-w-0 flex-1"><h2 className="text-sm font-bold sm:text-base">{roleLabel} joining</h2>{role !== 'teacher' && <p className="mt-0.5 text-[11px] leading-4 text-slate-600 dark:text-slate-300 sm:text-xs">Allow {person} to request access to this school.</p>}</div>
       <div className="flex shrink-0 flex-col items-center gap-1">
         <button type="button" role="switch" aria-label={`Allow ${person} to request access`} aria-checked={Boolean(enabled)} disabled={busy || !codes} onClick={() => void update('set-enabled', !enabled)} className={`relative h-8 w-[58px] rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:opacity-50 sm:h-9 sm:w-[66px] ${enabled ? 'bg-blue-600' : 'bg-slate-400 dark:bg-slate-600'}`}><span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all sm:h-7 sm:w-7 ${enabled ? 'left-[30px] sm:left-[35px]' : 'left-1'}`} /></button>
         <span className={`whitespace-nowrap text-[10px] font-bold sm:text-xs ${enabled ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`}>{enabled ? '● Joining ON' : 'Joining OFF'}</span>
