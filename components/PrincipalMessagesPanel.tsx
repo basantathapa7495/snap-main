@@ -5,6 +5,7 @@ import { ArrowLeft, BookOpen, ChevronRight, FileText, GraduationCap, MessagesSqu
 import TeacherAvatar from "@/components/TeacherAvatar";
 import { activateTeacherAvatarCache } from "@/lib/teacher-avatars";
 import { supabase } from "@/lib/supabase";
+import { useDirectMessageRealtime, type DirectRealtimeMessage } from "@/lib/use-direct-message-realtime";
 
 type Role = "teacher" | "student";
 type Recipient = { userId: string; name: string; role: Role; context: string; canMessage: boolean; avatarPath: string | null };
@@ -94,6 +95,14 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
     if (!error) void loadInbox(true);
   }, [schoolId, principalId, loadInbox]);
 
+  const publishRealtime = useDirectMessageRealtime(selected?.id || null, useCallback((message: DirectRealtimeMessage) => {
+    setHistory((current) => current.some((item) => item.id === message.id)
+      ? current
+      : [...current, message].sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id)));
+    if (message.sender_id !== principalId) void markRead(message.conversation_id);
+    void loadInbox(true);
+  }, [principalId, markRead, loadInbox]));
+
   useEffect(() => { const initial = window.setTimeout(() => void loadInbox(), 0); const timer = window.setInterval(() => void loadInbox(true), 20000); return () => { window.clearTimeout(initial); window.clearInterval(timer); }; }, [loadInbox]);
   useEffect(() => { const initial = window.setTimeout(() => void loadRecipients(), 0); return () => window.clearTimeout(initial); }, [loadRecipients]);
   useEffect(() => { if (newMessageKey > 0) setSearchFocused(true); }, [newMessageKey]);
@@ -168,6 +177,7 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
       setHistoryError("Message could not be sent. Try again.");
     } else {
       setHistory((current) => current.map((item) => item.id === optimisticId ? result.data as Message : item));
+      void publishRealtime(result.data as Message);
       void loadInbox(true);
     }
     sendingRef.current = false; setSending(false);

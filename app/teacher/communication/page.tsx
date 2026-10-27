@@ -25,6 +25,7 @@ import {
 import Sidebar from '@/components/sidebar';
 import TopBar from '@/components/TopBar';
 import { supabase } from '@/lib/supabase';
+import { useDirectMessageRealtime, type DirectRealtimeMessage } from '@/lib/use-direct-message-realtime';
 
 type Tab = 'overview' | 'notices' | 'messages' | 'scheduled';
 type NoticeStatus = 'published' | 'scheduled' | 'draft';
@@ -198,6 +199,19 @@ export default function TeacherCommunicationPage() {
     file: null as File | null,
   });
   const messageEndRef = useRef<HTMLDivElement>(null);
+
+  const publishRealtime = useDirectMessageRealtime(
+    selectedConversation?.source === 'principal' ? selectedConversation.id : null,
+    useCallback((message: DirectRealtimeMessage) => {
+      setMessages((current) => current.some((item) => item.id === message.id) ? current : [...current, message]);
+      if (message.sender_id !== userId) {
+        void supabase.from('direct_messages').update({ read_at: new Date().toISOString() }).eq('id', message.id);
+      }
+      setConversations((current) => current.map((item) => item.id === message.conversation_id && item.source === 'principal'
+        ? { ...item, latest: message.content, latestAt: message.created_at, unread: 0 }
+        : item));
+    }, [userId]),
+  );
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -653,6 +667,7 @@ export default function TeacherCommunicationPage() {
   async function sendMessage(event: FormEvent) {
     event.preventDefault();
     if (!selectedConversation || !messageText.trim()) return;
+    const outgoingText = messageText.trim();
     const fileError = validateFile(messageFile);
     if (fileError) {
       setMessageError(fileError);
@@ -664,13 +679,23 @@ export default function TeacherCommunicationPage() {
     try {
       if (selectedConversation.source === 'principal') {
         if (messageFile) throw new Error('Attachments are not enabled for principal conversations.');
+        const content = outgoingText;
+        const optimisticId = `sending-${crypto.randomUUID()}`;
+        const optimistic: ChatMessage = { id: optimisticId, sender_id: userId, content, read_at: null, created_at: new Date().toISOString() };
+        setMessages((current) => [...current, optimistic]);
+        setMessageText('');
         const result = await supabase
           .from('direct_messages')
-          .insert({ conversation_id: selectedConversation.id, school_id: schoolId, sender_id: userId, content: messageText.trim() })
+          .insert({ conversation_id: selectedConversation.id, school_id: schoolId, sender_id: userId, content })
           .select('id,sender_id,content,read_at,created_at')
           .single();
-        if (result.error) throw result.error;
-        setMessages((current) => [...current, result.data as ChatMessage]);
+        if (result.error) {
+          setMessages((current) => current.filter((item) => item.id !== optimisticId));
+          setMessageText((current) => current || content);
+          throw result.error;
+        }
+        setMessages((current) => current.map((item) => item.id === optimisticId ? result.data as ChatMessage : item));
+        void publishRealtime({ ...result.data, conversation_id: selectedConversation.id } as DirectRealtimeMessage);
       } else {
         const id = crypto.randomUUID();
         let attachment = {};
@@ -696,7 +721,7 @@ export default function TeacherCommunicationPage() {
             conversation_id: selectedConversation.id,
             school_id: schoolId,
             sender_id: userId,
-            content: messageText.trim(),
+            content: outgoingText,
             ...attachment,
           })
           .select('id,sender_id,content,read_at,created_at,attachment_path,attachment_name,attachment_mime,attachment_size')
@@ -704,7 +729,7 @@ export default function TeacherCommunicationPage() {
         if (result.error) throw result.error;
         setMessages((current) => [...current, result.data as ChatMessage]);
       }
-      const sentText = messageText.trim();
+      const sentText = outgoingText;
       setMessageText('');
       setMessageFile(null);
       setConversations((current) => current.map((item) => item.id === selectedConversation.id && item.source === selectedConversation.source
