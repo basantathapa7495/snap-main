@@ -835,13 +835,17 @@ export default function TeachersPage() {
             )}
 
             {pageTab === "teachers" && <section id="mobile-teacher-records" className="mt-2 scroll-mt-20 sm:hidden" aria-label="Teachers">
-              <div className="flex gap-2 px-0.5">
+              <div className="grid grid-cols-[minmax(0,1fr)_40px_52px] items-stretch gap-1.5 px-0.5">
                 <label className="group relative min-w-0 flex-1">
                   <span className="sr-only">Search teachers</span>
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-emerald-600" aria-hidden="true" />
-                  <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name or subject" className="h-10 w-full rounded-xl border border-slate-200 bg-slate-100 pl-9 pr-3 text-sm font-medium text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-500 hover:border-slate-300 focus:border-emerald-400 focus:bg-slate-50 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-600 dark:focus:bg-slate-800 dark:focus:ring-emerald-950" />
+                  <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search teachers..." className="h-10 w-full rounded-xl border border-slate-200 bg-slate-100 pl-9 pr-2 text-xs font-medium text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-500 hover:border-slate-300 focus:border-emerald-400 focus:bg-slate-50 focus:ring-2 focus:ring-emerald-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-emerald-600 dark:focus:bg-slate-800 dark:focus:ring-emerald-950 min-[390px]:text-sm" />
                 </label>
                 <button type="button" aria-label="Filter teachers" aria-expanded={showMobileFilters} aria-pressed={showMobileFilters} onClick={() => setShowMobileFilters((value) => !value)} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-100 dark:focus-visible:ring-emerald-950 ${showMobileFilters ? "border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300" : "border-slate-200 bg-slate-100 text-slate-600 hover:border-emerald-200 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"}`}><SlidersHorizontal className="h-5 w-5" /></button>
+                <div aria-label={`${teachers.length} total teachers`} className="flex h-10 min-w-0 flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-1 leading-none dark:border-slate-700 dark:bg-slate-900">
+                  <span className="text-[8px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Total</span>
+                  <span className="mt-0.5 text-sm font-extrabold text-slate-950 dark:text-white">{teachers.length}</span>
+                </div>
               </div>
               {showMobileFilters && <div className="mt-2 grid grid-cols-2 gap-2"><Select value={grade} onChange={setGrade} label="Class" options={classOptions} allLabel="Class" icon={School} /><Select value={subject} onChange={setSubject} label="Subject" options={subjectOptions} allLabel="Subjects" icon={BookOpen} /></div>}
               {filteredTeachers.length ? <>
