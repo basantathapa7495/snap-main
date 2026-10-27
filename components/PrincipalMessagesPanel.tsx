@@ -157,10 +157,19 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
     event.preventDefault();
     const content = draft.trim();
     if (!selected || !content || sendingRef.current) return;
-    sendingRef.current = true; setSending(true); setHistoryError("");
+    const optimisticId = `sending-${crypto.randomUUID()}`;
+    const optimisticMessage: Message = { id: optimisticId, conversation_id: selected.id, sender_id: principalId, content, created_at: new Date().toISOString(), read_at: null };
+    sendingRef.current = true; setSending(true); setHistoryError(""); setDraft("");
+    setHistory((current) => [...current, optimisticMessage]);
     const result = await supabase.from("direct_messages").insert({ conversation_id: selected.id, school_id: schoolId, sender_id: principalId, content }).select(messageColumns).single();
-    if (result.error) setHistoryError("Message could not be sent. Try again.");
-    else { setDraft(""); setHistory((current) => [...current, result.data as Message]); void loadInbox(true); }
+    if (result.error) {
+      setHistory((current) => current.filter((item) => item.id !== optimisticId));
+      setDraft((current) => current || content);
+      setHistoryError("Message could not be sent. Try again.");
+    } else {
+      setHistory((current) => current.map((item) => item.id === optimisticId ? result.data as Message : item));
+      void loadInbox(true);
+    }
     sendingRef.current = false; setSending(false);
   }
 
