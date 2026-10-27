@@ -41,6 +41,7 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
   const [message, setMessage] = useState("");
   const [saveRevision, setSaveRevision] = useState(0);
   const [monthlyTeacher, setMonthlyTeacher] = useState("");
+  const [monthlyTeacherOpen, setMonthlyTeacherOpen] = useState(false);
   const [month, setMonth] = useState(() => todayInNepal().slice(0, 7));
   const [monthRows, setMonthRows] = useState<Attendance[]>([]);
   const [monthLeaves, setMonthLeaves] = useState<Leave[]>([]);
@@ -61,8 +62,8 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
       ),
     );
   }, [activeTeachers, search]);
-  const selectedTeacher = activeTeachers.find((teacher) => teacher.id === monthlyTeacher);
-  const selectedMonthTeacherId = selectedTeacher?.id || activeTeachers[0]?.id || "";
+  const selectedTeacher = activeTeachers.find((teacher) => teacher.id === monthlyTeacher) || activeTeachers[0];
+  const selectedMonthTeacherId = selectedTeacher?.id || "";
 
   const loadDate = useCallback(async () => {
     setLoading(true);
@@ -307,12 +308,16 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
         <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">Monthly attendance</h3>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 sm:text-sm">Select a teacher and month to see recorded days.</p>
         <div className="mt-4 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2">
-          <select aria-label="Teacher for monthly attendance" value={selectedMonthTeacherId}
-            onChange={(event) => setMonthlyTeacher(event.target.value)}
-            className="h-11 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-white sm:px-3 sm:text-sm">
-            {!activeTeachers.length && <option value="">No teachers</option>}
-            {activeTeachers.map((teacher) => <option key={teacher.id} value={teacher.id}>{teacher.name}</option>)}
-          </select>
+          <div className="relative min-w-0">
+            <button type="button" aria-label="Teacher for monthly attendance" aria-haspopup="listbox" aria-expanded={monthlyTeacherOpen} onClick={() => setMonthlyTeacherOpen((open) => !open)} className="flex h-11 w-full min-w-0 items-center gap-2 rounded-xl border border-slate-300 bg-white px-2 text-left shadow-sm dark:border-slate-600 dark:bg-slate-800">
+              {selectedTeacher ? <TeacherAvatar name={selectedTeacher.name} path={selectedTeacher.avatar_path} scope={avatarScope} className="h-8 w-8 shrink-0 rounded-full bg-blue-100 text-[10px] font-extrabold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200" /> : <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-400"><UserRound className="h-4 w-4" /></span>}
+              <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-900 dark:text-white sm:text-sm">{selectedTeacher?.name || "No teachers"}</span>
+              <ChevronDown className={`h-4 w-4 shrink-0 text-slate-500 transition ${monthlyTeacherOpen ? "rotate-180" : ""}`} />
+            </button>
+            {monthlyTeacherOpen && <div role="listbox" aria-label="Select teacher" className="absolute left-0 top-[calc(100%+4px)] z-30 max-h-64 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+              {activeTeachers.map((teacher) => <button key={teacher.id} type="button" role="option" aria-selected={teacher.id === selectedMonthTeacherId} onClick={() => { setMonthlyTeacher(teacher.id); setMonthlyTeacherOpen(false); }} className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left ${teacher.id === selectedMonthTeacherId ? "bg-blue-50 text-blue-700 dark:bg-blue-500/20 dark:text-blue-200" : "hover:bg-slate-50 dark:hover:bg-slate-700"}`}><TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className="h-8 w-8 shrink-0 rounded-full bg-blue-100 text-[10px] font-extrabold text-blue-700 dark:bg-blue-500/20 dark:text-blue-200" /><span className="min-w-0 flex-1 truncate text-xs font-bold sm:text-sm">{teacher.name}</span>{teacher.id === selectedMonthTeacherId && <Check className="h-4 w-4 shrink-0" />}</button>)}
+            </div>}
+          </div>
           <input aria-label="Month for attendance" type="month" value={month} max={today.slice(0, 7)}
             onChange={(event) => setMonth(event.target.value)}
             className="h-11 w-full min-w-0 rounded-xl border border-slate-300 bg-white px-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-white sm:px-3 sm:text-sm" />
@@ -320,17 +325,18 @@ export default function TeacherAttendancePanel({ schoolId, teachers, avatarScope
         {monthError && <p role="alert" className="mt-3 text-sm text-rose-700 dark:text-rose-300">Monthly attendance could not be loaded: {monthError}</p>}
         <div className="mt-4 grid grid-cols-[repeat(3,minmax(0,1fr))_minmax(0,1.5fr)] gap-1.5 sm:gap-3" aria-label="Monthly attendance summary">
           {([
-            ["Present", counts.present, "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"],
-            ["Absent", counts.absent, "bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-200"],
-            ["Leave", counts.leave, "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-200"],
-            ["Attendance Rate", percentage === null ? "—" : `${percentage}%`, "bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200"],
+            ["Present", counts.present, "border-emerald-200 bg-white text-emerald-700 dark:border-emerald-700 dark:bg-slate-800 dark:text-emerald-300", UserCheck, "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20"],
+            ["Absent", counts.absent, "border-rose-200 bg-white text-[#DC143C] dark:border-rose-700 dark:bg-slate-800 dark:text-rose-300", UserMinus, "bg-rose-100 text-[#DC143C] dark:bg-rose-500/20"],
+            ["Leave", counts.leave, "border-amber-200 bg-white text-[#B77900] dark:border-amber-700 dark:bg-slate-800 dark:text-amber-300", Clock3, "bg-amber-100 text-[#B77900] dark:bg-amber-500/20"],
+            ["Attendance Rate", percentage === null ? "—" : `${percentage}%`, "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-500/15 dark:text-blue-200", null, ""],
           ] as const).map(([label, value, tone]) => (
-            <div key={label} className={`min-w-0 rounded-xl px-1.5 py-1.5 sm:px-4 sm:py-2 ${tone}`}>
-              <div className="flex items-center gap-1">
+            <div key={label} className={`min-w-0 rounded-lg border px-1.5 py-1.5 shadow-sm sm:px-3 sm:py-2 ${tone}`}>
+              <div className="flex items-center gap-1.5">
                 {label === "Attendance Rate" && <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-300" aria-hidden="true"><rect x="2" y="11" width="4" height="7" rx="1" /><rect x="8" y="7" width="4" height="11" rx="1" /><rect x="14" y="2" width="4" height="16" rx="1" /></svg>}
-                <p className="text-base font-extrabold text-slate-950 dark:text-white sm:text-2xl">{monthLoading ? "–" : value}</p>
+                {label !== "Attendance Rate" && (() => { const Icon = label === "Present" ? UserCheck : label === "Absent" ? UserMinus : Clock3; const iconTone = label === "Present" ? "bg-emerald-100 text-emerald-700" : label === "Absent" ? "bg-rose-100 text-[#DC143C]" : "bg-amber-100 text-[#B77900]"; return <span className={`hidden h-6 w-6 shrink-0 items-center justify-center rounded-md sm:flex ${iconTone}`}><Icon className="h-3.5 w-3.5" /></span>; })()}
+                <p className="text-base font-black sm:text-xl">{monthLoading ? "–" : value}</p>
               </div>
-              <p className="mt-0.5 whitespace-nowrap text-[8px] leading-tight sm:text-xs">{label}</p>
+              <p className="mt-0.5 truncate text-[8px] font-semibold leading-tight text-slate-500 dark:text-slate-400 sm:text-xs">{label}</p>
             </div>
           ))}
         </div>
