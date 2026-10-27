@@ -17,13 +17,19 @@ const channelName = (conversationId: string) => `nepsom:direct:${conversationId}
 
 export function useDirectMessageRealtime(
   conversationId: string | null,
+  currentUserId: string,
   onMessage: (message: DirectRealtimeMessage) => void,
+  onDelivered?: (messageId: string) => void,
 ) {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const handlerRef = useRef(onMessage);
+  const deliveredHandlerRef = useRef(onDelivered);
   useEffect(() => {
     handlerRef.current = onMessage;
   }, [onMessage]);
+  useEffect(() => {
+    deliveredHandlerRef.current = onDelivered;
+  }, [onDelivered]);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -59,9 +65,19 @@ export function useDirectMessageRealtime(
     channel = client.channels.get(channelName(conversationId));
     const receive = (event: AblyMessage) => {
       const message = event.data as DirectRealtimeMessage | undefined;
-      if (!disposed && message?.conversation_id === conversationId && message.id) handlerRef.current(message);
+      if (!disposed && message?.conversation_id === conversationId && message.id) {
+        handlerRef.current(message);
+        if (message.sender_id !== currentUserId) {
+          void channel?.publish("message.received", { message_id: message.id, sender_id: message.sender_id });
+        }
+      }
+    };
+    const receiveDelivery = (event: AblyMessage) => {
+      const receipt = event.data as { message_id?: string; sender_id?: string } | undefined;
+      if (!disposed && receipt?.message_id && receipt.sender_id === currentUserId) deliveredHandlerRef.current?.(receipt.message_id);
     };
     void channel.subscribe("message.created", receive);
+    void channel.subscribe("message.received", receiveDelivery);
     channelRef.current = channel;
     client.connect();
 
@@ -69,9 +85,10 @@ export function useDirectMessageRealtime(
       disposed = true;
       channelRef.current = null;
       if (channel) void channel.unsubscribe("message.created", receive);
+      if (channel) void channel.unsubscribe("message.received", receiveDelivery);
       client?.close();
     };
-  }, [conversationId]);
+  }, [conversationId, currentUserId]);
 
   return useCallback(async (message: DirectRealtimeMessage) => {
     const channel = channelRef.current;

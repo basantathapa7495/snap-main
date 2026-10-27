@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, BookOpen, ChevronRight, FileText, GraduationCap, MessagesSquare, MoreVertical, Paperclip, Pencil, Search, Send, SlidersHorizontal, UsersRound, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, CheckCheck, ChevronRight, FileText, GraduationCap, MessagesSquare, MoreVertical, Pencil, Search, Send, SlidersHorizontal, UsersRound, X } from "lucide-react";
 import TeacherAvatar from "@/components/TeacherAvatar";
 import { activateTeacherAvatarCache } from "@/lib/teacher-avatars";
 import { supabase } from "@/lib/supabase";
@@ -45,6 +45,7 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
   const [olderLoading, setOlderLoading] = useState(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [deliveredIds, setDeliveredIds] = useState<Set<string>>(() => new Set());
   const sendingRef = useRef(false);
   const chatEnd = useRef<HTMLDivElement>(null);
   const directRecipientRef = useRef<string | null>(null);
@@ -95,13 +96,15 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
     if (!error) void loadInbox(true);
   }, [schoolId, principalId, loadInbox]);
 
-  const publishRealtime = useDirectMessageRealtime(selected?.id || null, useCallback((message: DirectRealtimeMessage) => {
+  const publishRealtime = useDirectMessageRealtime(selected?.id || null, principalId, useCallback((message: DirectRealtimeMessage) => {
     setHistory((current) => current.some((item) => item.id === message.id)
       ? current
       : [...current, message].sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id)));
     if (message.sender_id !== principalId) void markRead(message.conversation_id);
     void loadInbox(true);
-  }, [principalId, markRead, loadInbox]));
+  }, [principalId, markRead, loadInbox]), useCallback((messageId: string) => {
+    setDeliveredIds((current) => new Set(current).add(messageId));
+  }, []));
 
   useEffect(() => { const initial = window.setTimeout(() => void loadInbox(), 0); const timer = window.setInterval(() => void loadInbox(true), 20000); return () => { window.clearTimeout(initial); window.clearInterval(timer); }; }, [loadInbox]);
   useEffect(() => { const initial = window.setTimeout(() => void loadRecipients(), 0); return () => window.clearTimeout(initial); }, [loadRecipients]);
@@ -115,7 +118,7 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [selected?.id, lastMessageId]);
 
   async function openConversation(row: Inbox) {
-    setSearchFocused(false); setSelected(row); setHistory([]); setHistoryError(""); setHasOlder(false); setDraft("");
+    setSearchFocused(false); setSelected(row); setHistory([]); setDeliveredIds(new Set()); setHistoryError(""); setHasOlder(false); setDraft("");
     await loadHistory(row.id);
     if (row.unread_count) await markRead(row.id);
   }
@@ -221,13 +224,19 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
             {historyLoading && !history.length && <p className="pt-10 text-center text-xs text-slate-500">Loading messages…</p>}
             {historyError && <p role="alert" className="mb-2 rounded-lg border border-rose-200 bg-white/90 p-2 text-xs text-rose-700">{historyError}</p>}
             {!historyLoading && !history.length && !historyError && <div className="flex min-h-full flex-col items-center justify-center pb-16 text-center"><span className="relative flex h-28 w-32 items-center justify-center"><span className="absolute bottom-4 right-2 h-14 w-16 rounded-[22px] bg-blue-300/80" /><span className="relative flex h-20 w-24 items-center justify-center rounded-[28px] bg-slate-200 text-slate-400 shadow-[0_16px_28px_rgba(148,163,184,0.18)]"><MessagesSquare className="h-10 w-10" /></span></span><h4 className="mt-2 text-xl font-extrabold">No messages yet</h4><p className="mt-1 text-sm text-slate-500">Start the conversation with {selectedPerson?.name?.split(/\s+/)[0] || (selected.recipient_role === "teacher" ? "this teacher" : "this student")}.</p></div>}
-            {history.map((item, index) => <div key={item.id}>{(index === 0 || dateGroup(item.created_at) !== dateGroup(history[index - 1].created_at)) && <p className="my-3 text-center text-[10px] text-slate-500">{dateGroup(item.created_at)}</p>}<div className={`mb-2 flex ${item.sender_id === principalId ? "justify-end" : "justify-start"}`}><div className={`max-w-[82%] rounded-2xl px-3 py-2 text-xs leading-5 shadow-sm ${item.sender_id === principalId ? "rounded-br-sm bg-blue-600 text-white" : "rounded-bl-sm border border-slate-200 bg-white text-slate-900"}`}><p className="whitespace-pre-wrap break-words">{item.content}</p><p className={`mt-0.5 text-right text-[9px] ${item.sender_id === principalId ? "text-blue-100" : "text-slate-400"}`}>{time(item.created_at)}</p></div></div></div>)}
+            {history.map((item, index) => {
+              const own = item.sender_id === principalId;
+              const showMeta = index === history.length - 1 || history[index + 1].sender_id !== item.sender_id;
+              const saved = !item.id.startsWith("sending-");
+              const received = Boolean(item.read_at) || deliveredIds.has(item.id);
+              return <div key={item.id}>{(index === 0 || dateGroup(item.created_at) !== dateGroup(history[index - 1].created_at)) && <p className="my-2 text-center text-[10px] text-slate-500">{dateGroup(item.created_at)}</p>}<div className={`mb-1 flex ${own ? "justify-end" : "justify-start"}`}><div className={`max-w-[82%] rounded-2xl px-2.5 py-1.5 text-xs leading-4 shadow-sm ${own ? "rounded-br-sm bg-blue-600 text-white" : "rounded-bl-sm border border-slate-200 bg-white text-slate-900"}`}><p className="whitespace-pre-wrap break-words">{item.content}</p>{showMeta && <span className={`mt-0.5 flex items-center justify-end gap-1 text-[9px] ${own ? "text-blue-100" : "text-slate-400"}`}><span>{time(item.created_at)}</span>{own && saved && (received ? <CheckCheck className="h-3 w-3" aria-label="Received" /> : <Check className="h-3 w-3" aria-label="Sent" />)}</span>}</div></div></div>;
+            })}
             <div ref={chatEnd} />
           </div>
         </div>
-        <form onSubmit={send} className="flex shrink-0 items-center gap-2 border-t border-slate-200 bg-white px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-          <div className="flex min-w-0 flex-1 items-center rounded-full border border-slate-300 bg-white px-2 shadow-sm"><button type="button" disabled aria-label="Message attachments are not available yet" title="Attachments coming later" className="flex h-10 w-9 shrink-0 items-center justify-center text-slate-500 disabled:opacity-70"><Paperclip className="h-5 w-5" /></button><span className="h-6 w-px bg-slate-200" aria-hidden="true" /><label className="min-w-0 flex-1"><span className="sr-only">Write a message</span><textarea rows={1} maxLength={5000} value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Write a message..." className="max-h-28 min-h-11 w-full resize-none bg-transparent px-3 py-3 text-sm outline-none placeholder:text-slate-400" /></label></div>
-          <button type="submit" disabled={sending || !draft.trim()} aria-label="Send message" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-300/50 transition active:scale-95 disabled:bg-blue-300 disabled:shadow-none"><Send className="h-5 w-5 -rotate-6" /></button>
+        <form onSubmit={send} className="flex shrink-0 items-center gap-2 border-t border-slate-200 bg-white px-3 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+          <div className="flex min-w-0 flex-1 items-center rounded-full border border-slate-300 bg-white px-2 shadow-sm"><label className="min-w-0 flex-1"><span className="sr-only">Write a message</span><textarea rows={1} maxLength={5000} value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Write a message..." className="max-h-24 min-h-9 w-full resize-none bg-transparent px-2 py-2 text-sm leading-5 outline-none placeholder:text-slate-400" /></label></div>
+          <button type="submit" disabled={sending || !draft.trim()} aria-label="Send message" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-md shadow-blue-300/40 transition active:scale-95 disabled:bg-blue-300 disabled:shadow-none"><Send className="h-4 w-4 -rotate-6" /></button>
         </form>
       </div>
     </div>}

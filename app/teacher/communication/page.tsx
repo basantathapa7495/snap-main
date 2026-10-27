@@ -7,6 +7,7 @@ import {
   AlertCircle,
   Bell,
   CalendarClock,
+  Check,
   CheckCheck,
   ChevronLeft,
   ChevronRight,
@@ -180,6 +181,7 @@ export default function TeacherCommunicationPage() {
   const [messageText, setMessageText] = useState('');
   const [messageFile, setMessageFile] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
+  const [deliveredIds, setDeliveredIds] = useState<Set<string>>(() => new Set());
   const [newMessageOpen, setNewMessageOpen] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
   const [editingNotice, setEditingNotice] = useState<NoticeRow | null>(null);
@@ -202,6 +204,7 @@ export default function TeacherCommunicationPage() {
 
   const publishRealtime = useDirectMessageRealtime(
     selectedConversation?.source === 'principal' ? selectedConversation.id : null,
+    userId,
     useCallback((message: DirectRealtimeMessage) => {
       setMessages((current) => current.some((item) => item.id === message.id) ? current : [...current, message]);
       if (message.sender_id !== userId) {
@@ -211,6 +214,9 @@ export default function TeacherCommunicationPage() {
         ? { ...item, latest: message.content, latestAt: message.created_at, unread: 0 }
         : item));
     }, [userId]),
+    useCallback((messageId: string) => {
+      setDeliveredIds((current) => new Set(current).add(messageId));
+    }, []),
   );
 
   const loadData = useCallback(async () => {
@@ -480,6 +486,7 @@ export default function TeacherCommunicationPage() {
 
   function openConversation(item: Conversation) {
     setMessages([]);
+    setDeliveredIds(new Set());
     setMessageError('');
     setSelectedConversation(item);
   }
@@ -853,13 +860,16 @@ export default function TeacherCommunicationPage() {
               {messagesLoading && !messages.length && <div className="py-12 text-center text-xs text-slate-500"><Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" />Loading messages…</div>}
               {messageError && <div role="alert" className="rounded-lg bg-rose-50 p-2 text-xs text-rose-700 dark:bg-rose-950 dark:text-rose-300">{messageError}</div>}
               {!messagesLoading && !messages.length && <Empty compact title="No messages yet" detail="Send the first message in this conversation." />}
-              {messages.map((item) => {
+              {messages.map((item, index) => {
                 const mine = item.sender_id === userId;
+                const showMeta = index === messages.length - 1 || messages[index + 1].sender_id !== item.sender_id;
+                const saved = !item.id.startsWith('sending-');
+                const received = Boolean(item.read_at) || deliveredIds.has(item.id);
                 return <div key={item.id} className={'flex ' + (mine ? 'justify-end' : 'justify-start')}>
-                  <div className={'max-w-[82%] rounded-2xl px-3 py-2 text-xs ' + (mine ? 'rounded-br-md bg-blue-600 text-white' : 'rounded-bl-md bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white')}>
-                    <p className="whitespace-pre-wrap break-words leading-5">{item.content}</p>
+                  <div className={'max-w-[82%] rounded-2xl px-2.5 py-1.5 text-xs ' + (mine ? 'rounded-br-md bg-blue-600 text-white' : 'rounded-bl-md bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white')}>
+                    <p className="whitespace-pre-wrap break-words leading-4">{item.content}</p>
                     {item.attachment_path && <button type="button" onClick={() => void openAttachment(item.attachment_path || null)} className={'mt-1.5 flex max-w-full items-center gap-1.5 rounded-lg px-2 py-1 text-left text-[10px] ' + (mine ? 'bg-white/15' : 'bg-white dark:bg-slate-700')}><Paperclip className="h-3 w-3 shrink-0" /><span className="truncate">{item.attachment_name || 'Attachment'}</span></button>}
-                    <span className={'mt-1 flex items-center justify-end gap-1 text-[9px] ' + (mine ? 'text-blue-100' : 'text-slate-400')}>{new Date(item.created_at).toLocaleTimeString('en-NP', { hour: 'numeric', minute: '2-digit' })}{mine && item.read_at && <CheckCheck className="h-3 w-3" />}</span>
+                    {showMeta && <span className={'mt-0.5 flex items-center justify-end gap-1 text-[9px] ' + (mine ? 'text-blue-100' : 'text-slate-400')}>{new Date(item.created_at).toLocaleTimeString('en-NP', { hour: 'numeric', minute: '2-digit' })}{mine && saved && (received ? <CheckCheck className="h-3 w-3" aria-label="Received" /> : <Check className="h-3 w-3" aria-label="Sent" />)}</span>}
                   </div>
                 </div>;
               })}
