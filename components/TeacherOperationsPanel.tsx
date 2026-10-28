@@ -157,7 +157,7 @@ export default function TeacherOperationsPanel({ schoolId, teachers, avatarScope
         </div>}
         {tab === "attendance" && <TeacherAttendancePanel schoolId={schoolId} teachers={teachers} avatarScope={avatarScope} onSaved={() => setRefresh((value) => value + 1)} />}
         {tab === "leave" && <LeavePanel teachers={teachers} rows={leaves} working={working} run={run} avatarScope={avatarScope} />}
-        {tab === "assignments" && <TeacherAssignmentsPanel schoolId={schoolId} teachers={teachers} onTeacherChanged={onTeacherChanged} />}
+        {tab === "assignments" && <TeacherAssignmentsPanel schoolId={schoolId} teachers={teachers} avatarScope={avatarScope} onTeacherChanged={onTeacherChanged} />}
         {tab === "timetable" && <TimetablePanel schoolId={schoolId} teachers={teachers} rows={timetable} working={working} run={run} />}
         {tab === "performance" && <PerformancePanel schoolId={schoolId} teachers={teachers} rows={performance} working={working} run={run} />}
         {tab === "payroll" && <PayrollPanel schoolId={schoolId} teachers={teachers} rows={payroll} working={working} run={run} />}
