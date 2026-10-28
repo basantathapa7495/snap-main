@@ -257,11 +257,12 @@ export default function TeacherAssignmentsPanel({ schoolId, teachers, avatarScop
 
   function renderAssignmentRow(item: Assignment) {
     const { period } = details(item);
-    return <div key={item.id} className="flex min-w-0 items-center gap-1 border-t border-slate-100 px-2 py-2.5 first:border-t-0 dark:border-slate-700 sm:gap-2 sm:px-4">
-      <p className="w-[52px] shrink-0 truncate text-[11px] font-extrabold text-slate-950 dark:text-white sm:w-auto sm:min-w-[72px] sm:flex-1 sm:text-sm">{item.subject}</p>
-      <span className="shrink-0 rounded-full bg-indigo-50 px-1.5 py-1 text-[9px] font-bold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 sm:px-2 sm:text-[10px]">{period?.name || "No period"}</span>
-      <span className="min-w-0 flex-1 truncate text-[9px] text-slate-500 dark:text-slate-400 sm:flex-none sm:text-xs">{period && timeLabel(period) ? timeLabel(period) : item.weekday !== null ? weekdays[item.weekday] : ""}</span>
-      <div className="flex shrink-0 items-center gap-0 border-l border-slate-200 pl-1 dark:border-slate-700 sm:ml-auto sm:gap-1 sm:pl-2"><button type="button" disabled={working} onClick={() => startAssignment(item)} className="inline-flex h-8 items-center gap-0.5 rounded-lg px-1 text-[9px] font-bold text-blue-600 hover:bg-blue-50 dark:text-blue-300 sm:gap-1 sm:px-2 sm:text-[10px]"><Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" />Edit</button><button type="button" disabled={working} onClick={() => removeAssignment(item)} className="inline-flex h-8 items-center gap-0.5 rounded-lg px-1 text-[9px] font-bold text-red-600 hover:bg-red-50 dark:text-red-300 sm:gap-1 sm:px-2 sm:text-[10px]"><Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />Remove</button></div>
+    return <div key={item.id} className="grid min-w-0 grid-cols-[minmax(0,0.8fr)_auto_minmax(0,1.15fr)_auto_auto] items-center gap-1 border-t border-slate-100 px-2 py-2.5 first:border-t-0 dark:border-slate-700 sm:grid-cols-[minmax(90px,1fr)_auto_auto_auto_auto] sm:gap-2 sm:px-4">
+      <p className="min-w-0 truncate text-[10px] font-extrabold text-slate-950 dark:text-white sm:text-sm">{item.subject}</p>
+      <span className="whitespace-nowrap rounded-full bg-indigo-50 px-1.5 py-1 text-[8px] font-bold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 sm:px-2 sm:text-[10px]">{period?.name || "No period"}</span>
+      <span className="min-w-0 truncate whitespace-nowrap text-[8px] text-slate-500 dark:text-slate-400 sm:text-xs">{period && timeLabel(period) ? timeLabel(period) : item.weekday !== null ? weekdays[item.weekday] : ""}</span>
+      <button type="button" disabled={working} onClick={() => startAssignment(item)} className="inline-flex h-8 items-center justify-center gap-0.5 whitespace-nowrap rounded-lg px-0.5 text-[8px] font-bold text-blue-600 hover:bg-blue-50 dark:text-blue-300 sm:gap-1 sm:px-2 sm:text-[10px]"><Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" />Edit</button>
+      <button type="button" disabled={working} onClick={() => removeAssignment(item)} className="inline-flex h-8 items-center justify-center gap-0.5 whitespace-nowrap rounded-lg px-0.5 text-[8px] font-bold text-red-600 hover:bg-red-50 dark:text-red-300 sm:gap-1 sm:px-2 sm:text-[10px]"><Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />Remove</button>
     </div>;
   }
 
