@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import NepaliDate from "nepali-date-converter";
-import { AlertCircle, ArrowUpDown, BookOpen, Clock3, Coffee, GripVertical, Pencil, Plus, Search, Settings2, Trash2, X } from "lucide-react";
+import { AlertCircle, ArrowUpDown, BookOpen, ChevronDown, Clock3, Coffee, GripVertical, Pencil, Plus, Search, Settings2, Trash2, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type Teacher = { id: string; name: string; subject: string | null; department?: string | null };
