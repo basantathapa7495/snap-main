@@ -223,6 +223,11 @@ export default function TeacherAssignmentsPanel({ schoolId, teachers, onTeacherC
   }
 
   async function updateClassShift(classId: string, shift: Shift) {
+    const mismatched = assignments.some((assignment) => assignment.class_id === classId && assignment.period_id && periodById.get(assignment.period_id)?.shift !== shift);
+    if (mismatched) {
+      setError("Move this class's teaching slots to the new shift before changing its shift.");
+      return;
+    }
     setWorking(true); setError("");
     const result = await supabase.from("classes").update({ shift }).eq("id", classId).eq("school_id", schoolId);
     setWorking(false);
