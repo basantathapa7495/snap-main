@@ -31,12 +31,10 @@ const defaultPeriods: Omit<Period, "id">[] = [
 ];
 
 const field = "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white";
-const secondary = "rounded-lg border border-blue-200 px-2.5 py-1.5 text-xs font-semibold text-blue-700 dark:border-blue-800 dark:text-blue-300";
 const primary = "inline-flex h-11 items-center justify-center gap-1 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white disabled:opacity-50 sm:px-4 sm:text-sm";
 const normalize = (value: string | null | undefined) => (value || "").trim().toLowerCase();
 const classNameOf = (row: ClassRow) => row.class_name || row.class || row.name || (row.class_number ? `Class ${row.class_number}` : "Unnamed class");
 const displayClass = (value: string) => value.replace(/^Class\s+(\d+)$/i, "Grade $1");
-const initials = (value: string) => value.split(/\s+/).slice(0, 2).map((word) => word[0] || "").join("").toUpperCase();
 function formatClockTime(value: string | null | undefined) {
   if (!value) return "";
   const [hours, minutes] = value.slice(0, 5).split(":").map(Number);
