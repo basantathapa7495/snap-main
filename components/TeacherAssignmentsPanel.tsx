@@ -18,14 +18,15 @@ type PeriodForm = { name: string; position: string; kind: "lesson" | "break"; st
 const year = Number(new NepaliDate(new Date()).format("YYYY"));
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const defaultPeriods: Omit<Period, "id">[] = [
-  { name: "Period 1", position: 1, kind: "lesson", start_time: "10:00", end_time: "10:45", shift: "day" },
-  { name: "Period 2", position: 2, kind: "lesson", start_time: "10:45", end_time: "11:30", shift: "day" },
-  { name: "Period 3", position: 3, kind: "lesson", start_time: "11:30", end_time: "12:15", shift: "day" },
-  { name: "Period 4", position: 4, kind: "lesson", start_time: "12:15", end_time: "13:00", shift: "day" },
-  { name: "Lunch Break", position: 5, kind: "break", start_time: "13:00", end_time: "13:30", shift: "day" },
-  { name: "Period 5", position: 6, kind: "lesson", start_time: "13:30", end_time: "14:15", shift: "day" },
-  { name: "Period 6", position: 7, kind: "lesson", start_time: "14:15", end_time: "15:00", shift: "day" },
-  { name: "Period 7", position: 8, kind: "lesson", start_time: "15:00", end_time: "15:45", shift: "day" },
+  { name: "Period 1", position: 1, kind: "lesson", start_time: "10:20", end_time: "10:50", shift: "day" },
+  { name: "Period 2", position: 2, kind: "lesson", start_time: "10:50", end_time: "11:30", shift: "day" },
+  { name: "Period 3", position: 3, kind: "lesson", start_time: "11:30", end_time: "12:10", shift: "day" },
+  { name: "Period 4", position: 4, kind: "lesson", start_time: "12:10", end_time: "12:50", shift: "day" },
+  { name: "Period 5", position: 5, kind: "lesson", start_time: "12:50", end_time: "13:30", shift: "day" },
+  { name: "Lunch", position: 6, kind: "break", start_time: "13:30", end_time: "14:00", shift: "day" },
+  { name: "Period 6", position: 7, kind: "lesson", start_time: "14:00", end_time: "14:40", shift: "day" },
+  { name: "Period 7", position: 8, kind: "lesson", start_time: "14:40", end_time: "15:20", shift: "day" },
+  { name: "Period 8", position: 9, kind: "lesson", start_time: "15:20", end_time: "16:00", shift: "day" },
 ];
 
 const field = "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white";
