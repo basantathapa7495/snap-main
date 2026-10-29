@@ -69,6 +69,7 @@ type Teacher = {
   employee_id: string | null;
   left_at: string | null;
   avatar_path?: string | null;
+  assigned_subjects?: string[];
 };
 
 type ClassFilterRow = {
@@ -85,6 +86,7 @@ type TeacherClassAssignment = {
   teacher_id: string;
   class_id: string | null;
   class_name: string | null;
+  subject: string | null;
 };
 
 type TemporaryCredential = {
@@ -271,7 +273,7 @@ export default function TeachersPage() {
             .is("archived_at", null),
           supabase
             .from("teacher_assignments")
-            .select("teacher_id,class_id,class_name")
+            .select("teacher_id,class_id,class_name,subject")
             .eq("school_id", profile.school_id)
             .eq("active", true),
         ]);
@@ -285,7 +287,20 @@ export default function TeachersPage() {
           const scope = activateTeacherAvatarCache(user.id, profile.school_id);
           setAvatarScope(scope);
           resumeTeacherAvatarCleanup(scope);
-          setTeachers((data || []) as Teacher[]);
+          const assignmentRows = (assignmentsResult.data || []) as TeacherClassAssignment[];
+          const subjectsByTeacher = new Map<string, Set<string>>();
+          assignmentRows.forEach((assignment) => {
+            const subjectName = assignment.subject?.trim();
+            if (!assignment.teacher_id || !subjectName) return;
+            const existing = subjectsByTeacher.get(assignment.teacher_id) || new Set<string>();
+            existing.add(subjectName);
+            subjectsByTeacher.set(assignment.teacher_id, existing);
+          });
+          const enrichedTeachers = ((data || []) as Teacher[]).map((teacher) => ({
+            ...teacher,
+            assigned_subjects: [...(subjectsByTeacher.get(teacher.id) || [])],
+          }));
+          setTeachers(enrichedTeachers);
           setSubjectOptions([
             "All",
             ...(subjectsResult.data || []).map((item) => item.name),
@@ -315,7 +330,7 @@ export default function TeachersPage() {
             classesByTeacher.set(teacherId, existing);
           };
           currentClassRows.forEach((row) => addTeacherClass(row.teacher_id, classFilterLabel(row)));
-          ((assignmentsResult.data || []) as TeacherClassAssignment[]).forEach((assignment) => {
+          assignmentRows.forEach((assignment) => {
             const className = assignment.class_id
               ? labelsById.get(assignment.class_id) || assignment.class_name || ""
               : assignment.class_name || "";
@@ -327,7 +342,7 @@ export default function TeachersPage() {
             ),
           );
           const selectedId = new URLSearchParams(window.location.search).get('teacher');
-          const match = (data || []).find((item) => item.id === selectedId);
+          const match = enrichedTeachers.find((item) => item.id === selectedId);
           if (match) {
             setSelectedTeacher(match as Teacher);
             window.history.replaceState(window.history.state, '', window.location.pathname);
@@ -400,12 +415,12 @@ export default function TeachersPage() {
     return teachers.filter((teacher) => {
       const matchesSearch =
         !query ||
-        [teacher.name, teacher.subject, teacher.phone, teacher.email].some(
+        [teacher.name, teacher.subject, teacher.department, ...(teacher.assigned_subjects || []), teacher.phone, teacher.email].some(
           (value) => value?.toLowerCase().includes(query),
         );
-      const teacherSubject = (teacher.subject || teacher.department || "").trim().toLowerCase();
+      const teacherSubjects = (teacher.assigned_subjects?.length ? teacher.assigned_subjects : [teacher.subject || teacher.department || ""]).map((value) => value.trim().toLowerCase());
       const matchesSubject =
-        subject === "All" || teacherSubject === subject.trim().toLowerCase();
+        subject === "All" || teacherSubjects.includes(subject.trim().toLowerCase());
       const matchesClass =
         grade === "All" ||
         (teacherClasses[teacher.id] || []).some(
@@ -988,11 +1003,19 @@ export default function TeachersPage() {
   );
 }
 
+function teacherSubjectSummary(teacher: Teacher) {
+  const names = teacher.assigned_subjects?.length
+    ? teacher.assigned_subjects
+    : [teacher.subject || teacher.department].filter((value): value is string => Boolean(value?.trim()));
+  if (!names.length) return "Subject not assigned";
+  return names.length <= 3 ? names.join(", ") : `${names.slice(0, 2).join(", ")} +${names.length - 2} more`;
+}
+
 function MobileTeacherCard({ teacher, avatarScope, index, status, onClick }: { teacher: Teacher; avatarScope: string; index: number; status: string; onClick: () => void }) {
   const displayStatus = teacher.employment_status === "inactive" ? "Inactive" : status === "present" ? "Present" : status === "late" ? "Late" : status === "absent" ? "Absent" : status === "leave" ? "On leave" : "Not marked";
   const statusTone = displayStatus === "Present" ? "bg-emerald-100 text-emerald-800" : displayStatus === "Late" ? "bg-amber-100 text-amber-800" : displayStatus === "Absent" || displayStatus === "Inactive" ? "bg-rose-100 text-rose-800" : displayStatus === "On leave" ? "bg-violet-100 text-violet-800" : "bg-slate-100 text-slate-600";
   const StatusIcon = displayStatus === "Present" ? CircleCheck : displayStatus === "Late" ? Clock3 : displayStatus === "Absent" || displayStatus === "Inactive" || displayStatus === "On leave" ? UserMinus : Clock3;
-  const subject = teacher.subject || teacher.department || "Subject not assigned";
+  const subject = teacherSubjectSummary(teacher);
   return <article className="min-w-0 rounded-xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
     <div className="flex min-w-0 items-start gap-1.5">
       <button type="button" onClick={onClick} className="shrink-0 rounded-lg" aria-label={`View ${teacher.name}`}>
@@ -1021,7 +1044,7 @@ const teacherTones = [
 ];
 
 function TeacherProfileCard({ teacher, avatarScope, index, onView, onEdit, onLogin }: TeacherActions & { avatarScope: string; index: number; onEdit: (teacher: Teacher) => void }) {
-  return <article className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/10"><div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${teacherTones[index % teacherTones.length]}`} aria-hidden="true" /><div className="flex items-start gap-3"><button type="button" onClick={() => onView(teacher)} className="shrink-0 rounded-2xl" aria-label={`View ${teacher.name}`}><TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className={`h-12 w-12 rounded-2xl bg-gradient-to-br text-sm font-extrabold text-white shadow-md ${teacherTones[index % teacherTones.length]}`} /></button><div className="min-w-0 flex-1"><button type="button" onClick={() => onView(teacher)} className="block max-w-full truncate text-left font-bold text-slate-950 transition hover:text-blue-700">{teacher.name}</button><p className="mt-1 truncate text-xs font-semibold text-slate-500">{teacher.subject || "Subject not assigned"}</p></div><AccountBadge active={Boolean(teacher.user_id)} /></div><div className="mt-4 grid grid-cols-2 gap-2 text-xs"><div className="rounded-xl bg-slate-50 p-2.5"><p className="text-slate-400">Qualification</p><p className="mt-1 truncate font-semibold text-slate-700">{teacher.qualification || "Not added"}</p></div><div className="rounded-xl bg-slate-50 p-2.5"><p className="text-slate-400">Contact</p><p className="mt-1 truncate font-semibold text-slate-700">{teacher.phone || teacher.email || "Not added"}</p></div></div><div className="mt-4 flex gap-2 border-t border-slate-100 pt-3"><button type="button" onClick={() => onEdit(teacher)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"><Edit3 className="h-3.5 w-3.5" /> Edit</button><button type="button" onClick={() => onLogin(teacher)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-blue-700"><KeyRound className="h-3.5 w-3.5" />{teacher.user_id ? "Reset" : "Access"}</button></div></article>;
+  return <article className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-900/10"><div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${teacherTones[index % teacherTones.length]}`} aria-hidden="true" /><div className="flex items-start gap-3"><button type="button" onClick={() => onView(teacher)} className="shrink-0 rounded-2xl" aria-label={`View ${teacher.name}`}><TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className={`h-12 w-12 rounded-2xl bg-gradient-to-br text-sm font-extrabold text-white shadow-md ${teacherTones[index % teacherTones.length]}`} /></button><div className="min-w-0 flex-1"><button type="button" onClick={() => onView(teacher)} className="block max-w-full truncate text-left font-bold text-slate-950 transition hover:text-blue-700">{teacher.name}</button><p className="mt-1 truncate text-xs font-semibold text-slate-500">{teacherSubjectSummary(teacher)}</p></div><AccountBadge active={Boolean(teacher.user_id)} /></div><div className="mt-4 grid grid-cols-2 gap-2 text-xs"><div className="rounded-xl bg-slate-50 p-2.5"><p className="text-slate-400">Qualification</p><p className="mt-1 truncate font-semibold text-slate-700">{teacher.qualification || "Not added"}</p></div><div className="rounded-xl bg-slate-50 p-2.5"><p className="text-slate-400">Contact</p><p className="mt-1 truncate font-semibold text-slate-700">{teacher.phone || teacher.email || "Not added"}</p></div></div><div className="mt-4 flex gap-2 border-t border-slate-100 pt-3"><button type="button" onClick={() => onEdit(teacher)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"><Edit3 className="h-3.5 w-3.5" /> Edit</button><button type="button" onClick={() => onLogin(teacher)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-blue-700"><KeyRound className="h-3.5 w-3.5" />{teacher.user_id ? "Reset" : "Access"}</button></div></article>;
 }
 
 function Select({
