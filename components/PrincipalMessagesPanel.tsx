@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, BookOpen, Check, CheckCheck, ChevronRight, FileText, GraduationCap, MessagesSquare, MoreVertical, Pencil, Search, Send, SlidersHorizontal, UsersRound, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, CheckCheck, ChevronRight, FileText, GraduationCap, MessagesSquare, MoreVertical, Pencil, Search, Send, SlidersHorizontal, Trash2, UsersRound, X } from "lucide-react";
 import TeacherAvatar from "@/components/TeacherAvatar";
 import { activateTeacherAvatarCache } from "@/lib/teacher-avatars";
 import { supabase } from "@/lib/supabase";
@@ -45,6 +45,8 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
   const [olderLoading, setOlderLoading] = useState(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [chatMenuOpen, setChatMenuOpen] = useState(false);
+  const [deletingMessages, setDeletingMessages] = useState(false);
   const [deliveredIds, setDeliveredIds] = useState<Set<string>>(() => new Set());
   const [timestampMessageId, setTimestampMessageId] = useState<string | null>(null);
   const sendingRef = useRef(false);
@@ -119,7 +121,7 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [selected?.id, lastMessageId]);
 
   async function openConversation(row: Inbox) {
-    setSearchFocused(false); setSelected(row); setHistory([]); setDeliveredIds(new Set()); setTimestampMessageId(null); setHistoryError(""); setHasOlder(false); setDraft("");
+    setSearchFocused(false); setChatMenuOpen(false); setSelected(row); setHistory([]); setDeliveredIds(new Set()); setTimestampMessageId(null); setHistoryError(""); setHasOlder(false); setDraft("");
     await loadHistory(row.id);
     if (row.unread_count) await markRead(row.id);
   }
@@ -187,6 +189,29 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
     sendingRef.current = false; setSending(false);
   }
 
+  async function deleteConversationMessages() {
+    if (!selected || deletingMessages) return;
+    if (!window.confirm("Delete all messages in this conversation? This cannot be undone.")) return;
+    setDeletingMessages(true);
+    setChatMenuOpen(false);
+    setHistoryError("");
+    const result = await supabase
+      .from("direct_messages")
+      .delete()
+      .eq("school_id", schoolId)
+      .eq("conversation_id", selected.id);
+    setDeletingMessages(false);
+    if (result.error) {
+      setHistoryError("Messages could not be deleted. Try again.");
+      return;
+    }
+    setHistory([]);
+    setHasOlder(false);
+    setDeliveredIds(new Set());
+    setTimestampMessageId(null);
+    await loadInbox(true);
+  }
+
   const matching = inbox.filter((row) => {
     const person = people.find((item) => item.userId === row.recipient_id);
     const query = search.trim().toLowerCase();
@@ -212,11 +237,12 @@ export default function PrincipalMessagesPanel({ schoolId, principalId, newMessa
 
     {selected && <div className="fixed inset-0 z-[80] flex justify-center bg-white text-slate-950 lg:bg-slate-950/60 lg:p-5">
       <div className="flex h-[100dvh] w-full max-w-2xl flex-col overflow-hidden bg-white lg:h-full lg:rounded-2xl lg:border lg:border-slate-200">
-        <header className="flex min-h-[68px] shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 pt-[env(safe-area-inset-top)] shadow-sm">
-          <button type="button" onClick={() => { setSelected(null); void loadInbox(true); }} aria-label="Back to conversations" className="flex h-10 w-8 shrink-0 items-center justify-center text-slate-800"><ArrowLeft className="h-6 w-6" /></button>
+        <header className="relative flex min-h-[68px] shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 pt-[env(safe-area-inset-top)] shadow-sm">
+          <button type="button" onClick={() => { setChatMenuOpen(false); setSelected(null); void loadInbox(true); }} aria-label="Back to conversations" className="flex h-10 w-8 shrink-0 items-center justify-center text-slate-800"><ArrowLeft className="h-6 w-6" /></button>
           <span className="relative shrink-0"><TeacherAvatar name={selectedPerson?.name || "?"} path={selectedPerson?.avatarPath} scope={avatarScope} className="h-11 w-11 rounded-full border border-slate-200 bg-blue-100 text-xs font-bold text-blue-700" />{selectedPerson?.canMessage && <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500" aria-label="Portal account active" />}</span>
           <div className="min-w-0 flex-1"><h3 className="truncate text-[17px] font-extrabold leading-tight">{selectedPerson?.name || (selected.recipient_role === "teacher" ? "Teacher" : "Student")}</h3><p className="mt-0.5 truncate text-xs font-medium capitalize text-slate-500">{selected.recipient_role}</p></div>
-          <MoreVertical className="h-5 w-5 shrink-0 text-slate-700" aria-hidden="true" />
+          <button type="button" onClick={() => setChatMenuOpen((open) => !open)} aria-label="Conversation options" aria-expanded={chatMenuOpen} className="grid h-10 w-9 shrink-0 place-items-center rounded-lg text-slate-700 hover:bg-slate-100"><MoreVertical className="h-5 w-5" aria-hidden="true" /></button>
+          {chatMenuOpen && <><button type="button" aria-label="Close conversation options" className="fixed inset-0 z-[85] cursor-default" onClick={() => setChatMenuOpen(false)} /><div className="absolute right-3 top-[calc(100%+6px)] z-[90] min-w-44 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl"><button type="button" disabled={deletingMessages || !history.length} onClick={() => void deleteConversationMessages()} className="flex h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-45"><Trash2 className="h-4 w-4" />{deletingMessages ? "Deleting…" : "Delete messages"}</button></div></>}
         </header>
         <div className="relative min-h-0 flex-1 overflow-hidden bg-[#f7faff]">
           <ChatPattern />
