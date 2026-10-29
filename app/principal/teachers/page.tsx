@@ -1016,6 +1016,7 @@ function MobileTeacherCard({ teacher, avatarScope, index, status, onClick }: { t
   const statusTone = displayStatus === "Present" ? "bg-emerald-100 text-emerald-800" : displayStatus === "Late" ? "bg-amber-100 text-amber-800" : displayStatus === "Absent" || displayStatus === "Inactive" ? "bg-rose-100 text-rose-800" : displayStatus === "On leave" ? "bg-violet-100 text-violet-800" : "bg-slate-100 text-slate-600";
   const StatusIcon = displayStatus === "Present" ? CircleCheck : displayStatus === "Late" ? Clock3 : displayStatus === "Absent" || displayStatus === "Inactive" || displayStatus === "On leave" ? UserMinus : Clock3;
   const subject = teacherSubjectSummary(teacher);
+  const subjectMissing = subject === "Subject not assigned";
   return <article className="min-w-0 rounded-xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
     <div className="flex min-w-0 items-start gap-1.5">
       <button type="button" onClick={onClick} className="shrink-0 rounded-lg" aria-label={`View ${teacher.name}`}>
@@ -1023,7 +1024,7 @@ function MobileTeacherCard({ teacher, avatarScope, index, status, onClick }: { t
       </button>
       <button type="button" onClick={onClick} className="min-w-0 flex-1 overflow-hidden text-left">
         <span className="block truncate whitespace-nowrap text-sm font-extrabold leading-tight text-slate-950 dark:text-white">{teacher.name}</span>
-        <span className="mt-0.5 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-[10px] text-slate-600 dark:text-slate-300"><BookOpen className="h-3 w-3 shrink-0 text-slate-400 dark:text-slate-400" /><span className="truncate whitespace-nowrap">{subject}</span></span>
+        <span className={`mt-0.5 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-[10px] ${subjectMissing ? "font-medium text-red-500 dark:text-red-400" : "text-slate-600 dark:text-slate-300"}`}><BookOpen className={`h-3 w-3 shrink-0 ${subjectMissing ? "text-red-400 dark:text-red-400" : "text-slate-400 dark:text-slate-400"}`} /><span className="truncate whitespace-nowrap">{subject}</span></span>
         <span className="mt-0.5 flex min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap text-[10px] text-slate-600 dark:text-slate-300"><Phone className="h-3 w-3 shrink-0 fill-slate-500 text-slate-600 dark:fill-slate-400 dark:text-slate-300" /><span className="truncate whitespace-nowrap">{teacher.phone || "Phone not added"}</span></span>
       </button>
     </div>
