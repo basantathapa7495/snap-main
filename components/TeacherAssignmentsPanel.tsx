@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import NepaliDate from "nepali-date-converter";
-import { AlertCircle, BookOpen, CalendarDays, ChevronDown, Clock3, Coffee, GraduationCap, Pencil, Plus, Search, Settings2, Trash2, UsersRound, X } from "lucide-react";
+import { AlertCircle, BookOpen, CalendarDays, ChevronDown, ChevronLeft, Clock3, Coffee, GraduationCap, Pencil, Plus, Search, Settings2, Trash2, UsersRound, X } from "lucide-react";
 import TeacherAvatar from "@/components/TeacherAvatar";
 import { supabase } from "@/lib/supabase";
 
@@ -313,12 +313,44 @@ export default function TeacherAssignmentsPanel({ schoolId, teachers, avatarScop
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-slate-50 dark:bg-slate-800 sm:h-9 sm:w-9"><ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`} /></span>
           </span>
         </button>
-        {open && <div className="border-t border-slate-100 p-2 dark:border-slate-700 sm:p-3">
+        {open && <div className="hidden border-t border-slate-100 p-2 dark:border-slate-700 sm:block sm:p-3">
           {classGroups.size ? <div className="space-y-2">{[...classGroups].map(([classLabel, rows], groupIndex) => <section key={classLabel} className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700"><div className={`flex items-center gap-2 px-3 py-2.5 ${groupIndex % 2 ? "bg-emerald-50/70 dark:bg-emerald-500/10" : "bg-blue-50/70 dark:bg-blue-500/10"}`}><GraduationCap className={`h-4 w-4 shrink-0 ${groupIndex % 2 ? "text-emerald-600" : "text-blue-600"}`} /><h4 className="min-w-0 flex-1 truncate text-xs font-extrabold sm:text-sm">{classLabel}</h4><span className="shrink-0 text-[10px] text-slate-500">{rows.length} {rows.length === 1 ? "assignment" : "assignments"}</span></div>{rows.map(renderAssignmentRow)}</section>)}</div> : <p className="rounded-xl bg-slate-50 p-4 text-center text-xs text-slate-500 dark:bg-slate-800">No teaching assignments yet.</p>}
           <button type="button" onClick={() => startAssignment(undefined, teacher.id)} className="mt-3 inline-flex h-10 w-full items-center justify-center gap-1 rounded-xl border border-blue-500 text-xs font-bold text-blue-600 hover:bg-blue-50 dark:text-blue-300"><Plus className="h-4 w-4" />Add assignment</button>
         </div>}
       </article>;
-    })}{!shownTeachers.length && <div className="rounded-xl border border-slate-200 p-6 text-center text-sm text-slate-500 dark:border-slate-700">No teacher assignments found.</div>}</div></div>}
+    })}{!shownTeachers.length && <div className="col-span-2 rounded-xl border border-slate-200 p-6 text-center text-sm text-slate-500 dark:border-slate-700">No teacher assignments found.</div>}</div></div>}
+    {expanded && typeof document !== "undefined" && createPortal(<div className="fixed inset-0 z-[110] flex items-end justify-center bg-slate-950/60 sm:hidden" onMouseDown={(event) => { if (event.target === event.currentTarget) setExpanded(""); }}>
+      {(() => {
+        const teacher = teachers.find((item) => item.id === expanded);
+        if (!teacher) return null;
+        const teacherRows = assigned.filter((item) => item.teacher_id === teacher.id);
+        const subjectNames = [...new Set(teacherRows.map((item) => item.subject).filter(Boolean))];
+        const subjectSummary = subjectNames.length === 0 ? "No subjects assigned" : subjectNames.length <= 3 ? subjectNames.join(", ") : `${subjectNames.slice(0, 2).join(", ")} +${subjectNames.length - 2} more`;
+        const classGroups = new Map<string, Assignment[]>();
+        teacherRows.forEach((item) => {
+          const info = details(item);
+          const label = `${info.className}${info.section ? ` · Section ${info.section}` : ""}`;
+          classGroups.set(label, [...(classGroups.get(label) || []), item]);
+        });
+        return <div className="max-h-[88dvh] w-full overflow-y-auto overscroll-contain rounded-t-[26px] bg-white px-3 pb-[max(18px,env(safe-area-inset-bottom))] pt-3 shadow-2xl dark:bg-slate-900">
+          <div className="relative flex min-h-12 items-start justify-center px-11 text-center">
+            <button type="button" onClick={() => setExpanded("")} aria-label="Close teacher assignments" className="absolute left-0 top-0 grid h-10 w-10 place-items-center rounded-xl text-slate-900 dark:text-white"><ChevronLeft className="h-6 w-6" /></button>
+            <div><h3 className="text-lg font-black tracking-tight">Teacher assignments</h3><p className="mt-0.5 text-[10px] text-slate-500">Tap outside to close</p></div>
+          </div>
+          <div className="mt-2 flex items-center gap-3 px-2">
+            <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className="h-16 w-16 shrink-0 rounded-full border border-blue-100 bg-blue-50 text-sm font-bold text-blue-700" />
+            <div className="min-w-0"><p className="truncate text-lg font-black">{teacher.name}</p><p className={`mt-0.5 truncate text-xs ${subjectNames.length === 0 ? "font-medium text-red-500 dark:text-red-400" : "text-slate-500 dark:text-slate-400"}`}>{subjectSummary}</p></div>
+          </div>
+          <div className="mt-4 space-y-3">
+            {classGroups.size ? [...classGroups].map(([classLabel, rows], groupIndex) => <section key={classLabel} className="overflow-hidden rounded-2xl bg-slate-50 p-1.5 dark:bg-slate-800/70">
+              <div className={`flex items-center gap-2 rounded-xl px-2.5 py-2 ${groupIndex % 2 ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-blue-50 dark:bg-blue-500/10"}`}><GraduationCap className={`h-4 w-4 shrink-0 ${groupIndex % 2 ? "text-emerald-600" : "text-blue-600"}`} /><h4 className="min-w-0 flex-1 truncate text-sm font-extrabold">{classLabel}</h4><span className="shrink-0 rounded-full bg-white/80 px-2 py-1 text-[9px] text-slate-600 dark:bg-slate-900/60 dark:text-slate-300">{rows.length} {rows.length === 1 ? "assignment" : "assignments"}</span></div>
+              <div className="mt-1 overflow-hidden rounded-xl bg-white dark:bg-slate-900">{rows.map(renderAssignmentRow)}</div>
+            </section>) : <p className="rounded-2xl bg-slate-50 p-6 text-center text-xs text-slate-500 dark:bg-slate-800">No teaching assignments yet.</p>}
+          </div>
+          <button type="button" onClick={() => { setExpanded(""); startAssignment(undefined, teacher.id); }} className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-sm font-extrabold text-white shadow-lg shadow-blue-600/20"><Plus className="h-5 w-5" />Add assignment</button>
+        </div>;
+      })()}
+    </div>, document.body)}
     <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-900 sm:p-4">
       <div className="flex items-center justify-between gap-3"><div><h2 className="text-base font-extrabold sm:text-lg">Class Timetable</h2><p className="mt-0.5 text-[10px] text-slate-500 sm:text-xs">View assigned and empty periods for each class.</p></div><span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">{selectedTimetableGroup ? displayClass(selectedTimetableGroup.name) : "No classes"}</span></div>
       {groups.length ? <>
