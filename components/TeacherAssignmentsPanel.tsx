@@ -305,7 +305,7 @@ export default function TeacherAssignmentsPanel({ schoolId, teachers, avatarScop
       return <article key={teacher.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <button type="button" onClick={() => setExpanded(open ? "" : teacher.id)} aria-expanded={open} className="flex w-full items-center gap-2.5 p-3 text-left sm:p-4">
           <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className="h-12 w-12 shrink-0 rounded-full border border-blue-100 bg-blue-50 text-sm font-bold text-blue-700 sm:h-14 sm:w-14" />
-          <span className="min-w-0 flex-1"><span className="block truncate text-sm font-extrabold sm:text-base">{teacher.name}</span><span className="mt-0.5 block truncate text-[11px] text-slate-500 dark:text-slate-400 sm:text-xs">{subjectSummary}</span></span>
+          <span className="min-w-0 flex-1"><span className="block truncate text-sm font-extrabold sm:text-base">{teacher.name}</span><span className={`mt-0.5 block truncate text-[11px] sm:text-xs ${subjectNames.length === 0 ? "font-medium text-red-500 dark:text-red-400" : "text-slate-500 dark:text-slate-400"}`}>{subjectSummary}</span></span>
           <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1.5 text-[10px] font-bold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">{teacherRows.length} assigned</span>
           <ChevronDown className={`h-4 w-4 shrink-0 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
