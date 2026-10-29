@@ -306,7 +306,7 @@ export default function TeacherAssignmentsPanel({ schoolId, teachers, avatarScop
         <button type="button" onClick={() => setExpanded(open ? "" : teacher.id)} aria-expanded={open} className="flex min-h-[112px] w-full flex-col justify-between gap-2 p-2 text-left sm:min-h-0 sm:flex-row sm:items-center sm:gap-2.5 sm:p-4">
           <span className="flex min-w-0 w-full items-center gap-1.5 sm:flex-1 sm:gap-2.5">
             <TeacherAvatar name={teacher.name} path={teacher.avatar_path} scope={avatarScope} className="h-11 w-11 shrink-0 rounded-full border border-blue-100 bg-blue-50 text-xs font-bold text-blue-700 sm:h-14 sm:w-14 sm:text-sm" />
-            <span className="min-w-0 flex-1"><span className="block truncate text-xs font-extrabold tracking-tight sm:text-base sm:tracking-normal">{teacher.name}</span><span className={`mt-0.5 block truncate text-[9px] sm:mt-1 sm:text-xs ${subjectNames.length === 0 ? "font-medium text-red-500 dark:text-red-400" : "text-slate-500 dark:text-slate-400"}`}>{subjectSummary}</span></span>
+            <span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-extrabold tracking-tight sm:text-base sm:tracking-normal">{teacher.name}</span><span className={`mt-0.5 block truncate text-[9px] sm:mt-1 sm:text-xs ${subjectNames.length === 0 ? "font-medium text-red-500 dark:text-red-400" : "text-slate-500 dark:text-slate-400"}`}>{subjectSummary}</span></span>
           </span>
           <span className="flex w-full items-center justify-between gap-2 sm:w-auto sm:contents">
             <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-1.5 text-[10px] font-bold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">{teacherRows.length} assigned</span>
