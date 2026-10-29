@@ -538,7 +538,7 @@ export default function ClassesPage() {
                 fill
                 priority
                 sizes="(max-width: 1023px) 100vw, calc(100vw - 16rem)"
-                className="object-cover object-center"
+                className="object-contain object-center"
               />
             </section>
 
