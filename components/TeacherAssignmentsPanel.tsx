@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import NepaliDate from "nepali-date-converter";
@@ -29,6 +30,18 @@ const defaultPeriods: Omit<Period, "id">[] = [
   { name: "Period 7", position: 8, kind: "lesson", start_time: "14:40", end_time: "15:20", shift: "day" },
   { name: "Period 8", position: 9, kind: "lesson", start_time: "15:20", end_time: "16:00", shift: "day" },
 ];
+
+const SUBJECT_IMAGES: Record<string, string> = {
+  nepali: "/nepali.jpg",
+  english: "/english.jpg",
+  math: "/math.jpg",
+  mathematics: "/math.jpg",
+  science: "/science.jpg",
+  social: "/social.jpg",
+  "social studies": "/social.jpg",
+  computer: "/computer.jpg",
+};
+const subjectImage = (name: string) => SUBJECT_IMAGES[name.trim().toLowerCase()] || null;
 
 const field = "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white";
 const primary = "inline-flex h-11 items-center justify-center gap-1 rounded-xl bg-blue-600 px-3 text-xs font-bold text-white disabled:opacity-50 sm:px-4 sm:text-sm";
@@ -85,6 +98,7 @@ export default function TeacherAssignmentsPanel({ schoolId, teachers, avatarScop
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [schoolSubjects, setSchoolSubjects] = useState<string[]>([]);
+  const [subjectPickerOpen, setSubjectPickerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [refresh, setRefresh] = useState(0);
@@ -396,12 +410,24 @@ export default function TeacherAssignmentsPanel({ schoolId, teachers, avatarScop
         </div>
         <div className="mt-2 grid grid-cols-2 gap-2 sm:mt-3 sm:gap-3">
           <label className="min-w-0 text-xs font-semibold text-slate-600 dark:text-slate-300"><span className="mb-1.5 flex items-center gap-1.5"><UsersRound className="h-4 w-4" />Section</span><select required className={`${field} !h-10 !text-xs sm:!h-12 sm:!text-sm`} value={form.classId} onChange={(event) => setForm({ ...form, classId: event.target.value })}>{(groups.find((group) => group.name === form.className)?.choices || []).map((choice) => <option key={choice.id} value={choice.id}>{choice.section ? `Section ${choice.section}` : "No section"}</option>)}</select></label>
-          <label className="min-w-0 text-xs font-semibold text-slate-600 dark:text-slate-300"><span className="mb-1.5 flex items-center gap-1.5"><BookOpen className="h-4 w-4" />Subject</span><select required className={`${field} !h-10 !text-xs sm:!h-12 sm:!text-sm`} value={form.subject} onChange={(event) => setForm({ ...form, subject: event.target.value })}><option value="">{subjects.length ? "Choose subject" : "No subjects available"}</option>{subjects.map((subject) => <option key={subject} value={subject}>{subject}</option>)}</select></label>
+          <div className="min-w-0 text-xs font-semibold text-slate-600 dark:text-slate-300"><span className="mb-1.5 flex items-center gap-1.5"><BookOpen className="h-4 w-4" />Subject</span><button type="button" disabled={!subjects.length} onClick={() => setSubjectPickerOpen(true)} className={`${field} !flex !h-10 items-center gap-2 !px-2 !text-left !text-xs disabled:opacity-60 sm:!h-12 sm:!text-sm`}>{form.subject && subjectImage(form.subject) ? <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-md bg-slate-50"><Image src={subjectImage(form.subject)!} alt="" fill sizes="28px" className="object-contain p-0.5" /></span> : <BookOpen className="h-4 w-4 shrink-0 text-blue-600" />}<span className="min-w-0 flex-1 truncate">{form.subject || (subjects.length ? "Choose subject" : "No subjects available")}</span><ChevronDown className="h-4 w-4 shrink-0" /></button></div>
         </div>
         <div className="mt-2 grid grid-cols-2 gap-2 sm:mt-3 sm:gap-3">
           <label className="min-w-0 text-xs font-semibold text-slate-600 dark:text-slate-300"><span className="mb-1.5 flex items-center gap-1.5"><Clock3 className="h-4 w-4" />Class period</span><select required className={`${field} !h-10 !text-[10px] !font-bold sm:!h-12 sm:!text-xs`} value={form.periodId} onChange={(event) => setForm({ ...form, periodId: event.target.value })}><option value="">Choose period</option>{lessons.map((period) => <option key={period.id} value={period.id}>{period.name}{timeLabel(period) ? ` (${timeLabel(period)})` : ""}</option>)}</select></label>
           <label className="min-w-0 text-xs font-semibold text-slate-600 dark:text-slate-300"><span className="mb-1.5 flex items-center gap-1.5"><CalendarDays className="h-4 w-4" />Day</span><select className={`${field} !h-10 !text-xs sm:!h-12 sm:!text-sm`} value={form.weekday} onChange={(event) => setForm({ ...form, weekday: event.target.value })}><option value="">Every day</option>{weekdays.map((day, index) => <option key={day} value={index}>{day}</option>)}</select></label>
         </div>
+        {subjectPickerOpen && <div className="fixed inset-0 z-[140] flex items-end justify-center bg-slate-950/55 sm:items-center sm:p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setSubjectPickerOpen(false); }}>
+          <div role="dialog" aria-modal="true" aria-label="Choose subject" className="max-h-[76dvh] w-full overflow-y-auto rounded-t-3xl bg-white p-3 pb-[max(16px,env(safe-area-inset-bottom))] shadow-2xl dark:bg-slate-900 sm:max-w-lg sm:rounded-3xl sm:p-5">
+            <div className="flex items-center justify-between gap-3 px-1"><h4 className="text-xl font-black text-slate-950 dark:text-white">Choose subject</h4><button type="button" onClick={() => setSubjectPickerOpen(false)} aria-label="Close subject picker" className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-white"><X className="h-5 w-5" /></button></div>
+            <div className="mt-3 grid grid-cols-3 gap-2">{subjects.map((subject) => {
+              const image = subjectImage(subject);
+              const selected = form.subject === subject;
+              return <button key={subject} type="button" onClick={() => { setForm({ ...form, subject }); setSubjectPickerOpen(false); }} className={`min-w-0 overflow-hidden rounded-xl border p-1.5 text-left transition ${selected ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500 dark:bg-blue-500/15" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"}`}>
+                {image ? <><span className="relative block h-16 w-full overflow-hidden rounded-lg bg-slate-50 dark:bg-slate-900"><Image src={image} alt={`${subject} subject`} fill sizes="30vw" className="object-contain p-1" /></span><span className="mt-1.5 block truncate px-0.5 text-[11px] font-extrabold text-slate-900 dark:text-white">{subject}</span></> : <span className="flex h-[86px] w-full items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-blue-50 px-2 text-center text-[11px] font-extrabold leading-tight text-slate-800 dark:from-slate-800 dark:to-slate-700 dark:text-white">{subject}</span>}
+              </button>;
+            })}</div>
+          </div>
+        </div>}
         {error && <p role="alert" className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 dark:bg-red-500/15 dark:text-red-300">{error}</p>}
         <div className="mt-4 grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)] gap-2 sm:mt-5 sm:gap-3"><button type="button" onClick={() => setForm(null)} className="h-10 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:h-12 sm:text-sm font-extrabold text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white">Cancel</button><button disabled={working || !lessons.length || !groups.length} className="h-10 rounded-xl bg-blue-600 text-xs sm:h-12 sm:text-sm font-extrabold text-white shadow-lg shadow-blue-600/20 disabled:opacity-50">{working ? "Saving…" : "Save assignment"}</button></div>
       </form>
