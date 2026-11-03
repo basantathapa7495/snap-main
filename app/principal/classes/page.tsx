@@ -534,13 +534,24 @@ export default function ClassesPage() {
             {error && <div role="alert" className="mt-3 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/15 dark:text-red-200"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
             {notice && <div role="status" className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"><CheckCircle2 className="h-4 w-4 shrink-0" />{notice}</div>}
 
-            <section className="mt-3" aria-label="Class list">
-              <div className="mb-4 flex items-end justify-between gap-4">
-                <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-3xl">Class List</h1>
-                <p className="shrink-0 text-right text-xs font-normal tabular-nums text-slate-500 dark:text-slate-400 sm:text-sm">
-                  Total Students: {totalStudents.toLocaleString()}
-                </p>
-              </div>
+            <section className="mt-0" aria-label="Class list">
+              <header className="-mx-3 mb-3 w-[calc(100%+1.5rem)] rounded-none border-b border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-50 px-3 py-3 sm:mx-0 sm:w-full sm:rounded-xl sm:border-x sm:border-b sm:px-5 sm:py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 sm:h-11 sm:w-11">
+                      <BookOpen className="h-5 w-5" aria-hidden="true"/>
+                    </span>
+                    <div className="min-w-0">
+                      <h1 className="truncate text-lg font-extrabold tracking-tight text-slate-950 sm:text-3xl">Class List</h1>
+                      <p className="mt-0.5 truncate text-[10px] leading-4 text-slate-600 sm:text-sm">Manage classes, sections and student placement.</p>
+                    </div>
+                  </div>
+                  <div className="flex h-12 min-w-[76px] shrink-0 flex-col items-center justify-center rounded-xl bg-blue-600 px-3 text-white shadow-sm shadow-blue-200 sm:h-14 sm:min-w-[92px]">
+                    <span className="text-[9px] font-semibold uppercase tracking-wide text-blue-100 sm:text-[10px]">Students</span>
+                    <strong className="text-lg font-extrabold leading-5 tabular-nums sm:text-xl">{totalStudents.toLocaleString()}</strong>
+                  </div>
+                </div>
+              </header>
 
               <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredClasses.map((schoolClass) => {
