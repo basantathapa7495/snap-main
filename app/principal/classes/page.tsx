@@ -531,17 +531,6 @@ export default function ClassesPage() {
 
         <main className="flex-1 px-3 pb-28 pt-0 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px]">
-            <section className="relative -mx-3 aspect-[1672/650] w-[calc(100%+1.5rem)] overflow-hidden bg-[#edf7ff] sm:mx-0 sm:w-full sm:rounded-2xl sm:border sm:border-blue-100 sm:shadow-sm">
-              <Image
-                src="/class.jpg"
-                alt="Classes and sections"
-                fill
-                priority
-                sizes="(max-width: 1023px) 100vw, calc(100vw - 16rem)"
-                className="object-contain object-center"
-              />
-            </section>
-
             {error && <div role="alert" className="mt-3 flex items-start gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-500/15 dark:text-red-200"><AlertCircle className="h-4 w-4 shrink-0" />{error}</div>}
             {notice && <div role="status" className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200"><CheckCircle2 className="h-4 w-4 shrink-0" />{notice}</div>}
 
@@ -953,7 +942,6 @@ function ClassesSkeleton() {
         </div>
         <main className="px-3 pb-24 pt-0 sm:px-6 lg:px-8 lg:pt-24">
           <div className="mx-auto max-w-[1500px] animate-pulse">
-            <div className="-mx-3 aspect-[1672/650] w-[calc(100%+1.5rem)] bg-slate-100 sm:mx-0 sm:w-full sm:rounded-2xl" />
             <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
               {Array.from({ length: 4 }, (_, index) => (
                 <div key={index} className="h-24 rounded-2xl bg-white" />
