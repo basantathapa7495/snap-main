@@ -539,7 +539,7 @@ export default function ClassesPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2.5">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600 sm:h-11 sm:w-11">
-                      <BookOpen className="h-5 w-5" aria-hidden="true"/>
+                      <span role="img" aria-label="School classes" className="text-xl leading-none sm:text-2xl">🏫</span>
                     </span>
                     <div className="min-w-0">
                       <h1 className="truncate text-lg font-extrabold tracking-tight text-slate-950 sm:text-3xl">Class List</h1>
