@@ -189,7 +189,7 @@ export default function TopBar() {
   return (
     <>
       {isStudentArea && (
-        <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 bg-white px-4 lg:hidden">
+        <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 border-b border-slate-100 bg-white px-4 lg:hidden">
           <button
             type="button"
             onClick={() => window.dispatchEvent(new Event('student-sidebar:open'))}
