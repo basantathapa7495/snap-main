@@ -109,10 +109,10 @@ export default function CalendarPage(){
   const cells=Array.from({length:totalCells},(_,index)=>nextDate(firstDate,index-firstWeekday));
   const monthDates=Array.from({length:daysInMonth},(_,index)=>nextDate(firstDate,index));
   const weekendDates=monthDates.filter(date=>{const weekday=new Date(`${date}T00:00:00Z`).getUTCDay();return weekday===0||weekday===6;});
-  const explicitHolidays=visible.filter(item=>item.type==='holiday'&&item.start.slice(0,7)===month);
+  const explicitHolidays=allItems.filter(item=>item.type==='holiday'&&item.start.slice(0,7)===month);
   const defaultWeekendHolidayCount=weekendDates.filter(date=>!explicitHolidays.some(item=>item.start<=date&&item.end>=date)).length;
   const monthTitle=new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${firstDate}T00:00:00Z`));
-  const typeCounts={event:visible.filter(item=>item.type==='event'&&item.start.slice(0,7)===month).length,exam:visible.filter(item=>item.type==='exam'&&item.start.slice(0,7)===month).length,meeting:visible.filter(item=>item.type==='meeting'&&item.start.slice(0,7)===month).length,holiday:explicitHolidays.length+defaultWeekendHolidayCount};
+  const typeCounts={event:allItems.filter(item=>item.type==='event'&&item.start.slice(0,7)===month).length,exam:allItems.filter(item=>item.type==='exam'&&item.start.slice(0,7)===month).length,meeting:allItems.filter(item=>item.type==='meeting'&&item.start.slice(0,7)===month).length,holiday:explicitHolidays.length+defaultWeekendHolidayCount};
 
   function selectDate(date:string){setDay(date);if(date.slice(0,7)!==month)setMonth(date.slice(0,7));}
   function openForm(event?:CalendarEvent){setSelectedId(null);setEditingId(event?.id||null);setForm(event?{title:event.title,type:normalize(event.category),date:event.event_date||today,endDate:event.end_date||event.event_date||today,startTime:event.event_time?.slice(0,5)||'',endTime:event.end_time?.slice(0,5)||'',allDay:Boolean(event.all_day)||!event.event_time,description:event.content||'',location:event.location||'',audience:event.audience==='school'||event.audience==='classes'?event.audience:'public',classes:event.class_targets||[]}:{...emptyForm,date:day,endDate:day});setFormOpen(true);setError('');setNotice('');}
