@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -33,6 +33,11 @@ type TeacherAssignment = {
   active:boolean|null; created_at:string|null;
 };
 type Attendance = { status:string|null; attendance_date:string; class_name:string|null; section:string|null };
+type CachedClassDetails = {
+  baseRow:ClassRow; rows:ClassRow[]; students:Student[]; teachers:Teacher[];
+  assignments:TeacherAssignment[]; attendance:Attendance[];
+};
+const classDetailsCache=new Map<string,CachedClassDetails>();
 
 const norm=(value:string|null|undefined)=>(value||"").trim().toLowerCase().replace(/^(class|grade)\s+/,"");
 const rawClass=(row:ClassRow)=>row.class_name||row.class||row.name||row.class_number||"Class";
@@ -43,6 +48,7 @@ const formatDateTime=(value:string|null)=>value?new Intl.DateTimeFormat("en-NP",
 
 export default function ClassDetailsPage(){
   const params=useParams<{id:string}>();
+  const router=useRouter();
   const classId=Array.isArray(params.id)?params.id[0]:params.id;
   const [tab,setTab]=useState<Tab>("overview");
   const [loading,setLoading]=useState(true);
@@ -55,7 +61,11 @@ export default function ClassDetailsPage(){
   const [attendance,setAttendance]=useState<Attendance[]>([]);
 
   useEffect(()=>{let active=true;async function load(){
-    setLoading(true);setError("");
+    const cached=classDetailsCache.get(classId);
+    if(cached){
+      setBaseRow(cached.baseRow);setRows(cached.rows);setStudents(cached.students);setTeachers(cached.teachers);setAssignments(cached.assignments);setAttendance(cached.attendance);setLoading(false);
+    }else setLoading(true);
+    setError("");
     try{
       const {data:{user},error:authError}=await supabase.auth.getUser();
       if(authError)throw authError;
@@ -72,12 +82,14 @@ export default function ClassDetailsPage(){
       if(selected.school_id!==school)throw new Error("Class could not be found.");
       const selectedRow=selected as ClassRow;
       const since=new Date();since.setUTCDate(since.getUTCDate()-30);
+      const plainClass=rawClass(selectedRow).trim().replace(/^(class|grade)\s+/i,"");
+      const classVariants=[...new Set([rawClass(selectedRow),plainClass,`Class ${plainClass}`,`Grade ${plainClass}`,plainClass.toLowerCase(),plainClass.toUpperCase()])];
       const [classResult,studentResult,teacherResult,assignmentResult,attendanceResult]=await Promise.all([
         supabase.from("classes").select("id,school_id,class_name,class,name,class_number,section,section_name,teacher_id,academic_year,archived_at").eq("school_id",school).eq("academic_year",selectedRow.academic_year).is("archived_at",null),
-        supabase.from("students").select("id,name,class,section,created_at").eq("school_id",school),
+        supabase.from("students").select("id,name,class,section,created_at").eq("school_id",school).in("class",classVariants),
         supabase.from("teachers").select("id,name,subject,avatar_path").eq("school_id",school).is("left_at",null),
         supabase.from("teacher_assignments").select("id,teacher_id,class_id,class_name,subject,active,created_at").eq("school_id",school),
-        supabase.from("attendance").select("status,attendance_date,class_name,section").eq("school_id",school).gte("attendance_date",since.toISOString().slice(0,10)),
+        supabase.from("attendance").select("status,attendance_date,class_name,section").eq("school_id",school).in("class_name",classVariants).gte("attendance_date",since.toISOString().slice(0,10)),
       ]);
       const failure=[classResult,studentResult,teacherResult,assignmentResult,attendanceResult].find(result=>result.error)?.error;
       if(failure)throw failure;
@@ -88,7 +100,9 @@ export default function ClassDetailsPage(){
       const classAssignments=((assignmentResult.data||[]) as TeacherAssignment[]).filter(item=>item.active!==false&&(Boolean(item.class_id&&rowIds.has(item.class_id))||norm(item.class_name)===key));
       const classAttendance=((attendanceResult.data||[]) as Attendance[]).filter(item=>norm(item.class_name)===key);
       if(!active)return;
-      setBaseRow(selectedRow);setRows(classRows);setStudents(classStudents);setTeachers((teacherResult.data||[]) as Teacher[]);setAssignments(classAssignments);setAttendance(classAttendance);
+      const details={baseRow:selectedRow,rows:classRows,students:classStudents,teachers:(teacherResult.data||[]) as Teacher[],assignments:classAssignments,attendance:classAttendance};
+      classDetailsCache.set(classId,details);
+      setBaseRow(details.baseRow);setRows(details.rows);setStudents(details.students);setTeachers(details.teachers);setAssignments(details.assignments);setAttendance(details.attendance);
     }catch(cause){if(active)setError(cause instanceof Error?cause.message:"Class details could not be loaded.");}
     finally{if(active)setLoading(false);}
   }load();return()=>{active=false;};},[classId]);
@@ -125,7 +139,7 @@ export default function ClassDetailsPage(){
     {!error&&baseRow&&<>
       <header className="-mx-3 border-b border-blue-100 bg-gradient-to-r from-blue-50 via-white to-sky-50 px-3 py-3 sm:mx-0 sm:rounded-xl sm:border sm:px-5 sm:py-4">
         <div className="flex items-center gap-3">
-          <Link href="/principal/classes" aria-label="Back to classes" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/80 text-slate-600 shadow-sm"><ArrowLeft className="h-5 w-5"/></Link>
+          <button type="button" onClick={()=>window.history.length>1?router.back():router.push("/principal/classes")} aria-label="Back to classes" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/80 text-slate-600 shadow-sm"><ArrowLeft className="h-5 w-5"/></button>
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-2xl" role="img" aria-label="Class books">📚</span>
           <div className="min-w-0 flex-1"><h1 className="truncate text-2xl font-extrabold tracking-tight text-slate-950">{title}</h1><p className="truncate text-[11px] text-slate-600 sm:text-sm">Manage sections, students, teachers and class activities.</p></div>
           <div className="flex h-14 min-w-[74px] shrink-0 flex-col items-center justify-center rounded-xl bg-blue-600 px-2 text-white shadow-sm"><span className="text-[9px] font-semibold uppercase text-blue-100">Students</span><strong className="text-2xl font-black leading-6">{students.length}</strong></div>
