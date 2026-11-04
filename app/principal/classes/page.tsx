@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import NepaliDate from "nepali-date-converter";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/TopBar";
@@ -145,6 +146,7 @@ function titleCase(value: string) {
 }
 
 export default function ClassesPage() {
+  const router = useRouter();
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [schoolId, setSchoolId] = useState<string | null>(null);
@@ -155,6 +157,8 @@ export default function ClassesPage() {
   const currentYear = Number(new NepaliDate(new Date()).format("YYYY"));
   const selectedYear = currentYear;
   const [expandedClass, setExpandedClass] = useState<string | null>(null);
+
+  useEffect(() => { classes.forEach((item) => router.prefetch(`/principal/classes/${item.id}`)); }, [classes, router]);
   const [classModalOpen, setClassModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<SchoolClass | null>(null);
   const [className, setClassName] = useState("");
@@ -561,7 +565,7 @@ export default function ClassesPage() {
                       <ClassCard
                         schoolClass={schoolClass}
                         expanded={expanded}
-                        onToggle={() => { window.location.href = `/principal/classes/${schoolClass.id}`; }}
+                        onToggle={() => router.push(`/principal/classes/${schoolClass.id}`)}
                         showStudents
                         canDelete={isExtraGrade(schoolClass)}
                         onDeleteClass={deleteExtraClass}
