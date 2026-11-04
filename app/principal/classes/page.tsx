@@ -231,7 +231,7 @@ export default function ClassesPage() {
           const linkedId = new URLSearchParams(window.location.search).get('class');
           const linkedRow = classRows.find((row) => row.id === linkedId);
           const linkedClass = linkedRow && schoolClasses.find((item) => normalize(item.name) === normalize(classLabel(linkedRow)));
-          if (linkedClass) window.history.replaceState(window.history.state, '', `/principal/classes#class-${linkedClass.id}`);
+          if (linkedClass) { setExpandedClass(linkedClass.id); window.history.replaceState(window.history.state, '', `/principal/classes#class-${linkedClass.id}`); }
           setSchoolId(profile.school_id);
           const level = schoolResult.data.school_level;
           setDefaultHighestGrade(level === "Primary" ? 5 : level === "Basic" ? 8 : level === "Secondary" ? (schoolResult.data.highest_grade === 12 ? 12 : 10) : level === "Higher Secondary" ? 12 : null);
@@ -561,7 +561,7 @@ export default function ClassesPage() {
                       <ClassCard
                         schoolClass={schoolClass}
                         expanded={expanded}
-                        onToggle={() => setExpandedClass((current) => current === schoolClass.id ? null : schoolClass.id)}
+                        onToggle={() => { window.location.href = `/principal/classes/${schoolClass.id}`; }}
                         showStudents
                         canDelete={isExtraGrade(schoolClass)}
                         onDeleteClass={deleteExtraClass}
