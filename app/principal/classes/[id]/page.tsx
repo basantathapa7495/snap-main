@@ -47,7 +47,6 @@ export default function ClassDetailsPage(){
   const [tab,setTab]=useState<Tab>("overview");
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState("");
-  const [schoolId,setSchoolId]=useState("");
   const [baseRow,setBaseRow]=useState<ClassRow|null>(null);
   const [rows,setRows]=useState<ClassRow[]>([]);
   const [students,setStudents]=useState<Student[]>([]);
@@ -61,11 +60,16 @@ export default function ClassDetailsPage(){
       const {data:{user},error:authError}=await supabase.auth.getUser();
       if(authError)throw authError;
       if(!user)throw new Error("Please sign in again.");
-      const {data:profile,error:profileError}=await supabase.from("profiles").select("school_id,role").eq("user_id",user.id).single();
+      const [profileResult,selectedResult]=await Promise.all([
+        supabase.from("profiles").select("school_id,role").eq("user_id",user.id).single(),
+        supabase.from("classes").select("id,school_id,class_name,class,name,class_number,section,section_name,teacher_id,academic_year,archived_at").eq("id",classId).is("archived_at",null).single(),
+      ]);
+      const {data:profile,error:profileError}=profileResult;
+      const {data:selected,error:selectedError}=selectedResult;
       if(profileError||!profile?.school_id)throw profileError||new Error("School profile could not be loaded.");
-      const school=profile.school_id as string;
-      const {data:selected,error:selectedError}=await supabase.from("classes").select("id,school_id,class_name,class,name,class_number,section,section_name,teacher_id,academic_year,archived_at").eq("id",classId).eq("school_id",school).is("archived_at",null).single();
       if(selectedError||!selected)throw selectedError||new Error("Class could not be found.");
+      const school=profile.school_id as string;
+      if(selected.school_id!==school)throw new Error("Class could not be found.");
       const selectedRow=selected as ClassRow;
       const since=new Date();since.setUTCDate(since.getUTCDate()-30);
       const [classResult,studentResult,teacherResult,assignmentResult,attendanceResult]=await Promise.all([
@@ -84,7 +88,7 @@ export default function ClassDetailsPage(){
       const classAssignments=((assignmentResult.data||[]) as TeacherAssignment[]).filter(item=>item.active!==false&&(Boolean(item.class_id&&rowIds.has(item.class_id))||norm(item.class_name)===key));
       const classAttendance=((attendanceResult.data||[]) as Attendance[]).filter(item=>norm(item.class_name)===key);
       if(!active)return;
-      setSchoolId(school);setBaseRow(selectedRow);setRows(classRows);setStudents(classStudents);setTeachers((teacherResult.data||[]) as Teacher[]);setAssignments(classAssignments);setAttendance(classAttendance);
+      setBaseRow(selectedRow);setRows(classRows);setStudents(classStudents);setTeachers((teacherResult.data||[]) as Teacher[]);setAssignments(classAssignments);setAttendance(classAttendance);
     }catch(cause){if(active)setError(cause instanceof Error?cause.message:"Class details could not be loaded.");}
     finally{if(active)setLoading(false);}
   }load();return()=>{active=false;};},[classId]);
