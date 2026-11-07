@@ -51,7 +51,7 @@ export default function MobileBottomNav() {
         aria-label="Principal mobile navigation"
         className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white shadow-[0_-5px_18px_rgba(15,23,42,0.08)] md:hidden"
       >
-        <div className="grid h-[60px] grid-cols-5 items-stretch px-1 pb-[env(safe-area-inset-bottom)]">
+        <div className="grid h-[54px] grid-cols-5 items-stretch px-1 pb-[env(safe-area-inset-bottom)]">
           {principalNavItems.map((item, index) => {
             const Icon = item.icon;
             const isPortalRoot = item.href === '/principal';
