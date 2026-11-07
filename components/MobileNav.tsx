@@ -49,9 +49,9 @@ export default function MobileBottomNav() {
     return (
       <nav
         aria-label="Principal mobile navigation"
-        className="fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-50 md:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white shadow-[0_-5px_18px_rgba(15,23,42,0.08)] md:hidden"
       >
-        <div className="grid h-[70px] grid-cols-5 items-stretch rounded-[26px] border border-slate-200/90 bg-white/95 px-1 shadow-[0_10px_35px_rgba(30,64,175,0.18)] backdrop-blur-xl">
+        <div className="grid h-[64px] grid-cols-5 items-stretch px-1 pb-[env(safe-area-inset-bottom)]">
           {principalNavItems.map((item, index) => {
             const Icon = item.icon;
             const isPortalRoot = item.href === '/principal';
@@ -62,21 +62,20 @@ export default function MobileBottomNav() {
             return (
               <div
                 key={item.href}
-                className={`relative flex min-w-0 items-center justify-center ${index > 0 ? 'before:absolute before:bottom-3 before:left-0 before:top-3 before:w-px before:bg-slate-200' : ''}`}
+                className={`relative flex min-w-0 items-center justify-center ${index > 0 ? 'before:absolute before:bottom-2.5 before:left-0 before:top-2.5 before:w-px before:bg-slate-200' : ''}`}
               >
                 <Link
                   href={item.href}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`relative z-10 flex min-w-0 flex-col items-center justify-center text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${isActive
-                    ? '-translate-y-2 h-[76px] w-[calc(100%-4px)] max-w-[78px] gap-1 rounded-[24px] bg-gradient-to-b from-blue-500 to-blue-700 px-0.5 text-white shadow-[0_10px_22px_rgba(37,99,235,0.38)]'
-                    : 'h-full w-full gap-1 px-0.5 text-slate-600 active:scale-95'
-                  }`}
+                  className={`relative z-10 flex h-full w-full min-w-0 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 ${isActive ? 'text-blue-700' : 'text-slate-600 active:bg-slate-50'}`}
                 >
-                  <Icon
-                    className={isActive ? 'h-7 w-7' : 'h-6 w-6 text-slate-600'}
-                    strokeWidth={isActive ? 2.6 : 2.25}
-                    aria-hidden="true"
-                  />
+                  <span className={`flex h-9 w-11 items-center justify-center rounded-xl transition-colors ${isActive ? 'bg-blue-600 text-white shadow-sm shadow-blue-200' : 'bg-transparent text-slate-600'}`}>
+                    <Icon
+                      className="h-[22px] w-[22px]"
+                      strokeWidth={isActive ? 2.6 : 2.25}
+                      aria-hidden="true"
+                    />
+                  </span>
                   <span className={`w-full truncate font-bold leading-none tracking-[-0.02em] ${item.label === 'Communication' ? 'text-[8px] min-[390px]:text-[9px]' : 'text-[10px] min-[390px]:text-[11px]'}`}>
                     {item.label}
                   </span>
