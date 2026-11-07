@@ -503,7 +503,7 @@ export default function StudentsPage() {
               onUnassigned={(ids) => { setUnassignedIds(ids); setStudentClass("All"); setSection("All"); setCurrentPage(1); setPageTab("students"); }}
               onJoining={() => setPageTab("joining")} />}
             {pageTab === "attendance" && schoolId && <PrincipalStudentAttendanceTab schoolId={schoolId} students={students} />}
-            {pageTab === "joining" && <><SchoolJoiningControls role="student" /><StudentJoiningOversight /></>}
+            {pageTab === "joining" && <><SchoolJoiningControls role="student" /><StudentJoiningOversight onApproved={() => setRefreshKey((value) => value + 1)} /></>}
 
             {pageTab === "students" && <>
               {unassignedIds && <button type="button" onClick={() => setUnassignedIds(null)} className="mb-2 text-xs font-semibold text-blue-600">Showing unassigned students · Clear filter</button>}
