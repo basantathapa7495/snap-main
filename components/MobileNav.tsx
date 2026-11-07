@@ -45,6 +45,50 @@ export default function MobileBottomNav() {
         ? studentNavItems
         : defaultNavItems;
 
+  if (isPrincipal) {
+    return (
+      <nav
+        aria-label="Principal mobile navigation"
+        className="fixed inset-x-2 bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-50 md:hidden"
+      >
+        <div className="grid h-[70px] grid-cols-5 items-stretch rounded-[26px] border border-slate-200/90 bg-white/95 px-1 shadow-[0_10px_35px_rgba(30,64,175,0.18)] backdrop-blur-xl">
+          {principalNavItems.map((item, index) => {
+            const Icon = item.icon;
+            const isPortalRoot = item.href === '/principal';
+            const isActive =
+              pathname === item.href ||
+              (!isPortalRoot && pathname.startsWith(`${item.href}/`));
+
+            return (
+              <div
+                key={item.href}
+                className={`relative flex min-w-0 items-center justify-center ${index > 0 ? 'before:absolute before:bottom-3 before:left-0 before:top-3 before:w-px before:bg-slate-200' : ''}`}
+              >
+                <Link
+                  href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`relative z-10 flex min-w-0 flex-col items-center justify-center text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${isActive
+                    ? '-translate-y-2 h-[76px] w-[calc(100%-4px)] max-w-[78px] gap-1 rounded-[24px] bg-gradient-to-b from-blue-500 to-blue-700 px-0.5 text-white shadow-[0_10px_22px_rgba(37,99,235,0.38)]'
+                    : 'h-full w-full gap-1 px-0.5 text-slate-600 active:scale-95'
+                  }`}
+                >
+                  <Icon
+                    className={isActive ? 'h-7 w-7' : 'h-6 w-6 text-slate-600'}
+                    strokeWidth={isActive ? 2.6 : 2.25}
+                    aria-hidden="true"
+                  />
+                  <span className={`w-full truncate font-bold leading-none tracking-[-0.02em] ${item.label === 'Communication' ? 'text-[8px] min-[390px]:text-[9px]' : 'text-[10px] min-[390px]:text-[11px]'}`}>
+                    {item.label}
+                  </span>
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      </nav>
+    );
+  }
+
   return (
     <nav aria-label="Mobile navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/80 bg-[#F8FAFC]/95 shadow-[0_-4px_18px_rgba(15,23,42,0.05)] backdrop-blur-md dark:border-slate-700/70 dark:bg-[#111B2B]/95 md:hidden">
       <div className="grid grid-cols-5 items-center px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
