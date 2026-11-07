@@ -74,7 +74,6 @@ const principalMenu: MenuSection[] = [
     { href: '/principal/admission', label: 'Admission', icon: UserCog },
     { href: '/principal/results', label: 'Exams & Results', icon: FileText },
     { href: '/principal/communication', label: 'Communication', icon: Bell },
-    { href: '/principal/calendar', label: 'Calendar', icon: Calendar },
   ],
   [
     { href: '/principal/reports', label: 'Reports', icon: BarChart3 },
