@@ -51,7 +51,7 @@ export default function MobileBottomNav() {
         aria-label="Principal mobile navigation"
         className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white shadow-[0_-5px_18px_rgba(15,23,42,0.08)] md:hidden"
       >
-        <div className="grid h-[64px] grid-cols-5 items-stretch px-1 pb-[env(safe-area-inset-bottom)]">
+        <div className="grid h-[60px] grid-cols-5 items-stretch px-1 pb-[env(safe-area-inset-bottom)]">
           {principalNavItems.map((item, index) => {
             const Icon = item.icon;
             const isPortalRoot = item.href === '/principal';
@@ -62,16 +62,16 @@ export default function MobileBottomNav() {
             return (
               <div
                 key={item.href}
-                className={`relative flex min-w-0 items-center justify-center ${index > 0 ? 'before:absolute before:bottom-2.5 before:left-0 before:top-2.5 before:w-px before:bg-slate-200' : ''}`}
+                className={`relative flex min-w-0 items-center justify-center ${index > 0 ? 'before:absolute before:bottom-2 before:left-0 before:top-2 before:w-px before:bg-slate-200' : ''}`}
               >
                 <Link
                   href={item.href}
                   aria-current={isActive ? 'page' : undefined}
                   className={`relative z-10 flex h-full w-full min-w-0 flex-col items-center justify-center gap-0.5 px-0.5 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500 ${isActive ? 'text-blue-700' : 'text-slate-600 active:bg-slate-50'}`}
                 >
-                  <span className={`flex h-9 w-11 items-center justify-center rounded-xl transition-colors ${isActive ? 'bg-blue-600 text-white shadow-sm shadow-blue-200' : 'bg-transparent text-slate-600'}`}>
+                  <span className={`flex h-8 w-10 items-center justify-center rounded-xl transition-colors ${isActive ? 'bg-blue-600 text-white shadow-sm shadow-blue-200' : 'bg-transparent text-slate-600'}`}>
                     <Icon
-                      className="h-[22px] w-[22px]"
+                      className="h-5 w-5"
                       strokeWidth={isActive ? 2.6 : 2.25}
                       aria-hidden="true"
                     />
