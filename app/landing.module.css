@@ -1,0 +1,25 @@
+.home { color-scheme: light; }
+.home summary::-webkit-details-marker { display: none; }
+.heroPhoto {
+  position: relative;
+  aspect-ratio: 1.65;
+  overflow: hidden;
+  background: #f8fafc;
+}
+/* Show only the administrator in the existing image, not its mock feature cards. */
+.heroImage {
+  position: absolute;
+  top: -30%;
+  left: 0;
+  width: 210%;
+  max-width: none;
+  height: auto;
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .heroPhoto { aspect-ratio: 2.1; }
+  .heroImage { top: -48%; }
+}
+@media (min-width: 1024px) {
+  .heroPhoto { aspect-ratio: 1.25; }
+  .heroImage { top: -20%; }
+}
