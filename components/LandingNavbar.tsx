@@ -55,7 +55,7 @@ export default function LandingNavbar() {
           {mobileOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
         </button>
         <Link href="/" aria-label="NEPSOM home" className="absolute left-1/2 flex min-h-11 -translate-x-1/2 items-center lg:static lg:translate-x-0">
-          <Image src="/logo2.png" alt="NEPSOM" width={1035} height={241} sizes="132px" className="h-auto w-[116px] sm:w-[124px] lg:w-[132px]" />
+          <Image src="/logo2.png" alt="NEPSOM" width={1035} height={241} sizes="144px" className="h-auto w-[124px] sm:w-[132px] lg:w-[144px]" />
         </Link>
         <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex">
           {navLinks.map(({ href, label }) => <li key={href}><a href={href} className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]">{label}</a></li>)}
