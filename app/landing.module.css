@@ -1,25 +1,89 @@
-.home { color-scheme: light; }
-.home summary::-webkit-details-marker { display: none; }
+.home {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+.home summary::-webkit-details-marker {
+  display: none;
+}
+
+.heroFrame {
+  box-shadow: 0 22px 46px -38px rgba(15, 23, 42, 0.55);
+}
+
 .heroPhoto {
   position: relative;
-  aspect-ratio: 1.7;
+  aspect-ratio: 1.48;
   overflow: hidden;
   background: #f8fafc;
 }
-/* Show only the administrator in the existing image, not its mock feature cards. */
+
+/* Show the administrator, not the existing asset's old mock UI. */
 .heroImage {
   position: absolute;
-  top: -30%;
+  top: -32%;
   left: 0;
   width: 210%;
   max-width: none;
   height: auto;
 }
-@media (min-width: 640px) and (max-width: 1023px) {
-  .heroPhoto { aspect-ratio: 2.1; }
-  .heroImage { top: -48%; }
+
+.featureCard,
+.portalCard {
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
+
+@media (hover: hover) and (pointer: fine) {
+  .featureCard:hover,
+  .portalCard:hover {
+    transform: translateY(-2px);
+    border-color: #cbd5e1;
+    box-shadow: 0 12px 24px -22px rgba(15, 23, 42, 0.55);
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .heroPhoto {
+    aspect-ratio: 2;
+  }
+
+  .heroImage {
+    top: -48%;
+    width: 210%;
+  }
+}
+
+@media (min-width: 768px) {
+  .steps {
+    position: relative;
+  }
+
+  .steps::before {
+    content: "";
+    position: absolute;
+    top: 18px;
+    right: 16.667%;
+    left: 16.667%;
+    height: 1px;
+    background: #cbd5e1;
+  }
+}
+
 @media (min-width: 1024px) {
-  .heroPhoto { aspect-ratio: 1.52; }
-  .heroImage { top: -28%; }
+  .heroPhoto {
+    aspect-ratio: 1.36;
+  }
+
+  .heroImage {
+    top: -22%;
+    width: 210%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featureCard,
+  .portalCard {
+    transition: none;
+  }
 }
