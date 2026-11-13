@@ -145,7 +145,7 @@ export default function HomePage() {
                   alt="School administrator using a phone in her office"
                   width={1536}
                   height={1024}
-                  sizes="(max-width: 639px) 210vw, (max-width: 1023px) 180vw, 1100px"
+                  sizes="(max-width: 1023px) 210vw, 1100px"
                   preload
                   className={styles.heroImage}
                 />
