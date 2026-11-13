@@ -2,7 +2,7 @@
 .home summary::-webkit-details-marker { display: none; }
 .heroPhoto {
   position: relative;
-  aspect-ratio: 1.65;
+  aspect-ratio: 1.7;
   overflow: hidden;
   background: #f8fafc;
 }
@@ -20,6 +20,6 @@
   .heroImage { top: -48%; }
 }
 @media (min-width: 1024px) {
-  .heroPhoto { aspect-ratio: 1.25; }
-  .heroImage { top: -20%; }
+  .heroPhoto { aspect-ratio: 1.52; }
+  .heroImage { top: -28%; }
 }

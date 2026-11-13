@@ -24,49 +24,7 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-/* NEPSOM Landing Page Animations */
 html { scroll-behavior: smooth; }
-.fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
-.fade-in.visible { opacity: 1; transform: translateY(0); }
-
-/* Subtle background patterns inspired by basantasaru.com. */
-.nepsom-pattern-grid {
-  isolation: isolate;
-}
-
-.nepsom-pattern-grid::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.nepsom-pattern-grid::before {
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(37, 99, 235, 0.11) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(37, 99, 235, 0.11) 1px, transparent 1px);
-  background-size: 34px 34px;
-  mask-image: linear-gradient(to bottom, black 5%, transparent 92%);
-  animation: nepsom-grid-drift 24s linear infinite;
-}
-
-@keyframes nepsom-grid-drift {
-  to { background-position: 34px 34px; }
-}
-
-@media (max-width: 640px) {
-  .nepsom-pattern-grid::before {
-    background-size: 26px 26px;
-    opacity: 0.82;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .nepsom-pattern-grid::before {
-    animation: none;
-  }
-}
 
 @layer components {
   .control {
@@ -120,12 +78,6 @@ html { scroll-behavior: smooth; }
 .nepsom-home :is(a, button, summary):focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 3px;
-}
-
-@media (max-width: 640px) {
-  .nepsom-home .nepsom-pattern-grid::before {
-    animation: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
