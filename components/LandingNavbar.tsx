@@ -55,7 +55,7 @@ export default function LandingNavbar() {
         <button ref={toggleRef} type="button" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="landing-mobile-menu" onClick={() => setMobileOpen((open) => !open)} className="-ml-2 inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg border border-[#CBD5E1] bg-white text-[#0F172A] transition-colors hover:bg-[#F8FAFC] lg:hidden">
           {mobileOpen ? <X className="h-[18px] w-[18px]" strokeWidth={2.5} aria-hidden="true" /> : <Menu className="h-[18px] w-[18px]" strokeWidth={3} aria-hidden="true" />}
         </button>
-        <Link href="/" aria-label="NEPSOM home" className="flex min-h-11 shrink-0 items-center lg:static">
+        <Link href="/" aria-label="NEPSOM home" className="ml-1 flex min-h-11 shrink-0 items-center lg:static lg:ml-0">
           <Image src="/logo2.png" alt="NEPSOM" width={1035} height={241} sizes="150px" className="h-auto w-[150px] sm:w-[150px] lg:w-[150px]" />
         </Link>
         <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex">
