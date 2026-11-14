@@ -15,7 +15,6 @@ import {
   Minus,
   Phone,
   Plus,
-  School,
   UserRoundCheck,
   Users,
   WalletCards,
@@ -161,10 +160,9 @@ export default function HomePage() {
               <Link
                 href="/auth/signup"
                 prefetch={false}
-                className="mt-4 flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#2563EB] px-5 text-white shadow-[0_14px_24px_-18px_rgba(37,99,235,0.9)] transition-colors hover:bg-[#1D4ED8]"
+                className="mt-4 flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#3B82F6] px-5 text-white transition-colors hover:bg-[#2563EB]"
               >
-                <School className="h-6 w-6 shrink-0" strokeWidth={1.8} aria-hidden="true" />
-                <span className="mx-4 text-base font-bold">Register your school</span>
+                <span className="text-base font-bold">Register your school</span>
                 <ArrowRight className="ml-auto h-5 w-5 shrink-0" strokeWidth={2.3} aria-hidden="true" />
               </Link>
             </div>
