@@ -52,7 +52,7 @@ export default function LandingNavbar() {
       if (!event.currentTarget.contains(event.relatedTarget as Node)) setMobileOpen(false);
     }}>
       <nav aria-label="Main navigation" className="relative mx-auto flex h-[50px] max-w-[1180px] items-center justify-between gap-3 px-4 sm:px-6 lg:h-14 lg:px-8">
-        <button ref={toggleRef} type="button" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="landing-mobile-menu" onClick={() => setMobileOpen((open) => !open)} className="-ml-2 inline-flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-[#CBD5E1] bg-white text-[#0F172A] shadow-sm transition-colors hover:bg-[#F8FAFC] lg:hidden">
+        <button ref={toggleRef} type="button" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="landing-mobile-menu" onClick={() => setMobileOpen((open) => !open)} className="-ml-2 inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg border border-[#CBD5E1] bg-white text-[#0F172A] transition-colors hover:bg-[#F8FAFC] lg:hidden">
           {mobileOpen ? <X className="h-[18px] w-[18px]" strokeWidth={2.5} aria-hidden="true" /> : <Menu className="h-[18px] w-[18px]" strokeWidth={3} aria-hidden="true" />}
         </button>
         <Link href="/" aria-label="NEPSOM home" className="flex min-h-11 shrink-0 items-center lg:static">
@@ -67,10 +67,10 @@ export default function LandingNavbar() {
             aria-label={`Switch to ${language === 'eng' ? 'Nepali' : 'English'}`}
             aria-pressed={language === 'nep'}
             onClick={() => setLanguage((current) => current === 'eng' ? 'nep' : 'eng')}
-            className="grid h-[35px] w-[62px] grid-cols-2 items-center rounded-full border border-[#93C5FD] bg-white p-0.5 text-[10px] font-bold uppercase tracking-tight text-[#64748B] lg:hidden"
+            className="grid h-[35px] w-[72px] grid-cols-2 items-center overflow-hidden rounded-full border border-[#94A3B8] bg-white p-0.5 text-[11px] font-bold uppercase tracking-tight text-[#334155] lg:hidden"
           >
-            <span className={`flex h-[29px] items-center justify-center rounded-full transition-colors ${language === 'eng' ? 'bg-[#DBEAFE] text-[#1D4ED8]' : ''}`}>ENG</span>
-            <span className={`flex h-[29px] items-center justify-center rounded-full transition-colors ${language === 'nep' ? 'bg-[#DBEAFE] text-[#1D4ED8]' : ''}`}>NEP</span>
+            <span className={`flex h-[29px] items-center justify-center transition-colors ${language === 'eng' ? 'rounded-l-full bg-[#0B5CBD] text-white' : ''}`}>ENG</span>
+            <span className={`flex h-[29px] items-center justify-center transition-colors ${language === 'nep' ? 'rounded-r-full bg-[#0B5CBD] text-white' : ''}`}>NEP</span>
           </button>
           <Link href="/auth/login" prefetch={false} className="inline-flex h-[35px] items-center justify-center rounded-lg border border-[#CBD5E1] px-2.5 text-sm font-semibold text-[#0F172A] hover:bg-[#F8FAFC] lg:h-10 lg:px-4">Log in</Link>
         </div>
