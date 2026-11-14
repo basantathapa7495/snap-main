@@ -240,14 +240,17 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="portals" aria-labelledby="portals-heading" className="scroll-mt-20 border-y border-[#E2E8F0] bg-white py-12 sm:py-[72px]">
+        <section id="portals" aria-labelledby="portals-heading" className="scroll-mt-20 border-y border-[#E2E8F0] bg-white py-8 sm:py-12">
           <div className={container}>
-            <div className="text-center">
-              <h2 id="portals-heading" className={heading}>One school, three portals</h2>
-              <p className="mt-3 text-sm font-medium text-[#475569] sm:text-base">Built for principals, teachers and students.</p>
+            <div className="text-left sm:text-center">
+              <span className="mb-2 block h-1 w-10 rounded-full bg-[#2563EB] sm:mx-auto" aria-hidden="true" />
+              <h2 id="portals-heading" className="text-[25px] font-bold leading-tight tracking-[-0.03em] text-[#0F172A] sm:text-[32px]">
+                One school, <span className="text-[#2563EB]">three portals</span>
+              </h2>
+              <p className="mt-1.5 text-[13px] font-medium leading-5 text-[#475569] sm:text-base">Built for principals, teachers and students.</p>
             </div>
 
-            <div className="mt-8 grid gap-4 sm:mt-10 lg:grid-cols-3">
+            <div className="mt-5 grid gap-4 sm:mt-8 lg:grid-cols-3">
               {portals.map(({
                 name,
                 icon: Icon,
