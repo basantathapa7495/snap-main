@@ -143,7 +143,7 @@ export default function HomePage() {
                 Less paperwork. More teaching.
               </p>
 
-              <figure className={`${styles.heroFrame} -mx-4 mt-7 w-[calc(100%+2rem)] max-w-none overflow-hidden border-y border-[#E2E8F0] bg-[#F8FAFC] sm:mx-0 sm:w-full sm:max-w-[920px] sm:rounded-xl sm:border`}>
+              <figure className={`${styles.heroFrame} -mx-4 mt-4 w-[calc(100%+2rem)] max-w-none overflow-hidden border-y border-[#E2E8F0] bg-[#F8FAFC] sm:mx-0 sm:w-full sm:max-w-[920px] sm:rounded-xl sm:border`}>
                 <div className={styles.heroPhoto}>
                   <Image
                     src="/hero-img.png"
