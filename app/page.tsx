@@ -141,6 +141,19 @@ export default function HomePage() {
                 </span>
               </p>
 
+              <figure className={`${styles.heroFrame} mt-7 w-full max-w-[920px] overflow-hidden rounded-xl border border-[#E2E8F0] bg-[#F8FAFC]`}>
+                <div className={styles.heroPhoto}>
+                  <Image
+                    src="/hero-image.png"
+                    alt="School administrator using NEPSOM on her phone"
+                    width={1536}
+                    height={1024}
+                    sizes="(max-width: 639px) calc(100vw - 32px), 920px"
+                    preload
+                    className={styles.heroImage}
+                  />
+                </div>
+              </figure>
             </div>
           </div>
         </section>
