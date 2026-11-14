@@ -15,7 +15,6 @@ import {
   Minus,
   Phone,
   Plus,
-  UserRoundCheck,
   Users,
   WalletCards,
 } from 'lucide-react';
