@@ -54,8 +54,8 @@ export default function LandingNavbar() {
         <button ref={toggleRef} type="button" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="landing-mobile-menu" onClick={() => setMobileOpen((open) => !open)} className="-ml-2 inline-flex h-[45px] w-[45px] items-center justify-center rounded-lg text-[#0F172A] hover:bg-[#F8FAFC] lg:hidden">
           {mobileOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
         </button>
-        <Link href="/" aria-label="NEPSOM home" className="absolute left-1/2 flex min-h-11 -translate-x-1/2 items-center lg:static lg:translate-x-0">
-          <Image src="/logo2.png" alt="NEPSOM" width={1035} height={241} sizes="180px" className="h-auto w-[180px] sm:w-[180px] lg:w-[180px]" />
+        <Link href="/" aria-label="NEPSOM home" className="absolute left-[48%] flex min-h-11 -translate-x-1/2 items-center sm:left-1/2 lg:static lg:translate-x-0">
+          <Image src="/logo2.png" alt="NEPSOM" width={1035} height={241} sizes="200px" className="h-auto w-[200px] sm:w-[200px] lg:w-[200px]" />
         </Link>
         <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex">
           {navLinks.map(({ href, label }) => <li key={href}><a href={href} className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]">{label}</a></li>)}
