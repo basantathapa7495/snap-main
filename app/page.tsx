@@ -183,13 +183,13 @@ export default function HomePage() {
             {features.map(({ name, description, icon: Icon, rail, iconBg, iconColor }) => (
               <article
                 key={name}
-                className={`${styles.featureCard} relative flex min-h-[118px] items-center overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-3 pl-4 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.65)] sm:min-h-[132px] sm:gap-4 sm:p-5 sm:pl-6`}
+                className={`${styles.featureCard} relative flex min-h-[100px] items-center overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-2.5 pl-4 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.65)] sm:min-h-[112px] sm:gap-3 sm:p-4 sm:pl-5`}
               >
                 <span className={`absolute inset-y-3 left-0 w-1 rounded-r-full ${rail}`} aria-hidden="true" />
-                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconBg} sm:h-14 sm:w-14`}>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg} sm:h-12 sm:w-12`}>
                   <Icon className={`h-6 w-6 ${iconColor} sm:h-7 sm:w-7`} strokeWidth={1.9} aria-hidden="true" />
                 </span>
-                <span className="mx-2.5 h-14 w-px shrink-0 bg-[#E2E8F0] sm:mx-0 sm:h-16" aria-hidden="true" />
+                <span className="mx-2 h-12 w-px shrink-0 bg-[#E2E8F0] sm:mx-0 sm:h-14" aria-hidden="true" />
                 <div className="min-w-0">
                   <h3 className="text-[13px] font-bold leading-4 text-[#0F172A] sm:text-lg sm:leading-6">{name}</h3>
                   <p className="mt-1.5 text-[11px] leading-[1.45] text-[#475569] sm:text-sm sm:leading-5">{description}</p>
