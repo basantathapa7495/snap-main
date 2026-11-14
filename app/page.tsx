@@ -274,7 +274,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="pricing" aria-labelledby="cta-heading" className="scroll-mt-20 border-y border-[#E2E8F0] bg-[#F8FAFC] py-10 sm:py-12">
+        <section aria-labelledby="cta-heading" className="border-y border-[#E2E8F0] bg-[#F8FAFC] py-10 sm:py-12">
           <div className={`${container} flex flex-col gap-5 md:flex-row md:items-center md:justify-between md:gap-10`}>
             <div>
               <h2 id="cta-heading" className="text-[25px] font-semibold leading-tight tracking-[-0.02em] sm:text-[30px]">Ready to organize your school day?</h2>
