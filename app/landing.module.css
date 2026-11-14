@@ -100,7 +100,7 @@
 }
 
 .heroFrame {
-  box-shadow: 0 22px 46px -38px rgba(15, 23, 42, 0.55);
+  box-shadow: none;
 }
 
 .heroPhoto {
