@@ -118,14 +118,14 @@ export default function HomePage() {
 
       <main id="main-content" tabIndex={-1} className={styles.gridBackground}>
         <section aria-labelledby="hero-heading" className="border-b border-[#E2E8F0]">
-          <div className={`${container} flex flex-col items-start py-12 text-left sm:py-16 lg:py-20`}>
+          <div className={`${container} flex flex-col items-start py-8 text-left sm:py-12 lg:py-14`}>
             <div className="w-full max-w-[920px]">
               <h1
                 id="hero-heading"
-                className="text-[42px] font-extrabold leading-[1.08] tracking-[-0.045em] text-[#071A3D] sm:text-[56px] lg:text-[68px]"
+                className="text-[42px] font-extrabold leading-[1.03] tracking-[-0.045em] text-[#071A3D] sm:text-[56px] lg:text-[68px]"
               >
                 <span className="block">Run Your School</span>
-                <span className="mt-1 block">
+                <span className="block">
                   from{' '}
                   <span className={styles.heroAccent}>
                     One Place
@@ -135,7 +135,7 @@ export default function HomePage() {
                 </span>
               </h1>
 
-              <p className="mt-8 max-w-[760px] text-[17px] font-medium leading-[1.7] text-[#64748B] sm:text-[20px]">
+              <p className="mt-5 max-w-[760px] text-[17px] font-medium leading-[1.7] text-[#64748B] sm:text-[20px]">
                 Manage students, teachers, attendance, fees, results and notices —{' '}
                 <span className="inline-block rounded-full bg-[#DCFCE7] px-3 py-0.5 font-bold text-[#166534]">
                   all in one system
@@ -145,7 +145,7 @@ export default function HomePage() {
               <Link
                 href="/auth/signup"
                 prefetch={false}
-                className={`${styles.heroCta} mt-10 flex min-h-16 w-full max-w-[620px] items-center justify-center rounded-2xl bg-[#047857] px-5 text-white transition-colors hover:bg-[#065F46] sm:min-h-[72px] sm:px-8`}
+                className={`${styles.heroCta} mt-7 flex min-h-16 w-full max-w-[620px] items-center justify-center rounded-2xl bg-[#047857] px-5 text-white transition-colors hover:bg-[#065F46] sm:min-h-[72px] sm:px-8`}
               >
                 <School className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" strokeWidth={1.8} aria-hidden="true" />
                 <span aria-hidden="true" className="mx-5 h-8 w-px bg-white/55 sm:mx-7" />
