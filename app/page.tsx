@@ -263,7 +263,7 @@ export default function HomePage() {
               }) => (
                 <article
                   key={name}
-                  className={`${styles.portalCard} ${styles.portalShowcaseCard} ${card} relative isolate min-h-[320px] overflow-hidden rounded-[20px] border shadow-[0_18px_36px_-30px_rgba(15,23,42,0.55)]`}
+                  className={`${styles.portalCard} ${styles.portalShowcaseCard} ${card} relative isolate min-h-[290px] overflow-hidden rounded-[20px] border shadow-[0_18px_36px_-30px_rgba(15,23,42,0.55)]`}
                 >
                   <div className="relative z-30 p-4 sm:p-5">
                     <div className="flex items-center gap-3">
@@ -279,7 +279,7 @@ export default function HomePage() {
                   <div className={`${styles.portalWave} ${styles.portalWaveBack} ${waveBack}`} aria-hidden="true" />
                   <div className={`${styles.portalWave} ${styles.portalWaveFront} ${waveFront}`} aria-hidden="true" />
 
-                  <div className="absolute bottom-0 left-0 z-20 h-[55%] w-[48%]">
+                  <div className="absolute bottom-0 left-0 z-20 h-[54%] w-[48%]">
                     <Image
                       src={portrait}
                       alt={portraitAlt}
