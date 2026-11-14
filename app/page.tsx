@@ -172,7 +172,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="features" aria-labelledby="features-heading" className={`${container} scroll-mt-20 pb-12 pt-6 sm:pb-[72px] sm:pt-10`}>
+        <section id="features" aria-labelledby="features-heading" className={`${container} scroll-mt-20 pb-12 pt-4 sm:pb-[72px] sm:pt-10`}>
           <div className="mb-7 sm:mb-9">
             <div className="flex items-center gap-3">
               <span className="h-7 w-1 shrink-0 rounded-full bg-[#2563EB]" aria-hidden="true" />
