@@ -261,7 +261,6 @@ export default function HomePage() {
                 chipText,
                 waveBack,
                 waveFront,
-                features: portalFeatures,
               }) => (
                 <article
                   key={name}
@@ -276,15 +275,6 @@ export default function HomePage() {
                     </div>
 
                     <p className="mt-3 max-w-[58%] text-[13px] leading-5 text-[#334155]">{description}</p>
-
-                    <div className="mt-4 flex max-w-[58%] flex-col items-start gap-2">
-                      {portalFeatures.map(({ label, icon: FeatureIcon }) => (
-                        <span key={label} className={`inline-flex min-h-7 items-center gap-1.5 rounded-full border border-white/70 bg-white/90 px-2.5 text-[10px] font-semibold shadow-sm ${chipText}`}>
-                          <FeatureIcon className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
-                          {label}
-                        </span>
-                      ))}
-                    </div>
                   </div>
 
                   <div className={`${styles.portalWave} ${styles.portalWaveBack} ${waveBack}`} aria-hidden="true" />
@@ -301,7 +291,7 @@ export default function HomePage() {
                     />
                   </div>
 
-                  <div className="absolute bottom-3 right-3 z-30 w-[39%]">
+                  <div className="absolute right-4 top-4 z-30 w-[30%] sm:w-[32%]">
                     <div className="relative aspect-[177/353]">
                       <Image
                         src={dashboard}
@@ -309,7 +299,7 @@ export default function HomePage() {
                         fill
                         sizes="(max-width: 1023px) 38vw, 13vw"
                         loading="lazy"
-                        className="object-contain object-bottom"
+                        className="object-contain object-top"
                       />
                     </div>
                   </div>
