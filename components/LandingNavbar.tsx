@@ -14,6 +14,7 @@ const navLinks = [
 
 export default function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [language, setLanguage] = useState<'eng' | 'nep'>('eng');
   const navbarRef = useRef<HTMLElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
 
@@ -51,16 +52,28 @@ export default function LandingNavbar() {
       if (!event.currentTarget.contains(event.relatedTarget as Node)) setMobileOpen(false);
     }}>
       <nav aria-label="Main navigation" className="relative mx-auto flex h-[50px] max-w-[1180px] items-center justify-between gap-3 px-4 sm:px-6 lg:h-14 lg:px-8">
-        <button ref={toggleRef} type="button" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="landing-mobile-menu" onClick={() => setMobileOpen((open) => !open)} className="-ml-2 inline-flex h-[45px] w-[45px] items-center justify-center rounded-lg text-[#0F172A] hover:bg-[#F8FAFC] lg:hidden">
+        <button ref={toggleRef} type="button" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="landing-mobile-menu" onClick={() => setMobileOpen((open) => !open)} className="-ml-3 inline-flex h-[45px] w-[45px] items-center justify-center rounded-lg text-[#0F172A] hover:bg-[#F8FAFC] lg:hidden">
           {mobileOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
         </button>
-        <Link href="/" aria-label="NEPSOM home" className="absolute left-[48%] flex min-h-11 -translate-x-1/2 items-center sm:left-1/2 lg:static lg:translate-x-0">
-          <Image src="/logo2.png" alt="NEPSOM" width={1035} height={241} sizes="200px" className="h-auto w-[200px] sm:w-[200px] lg:w-[200px]" />
+        <Link href="/" aria-label="NEPSOM home" className="absolute left-[42%] flex min-h-11 -translate-x-1/2 items-center sm:left-[46%] lg:static lg:translate-x-0">
+          <Image src="/logo2.png" alt="NEPSOM" width={1035} height={241} sizes="150px" className="h-auto w-[150px] sm:w-[150px] lg:w-[150px]" />
         </Link>
         <ul className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex">
           {navLinks.map(({ href, label }) => <li key={href}><a href={href} className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]">{label}</a></li>)}
         </ul>
-        <Link href="/auth/login" prefetch={false} className="inline-flex h-[35px] items-center justify-center rounded-lg border border-[#CBD5E1] px-3 text-sm font-semibold text-[#0F172A] hover:bg-[#F8FAFC] lg:h-10 lg:px-4">Log in</Link>
+        <div className="ml-auto flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-label={`Switch to ${language === 'eng' ? 'Nepali' : 'English'}`}
+            aria-pressed={language === 'nep'}
+            onClick={() => setLanguage((current) => current === 'eng' ? 'nep' : 'eng')}
+            className="grid h-[35px] w-[62px] grid-cols-2 items-center rounded-full border border-[#93C5FD] bg-white p-0.5 text-[10px] font-bold uppercase tracking-tight text-[#64748B] lg:hidden"
+          >
+            <span className={`flex h-[29px] items-center justify-center rounded-full transition-colors ${language === 'eng' ? 'bg-[#DBEAFE] text-[#1D4ED8]' : ''}`}>ENG</span>
+            <span className={`flex h-[29px] items-center justify-center rounded-full transition-colors ${language === 'nep' ? 'bg-[#DBEAFE] text-[#1D4ED8]' : ''}`}>NEP</span>
+          </button>
+          <Link href="/auth/login" prefetch={false} className="inline-flex h-[35px] items-center justify-center rounded-lg border border-[#CBD5E1] px-2.5 text-sm font-semibold text-[#0F172A] hover:bg-[#F8FAFC] lg:h-10 lg:px-4">Log in</Link>
+        </div>
       </nav>
       <div id="landing-mobile-menu" hidden={!mobileOpen} className="absolute inset-x-0 top-full border-b border-[#E2E8F0] bg-white px-4 pb-3 shadow-[0_12px_20px_-18px_rgba(15,23,42,0.45)] sm:px-6 lg:hidden">
         <nav aria-label="Mobile navigation"><ul>
