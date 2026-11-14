@@ -8,6 +8,16 @@
   display: none;
 }
 
+/* Subtle, image-free grid for the public landing page below the navbar. */
+.gridBackground,
+.gridBackground > section {
+  background-image:
+    linear-gradient(to right, #e5ecf5 1px, transparent 1px),
+    linear-gradient(to bottom, #e5ecf5 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: top left;
+}
+
 .heroFrame {
   box-shadow: 0 22px 46px -38px rgba(15, 23, 42, 0.55);
 }
