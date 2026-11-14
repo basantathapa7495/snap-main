@@ -263,7 +263,7 @@ export default function HomePage() {
               }) => (
                 <article
                   key={name}
-                  className={`${styles.portalCard} ${styles.portalShowcaseCard} ${card} relative isolate min-h-[290px] overflow-hidden rounded-[20px] border shadow-[0_18px_36px_-30px_rgba(15,23,42,0.55)]`}
+                  className={`${styles.portalCard} ${styles.portalShowcaseCard} ${card} relative isolate min-h-[270px] overflow-hidden rounded-[20px] border shadow-[0_18px_36px_-30px_rgba(15,23,42,0.55)]`}
                 >
                   <div className="relative z-30 p-4 sm:p-5">
                     <div className="flex items-center gap-3">
@@ -273,13 +273,13 @@ export default function HomePage() {
                       <h3 className="text-[26px] font-bold tracking-[-0.03em] text-[#0F172A]">{name}</h3>
                     </div>
 
-                    <p className="mt-3 max-w-[58%] text-[13px] leading-5 text-[#334155]">{description}</p>
+                    <p className="mt-1.5 max-w-[58%] text-[13px] leading-[1.3] text-[#334155]">{description}</p>
                   </div>
 
                   <div className={`${styles.portalWave} ${styles.portalWaveBack} ${waveBack}`} aria-hidden="true" />
                   <div className={`${styles.portalWave} ${styles.portalWaveFront} ${waveFront}`} aria-hidden="true" />
 
-                  <div className="absolute bottom-0 left-0 z-20 h-[54%] w-[48%]">
+                  <div className="absolute bottom-0 left-0 z-20 h-[60%] w-[48%]">
                     <Image
                       src={portrait}
                       alt={portraitAlt}
@@ -290,7 +290,7 @@ export default function HomePage() {
                     />
                   </div>
 
-                  <div className="absolute right-2 top-2 z-30 w-[42%] sm:w-[40%]">
+                  <div className="absolute right-2 top-2 z-30 w-[39%] sm:w-[37%]">
                     <div className="relative aspect-[177/353]">
                       <Image
                         src={dashboard}
