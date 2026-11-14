@@ -15,7 +15,6 @@ import {
   Minus,
   Phone,
   Plus,
-  School,
   UserRoundCheck,
   Users,
   WalletCards,
@@ -122,7 +121,7 @@ export default function HomePage() {
             <div className="w-full max-w-[920px]">
               <h1
                 id="hero-heading"
-                className="text-[42px] font-extrabold leading-[1.03] tracking-[-0.045em] text-[#071A3D] sm:text-[56px] lg:text-[68px]"
+                className="text-[36px] font-extrabold leading-[1.04] tracking-[-0.04em] text-[#071A3D] sm:text-[48px] lg:text-[58px]"
               >
                 <span className="block">Run Your School</span>
                 <span className="block">
@@ -135,23 +134,13 @@ export default function HomePage() {
                 </span>
               </h1>
 
-              <p className="mt-5 max-w-[760px] text-[17px] font-medium leading-[1.7] text-[#64748B] sm:text-[20px]">
+              <p className="mt-5 max-w-[760px] text-[15px] font-medium leading-[1.65] text-[#64748B] sm:text-[18px]">
                 Manage students, teachers, attendance, fees, results and notices —{' '}
                 <span className="inline-block rounded-full bg-[#DCFCE7] px-3 py-0.5 font-bold text-[#166534]">
                   all in one system
                 </span>
               </p>
 
-              <Link
-                href="/auth/signup"
-                prefetch={false}
-                className={`${styles.heroCta} mt-7 flex min-h-16 w-full max-w-[620px] items-center justify-center rounded-2xl bg-[#047857] px-5 text-white transition-colors hover:bg-[#065F46] sm:min-h-[72px] sm:px-8`}
-              >
-                <School className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" strokeWidth={1.8} aria-hidden="true" />
-                <span aria-hidden="true" className="mx-5 h-8 w-px bg-white/55 sm:mx-7" />
-                <span className="text-[18px] font-bold tracking-[-0.01em] sm:text-[22px]">Register Your School</span>
-                <ArrowRight className="ml-auto h-6 w-6 shrink-0 sm:h-7 sm:w-7" strokeWidth={2.2} aria-hidden="true" />
-              </Link>
             </div>
           </div>
         </section>
