@@ -70,10 +70,6 @@
   transform: rotate(53deg);
 }
 
-.heroCta {
-  box-shadow: 0 18px 30px -20px rgba(4, 120, 87, 0.75);
-}
-
 @media (max-width: 639px) {
   .heroRays,
   .heroRays::before,
