@@ -120,9 +120,14 @@ export default function HomePage() {
         <section aria-labelledby="hero-heading" className="border-b border-[#E2E8F0]">
           <div className={`${container} flex flex-col items-start py-8 text-left sm:py-12 lg:py-14`}>
             <div className="w-full max-w-[920px]">
+              <p className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#BFDBFE] bg-[#EFF6FF] px-3.5 text-sm font-semibold text-[#1D4ED8]">
+                <School className="h-[18px] w-[18px] shrink-0" strokeWidth={1.9} aria-hidden="true" />
+                Made for Nepal schools
+              </p>
+
               <h1
                 id="hero-heading"
-                className="text-[46px] font-extrabold leading-[0.99] tracking-[-0.045em] text-[#071A3D] sm:text-[56px] lg:text-[64px]"
+                className="mt-5 text-[46px] font-extrabold leading-[0.99] tracking-[-0.045em] text-[#071A3D] sm:text-[56px] lg:text-[64px]"
               >
                 <span className="block">Run your school</span>
                 <span className="block">
