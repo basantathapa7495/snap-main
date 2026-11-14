@@ -15,6 +15,7 @@ import {
   Minus,
   Phone,
   Plus,
+  School,
   UserRoundCheck,
   Users,
   WalletCards,
@@ -117,43 +118,41 @@ export default function HomePage() {
 
       <main id="main-content" tabIndex={-1} className={styles.gridBackground}>
         <section aria-labelledby="hero-heading" className="border-b border-[#E2E8F0]">
-          <div className={`${container} grid items-center gap-8 py-9 sm:py-14 lg:grid-cols-[0.94fr_1.06fr] lg:gap-16 lg:py-[72px]`}>
-            <div className="max-w-[540px]">
-              <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.02em] text-[#475569]">
-                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" />
-                Built for Nepali schools
-              </p>
+          <div className={`${container} flex flex-col items-center py-12 text-center sm:py-16 lg:py-20`}>
+            <div className="w-full max-w-[920px]">
               <h1
                 id="hero-heading"
-                className="mt-4 max-w-[13ch] text-[40px] font-semibold leading-[1.06] tracking-[-0.045em] sm:text-[50px] lg:text-[58px]"
+                className="text-[42px] font-extrabold leading-[1.08] tracking-[-0.045em] text-[#071A3D] sm:text-[56px] lg:text-[68px]"
               >
-                Run your school from one place.
+                <span className="block">Run Your School</span>
+                <span className="mt-1 block">
+                  from{' '}
+                  <span className={styles.heroAccent}>
+                    One Place
+                    <span className={styles.heroRays} aria-hidden="true" />
+                  </span>
+                  .
+                </span>
               </h1>
-              <p className="mt-5 max-w-[500px] text-[15px] leading-[1.65] text-[#64748B] sm:text-[17px]">
-                Manage students, teachers, attendance, fees, results and notices without switching between registers and spreadsheets.
-              </p>
-              <RegisterLink className="mt-7 w-full sm:w-auto" />
-              <p className="mt-3 text-center text-xs leading-5 text-[#64748B] sm:text-left">
-                Free for now&nbsp;&nbsp;·&nbsp;&nbsp;Works in your browser
-              </p>
-            </div>
 
-            <figure className={`${styles.heroFrame} min-w-0 overflow-hidden rounded-xl border border-[#E2E8F0] bg-[#F8FAFC]`}>
-              <div className={styles.heroPhoto}>
-                <Image
-                  src="/hero-image.png"
-                  alt="School administrator using a phone in her office"
-                  width={1536}
-                  height={1024}
-                  sizes="(max-width: 1023px) 210vw, 1100px"
-                  preload
-                  className={styles.heroImage}
-                />
-              </div>
-              <figcaption className="flex min-h-11 items-center border-t border-[#E2E8F0] bg-white px-4 text-xs font-medium text-[#475569]">
-                School work, wherever the day takes you.
-              </figcaption>
-            </figure>
+              <p className="mx-auto mt-8 max-w-[760px] text-[17px] font-medium leading-[1.7] text-[#64748B] sm:text-[20px]">
+                Manage students, teachers, attendance, fees, results and notices —{' '}
+                <span className="inline-block rounded-full bg-[#DCFCE7] px-3 py-0.5 font-bold text-[#166534]">
+                  all in one system
+                </span>
+              </p>
+
+              <Link
+                href="/auth/signup"
+                prefetch={false}
+                className={`${styles.heroCta} mx-auto mt-10 flex min-h-16 w-full max-w-[620px] items-center justify-center rounded-2xl bg-[#047857] px-5 text-white transition-colors hover:bg-[#065F46] sm:min-h-[72px] sm:px-8`}
+              >
+                <School className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" strokeWidth={1.8} aria-hidden="true" />
+                <span aria-hidden="true" className="mx-5 h-8 w-px bg-white/55 sm:mx-7" />
+                <span className="text-[18px] font-bold tracking-[-0.01em] sm:text-[22px]">Register Your School</span>
+                <ArrowRight className="ml-auto h-6 w-6 shrink-0 sm:h-7 sm:w-7" strokeWidth={2.2} aria-hidden="true" />
+              </Link>
+            </div>
           </div>
         </section>
 
