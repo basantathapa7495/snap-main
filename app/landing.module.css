@@ -110,14 +110,13 @@
   background: #f8fafc;
 }
 
-/* Show the administrator, not the existing asset's old mock UI. */
 .heroImage {
   position: absolute;
-  top: -32%;
-  left: 0;
-  width: 210%;
-  max-width: none;
-  height: auto;
+  inset: 0;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .featureCard,
@@ -134,17 +133,6 @@
   }
 }
 
-@media (min-width: 640px) and (max-width: 1023px) {
-  .heroPhoto {
-    aspect-ratio: 2;
-  }
-
-  .heroImage {
-    top: -48%;
-    width: 210%;
-  }
-}
-
 @media (min-width: 768px) {
   .steps {
     position: relative;
@@ -158,17 +146,6 @@
     left: 16.667%;
     height: 1px;
     background: #cbd5e1;
-  }
-}
-
-@media (min-width: 1024px) {
-  .heroPhoto {
-    aspect-ratio: 1.36;
-  }
-
-  .heroImage {
-    top: -22%;
-    width: 210%;
   }
 }
 
