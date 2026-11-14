@@ -117,7 +117,7 @@ export default function HomePage() {
 
       <main id="main-content" tabIndex={-1} className={styles.gridBackground}>
         <section aria-labelledby="hero-heading">
-          <div className={`${container} flex flex-col items-start pb-8 pt-4 text-left sm:pb-12 sm:pt-6 lg:pb-14 lg:pt-7`}>
+          <div className={`${container} flex flex-col items-start pb-4 pt-4 text-left sm:pb-8 sm:pt-6 lg:pb-10 lg:pt-7`}>
             <div className="w-full max-w-[920px]">
               <p className="-ml-1 inline-flex h-8 items-center gap-2 rounded-full bg-[#EFF6FF] px-3.5 text-xs font-semibold text-[#1E40AF]">
                 <span className="h-2 w-2 shrink-0 rounded-full bg-[#2563EB]" aria-hidden="true" />
@@ -172,9 +172,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="features" aria-labelledby="features-heading" className={`${container} scroll-mt-20 py-12 sm:py-[72px]`}>
+        <section id="features" aria-labelledby="features-heading" className={`${container} scroll-mt-20 pb-12 pt-6 sm:pb-[72px] sm:pt-10`}>
           <div className="mb-7 sm:mb-9">
-            <h2 id="features-heading" className={heading}>Everything your school does every day.</h2>
+            <div className="flex items-center gap-3">
+              <span className="h-7 w-1 shrink-0 rounded-full bg-[#2563EB]" aria-hidden="true" />
+              <h2 id="features-heading" className={heading}>Your school’s everyday tasks.</h2>
+            </div>
             <p className="mt-3 text-sm font-medium text-[#475569]">Daily work, organized in one place.</p>
           </div>
 
