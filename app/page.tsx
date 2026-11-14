@@ -116,12 +116,12 @@ export default function HomePage() {
       <LandingNavbar />
 
       <main id="main-content" tabIndex={-1} className={styles.gridBackground}>
-        <section aria-labelledby="hero-heading" className="border-b border-[#E2E8F0]">
-          <div className={`${container} flex flex-col items-start py-8 text-left sm:py-12 lg:py-14`}>
+        <section aria-labelledby="hero-heading">
+          <div className={`${container} flex flex-col items-start pb-8 pt-4 text-left sm:pb-12 sm:pt-6 lg:pb-14 lg:pt-7`}>
             <div className="w-full max-w-[920px]">
-              <p className="-ml-1 -mt-2 inline-flex h-8 items-center gap-2 rounded-full bg-[#EFF6FF] px-3.5 text-xs font-semibold text-[#1E40AF]">
+              <p className="-ml-1 inline-flex h-8 items-center gap-2 rounded-full bg-[#EFF6FF] px-3.5 text-xs font-semibold text-[#1E40AF]">
                 <span className="h-2 w-2 shrink-0 rounded-full bg-[#2563EB]" aria-hidden="true" />
-                Ready to take your school digital?
+                Made for Nepal's schools for now
               </p>
 
               <h1
@@ -139,9 +139,21 @@ export default function HomePage() {
                 </span>
               </h1>
 
-              <p className="mt-3 max-w-[780px] text-[18px] font-medium leading-[1.5] text-[#64748B] sm:text-[21px]">
+              <p className="mt-3 max-w-[780px] text-[18px] font-medium leading-[1.5] text-[#475569] sm:text-[21px]">
                 Less paperwork. More teaching.
               </p>
+              <p className="mt-2 max-w-[780px] text-sm leading-6 text-[#475569] sm:text-base">
+                Mark attendance in seconds. Track fee dues instantly. Print report cards in a few clicks.
+              </p>
+
+              <Link
+                href="/auth/signup"
+                prefetch={false}
+                className="mt-5 flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#3B82F6] px-5 text-white transition-colors hover:bg-[#2563EB]"
+              >
+                <span className="text-base font-bold">Register your school</span>
+                <ArrowRight className="ml-auto h-5 w-5 shrink-0" strokeWidth={2.3} aria-hidden="true" />
+              </Link>
 
               <figure className={`${styles.heroFrame} -mx-4 mt-4 w-[calc(100%+2rem)] max-w-none overflow-hidden border-y border-[#E2E8F0] bg-[#F8FAFC] sm:mx-0 sm:w-full sm:max-w-[920px] sm:rounded-xl sm:border`}>
                 <div className={styles.heroPhoto}>
@@ -150,30 +162,20 @@ export default function HomePage() {
                     alt="School administrator using NEPSOM on her phone"
                     width={1536}
                     height={1024}
-                    sizes="(max-width: 639px) calc(100vw - 32px), 920px"
+                    sizes="(max-width: 639px) 100vw, 920px"
                     preload
                     className={styles.heroImage}
                   />
                 </div>
               </figure>
-
-              <Link
-                href="/auth/signup"
-                prefetch={false}
-                className="mt-4 flex min-h-[52px] w-full items-center justify-center rounded-xl bg-[#3B82F6] px-5 text-white transition-colors hover:bg-[#2563EB]"
-              >
-                <span className="text-base font-bold">Register your school</span>
-                <ArrowRight className="ml-auto h-5 w-5 shrink-0" strokeWidth={2.3} aria-hidden="true" />
-              </Link>
             </div>
           </div>
         </section>
 
         <section id="features" aria-labelledby="features-heading" className={`${container} scroll-mt-20 py-12 sm:py-[72px]`}>
           <div className="mb-7 sm:mb-9">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#2563EB]">Core features</p>
-            <h2 id="features-heading" className={`${heading} mt-2.5`}>The essentials, together.</h2>
-            <p className={sectionCopy}>One focused workspace for the work that keeps your school running.</p>
+            <h2 id="features-heading" className={heading}>Everything your school does every day.</h2>
+            <p className="mt-3 text-sm font-medium text-[#475569]">Daily work, organized in one place.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
