@@ -136,7 +136,7 @@ export default function HomePage() {
               </h1>
 
               <p className="mt-7 max-w-[780px] text-[18px] font-medium leading-[1.5] text-[#64748B] sm:text-[21px]">
-                Manage students, teachers, attendance, fees, results and notices in one system.
+                Less paperwork. More teaching.
               </p>
 
               <Link
