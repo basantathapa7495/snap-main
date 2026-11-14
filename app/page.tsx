@@ -3,7 +3,6 @@ import Link from 'next/link';
 import {
   ArrowRight,
   BarChart3,
-  BookOpen,
   Check,
   ClipboardCheck,
   FilePenLine,
@@ -34,22 +33,64 @@ const features = [
 
 const portals = [
   {
-    name: 'Principal portal',
-    eyebrow: 'School oversight',
+    name: 'Principal',
     icon: LayoutDashboard,
-    description: 'See daily priorities and manage people, attendance, fees and school operations.',
+    description: 'See school activity, attendance, teachers and fees in one view.',
+    portrait: '/principle.png',
+    portraitAlt: 'Nepali school principal',
+    dashboard: '/principle-dash.png',
+    dashboardAlt: 'Sample NEPSOM principal dashboard',
+    card: 'border-[#BFDBFE] bg-[linear-gradient(135deg,#EFF6FF_0%,#DBEAFE_100%)]',
+    accent: 'text-[#2563EB]',
+    iconTile: 'bg-[#2563EB]',
+    chipText: 'text-[#1D4ED8]',
+    waveBack: 'bg-[#93C5FD]',
+    waveFront: 'bg-[#3B82F6]',
+    features: [
+      { label: 'Full overview', icon: BarChart3 },
+      { label: 'Approvals', icon: ClipboardCheck },
+      { label: 'Reports', icon: FilePenLine },
+    ],
   },
   {
-    name: 'Teacher portal',
-    eyebrow: 'Classroom work',
-    icon: BookOpen,
-    description: 'Manage assigned classes, take attendance and record student marks.',
-  },
-  {
-    name: 'Student portal',
-    eyebrow: 'Learning access',
+    name: 'Teacher',
     icon: GraduationCap,
-    description: 'Follow assignments, attendance, results and important school notices.',
+    description: 'Manage classes, take attendance and update marks quickly.',
+    portrait: '/teacher.png',
+    portraitAlt: 'Nepali school teacher',
+    dashboard: '/teacher-dash.png',
+    dashboardAlt: 'Sample NEPSOM teacher dashboard',
+    card: 'border-[#BBF7D0] bg-[linear-gradient(135deg,#ECFDF5_0%,#D1FAE5_100%)]',
+    accent: 'text-[#1F7A5A]',
+    iconTile: 'bg-[#1F7A5A]',
+    chipText: 'text-[#1F7A5A]',
+    waveBack: 'bg-[#86D7B7]',
+    waveFront: 'bg-[#38A77E]',
+    features: [
+      { label: 'My classes', icon: Users },
+      { label: 'Attendance', icon: ClipboardCheck },
+      { label: 'Enter marks', icon: FilePenLine },
+    ],
+  },
+  {
+    name: 'Student',
+    icon: Users,
+    description: 'Check attendance, results and school notices anytime.',
+    portrait: '/student.png',
+    portraitAlt: 'Nepali school student',
+    dashboard: '/student-dash.png',
+    dashboardAlt: 'Sample NEPSOM student dashboard',
+    card: 'border-[#DDD6FE] bg-[linear-gradient(135deg,#F5F3FF_0%,#EDE9FE_100%)]',
+    accent: 'text-[#7C3AED]',
+    iconTile: 'bg-[#7C3AED]',
+    chipText: 'text-[#6D28D9]',
+    waveBack: 'bg-[#C4B5FD]',
+    waveFront: 'bg-[#8B5CF6]',
+    features: [
+      { label: 'View results', icon: BarChart3 },
+      { label: 'See notices', icon: Megaphone },
+      { label: 'Track attendance', icon: ClipboardCheck },
+    ],
   },
 ];
 
@@ -199,25 +240,81 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="portals" aria-labelledby="portals-heading" className="scroll-mt-20 border-y border-[#E2E8F0] bg-[#F8FAFC] py-12 sm:py-[72px]">
+        <section id="portals" aria-labelledby="portals-heading" className="scroll-mt-20 border-y border-[#E2E8F0] bg-white py-12 sm:py-[72px]">
           <div className={container}>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#2563EB]">Connected access</p>
-            <h2 id="portals-heading" className={`${heading} mt-2.5`}>One school. Three clear portals.</h2>
-            <p className={sectionCopy}>Each person sees the tools and information they need for their part of the school day.</p>
+            <div className="text-center">
+              <h2 id="portals-heading" className={heading}>One school, three portals</h2>
+              <p className="mt-3 text-sm font-medium text-[#475569] sm:text-base">Built for principals, teachers and students.</p>
+            </div>
 
-            <div className="mt-7 grid gap-3 sm:mt-9 md:grid-cols-3 md:gap-4">
-              {portals.map(({ name, eyebrow, icon: Icon, description }) => (
-                <article key={name} className={`${styles.portalCard} rounded-[10px] border border-[#E2E8F0] bg-white p-4 sm:p-5`}>
-                  <div className="flex items-start gap-3.5 md:block">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] md:mb-5">
-                      <Icon className="h-5 w-5 text-[#0F172A]" strokeWidth={1.7} aria-hidden="true" />
-                    </span>
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#64748B]">{eyebrow}</p>
-                      <h3 className="mt-1 text-[16px] font-semibold leading-6">{name}</h3>
+            <div className="mt-8 grid gap-4 sm:mt-10 lg:grid-cols-3">
+              {portals.map(({
+                name,
+                icon: Icon,
+                description,
+                portrait,
+                portraitAlt,
+                dashboard,
+                dashboardAlt,
+                card,
+                accent,
+                iconTile,
+                chipText,
+                waveBack,
+                waveFront,
+                features: portalFeatures,
+              }) => (
+                <article
+                  key={name}
+                  className={`${styles.portalCard} ${styles.portalShowcaseCard} ${card} relative isolate min-h-[420px] overflow-hidden rounded-[20px] border shadow-[0_18px_36px_-30px_rgba(15,23,42,0.55)]`}
+                >
+                  <div className="relative z-30 p-5">
+                    <div className="flex items-center gap-3">
+                      <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white ${iconTile}`}>
+                        <Icon className="h-6 w-6" strokeWidth={1.8} aria-hidden="true" />
+                      </span>
+                      <h3 className="text-[26px] font-bold tracking-[-0.03em] text-[#0F172A]">{name}</h3>
+                    </div>
+
+                    <p className="mt-3 max-w-[58%] text-[13px] leading-5 text-[#334155]">{description}</p>
+
+                    <div className="mt-4 flex max-w-[58%] flex-col items-start gap-2">
+                      {portalFeatures.map(({ label, icon: FeatureIcon }) => (
+                        <span key={label} className={`inline-flex min-h-7 items-center gap-1.5 rounded-full border border-white/70 bg-white/90 px-2.5 text-[10px] font-semibold shadow-sm ${chipText}`}>
+                          <FeatureIcon className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                    <p className={`mt-2 text-[11px] italic ${accent}`}>Sample data</p>
+                  </div>
+
+                  <div className={`${styles.portalWave} ${styles.portalWaveBack} ${waveBack}`} aria-hidden="true" />
+                  <div className={`${styles.portalWave} ${styles.portalWaveFront} ${waveFront}`} aria-hidden="true" />
+
+                  <div className="absolute bottom-0 left-0 z-20 h-[48%] w-[48%]">
+                    <Image
+                      src={portrait}
+                      alt={portraitAlt}
+                      fill
+                      sizes="(max-width: 1023px) 46vw, 16vw"
+                      loading="lazy"
+                      className="object-contain object-left-bottom"
+                    />
+                  </div>
+
+                  <div className="absolute bottom-4 right-4 z-30 w-[40%] rounded-[28px] border-[4px] border-[#0F172A] bg-[#0F172A] p-1 shadow-[0_16px_28px_-20px_rgba(15,23,42,0.8)]">
+                    <div className="relative aspect-[9/18] overflow-hidden rounded-[21px] bg-white">
+                      <Image
+                        src={dashboard}
+                        alt={dashboardAlt}
+                        fill
+                        sizes="(max-width: 1023px) 38vw, 13vw"
+                        loading="lazy"
+                        className="object-contain object-top"
+                      />
                     </div>
                   </div>
-                  <p className="mt-3 text-[13px] leading-6 text-[#64748B] md:mt-4">{description}</p>
                 </article>
               ))}
             </div>
