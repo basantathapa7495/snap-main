@@ -273,7 +273,7 @@ export default function HomePage() {
                       <h3 className="text-[26px] font-bold tracking-[-0.03em] text-[#0F172A]">{name}</h3>
                     </div>
 
-                    <p className="mt-1.5 max-w-[62%] text-[13px] leading-[1.3] text-[#334155]">{description}</p>
+                    <p className="-mt-0.5 max-w-[62%] text-[13px] leading-[1.3] text-[#334155]">{description}</p>
                   </div>
 
                   <div className={`${styles.portalWave} ${styles.portalWaveBack} ${waveBack}`} aria-hidden="true" />
