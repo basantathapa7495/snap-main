@@ -115,7 +115,7 @@ export default function HomePage() {
       </a>
       <LandingNavbar />
 
-      <main id="main-content" tabIndex={-1}>
+      <main id="main-content" tabIndex={-1} className={styles.gridBackground}>
         <section aria-labelledby="hero-heading" className="border-b border-[#E2E8F0]">
           <div className={`${container} grid items-center gap-8 py-9 sm:py-14 lg:grid-cols-[0.94fr_1.06fr] lg:gap-16 lg:py-[72px]`}>
             <div className="max-w-[540px]">
@@ -285,7 +285,7 @@ export default function HomePage() {
         </section>
       </main>
 
-      <footer className={`${container} py-8 sm:py-10`}>
+      <footer className={`${styles.gridBackground} ${container} py-8 sm:py-10`}>
         <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
           <div>
             <Link href="/" aria-label="NEPSOM home" className="inline-flex min-h-11 items-center">
