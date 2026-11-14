@@ -15,6 +15,7 @@ import {
   Minus,
   Phone,
   Plus,
+  School,
   UserRoundCheck,
   Users,
   WalletCards,
@@ -119,27 +120,39 @@ export default function HomePage() {
         <section aria-labelledby="hero-heading" className="border-b border-[#E2E8F0]">
           <div className={`${container} flex flex-col items-start py-8 text-left sm:py-12 lg:py-14`}>
             <div className="w-full max-w-[920px]">
+              <p className="inline-flex min-h-11 items-center gap-2.5 rounded-full bg-[#DBEAFE] px-4 text-[15px] font-bold text-[#164E9B] sm:text-[17px]">
+                <School className="h-5 w-5 shrink-0" strokeWidth={2} aria-hidden="true" />
+                Built for Nepali schools
+              </p>
+
               <h1
                 id="hero-heading"
-                className="text-[36px] font-extrabold leading-[1.04] tracking-[-0.04em] text-[#071A3D] sm:text-[48px] lg:text-[58px]"
+                className="mt-7 text-[46px] font-extrabold leading-[0.99] tracking-[-0.045em] text-[#071A3D] sm:text-[56px] lg:text-[64px]"
               >
-                <span className="block">Run Your School</span>
+                <span className="block">Run your school</span>
                 <span className="block">
                   from{' '}
                   <span className={styles.heroAccent}>
-                    One Place
+                    one place
                     <span className={styles.heroRays} aria-hidden="true" />
                   </span>
                   .
                 </span>
               </h1>
 
-              <p className="mt-5 max-w-[760px] text-[15px] font-medium leading-[1.65] text-[#64748B] sm:text-[18px]">
-                Manage students, teachers, attendance, fees, results and notices —{' '}
-                <span className="inline-block rounded-full bg-[#DCFCE7] px-3 py-0.5 font-bold text-[#166534]">
-                  all in one system
-                </span>
+              <p className="mt-7 max-w-[780px] text-[18px] font-medium leading-[1.5] text-[#64748B] sm:text-[21px]">
+                Manage students, teachers, attendance, fees, results and notices in one system.
               </p>
+
+              <Link
+                href="/auth/signup"
+                prefetch={false}
+                className="mt-8 flex min-h-[60px] w-full max-w-[920px] items-center justify-center rounded-xl bg-[#2563EB] px-5 text-white shadow-[0_16px_26px_-18px_rgba(37,99,235,0.9)] transition-colors hover:bg-[#1D4ED8] sm:min-h-16 sm:px-8"
+              >
+                <School className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" strokeWidth={1.8} aria-hidden="true" />
+                <span className="mx-5 text-[18px] font-bold tracking-[-0.01em] sm:mx-7 sm:text-[22px]">Register your school</span>
+                <ArrowRight className="ml-auto h-6 w-6 shrink-0 sm:h-7 sm:w-7" strokeWidth={2.3} aria-hidden="true" />
+              </Link>
 
               <figure className={`${styles.heroFrame} mt-7 w-full max-w-[920px] overflow-hidden rounded-xl border border-[#E2E8F0] bg-[#F8FAFC]`}>
                 <div className={styles.heroPhoto}>
