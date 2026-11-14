@@ -52,8 +52,8 @@ export default function LandingNavbar() {
       if (!event.currentTarget.contains(event.relatedTarget as Node)) setMobileOpen(false);
     }}>
       <nav aria-label="Main navigation" className="relative mx-auto flex h-[50px] max-w-[1180px] items-center justify-between gap-3 px-4 sm:px-6 lg:h-14 lg:px-8">
-        <button ref={toggleRef} type="button" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="landing-mobile-menu" onClick={() => setMobileOpen((open) => !open)} className="-ml-3 inline-flex h-[45px] w-[45px] items-center justify-center rounded-[12px] border border-[#CBD5E1] bg-white text-[#0F172A] shadow-sm transition-colors hover:bg-[#F8FAFC] lg:hidden">
-          {mobileOpen ? <X className="h-6 w-6" strokeWidth={2.5} aria-hidden="true" /> : <Menu className="h-6 w-6" strokeWidth={3} aria-hidden="true" />}
+        <button ref={toggleRef} type="button" aria-label={mobileOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileOpen} aria-controls="landing-mobile-menu" onClick={() => setMobileOpen((open) => !open)} className="-ml-2 inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#CBD5E1] bg-white text-[#0F172A] shadow-sm transition-colors hover:bg-[#F8FAFC] lg:hidden">
+          {mobileOpen ? <X className="h-5 w-5" strokeWidth={2.5} aria-hidden="true" /> : <Menu className="h-5 w-5" strokeWidth={3} aria-hidden="true" />}
         </button>
         <Link href="/" aria-label="NEPSOM home" className="flex min-h-11 shrink-0 items-center lg:static">
           <Image src="/logo2.png" alt="NEPSOM" width={1035} height={241} sizes="150px" className="h-auto w-[150px] sm:w-[150px] lg:w-[150px]" />
