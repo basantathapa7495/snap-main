@@ -290,7 +290,7 @@ export default function HomePage() {
                     />
                   </div>
 
-                  <div className="absolute right-4 top-4 z-30 w-[30%] sm:w-[32%]">
+                  <div className="absolute right-3 top-3 z-30 w-[37%] sm:w-[36%]">
                     <div className="relative aspect-[177/353]">
                       <Image
                         src={dashboard}
