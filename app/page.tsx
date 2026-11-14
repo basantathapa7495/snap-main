@@ -23,14 +23,14 @@ import LandingNavbar from '@/components/LandingNavbar';
 import styles from './landing.module.css';
 
 const features = [
-  { name: 'Students', description: 'Records, classes and admissions.', icon: Users },
-  { name: 'Teachers', description: 'Staff, assignments and leave.', icon: UserRoundCheck },
-  { name: 'Attendance', description: 'Daily records for students and staff.', icon: ClipboardCheck },
-  { name: 'Fees', description: 'Payments, dues and receipts.', icon: WalletCards },
-  { name: 'Exams & Results', description: 'Marks, grades and report cards.', icon: FilePenLine },
-  { name: 'Communication', description: 'Notices and school messages.', icon: Megaphone },
-  { name: 'Reports', description: 'Academic, attendance and fee reports.', icon: BarChart3 },
-  { name: 'School Website', description: 'School information and updates online.', icon: Globe },
+  { name: 'Students', description: 'Records, classes and admissions.', icon: Users, rail: 'bg-[#2563EB]', iconBg: 'bg-[#EFF6FF]', iconColor: 'text-[#2563EB]' },
+  { name: 'Teachers', description: 'Staff, assignments and leave.', icon: GraduationCap, rail: 'bg-[#22C55E]', iconBg: 'bg-[#ECFDF5]', iconColor: 'text-[#16A34A]' },
+  { name: 'Attendance', description: 'Daily records for students and staff.', icon: ClipboardCheck, rail: 'bg-[#7C3AED]', iconBg: 'bg-[#F5F3FF]', iconColor: 'text-[#7C3AED]' },
+  { name: 'Fees', description: 'Payments, dues and receipts.', icon: WalletCards, rail: 'bg-[#F59E0B]', iconBg: 'bg-[#FFF7ED]', iconColor: 'text-[#EA580C]' },
+  { name: 'Exams & Results', description: 'Marks, grades and report cards.', icon: FilePenLine, rail: 'bg-[#EF4444]', iconBg: 'bg-[#FFF1F2]', iconColor: 'text-[#E11D48]' },
+  { name: 'Communication', description: 'Notices and school messages.', icon: Megaphone, rail: 'bg-[#0EA5E9]', iconBg: 'bg-[#F0F9FF]', iconColor: 'text-[#0284C7]' },
+  { name: 'Reports', description: 'Academic, attendance and fee reports.', icon: BarChart3, rail: 'bg-[#14B8A6]', iconBg: 'bg-[#F0FDFA]', iconColor: 'text-[#0D9488]' },
+  { name: 'School Website', description: 'School information and updates online.', icon: Globe, rail: 'bg-[#16A34A]', iconBg: 'bg-[#F0FDF4]', iconColor: 'text-[#16A34A]' },
 ];
 
 const portals = [
@@ -173,22 +173,28 @@ export default function HomePage() {
         </section>
 
         <section id="features" aria-labelledby="features-heading" className={`${container} -mt-1 scroll-mt-20 pb-12 pt-0 sm:mt-0 sm:pb-[72px] sm:pt-10`}>
-          <div className="mb-7 sm:mb-9">
-            <div className="flex items-center gap-3">
-              <span className="h-7 w-1 shrink-0 rounded-full bg-[#2563EB]" aria-hidden="true" />
-              <h2 id="features-heading" className={heading}>Your school’s everyday tasks.</h2>
-            </div>
-            <p className="mt-3 text-sm font-medium text-[#475569]">Daily work, organized in one place.</p>
+          <div className="mb-7 text-center sm:mb-10">
+            <h2 id="features-heading" className={heading}>
+              Your school’s <span className="text-[#2563EB]">everyday tasks.</span>
+            </h2>
+            <p className="mt-3 text-sm font-medium text-[#475569] sm:text-base">Daily work, organized in one place.</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            {features.map(({ name, description, icon: Icon }) => (
-              <article key={name} className={`${styles.featureCard} h-full rounded-[10px] border border-[#E2E8F0] bg-white p-3.5 sm:p-5`}>
-                <span className="mb-3.5 flex h-9 w-9 items-center justify-center rounded-lg bg-[#EFF6FF] sm:mb-5">
-                  <Icon className="h-[18px] w-[18px] text-[#2563EB]" strokeWidth={1.8} aria-hidden="true" />
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            {features.map(({ name, description, icon: Icon, rail, iconBg, iconColor }) => (
+              <article
+                key={name}
+                className={`${styles.featureCard} relative flex min-h-[118px] items-center overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-3 pl-4 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.65)] sm:min-h-[132px] sm:gap-4 sm:p-5 sm:pl-6`}
+              >
+                <span className={`absolute inset-y-3 left-0 w-1 rounded-r-full ${rail}`} aria-hidden="true" />
+                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconBg} sm:h-14 sm:w-14`}>
+                  <Icon className={`h-6 w-6 ${iconColor} sm:h-7 sm:w-7`} strokeWidth={1.9} aria-hidden="true" />
                 </span>
-                <h3 className="text-sm font-semibold leading-5 sm:text-[15px]">{name}</h3>
-                <p className="mt-1.5 text-[12.5px] leading-[1.55] text-[#64748B] sm:text-[13px]">{description}</p>
+                <span className="mx-2.5 h-14 w-px shrink-0 bg-[#E2E8F0] sm:mx-0 sm:h-16" aria-hidden="true" />
+                <div className="min-w-0">
+                  <h3 className="text-[13px] font-bold leading-4 text-[#0F172A] sm:text-lg sm:leading-6">{name}</h3>
+                  <p className="mt-1.5 text-[11px] leading-[1.45] text-[#475569] sm:text-sm sm:leading-5">{description}</p>
+                </div>
               </article>
             ))}
           </div>
