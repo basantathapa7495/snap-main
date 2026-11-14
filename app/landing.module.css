@@ -115,6 +115,33 @@
   height: auto;
 }
 
+
+.portalShowcaseCard {
+  isolation: isolate;
+}
+
+.portalWave {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  border-radius: 50% 50% 0 0 / 68% 68% 0 0;
+  pointer-events: none;
+}
+
+.portalWaveBack {
+  bottom: -42px;
+  height: 128px;
+  transform: rotate(-5deg);
+  opacity: 0.74;
+}
+
+.portalWaveFront {
+  bottom: -72px;
+  height: 132px;
+  transform: rotate(4deg);
+  opacity: 0.92;
+}
+
 .featureCard,
 .portalCard {
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
