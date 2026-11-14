@@ -15,7 +15,6 @@ import {
   Minus,
   Phone,
   Plus,
-  School,
   UserRoundCheck,
   Users,
   WalletCards,
@@ -127,7 +126,7 @@ export default function HomePage() {
 
               <h1
                 id="hero-heading"
-                className="mt-5 text-[46px] font-extrabold leading-[0.99] tracking-[-0.045em] text-[#071A3D] sm:text-[56px] lg:text-[64px]"
+                className="mt-2 text-[46px] font-extrabold leading-[0.99] tracking-[-0.045em] text-[#071A3D] sm:text-[56px] lg:text-[64px]"
               >
                 <span className="block">Run your school</span>
                 <span className="block">
@@ -140,19 +139,9 @@ export default function HomePage() {
                 </span>
               </h1>
 
-              <p className="mt-7 max-w-[780px] text-[18px] font-medium leading-[1.5] text-[#64748B] sm:text-[21px]">
+              <p className="mt-3 max-w-[780px] text-[18px] font-medium leading-[1.5] text-[#64748B] sm:text-[21px]">
                 Less paperwork. More teaching.
               </p>
-
-              <Link
-                href="/auth/signup"
-                prefetch={false}
-                className="mt-8 flex min-h-[60px] w-full max-w-[920px] items-center justify-center rounded-xl bg-[#2563EB] px-5 text-white shadow-[0_16px_26px_-18px_rgba(37,99,235,0.9)] transition-colors hover:bg-[#1D4ED8] sm:min-h-16 sm:px-8"
-              >
-                <School className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" strokeWidth={1.8} aria-hidden="true" />
-                <span className="mx-5 text-[18px] font-bold tracking-[-0.01em] sm:mx-7 sm:text-[22px]">Register your school</span>
-                <ArrowRight className="ml-auto h-6 w-6 shrink-0 sm:h-7 sm:w-7" strokeWidth={2.3} aria-hidden="true" />
-              </Link>
 
               <figure className={`${styles.heroFrame} -mx-4 mt-7 w-[calc(100%+2rem)] max-w-none overflow-hidden border-y border-[#E2E8F0] bg-[#F8FAFC] sm:mx-0 sm:w-full sm:max-w-[920px] sm:rounded-xl sm:border`}>
                 <div className={styles.heroPhoto}>
