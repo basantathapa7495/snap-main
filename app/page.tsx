@@ -149,7 +149,7 @@ export default function HomePage() {
                 <ArrowRight className="ml-auto h-6 w-6 shrink-0 sm:h-7 sm:w-7" strokeWidth={2.3} aria-hidden="true" />
               </Link>
 
-              <figure className={`${styles.heroFrame} mt-7 w-full max-w-[920px] overflow-hidden rounded-xl border border-[#E2E8F0] bg-[#F8FAFC]`}>
+              <figure className={`${styles.heroFrame} -mx-4 mt-7 w-[calc(100%+2rem)] max-w-none overflow-hidden border-y border-[#E2E8F0] bg-[#F8FAFC] sm:mx-0 sm:w-full sm:max-w-[920px] sm:rounded-xl sm:border`}>
                 <div className={styles.heroPhoto}>
                   <Image
                     src="/hero-img.png"
