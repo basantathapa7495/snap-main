@@ -97,6 +97,20 @@
     bottom: -6px;
     height: 4px;
   }
+
+  .heroPhoto {
+    aspect-ratio: auto;
+  }
+
+  .heroImage {
+    position: relative;
+    inset: auto;
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    object-fit: initial;
+  }
 }
 
 .heroFrame {
