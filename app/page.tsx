@@ -257,7 +257,6 @@ export default function HomePage() {
                 dashboard,
                 dashboardAlt,
                 card,
-                accent,
                 iconTile,
                 chipText,
                 waveBack,
@@ -266,9 +265,9 @@ export default function HomePage() {
               }) => (
                 <article
                   key={name}
-                  className={`${styles.portalCard} ${styles.portalShowcaseCard} ${card} relative isolate min-h-[420px] overflow-hidden rounded-[20px] border shadow-[0_18px_36px_-30px_rgba(15,23,42,0.55)]`}
+                  className={`${styles.portalCard} ${styles.portalShowcaseCard} ${card} relative isolate min-h-[380px] overflow-hidden rounded-[20px] border shadow-[0_18px_36px_-30px_rgba(15,23,42,0.55)]`}
                 >
-                  <div className="relative z-30 p-5">
+                  <div className="relative z-30 p-4 sm:p-5">
                     <div className="flex items-center gap-3">
                       <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white ${iconTile}`}>
                         <Icon className="h-6 w-6" strokeWidth={1.8} aria-hidden="true" />
@@ -286,13 +285,12 @@ export default function HomePage() {
                         </span>
                       ))}
                     </div>
-                    <p className={`mt-2 text-[11px] italic ${accent}`}>Sample data</p>
                   </div>
 
                   <div className={`${styles.portalWave} ${styles.portalWaveBack} ${waveBack}`} aria-hidden="true" />
                   <div className={`${styles.portalWave} ${styles.portalWaveFront} ${waveFront}`} aria-hidden="true" />
 
-                  <div className="absolute bottom-0 left-0 z-20 h-[48%] w-[48%]">
+                  <div className="absolute bottom-0 left-0 z-20 h-[46%] w-[48%]">
                     <Image
                       src={portrait}
                       alt={portraitAlt}
@@ -303,15 +301,15 @@ export default function HomePage() {
                     />
                   </div>
 
-                  <div className="absolute bottom-4 right-4 z-30 w-[40%] rounded-[28px] border-[4px] border-[#0F172A] bg-[#0F172A] p-1 shadow-[0_16px_28px_-20px_rgba(15,23,42,0.8)]">
-                    <div className="relative aspect-[9/18] overflow-hidden rounded-[21px] bg-white">
+                  <div className="absolute bottom-3 right-3 z-30 w-[39%]">
+                    <div className="relative aspect-[177/353]">
                       <Image
                         src={dashboard}
                         alt={dashboardAlt}
                         fill
                         sizes="(max-width: 1023px) 38vw, 13vw"
                         loading="lazy"
-                        className="object-contain object-top"
+                        className="object-contain object-bottom"
                       />
                     </div>
                   </div>
