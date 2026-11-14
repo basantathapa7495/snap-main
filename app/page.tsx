@@ -120,7 +120,7 @@ export default function HomePage() {
         <section aria-labelledby="hero-heading" className="border-b border-[#E2E8F0]">
           <div className={`${container} flex flex-col items-start py-8 text-left sm:py-12 lg:py-14`}>
             <div className="w-full max-w-[920px]">
-              <p className="inline-flex h-8 items-center gap-2 rounded-full bg-[#EFF6FF] px-3.5 text-xs font-semibold text-[#1E40AF]">
+              <p className="-ml-1 -mt-2 inline-flex h-8 items-center gap-2 rounded-full bg-[#EFF6FF] px-3.5 text-xs font-semibold text-[#1E40AF]">
                 <span className="h-2 w-2 shrink-0 rounded-full bg-[#2563EB]" aria-hidden="true" />
                 Ready to take your school digital?
               </p>
