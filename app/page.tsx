@@ -258,7 +258,6 @@ export default function HomePage() {
                 dashboardAlt,
                 card,
                 iconTile,
-                chipText,
                 waveBack,
                 waveFront,
               }) => (
